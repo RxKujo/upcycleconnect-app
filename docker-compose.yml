@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+
+  db:
+    image: mysql:8.0
+    container_name: uc_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: upcycleconnect
+      MYSQL_USER: uc_user
+      MYSQL_PASSWORD: uc_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - uc_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: uc_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: uc_user
+      PMA_PASSWORD: uc_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    networks:
+      - uc_network
+
+volumes:
+  mysql_data:
+
+networks:
+  uc_network:
+    driver: bridge
