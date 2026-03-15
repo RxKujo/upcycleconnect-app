@@ -477,3 +477,39 @@ CREATE TABLE tickets_incidents (
     FOREIGN KEY (id_signaleur) REFERENCES utilisateurs(id_utilisateur),
     FOREIGN KEY (id_conteneur) REFERENCES conteneurs(id_conteneur)
 );
+
+-- =============================================
+-- CATEGORIE_PRESTATION
+-- =============================================
+CREATE TABLE categories_prestations (
+    id_categorie INT AUTO_INCREMENT PRIMARY KEY,
+    nom          VARCHAR(150) NOT NULL,
+    description  TEXT,
+    date_creation DATETIME NOT NULL DEFAULT NOW()
+);
+
+-- =============================================
+-- PRESTATION
+-- =============================================
+CREATE TABLE prestations (
+    id_prestation INT AUTO_INCREMENT PRIMARY KEY,
+    id_categorie  INT NOT NULL,
+    titre         VARCHAR(200) NOT NULL,
+    description   TEXT,
+    prix          DECIMAL(10,2) NOT NULL,
+    statut        ENUM('en_attente', 'validee', 'refusee') NOT NULL DEFAULT 'en_attente',
+    date_creation DATETIME NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (id_categorie) REFERENCES categories_prestations(id_categorie)
+);
+
+-- =============================================
+-- SEED DATA
+-- =============================================
+INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe_hash, role) 
+VALUES ('Administrateur', 'UC', 'admin@upcycleconnect.com', '$2y$10$FcUsEAi0fIgjMBLOrMIDKe0OBggZADA2BQjmXpV0tC9ZSH7.2t88u', 'admin');
+
+INSERT INTO categories_prestations (nom, description) VALUES 
+('Couture & Retouche', 'Services de réparation et transformation textile'),
+('Menuiserie & Bois', 'Restauration et transformation de meubles en bois'),
+('Électronique & High-Tech', 'Réparation et détournement d''objets connectés'),
+('Décoration & Design', 'Création d''objets déco à partir de matériaux de récup');
