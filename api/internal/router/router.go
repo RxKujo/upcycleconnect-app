@@ -51,6 +51,43 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if match(path, "/api/catalogue") && method == "GET" {
+		handlers.GetCatalogueItems(w, req, role)
+		return
+	}
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "GET" {
+		handlers.GetCatalogueItem(w, req, parts[0], role)
+		return
+	}
+	if match(path, "/api/catalogue") && method == "POST" {
+		handlers.CreateCatalogueItem(w, req, userId, role)
+		return
+	}
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "PUT" {
+		handlers.UpdateCatalogueItem(w, req, parts[0], userId, role)
+		return
+	}
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "DELETE" {
+		handlers.DeleteCatalogueItem(w, req, parts[0], userId, role)
+		return
+	}
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "valider" && method == "POST" {
+		handlers.ValiderCatalogueItem(w, req, parts[0], userId, role)
+		return
+	}
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "reserver" && method == "POST" {
+		handlers.ReserverCatalogueItem(w, req, parts[0], userId, role)
+		return
+	}
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "reservations" && method == "GET" {
+		handlers.GetCatalogueReservations(w, req, parts[0], userId, role)
+		return
+	}
+	if parts := splitPath(path, "/api/utilisateurs"); len(parts) == 2 && parts[1] == "planning" && method == "GET" {
+		handlers.GetUtilisateurPlanning(w, req, parts[0], userId, role)
+		return
+	}
+
 	if role != "admin" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
