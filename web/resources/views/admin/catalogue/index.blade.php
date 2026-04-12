@@ -27,20 +27,24 @@
             <td>{{ $item['categorie'] }}</td>
             <td>{{ number_format($item['prix'], 2, ',', ' ') }} €</td>
             <td>
-                @if($item['statut'] === 'publie')
-                    <span class="badge badge-valid">Publié</span>
-                @elseif($item['statut'] === 'en_attente')
-                    <span class="badge badge-waiting">En attente</span>
-                @elseif($item['statut'] === 'annule')
-                    <span class="badge badge-refused">Annulé</span>
-                @else
-                    <span class="badge badge-waiting">Brouillon</span>
-                @endif
+                <span class="badge {{ $item['statut'] === 'publie' ? 'badge-valid' : ($item['statut'] === 'en_attente' ? 'badge-waiting' : 'badge-refused') }}">
+                    @if($item['statut'] === 'publie')
+                        Publié
+                    @elseif($item['statut'] === 'en_attente')
+                        En attente
+                    @elseif($item['statut'] === 'annule')
+                        Annulé
+                    @else
+                        Brouillon
+                    @endif
+                </span>
             </td>
             <td>
                 <div class="action-cell">
                     <a href="{{ route('admin.catalogue.show', $item['id_catalogue_item']) }}" class="btn-secondary btn-sm">Voir</a>
-                    <a href="{{ route('admin.catalogue.edit', $item['id_catalogue_item']) }}" class="btn-secondary btn-sm">Modifier</a>
+                    @if($item['statut'] !== 'publie')
+                        <a href="{{ route('admin.catalogue.edit', $item['id_catalogue_item']) }}" class="btn-secondary btn-sm">Modifier</a>
+                    @endif
                 </div>
             </td>
         </tr>

@@ -31,11 +31,11 @@
         </div>
         <div class="info-item">
             <span class="info-label">Date début</span>
-            <p class="info-value">{{ \Carbon\Carbon::parse($item['date_debut'])->format('d/m/Y H:i') }}</p>
+            <p class="info-value">{{ \App\Helpers\DateHelper::formatFrenchWithPeriod($item['date_debut']) }}</p>
         </div>
         <div class="info-item">
             <span class="info-label">Date fin</span>
-            <p class="info-value">{{ \Carbon\Carbon::parse($item['date_fin'])->format('d/m/Y H:i') }}</p>
+            <p class="info-value">{{ \App\Helpers\DateHelper::formatFrenchWithPeriod($item['date_fin']) }}</p>
         </div>
         <div class="info-item">
             <span class="info-label">Places</span>
@@ -94,7 +94,7 @@
                 <tr>
                     <td>{{ $reservation['id_reservation'] }}</td>
                     <td>{{ $reservation['id_utilisateur'] }}</td>
-                    <td>{{ \Carbon\Carbon::parse($reservation['date_reservation'])->format('d/m/Y H:i') }}</td>
+                    <td>{{ \App\Helpers\DateHelper::formatFrench($reservation['date_reservation']) }}</td>
                     <td>{{ ucfirst(str_replace('_', ' ', $reservation['statut_paiement'])) }}</td>
                 </tr>
                 @empty

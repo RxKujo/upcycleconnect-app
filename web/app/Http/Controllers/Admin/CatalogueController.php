@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Helpers\DateHelper;
 
 class CatalogueController extends Controller
 {
@@ -41,11 +42,15 @@ class CatalogueController extends Controller
             'description' => 'required|string',
             'categorie' => 'required|string',
             'format' => 'required|string',
-            'date_debut' => 'required|date',
-            'date_fin' => 'required|date',
+            'date_debut' => 'required|date_format:Y-m-d H:i:s',
+            'date_fin' => 'required|date_format:Y-m-d H:i:s',
             'nb_places_total' => 'required|integer|min:1',
             'prix' => 'required|numeric|min:0',
         ]);
+
+        if (strtotime($request->date_debut) >= strtotime($request->date_fin)) {
+            return back()->withInput()->with('error', 'La date de fin doit être après la date de début.');
+        }
 
         $payload = [
             'id_createur' => session('admin_id'),
@@ -64,7 +69,12 @@ class CatalogueController extends Controller
             ->post('http://localhost:8080/api/catalogue', $payload);
 
         if ($response->failed()) {
-            return back()->withInput()->with('error', __('admin.erreur_creation'));
+            $error = __('admin.erreur_creation');
+            $json = $response->json();
+            if (isset($json['erreur'])) {
+                $error = $json['erreur'];
+            }
+            return back()->withInput()->with('error', $error);
         }
 
         return redirect()->route('admin.catalogue.index')->with('success', __('admin.catalogue_create_success'));
@@ -101,11 +111,15 @@ class CatalogueController extends Controller
             'description' => 'required|string',
             'categorie' => 'required|string',
             'format' => 'required|string',
-            'date_debut' => 'required|date',
-            'date_fin' => 'required|date',
+            'date_debut' => 'required|date_format:Y-m-d H:i:s',
+            'date_fin' => 'required|date_format:Y-m-d H:i:s',
             'nb_places_total' => 'required|integer|min:1',
             'prix' => 'required|numeric|min:0',
         ]);
+
+        if (strtotime($request->date_debut) >= strtotime($request->date_fin)) {
+            return back()->withInput()->with('error', 'La date de fin doit être après la date de début.');
+        }
 
         $payload = [
             'titre' => $request->titre,
@@ -123,7 +137,12 @@ class CatalogueController extends Controller
             ->put("http://localhost:8080/api/catalogue/{$id}", $payload);
 
         if ($response->failed()) {
-            return back()->withInput()->with('error', __('admin.erreur_mise_a_jour'));
+            $error = __('admin.erreur_mise_a_jour');
+            $json = $response->json();
+            if (isset($json['erreur'])) {
+                $error = $json['erreur'];
+            }
+            return back()->withInput()->with('error', $error);
         }
 
         return redirect()->route('admin.catalogue.index')->with('success', __('admin.catalogue_update_success'));
