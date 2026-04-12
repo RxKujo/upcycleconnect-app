@@ -3,15 +3,16 @@ package handlers
 import (
 	"api/internal/models"
 	"api/pkg/database"
+	"encoding/json"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
-func GetCategories(c *gin.Context) {
+func GetCategories(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query("SELECT id_categorie, nom, description, date_creation FROM categories_prestations")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur serveur"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
 		return
 	}
 	defer rows.Close()
@@ -27,53 +28,71 @@ func GetCategories(c *gin.Context) {
 	if categories == nil {
 		categories = []models.CategoriePrestation{}
 	}
-	c.JSON(http.StatusOK, categories)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(categories)
 }
 
-func CreateCategorie(c *gin.Context) {
+func CreateCategorie(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Nom         string `json:"nom" binding:"required"`
-		Description string `json:"description" binding:"required"`
+		Nom         string `json:"nom"`
+		Description string `json:"description"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
 		return
 	}
 
 	res, err := database.DB.Exec("INSERT INTO categories_prestations (nom, description) VALUES (?, ?)", req.Nom, req.Description)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "impossible de créer la catégorie"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de créer la catégorie"})
 		return
 	}
 	id, _ := res.LastInsertId()
-	c.JSON(http.StatusCreated, gin.H{"message": "catégorie créée avec succès", "id": id})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"message": "catégorie créée avec succès", "id": id})
 }
 
-func UpdateCategorie(c *gin.Context) {
-	id := c.Param("id")
+func UpdateCategorie(w http.ResponseWriter, r *http.Request, id string) {
 	var req struct {
-		Nom         string `json:"nom" binding:"required"`
-		Description string `json:"description" binding:"required"`
+		Nom         string `json:"nom"`
+		Description string `json:"description"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
 		return
 	}
 
-	_, err := database.DB.Exec("UPDATE categories_prestations SET nom = ?, description = ? WHERE id_categorie = ?", req.Nom, req.Description, id)
+	_, err = database.DB.Exec("UPDATE categories_prestations SET nom = ?, description = ? WHERE id_categorie = ?", req.Nom, req.Description, id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "impossible de modifier la catégorie"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de modifier la catégorie"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "catégorie modifiée avec succès"})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "catégorie modifiée avec succès"})
 }
 
-func DeleteCategorie(c *gin.Context) {
-	id := c.Param("id")
+func DeleteCategorie(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("DELETE FROM categories_prestations WHERE id_categorie = ?", id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "impossible de supprimer la catégorie (peut-être des prestations associées)"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de supprimer la catégorie (peut-être des prestations associées)"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "catégorie supprimée avec succès"})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "catégorie supprimée avec succès"})
 }
