@@ -18,7 +18,9 @@ coverage.*
 profile.cov
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
+node_modules/
+public/build/
 
 # Go workspace file
 go.work
@@ -30,3 +32,8 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Laravel cache, logs & generated files
+web/bootstrap/cache/*.php
+web/storage/
+web/database/database.sqlite

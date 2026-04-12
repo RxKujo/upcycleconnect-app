@@ -16,7 +16,7 @@ cd api
 go run cmd/server/main.go
 ```
 
-**Port par défaut :** `8080` (configurable via `API_PORT` dans `.env`)
+**Port par défaut :** `8888` (configurable via `API_PORT` dans `.env`)
 
 ## Structure du projet
 
@@ -49,7 +49,7 @@ DB_PORT=3306
 DB_USER=uc_user
 DB_PASSWORD=uc_password
 DB_NAME=upcycleconnect
-API_PORT=8080
+API_PORT=8888
 JWT_SECRET=votre_secret_jwt_ici
 ```
 
@@ -106,7 +106,7 @@ Le token est obtenu via `/api/v1/auth/login` et valide pour **72 heures**.
 
 ### Inscription
 ```bash
-curl -X POST http://localhost:8080/api/v1/auth/register \
+curl -X POST http://localhost:8888/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "nom": "Dupont",
@@ -121,7 +121,7 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
 
 ### Connexion
 ```bash
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST http://localhost:8888/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "jean@example.com",
@@ -138,7 +138,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 
 ### Utiliser le token
 ```bash
-curl -X GET http://localhost:8080/api/v1/utilisateurs/me \
+curl -X GET http://localhost:8888/api/v1/utilisateurs/me \
   -H "Authorization: Bearer {votre_token}"
 ```
 

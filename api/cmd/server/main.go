@@ -25,11 +25,11 @@ func main() {
 
 	port := os.Getenv("API_PORT")
 	if port == "" {
-		port = "8080"
+		port = "8888"
 	}
 	log.Printf("Serveur en écoute sur le port %s", port)
-	
-	if err := http.ListenAndServe(":" + port, r); err != nil {
+
+	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatalf("Erreur au démarrage du serveur: %v", err)
 	}
 }

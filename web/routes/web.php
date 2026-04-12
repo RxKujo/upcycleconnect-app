@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\PrestationController;
 use App\Http\Controllers\Admin\EvenementController;
+use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CatalogueController;
 
 Route::get('/', function () {
@@ -51,5 +52,11 @@ Route::prefix('admin')->group(function () {
         Route::get('/evenements/{id}', [EvenementController::class, 'show'])->name('admin.evenements.show');
         Route::post('/evenements/{id}/valider', [EvenementController::class, 'valider'])->name('admin.evenements.valider');
         Route::post('/evenements/{id}/refuser', [EvenementController::class, 'refuser'])->name('admin.evenements.refuser');
+        Route::get('/conteneurs', [ConteneurController::class, 'index'])->name('admin.conteneurs.index');
+        Route::post('/conteneurs', [ConteneurController::class, 'store'])->name('admin.conteneurs.store');
+        Route::get('/conteneurs/{id}', [ConteneurController::class, 'show'])->name('admin.conteneurs.show');
+        Route::post('/conteneurs/{id}/scan', [ConteneurController::class, 'scanBarcode'])->name('admin.conteneurs.scan');
+        Route::put('/conteneurs/{id}/tickets/{ticketId}/resolve', [ConteneurController::class, 'resolveTicket'])->name('admin.conteneurs.tickets.resolve');
+        Route::get('/commandes/{idCommande}/barcode', [ConteneurController::class, 'generateBarcodePdf'])->name('admin.commandes.barcode.pdf');
     });
 });

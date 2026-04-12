@@ -171,6 +171,31 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if match(path, "/api/v1/admin/conteneurs") && method == "GET" {
+		handlers.GetAllConteneurs(w, req)
+		return
+	}
+	if match(path, "/api/v1/admin/conteneurs") && method == "POST" {
+		handlers.CreateConteneur(w, req)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/conteneurs"); len(parts) == 1 && method == "GET" {
+		handlers.GetConteneurDetails(w, req, parts[0])
+		return
+	}
+	if match(path, "/api/v1/admin/conteneurs/scan") && method == "POST" {
+		handlers.ScanBarcodeAndUpdateCommande(w, req)
+		return
+	}
+	if match(path, "/api/v1/admin/conteneurs/codes-barres") && method == "POST" {
+		handlers.CreateCodeBarre(w, req)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/conteneurs/tickets"); len(parts) == 2 && parts[1] == "resolve" && method == "PUT" {
+		handlers.ResolveTicket(w, req, parts[0])
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
 	json.NewEncoder(w).Encode(map[string]string{"erreur": "route non trouvée"})

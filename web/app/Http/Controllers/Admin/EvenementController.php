@@ -10,7 +10,7 @@ class EvenementController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8080/api/v1/admin/evenements');
+            ->get('http://localhost:8888/api/v1/admin/evenements');
 
         $evenements = $response->successful() ? $response->json() : [];
 
@@ -20,7 +20,7 @@ class EvenementController extends Controller
     public function show($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get("http://localhost:8080/api/v1/admin/evenements/{$id}");
+            ->get("http://localhost:8888/api/v1/admin/evenements/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.evenements.index')->with('error', 'Événement introuvable.');
@@ -32,7 +32,7 @@ class EvenementController extends Controller
     public function valider($id)
     {
         Http::withToken(session('admin_token'))
-            ->put("http://localhost:8080/api/v1/admin/evenements/{$id}/valider");
+            ->put("http://localhost:8888/api/v1/admin/evenements/{$id}/valider");
 
         return back()->with('success', 'Événement validé.');
     }
@@ -40,7 +40,7 @@ class EvenementController extends Controller
     public function refuser($id)
     {
         Http::withToken(session('admin_token'))
-            ->put("http://localhost:8080/api/v1/admin/evenements/{$id}/refuser");
+            ->put("http://localhost:8888/api/v1/admin/evenements/{$id}/refuser");
 
         return back()->with('success', 'Événement refusé.');
     }
