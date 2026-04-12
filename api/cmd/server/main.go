@@ -1,9 +1,10 @@
 package main
 
 import (
-	"api/internal/routes"
+	"api/internal/router"
 	"api/pkg/database"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -20,7 +21,7 @@ func main() {
 	}
 	defer database.DB.Close()
 
-	router := routes.SetupRouter()
+	r := router.New()
 
 	port := os.Getenv("API_PORT")
 	if port == "" {
@@ -28,7 +29,7 @@ func main() {
 	}
 	log.Printf("Serveur en écoute sur le port %s", port)
 	
-	if err := router.Run(":" + port); err != nil {
+	if err := http.ListenAndServe(":" + port, r); err != nil {
 		log.Fatalf("Erreur au démarrage du serveur: %v", err)
 	}
 }

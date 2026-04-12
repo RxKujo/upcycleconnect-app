@@ -3,15 +3,16 @@ package handlers
 import (
 	"api/internal/models"
 	"api/pkg/database"
+	"encoding/json"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
-func GetPrestations(c *gin.Context) {
+func GetPrestations(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query("SELECT id_prestation, id_categorie, titre, description, prix, statut, date_creation FROM prestations")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur serveur"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
 		return
 	}
 	defer rows.Close()
@@ -26,54 +27,72 @@ func GetPrestations(c *gin.Context) {
 	if prestations == nil {
 		prestations = []models.Prestation{}
 	}
-	c.JSON(http.StatusOK, prestations)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(prestations)
 }
 
-func GetPrestation(c *gin.Context) {
-	id := c.Param("id")
+func GetPrestation(w http.ResponseWriter, r *http.Request, id string) {
 	var p models.Prestation
 	err := database.DB.QueryRow("SELECT id_prestation, id_categorie, titre, description, prix, statut, date_creation FROM prestations WHERE id_prestation = ?", id).
 		Scan(&p.IDPrestation, &p.IDCategorie, &p.Titre, &p.Description, &p.Prix, &p.Statut, &p.DateCreation)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"erreur": "prestation non trouvée"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "prestation non trouvée"})
 		return
 	}
-	c.JSON(http.StatusOK, p)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(p)
 }
 
-func CreatePrestation(c *gin.Context) {
+func CreatePrestation(w http.ResponseWriter, r *http.Request) {
 	var req models.CreatePrestationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides"})
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
 		return
 	}
 
 	res, err := database.DB.Exec("INSERT INTO prestations (id_categorie, titre, description, prix, statut) VALUES (?, ?, ?, ?, 'validee')",
 		req.IDCategorie, req.Titre, req.Description, req.Prix)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "impossible de créer la prestation"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de créer la prestation"})
 		return
 	}
 	id, _ := res.LastInsertId()
-	c.JSON(http.StatusCreated, gin.H{"message": "prestation créée avec succès", "id": id})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"message": "prestation créée avec succès", "id": id})
 }
 
-func ValiderPrestation(c *gin.Context) {
-	id := c.Param("id")
+func ValiderPrestation(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("UPDATE prestations SET statut = 'validee' WHERE id_prestation = ?", id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors de la validation"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la validation"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "prestation validée"})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "prestation validée"})
 }
 
-func RefuserPrestation(c *gin.Context) {
-	id := c.Param("id")
+func RefuserPrestation(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("UPDATE prestations SET statut = 'refusee' WHERE id_prestation = ?", id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur lors du refus"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors du refus"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "prestation refusée"})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "prestation refusée"})
 }
