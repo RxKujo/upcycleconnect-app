@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\PrestationController;
 use App\Http\Controllers\Admin\EvenementController;
+use App\Http\Controllers\Admin\CatalogueController;
 
 Route::get('/', function () {
     return redirect()->route('admin.login');
@@ -35,6 +36,16 @@ Route::prefix('admin')->group(function () {
         Route::get('/prestations/{id}', [PrestationController::class, 'show'])->name('admin.prestations.show');
         Route::post('/prestations/{id}/valider', [PrestationController::class, 'valider'])->name('admin.prestations.valider');
         Route::post('/prestations/{id}/refuser', [PrestationController::class, 'refuser'])->name('admin.prestations.refuser');
+
+        Route::get('/catalogue', [CatalogueController::class, 'index'])->name('admin.catalogue.index');
+        Route::get('/catalogue/create', [CatalogueController::class, 'create'])->name('admin.catalogue.create');
+        Route::post('/catalogue', [CatalogueController::class, 'store'])->name('admin.catalogue.store');
+        Route::get('/catalogue/{id}/edit', [CatalogueController::class, 'edit'])->name('admin.catalogue.edit');
+        Route::put('/catalogue/{id}', [CatalogueController::class, 'update'])->name('admin.catalogue.update');
+        Route::delete('/catalogue/{id}', [CatalogueController::class, 'destroy'])->name('admin.catalogue.destroy');
+        Route::get('/catalogue/{id}', [CatalogueController::class, 'show'])->name('admin.catalogue.show');
+        Route::post('/catalogue/{id}/valider', [CatalogueController::class, 'valider'])->name('admin.catalogue.valider');
+        Route::get('/catalogue/{id}/reservations', [CatalogueController::class, 'reservations'])->name('admin.catalogue.reservations');
 
         Route::get('/evenements', [EvenementController::class, 'index'])->name('admin.evenements.index');
         Route::get('/evenements/{id}', [EvenementController::class, 'show'])->name('admin.evenements.show');
