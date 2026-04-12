@@ -106,21 +106,15 @@
                 <a href="{{ route('admin.prestations.index') }}" class="{{ request()->is('admin/prestations*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Prestations
                 </a>
-<<<<<<< HEAD
-                <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements
-                </a>
-                <a href="{{ route('admin.conteneurs.index') }}" class="{{ request()->is('admin/conteneurs*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Conteneurs
-                </a>
-=======
                 <a href="{{ route('admin.catalogue.index') }}" class="{{ request()->is('admin/catalogue*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catalogue
                 </a>
                 <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements
                 </a>
->>>>>>> eef791db5f133b74e1383c5f86b6090caa6ac465
+                <a href="{{ route('admin.conteneurs.index') }}" class="{{ request()->is('admin/conteneurs*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Conteneurs
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <form action="{{ route('admin.logout') }}" method="POST">
