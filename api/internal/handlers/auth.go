@@ -3,26 +3,30 @@ package handlers
 import (
 	"api/internal/models"
 	"api/pkg/database"
-	"database/sql"
+	"encoding/json"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Register(c *gin.Context) {
+func Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides", "details": err.Error()})
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.MotDePasse), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur de hashage"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur de hashage"})
 		return
 	}
 
@@ -31,42 +35,51 @@ func Register(c *gin.Context) {
 	
 	res, err := database.DB.Exec(query, req.Nom, req.Prenom, req.Email, string(hash), req.Telephone, req.Ville, req.Role, req.NomEntreprise, req.NumeroSiret)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "impossible de créer l'utilisateur"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de créer l'utilisateur"})
 		return
 	}
 
 	id, _ := res.LastInsertId()
-	c.JSON(http.StatusCreated, gin.H{"message": "utilisateur créé avec succès", "id": id})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"message": "utilisateur créé avec succès", "id": id})
 }
 
-func Login(c *gin.Context) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	var req models.LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"erreur": "données invalides", "details": err.Error()})
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
 		return
 	}
 
 	var user models.Utilisateur
 	query := `SELECT id_utilisateur, mot_de_passe_hash, role, est_banni, date_fin_ban FROM utilisateurs WHERE email = ?`
-	err := database.DB.QueryRow(query, req.Email).Scan(&user.IDUtilisateur, &user.MotDePasseHash, &user.Role, &user.EstBanni, &user.DateFinBan)
+	err = database.DB.QueryRow(query, req.Email).Scan(&user.IDUtilisateur, &user.MotDePasseHash, &user.Role, &user.EstBanni, &user.DateFinBan)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			c.JSON(http.StatusUnauthorized, gin.H{"erreur": "identifiants incorrects"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"erreur": "erreur base de données"})
-		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "identifiants incorrects"})
 		return
 	}
 
 	if user.EstBanni {
 		if user.DateFinBan == nil || user.DateFinBan.After(time.Now()) {
-			c.JSON(http.StatusForbidden, gin.H{"erreur": "ce compte est actuellement banni"})
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"erreur": "ce compte est actuellement banni"})
 			return
 		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.MotDePasseHash), []byte(req.MotDePasse)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"erreur": "identifiants incorrects"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "identifiants incorrects"})
 		return
 	}
 
@@ -78,9 +91,13 @@ func Login(c *gin.Context) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"erreur": "impossible de générer le token"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de générer le token"})
 		return
 	}
 
-	c.JSON(http.StatusOK, models.LoginResponse{Token: tokenString})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(models.LoginResponse{Token: tokenString})
 }
