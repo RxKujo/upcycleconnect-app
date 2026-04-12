@@ -32,3 +32,8 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Laravel cache, logs & generated files
+web/bootstrap/cache/*.php
+web/storage/
+web/database/database.sqlite
