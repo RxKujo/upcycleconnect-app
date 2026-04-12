@@ -11,7 +11,7 @@ class UtilisateurController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8888/api/v1/admin/utilisateurs');
+            ->get('http://localhost:8080/api/v1/admin/utilisateurs');
 
         $utilisateurs = $response->successful() ? $response->json() : [];
 
@@ -21,7 +21,7 @@ class UtilisateurController extends Controller
     public function show($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get("http://localhost:8888/api/v1/admin/utilisateurs/{$id}");
+            ->get("http://localhost:8080/api/v1/admin/utilisateurs/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.utilisateurs.index')->with('error', 'Utilisateur introuvable.');
@@ -35,7 +35,7 @@ class UtilisateurController extends Controller
     public function ban(Request $request, $id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->put("http://localhost:8888/api/v1/admin/utilisateurs/{$id}/ban", [
+            ->put("http://localhost:8080/api/v1/admin/utilisateurs/{$id}/ban", [
                 'date_fin_ban' => $request->input('date_fin_ban', '2099-12-31'),
             ]);
 
@@ -49,7 +49,7 @@ class UtilisateurController extends Controller
     public function unban($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->put("http://localhost:8888/api/v1/admin/utilisateurs/{$id}/unban");
+            ->put("http://localhost:8080/api/v1/admin/utilisateurs/{$id}/unban");
 
         if ($response->failed()) {
             return back()->with('error', 'Erreur lors du débannissement.');

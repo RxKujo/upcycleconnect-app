@@ -11,7 +11,7 @@ class CategorieController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8888/api/v1/admin/categories');
+            ->get('http://localhost:8080/api/v1/admin/categories');
 
         $categories = $response->successful() ? $response->json() : [];
 
@@ -28,7 +28,7 @@ class CategorieController extends Controller
         $request->validate(['nom' => 'required', 'description' => 'required']);
 
         $response = Http::withToken(session('admin_token'))
-            ->post('http://localhost:8888/api/v1/admin/categories', [
+            ->post('http://localhost:8080/api/v1/admin/categories', [
                 'nom' => $request->nom,
                 'description' => $request->description,
             ]);
@@ -43,7 +43,7 @@ class CategorieController extends Controller
     public function edit($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8888/api/v1/admin/categories');
+            ->get('http://localhost:8080/api/v1/admin/categories');
 
         $categories = $response->successful() ? $response->json() : [];
         $categorie = collect($categories)->firstWhere('id_categorie', (int) $id);
@@ -60,7 +60,7 @@ class CategorieController extends Controller
         $request->validate(['nom' => 'required', 'description' => 'required']);
 
         $response = Http::withToken(session('admin_token'))
-            ->put("http://localhost:8888/api/v1/admin/categories/{$id}", [
+            ->put("http://localhost:8080/api/v1/admin/categories/{$id}", [
                 'nom' => $request->nom,
                 'description' => $request->description,
             ]);
@@ -75,7 +75,7 @@ class CategorieController extends Controller
     public function destroy($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->delete("http://localhost:8888/api/v1/admin/categories/{$id}");
+            ->delete("http://localhost:8080/api/v1/admin/categories/{$id}");
 
         if ($response->failed()) {
             return back()->with('error', 'Erreur lors de la suppression.');
