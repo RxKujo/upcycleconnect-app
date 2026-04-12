@@ -13,12 +13,14 @@ docker-compose up -d
 
 ---
 
-## 2. Lancer l'API (Go)
+## 2. Lancer l'API (Go natif)
 Ouvrez un terminal dans le dossier `api/` :
 ```bash
 go run cmd/server/main.go
 ```
-*L'API tourne sur http://localhost:8888*
+*L'API tourne sur http://localhost:8080 (voir `.env` pour changer le port)*
+
+**Note :** L'API est écrite en Go natif (`net/http` stdlib) sans framework externe.
 
 ---
 
