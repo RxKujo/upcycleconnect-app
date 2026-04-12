@@ -509,7 +509,24 @@ INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe_hash, role)
 VALUES ('Administrateur', 'UC', 'admin@upcycleconnect.com', '$2y$10$FcUsEAi0fIgjMBLOrMIDKe0OBggZADA2BQjmXpV0tC9ZSH7.2t88u', 'admin');
 
 INSERT INTO categories_prestations (nom, description) VALUES 
-('Couture & Retouche', 'Services de réparation et transformation textile'),
+('Couture & Retouche', 'Services de reparation et transformation textile'),
 ('Menuiserie & Bois', 'Restauration et transformation de meubles en bois'),
-('Électronique & High-Tech', 'Réparation et détournement d''objets connectés'),
-('Décoration & Design', 'Création d''objets déco à partir de matériaux de récup');
+('Electronique & High-Tech', 'Reparation et detournement d''objets connectes'),
+('Decoration & Design', 'Creation d''objets deco a partir de materiaux de recuperation');
+
+-- =============================================
+-- SEED PRESTATIONS
+-- =============================================
+INSERT INTO prestations (id_categorie, titre, description, prix, statut) VALUES
+(1, 'Reparation Veste Denim', 'Reparation de dechirures et remplacement de boutons sur vestes en jean.', 25.00, 'validee'),
+(2, 'Restauration Table Basse', 'Ponçage, vernissage et reparation d''une table basse ancienne.', 85.00, 'validee'),
+(3, 'Upgrade PC Recyclé', 'Optimisation d''un ordinateur ancien avec des composants de seconde main.', 120.00, 'validee'),
+(4, 'Lampe Design Metal', 'Creation d''une lampe unique a partir de pieces metalliques de recuperation.', 45.00, 'en_attente');
+
+-- =============================================
+-- SEED EVENEMENTS
+-- =============================================
+INSERT INTO evenements (id_createur, titre, description, type_evenement, format, lieu, date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut) VALUES
+(1, 'Atelier Upcycling Textile', 'Apprenez a transformer vos vieux vetements en accessoires de mode.', 'atelier', 'presentiel', 'Atelier UC - Paris 11', '2026-05-15 14:00:00', '2026-05-15 17:00:00', 10, 10, 15.00, 'valide'),
+(1, 'Conference Economie Circulaire', 'Comprendre les enjeux de l''upcycling dans l''industrie moderne.', 'conference', 'distanciel', 'Zoom / En ligne', '2026-06-01 10:00:00', '2026-06-01 12:00:00', 100, 100, 0.00, 'valide'),
+(1, 'Formation Reparation Bois', 'Les bases de la menuiserie pour sauver vos meubles abimes.', 'formation', 'presentiel', 'FabLab UC - Lyon', '2026-06-10 09:00:00', '2026-06-10 18:00:00', 6, 6, 45.00, 'en_attente');
