@@ -185,6 +185,27 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if match(path, "/api/v1/admin/annonces") && method == "GET" {
+		handlers.GetAnnonces(w, req)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 1 && method == "GET" {
+		handlers.GetAnnonce(w, req, parts[0])
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 2 && parts[1] == "valider" && method == "PUT" {
+		handlers.ValiderAnnonce(w, req, parts[0], userId)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 2 && parts[1] == "refuser" && method == "PUT" {
+		handlers.RefuserAnnonce(w, req, parts[0])
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 2 && parts[1] == "attente" && method == "PUT" {
+		handlers.AttenteAnnonce(w, req, parts[0])
+		return
+	}
+
 	if match(path, "/api/v1/admin/conteneurs") && method == "GET" {
 		handlers.GetAllConteneurs(w, req)
 		return

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\PrestationController;
 use App\Http\Controllers\Admin\EvenementController;
+use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CatalogueController;
 
@@ -58,6 +59,13 @@ Route::prefix('admin')->group(function () {
         Route::put('/evenements/{id}/valider', [EvenementController::class, 'valider'])->name('admin.evenements.valider');
         Route::put('/evenements/{id}/refuser', [EvenementController::class, 'refuser'])->name('admin.evenements.refuser');
         Route::put('/evenements/{id}/attente', [EvenementController::class, 'attente'])->name('admin.evenements.attente');
+
+        Route::get('/annonces', [AnnonceController::class, 'index'])->name('admin.annonces.index');
+        Route::get('/annonces/{id}', [AnnonceController::class, 'show'])->name('admin.annonces.show');
+        Route::put('/annonces/{id}/valider', [AnnonceController::class, 'valider'])->name('admin.annonces.valider');
+        Route::put('/annonces/{id}/refuser', [AnnonceController::class, 'refuser'])->name('admin.annonces.refuser');
+        Route::put('/annonces/{id}/attente', [AnnonceController::class, 'attente'])->name('admin.annonces.attente');
+
         Route::get('/conteneurs', [ConteneurController::class, 'index'])->name('admin.conteneurs.index');
         Route::post('/conteneurs', [ConteneurController::class, 'store'])->name('admin.conteneurs.store');
         Route::get('/conteneurs/{id}', [ConteneurController::class, 'show'])->name('admin.conteneurs.show');
