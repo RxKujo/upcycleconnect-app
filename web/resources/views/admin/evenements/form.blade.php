@@ -1,10 +1,10 @@
 @extends('layouts.admin')
-@section('title', isset($item) ? 'Modifier élément' : 'Nouvel élément')
+@section('title', isset($evenement) ? 'Modifier événement' : 'Nouvel événement')
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">{{ isset($item) ? 'Modifier élément' : 'Nouvel élément' }}</h1>
-    <a href="{{ route('admin.catalogue.index') }}" class="btn-secondary btn-sm">← Retour</a>
+    <h1 class="page-title">{{ isset($evenement) ? 'Modifier événement' : 'Nouvel événement' }}</h1>
+    <a href="{{ route('admin.evenements.index') }}" class="btn-secondary btn-sm">← Retour</a>
 </div>
 
 @if($errors->any())
@@ -19,25 +19,25 @@
 @endif
 
 <div class="card">
-    <form method="POST" action="{{ isset($item) ? route('admin.catalogue.update', $item['id_catalogue_item']) : route('admin.catalogue.store') }}">
+    <form method="POST" action="{{ isset($evenement) ? route('admin.evenements.update', $evenement['id_evenement']) : route('admin.evenements.store') }}">
         @csrf
-        @if(isset($item))
+        @if(isset($evenement))
             @method('PUT')
         @endif
 
         <div class="info-grid">
             <div class="form-group">
                 <label class="form-label" for="titre">Titre</label>
-                <input id="titre" name="titre" class="form-input" value="{{ old('titre', $item['titre'] ?? '') }}" required>
+                <input id="titre" name="titre" class="form-input" value="{{ old('titre', $evenement['titre'] ?? '') }}" required>
                 @error('titre')
                     <span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>
                 @enderror
             </div>
             <div class="form-group">
-                <label class="form-label" for="categorie">Catégorie</label>
-                <select id="categorie" name="categorie" class="form-select" required>
-                    @foreach($categories as $key => $label)
-                        <option value="{{ $key }}" {{ old('categorie', $item['categorie'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                <label class="form-label" for="type_evenement">Type d'événement</label>
+                <select id="type_evenement" name="type_evenement" class="form-select" required>
+                    @foreach($types as $key => $label)
+                        <option value="{{ $key }}" {{ old('type_evenement', $evenement['type_evenement'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
@@ -45,28 +45,28 @@
                 <label class="form-label" for="format">Format</label>
                 <select id="format" name="format" class="form-select" required>
                     @foreach($formats as $key => $label)
-                        <option value="{{ $key }}" {{ old('format', $item['format'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="{{ $key }}" {{ old('format', $evenement['format'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="form-group">
                 <label class="form-label" for="lieu">Lieu</label>
-                <input id="lieu" name="lieu" class="form-input" value="{{ old('lieu', $item['lieu'] ?? '') }}">
+                <input id="lieu" name="lieu" class="form-input" value="{{ old('lieu', $evenement['lieu'] ?? '') }}">
             </div>
             <div class="form-group">
                 <label class="form-label" for="date_debut">Date début</label>
                 <div style="display: flex; gap: 12px; align-items: flex-end;">
                     <div style="flex: 1;">
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Date</label>
-                        <input id="date_debut_date" type="date" class="form-input" value="{{ old('date_debut_date', isset($item) ? \Carbon\Carbon::parse($item['date_debut'])->format('Y-m-d') : '') }}" required>
+                        <input id="date_debut_date" type="date" class="form-input" value="{{ old('date_debut_date', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('Y-m-d') : '') }}" min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" required>
                     </div>
                     <div style="flex: 0.8;">
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Heure</label>
-                        <input id="date_debut_hour" type="number" min="0" max="23" class="form-input" placeholder="00" value="{{ old('date_debut_hour', isset($item) ? \Carbon\Carbon::parse($item['date_debut'])->format('H') : '') }}" required>
+                        <input id="date_debut_hour" type="number" min="0" max="23" class="form-input" placeholder="00" value="{{ old('date_debut_hour', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('H') : '') }}" required>
                     </div>
                     <div style="flex: 0.8;">
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Min</label>
-                        <input id="date_debut_minute" type="number" min="0" max="59" step="5" class="form-input" placeholder="00" value="{{ old('date_debut_minute', isset($item) ? \Carbon\Carbon::parse($item['date_debut'])->format('i') : '') }}" required>
+                        <input id="date_debut_minute" type="number" min="0" max="59" step="5" class="form-input" placeholder="00" value="{{ old('date_debut_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('i') : '') }}" required>
                     </div>
                 </div>
                 <input id="date_debut" name="date_debut" type="hidden" value="{{ old('date_debut', '') }}">
@@ -79,15 +79,15 @@
                 <div style="display: flex; gap: 12px; align-items: flex-end;">
                     <div style="flex: 1;">
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Date</label>
-                        <input id="date_fin_date" type="date" class="form-input" value="{{ old('date_fin_date', isset($item) ? \Carbon\Carbon::parse($item['date_fin'])->format('Y-m-d') : '') }}" required>
+                        <input id="date_fin_date" type="date" class="form-input" value="{{ old('date_fin_date', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('Y-m-d') : '') }}" min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" required>
                     </div>
                     <div style="flex: 0.8;">
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Heure</label>
-                        <input id="date_fin_hour" type="number" min="0" max="23" class="form-input" placeholder="00" value="{{ old('date_fin_hour', isset($item) ? \Carbon\Carbon::parse($item['date_fin'])->format('H') : '') }}" required>
+                        <input id="date_fin_hour" type="number" min="0" max="23" class="form-input" placeholder="00" value="{{ old('date_fin_hour', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('H') : '') }}" required>
                     </div>
                     <div style="flex: 0.8;">
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Min</label>
-                        <input id="date_fin_minute" type="number" min="0" max="59" step="5" class="form-input" placeholder="00" value="{{ old('date_fin_minute', isset($item) ? \Carbon\Carbon::parse($item['date_fin'])->format('i') : '') }}" required>
+                        <input id="date_fin_minute" type="number" min="0" max="59" step="5" class="form-input" placeholder="00" value="{{ old('date_fin_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('i') : '') }}" required>
                     </div>
                 </div>
                 <input id="date_fin" name="date_fin" type="hidden" value="{{ old('date_fin', '') }}">
@@ -128,22 +128,22 @@
             </script>
             <div class="form-group">
                 <label class="form-label" for="nb_places_total">Capacité</label>
-                <input id="nb_places_total" name="nb_places_total" type="number" min="1" class="form-input" value="{{ old('nb_places_total', $item['nb_places_total'] ?? '') }}" required>
+                <input id="nb_places_total" name="nb_places_total" type="number" min="1" class="form-input" value="{{ old('nb_places_total', $evenement['nb_places_total'] ?? '') }}" required>
             </div>
             <div class="form-group">
                 <label class="form-label" for="prix">Prix (€)</label>
-                <input id="prix" name="prix" type="number" step="0.01" min="0" class="form-input" value="{{ old('prix', $item['prix'] ?? '') }}" required>
+                <input id="prix" name="prix" type="number" step="0.01" min="0" class="form-input" value="{{ old('prix', $evenement['prix'] ?? '') }}" required>
             </div>
             <div class="form-group full-width">
                 <label class="form-label" for="description">Description</label>
-                <textarea id="description" name="description" class="form-textarea" required>{{ old('description', $item['description'] ?? '') }}</textarea>
+                <textarea id="description" name="description" class="form-textarea" required>{{ old('description', $evenement['description'] ?? '') }}</textarea>
                 @error('description')
                     <span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>
                 @enderror
             </div>
         </div>
 
-        <button type="submit" class="btn-primary">{{ isset($item) ? 'Enregistrer' : 'Créer' }}</button>
+        <button type="submit" class="btn-primary">{{ isset($evenement) ? 'Enregistrer' : 'Créer' }}</button>
     </form>
 </div>
 @endsection

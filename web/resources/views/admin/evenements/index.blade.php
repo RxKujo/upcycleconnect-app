@@ -2,8 +2,9 @@
 @section('title', 'Événements')
 
 @section('content')
-<div class="page-header">
+<div class="page-header" style="align-items: center; justify-content: space-between;">
     <h1 class="page-title">Événements</h1>
+    <a href="{{ route('admin.evenements.create') }}" class="btn-primary">Créer un Événement</a>
 </div>
 
 <div class="table-container">
@@ -46,6 +47,12 @@
             <td>
                 <div class="action-cell">
                     <a href="{{ route('admin.evenements.show', $e['id_evenement']) }}" class="btn-secondary btn-sm">Voir</a>
+                    <a href="{{ route('admin.evenements.edit', $e['id_evenement']) }}" class="btn-secondary btn-sm" style="border-color: var(--cherry); color: var(--cherry);">Modifier</a>
+                    <form action="{{ route('admin.evenements.destroy', $e['id_evenement']) }}" method="POST" onsubmit="return confirm('Supprimer cet événement ?');" style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn-danger btn-sm">Suppr</button>
+                    </form>
                 </div>
             </td>
         </tr>

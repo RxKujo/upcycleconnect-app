@@ -64,16 +64,21 @@
     </div>
 </div>
 
-@if($evenement['statut'] === 'en_attente')
 <div class="action-cell" style="margin-top: 24px;">
+    <form action="{{ route('admin.evenements.attente', $evenement['id_evenement']) }}" method="POST">
+        @csrf
+        @method('PUT')
+        <button type="submit" class="btn-secondary">Mettre en attente</button>
+    </form>
     <form action="{{ route('admin.evenements.valider', $evenement['id_evenement']) }}" method="POST">
         @csrf
+        @method('PUT')
         <button type="submit" class="btn-success">Valider</button>
     </form>
     <form action="{{ route('admin.evenements.refuser', $evenement['id_evenement']) }}" method="POST">
         @csrf
+        @method('PUT')
         <button type="submit" class="btn-danger">Refuser</button>
     </form>
 </div>
-@endif
 @endsection

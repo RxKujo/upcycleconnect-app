@@ -59,28 +59,17 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handlers.GetCatalogueItem(w, req, parts[0], role)
 		return
 	}
-	if match(path, "/api/catalogue") && method == "POST" {
-		handlers.CreateCatalogueItem(w, req, userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "PUT" {
-		handlers.UpdateCatalogueItem(w, req, parts[0], userId, role)
-		return
-	}
 	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "DELETE" {
 		handlers.DeleteCatalogueItem(w, req, parts[0], userId, role)
 		return
 	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "valider" && method == "POST" {
+
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "valider" && method == "PUT" {
 		handlers.ValiderCatalogueItem(w, req, parts[0], userId, role)
 		return
 	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "reserver" && method == "POST" {
-		handlers.ReserverCatalogueItem(w, req, parts[0], userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "reservations" && method == "GET" {
-		handlers.GetCatalogueReservations(w, req, parts[0], userId, role)
+    if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "refuser" && method == "PUT" {
+		handlers.RefuserCatalogueItem(w, req, parts[0], userId, role)
 		return
 	}
 	if parts := splitPath(path, "/api/utilisateurs"); len(parts) == 2 && parts[1] == "planning" && method == "GET" {
@@ -109,6 +98,19 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "unban" && method == "PUT" {
 		handlers.UnbanUtilisateur(w, req, parts[0])
+		return
+	}
+
+	if match(path, "/api/v1/admin/commandes") && method == "GET" {
+		handlers.GetCommandes(w, req)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/commandes"); len(parts) == 1 && method == "GET" {
+		handlers.GetCommande(w, req, parts[0])
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/commandes"); len(parts) == 2 && parts[1] == "statut" && method == "PUT" {
+		handlers.UpdateCommandeStatut(w, req, parts[0])
 		return
 	}
 
@@ -162,8 +164,20 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handlers.CreateEvenement(w, req, userId)
 		return
 	}
+	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 1 && method == "PUT" {
+		handlers.UpdateEvenement(w, req, parts[0])
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 1 && method == "DELETE" {
+		handlers.DeleteEvenement(w, req, parts[0])
+		return
+	}
 	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 2 && parts[1] == "valider" && method == "PUT" {
 		handlers.ValiderEvenement(w, req, parts[0], userId)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 2 && parts[1] == "attente" && method == "PUT" {
+		handlers.AttenteEvenement(w, req, parts[0])
 		return
 	}
 	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 2 && parts[1] == "refuser" && method == "PUT" {

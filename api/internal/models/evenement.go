@@ -27,8 +27,8 @@ type CreateEvenementRequest struct {
 	TypeEvenement  string    `json:"type_evenement" binding:"required"`
 	Format         string    `json:"format" binding:"required"`
 	Lieu           *string   `json:"lieu"`
-	DateDebut      time.Time `json:"date_debut" binding:"required"`
-	DateFin        time.Time `json:"date_fin" binding:"required"`
+	DateDebut      CustomTime `json:"date_debut" binding:"required"`
+	DateFin        CustomTime `json:"date_fin" binding:"required"`
 	NbPlacesTotal  int       `json:"nb_places_total" binding:"required"`
 	Prix           float64   `json:"prix" binding:"required"`
 }

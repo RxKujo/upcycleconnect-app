@@ -39,19 +39,25 @@ Route::prefix('admin')->group(function () {
         Route::post('/prestations/{id}/refuser', [PrestationController::class, 'refuser'])->name('admin.prestations.refuser');
 
         Route::get('/catalogue', [CatalogueController::class, 'index'])->name('admin.catalogue.index');
-        Route::get('/catalogue/create', [CatalogueController::class, 'create'])->name('admin.catalogue.create');
-        Route::post('/catalogue', [CatalogueController::class, 'store'])->name('admin.catalogue.store');
-        Route::get('/catalogue/{id}/edit', [CatalogueController::class, 'edit'])->name('admin.catalogue.edit');
-        Route::put('/catalogue/{id}', [CatalogueController::class, 'update'])->name('admin.catalogue.update');
-        Route::delete('/catalogue/{id}', [CatalogueController::class, 'destroy'])->name('admin.catalogue.destroy');
         Route::get('/catalogue/{id}', [CatalogueController::class, 'show'])->name('admin.catalogue.show');
-        Route::post('/catalogue/{id}/valider', [CatalogueController::class, 'valider'])->name('admin.catalogue.valider');
-        Route::get('/catalogue/{id}/reservations', [CatalogueController::class, 'reservations'])->name('admin.catalogue.reservations');
+        Route::delete('/catalogue/{id}', [CatalogueController::class, 'destroy'])->name('admin.catalogue.destroy');
+        Route::put('/catalogue/{id}/valider', [CatalogueController::class, 'valider'])->name('admin.catalogue.valider');
+        Route::put('/catalogue/{id}/refuser', [CatalogueController::class, 'refuser'])->name('admin.catalogue.refuser');
+        
+        Route::get('/commandes', [\App\Http\Controllers\Admin\CommandeController::class, 'index'])->name('admin.commandes.index');
+        Route::get('/commandes/{id}', [\App\Http\Controllers\Admin\CommandeController::class, 'show'])->name('admin.commandes.show');
+        Route::put('/commandes/{id}/statut', [\App\Http\Controllers\Admin\CommandeController::class, 'updateStatut'])->name('admin.commandes.updateStatut');
 
         Route::get('/evenements', [EvenementController::class, 'index'])->name('admin.evenements.index');
+        Route::get('/evenements/create', [EvenementController::class, 'create'])->name('admin.evenements.create');
+        Route::post('/evenements', [EvenementController::class, 'store'])->name('admin.evenements.store');
+        Route::get('/evenements/{id}/edit', [EvenementController::class, 'edit'])->name('admin.evenements.edit');
+        Route::put('/evenements/{id}', [EvenementController::class, 'update'])->name('admin.evenements.update');
+        Route::delete('/evenements/{id}', [EvenementController::class, 'destroy'])->name('admin.evenements.destroy');
         Route::get('/evenements/{id}', [EvenementController::class, 'show'])->name('admin.evenements.show');
-        Route::post('/evenements/{id}/valider', [EvenementController::class, 'valider'])->name('admin.evenements.valider');
-        Route::post('/evenements/{id}/refuser', [EvenementController::class, 'refuser'])->name('admin.evenements.refuser');
+        Route::put('/evenements/{id}/valider', [EvenementController::class, 'valider'])->name('admin.evenements.valider');
+        Route::put('/evenements/{id}/refuser', [EvenementController::class, 'refuser'])->name('admin.evenements.refuser');
+        Route::put('/evenements/{id}/attente', [EvenementController::class, 'attente'])->name('admin.evenements.attente');
         Route::get('/conteneurs', [ConteneurController::class, 'index'])->name('admin.conteneurs.index');
         Route::post('/conteneurs', [ConteneurController::class, 'store'])->name('admin.conteneurs.store');
         Route::get('/conteneurs/{id}', [ConteneurController::class, 'show'])->name('admin.conteneurs.show');

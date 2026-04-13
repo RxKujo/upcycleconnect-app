@@ -47,11 +47,11 @@
         .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover, .btn-success:hover { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
 
         /* Tables */
-        .table-container { width: 100%; overflow-x: auto; border: var(--border); box-shadow: var(--shadow); background: var(--cream); margin-bottom: 32px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        .table-container { width: 100%; overflow-x: auto; border: var(--border); box-shadow: var(--shadow); background: var(--cream); margin-bottom: 32px; zoom: 0.8; }
+        table { width: 100%; border-collapse: collapse; min-width: 100%; }
         thead { background-color: var(--wheat); border-bottom: var(--border); }
-        th { font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.05em; padding: 18px 24px; text-align: left; color: var(--coffee); font-weight: 700; }
-        td { padding: 16px 24px; border-bottom: 2px solid rgba(18, 3, 9, 0.1); font-size: 1.05rem; vertical-align: middle; color: var(--coffee); }
+        th { font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.05em; padding: 14px 16px; text-align: left; color: var(--coffee); font-weight: 700; }
+        td { padding: 12px 16px; border-bottom: 2px solid rgba(18, 3, 9, 0.1); font-size: 1.05rem; vertical-align: middle; color: var(--coffee); }
         tbody tr:last-child td { border-bottom: none; }
         tbody tr:hover { background-color: rgba(216, 201, 155, 0.15); }
         .action-cell { display: flex; gap: 12px; align-items: center; }
@@ -105,9 +105,6 @@
                 </a>
                 <a href="{{ route('admin.prestations.index') }}" class="{{ request()->is('admin/prestations*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Prestations
-                </a>
-                <a href="{{ route('admin.catalogue.index') }}" class="{{ request()->is('admin/catalogue*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catalogue
                 </a>
                 <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements

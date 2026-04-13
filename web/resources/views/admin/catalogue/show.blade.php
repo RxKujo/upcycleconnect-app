@@ -1,109 +1,103 @@
 @extends('layouts.admin')
-@section('title', 'Catalogue #' . $item['id_catalogue_item'])
+
+@section('title', 'Détails de l\'Annonce')
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">Catalogue #{{ $item['id_catalogue_item'] }}</h1>
-    <a href="{{ route('admin.catalogue.index') }}" class="btn-secondary btn-sm">← Retour</a>
+<div class="page-header" style="align-items: flex-start; flex-direction: column; gap: 16px;">
+    <div>
+        <a href="{{ route('admin.catalogue.index') }}" style="color: var(--cherry); text-decoration: none; font-family: 'DM Mono', monospace; font-size: 0.9rem; font-weight: bold;">← RETOUR AUX ANNONCES</a>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <h2 class="page-title">{{ $item['titre'] }}</h2>
+        <div>
+            @if($item['statut'] === 'validee')
+                <span class="badge badge-valid" style="font-size: 1.1rem; padding: 10px 20px;">VALIDÉE</span>
+            @elseif($item['statut'] === 'en_attente')
+                <span class="badge badge-waiting" style="font-size: 1.1rem; padding: 10px 20px;">EN ATTENTE</span>
+            @elseif($item['statut'] === 'vendue')
+                <span class="badge" style="font-size: 1.1rem; padding: 10px 20px; background-color: var(--coffee); color: white;">VENDUE</span>
+            @else
+                <span class="badge badge-refused" style="font-size: 1.1rem; padding: 10px 20px;">{{ strtoupper($item['statut']) }}</span>
+            @endif
+        </div>
+    </div>
 </div>
 
-<div class="card" style="cursor: default; transform: none;">
+<div class="card">
     <div class="info-grid">
         <div class="info-item">
-            <span class="info-label">Titre</span>
-            <p class="info-value">{{ $item['titre'] }}</p>
+            <span class="info-label">Type d'annonce</span>
+            <p class="info-value"><strong style="color: {{ $item['type_annonce'] == 'don' ? 'var(--forest)' : 'var(--cherry)' }}; text-transform: uppercase;">{{ $item['type_annonce'] }}</strong></p>
         </div>
-        <div class="info-item">
-            <span class="info-label">Catégorie</span>
-            <p class="info-value">{{ $item['categorie'] }}</p>
-        </div>
-        <div class="info-item full-width">
-            <span class="info-label">Description</span>
-            <p class="info-value">{{ $item['description'] }}</p>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Format</span>
-            <p class="info-value">{{ $item['format'] }}</p>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Lieu</span>
-            <p class="info-value">{{ $item['lieu'] ?? '—' }}</p>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Date début</span>
-            <p class="info-value">{{ \App\Helpers\DateHelper::formatFrenchWithPeriod($item['date_debut']) }}</p>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Date fin</span>
-            <p class="info-value">{{ \App\Helpers\DateHelper::formatFrenchWithPeriod($item['date_fin']) }}</p>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Places</span>
-            <p class="info-value">{{ $item['nb_places_dispo'] }} <span style="font-size: 0.8rem; color: var(--cherry);">sur</span> {{ $item['nb_places_total'] }}</p>
-        </div>
+        
         <div class="info-item">
             <span class="info-label">Prix</span>
-            <p class="info-value-large">{{ number_format($item['prix'], 2, ',', ' ') }} €</p>
+            <p class="info-value-large">{{ $item['type_annonce'] == 'vente' && isset($item['prix']) ? number_format($item['prix'], 2) . ' €' : 'Gratuit' }}</p>
         </div>
+
         <div class="info-item">
-            <span class="info-label">Statut</span>
-            <p class="info-value">
-                @if($item['statut'] === 'publie')
-                    <span class="badge badge-valid">Publié</span>
-                @elseif($item['statut'] === 'en_attente')
-                    <span class="badge badge-waiting">En attente</span>
-                @elseif($item['statut'] === 'annule')
-                    <span class="badge badge-refused">Annulé</span>
-                @else
-                    <span class="badge badge-waiting">Brouillon</span>
-                @endif
-            </p>
+            <span class="info-label">Mode de Remise</span>
+            <p class="info-value">{{ $item['mode_remise'] == 'conteneur' ? 'Dépôt en Conteneur' : 'Remise en Main Propre' }}</p>
         </div>
+
+        <div class="info-item">
+            <span class="info-label">Date de Création</span>
+            <p class="info-value">{{ date('d/m/Y à H:i', strtotime($item['date_creation'])) }}</p>
+        </div>
+
+        @if(isset($item['categorie_objet']))
+        <div class="info-item">
+            <span class="info-label">Catégorie Objet</span>
+            <p class="info-value">{{ ucfirst($item['categorie_objet']) }}</p>
+        </div>
+        @endif
+
+        @if(isset($item['materiau_objet']))
+        <div class="info-item">
+            <span class="info-label">Matériau Principal</span>
+            <p class="info-value">{{ ucfirst($item['materiau_objet']) }}</p>
+        </div>
+        @endif
+
+        @if(isset($item['etat_objet']))
+        <div class="info-item">
+            <span class="info-label">État de l'objet</span>
+            <p class="info-value">{{ str_replace('_', ' ', ucfirst($item['etat_objet'])) }}</p>
+        </div>
+        @endif
+
+        <div class="info-item full-width">
+            <span class="info-label">Description Complète</span>
+            <p class="info-value" style="white-space: pre-line; background: rgba(0,0,0,0.02); padding: 20px; border-left: 4px solid var(--cherry);">{{ $item['description'] }}</p>
+        </div>
+        
+        @if($item['motif_refus'])
+        <div class="info-item full-width">
+            <span class="info-label">Motif du Refus</span>
+            <p class="info-value" style="color: var(--cherry); font-weight: bold;">{{ $item['motif_refus'] }}</p>
+        </div>
+        @endif
     </div>
 </div>
 
-<div class="action-cell" style="margin-top: 24px; gap: 12px;">
-    <a href="{{ route('admin.catalogue.edit', $item['id_catalogue_item']) }}" class="btn-secondary">Modifier</a>
-    @if($item['statut'] === 'en_attente')
-        <form action="{{ route('admin.catalogue.valider', $item['id_catalogue_item']) }}" method="POST" style="margin: 0;">
+@if($item['statut'] === 'en_attente')
+<div class="card" style="border-top: 5px solid var(--cherry);">
+    <h3 class="font-bebas" style="font-size: 2rem; margin-top: 0; margin-bottom: 24px;">Modération</h3>
+    <div style="display: flex; gap: 24px; align-items: flex-start;">
+        <form action="{{ route('admin.catalogue.valider', $item['id_annonce']) }}" method="POST" style="flex: 1;">
             @csrf
-            <button type="submit" class="btn-success">Publier</button>
+            @method('PUT')
+            <button type="submit" class="btn-success" style="width: 100%; padding: 16px; font-size: 1.4rem;">✓ VALIDER CETTE ANNONCE</button>
         </form>
-    @endif
-    <form action="{{ route('admin.catalogue.destroy', $item['id_catalogue_item']) }}" method="POST" style="margin: 0;">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn-danger">Annuler</button>
-    </form>
-</div>
 
-<div class="card" style="margin-top: 32px;">
-    <h2 class="font-bebas" style="font-size: 1.3rem; margin-bottom: 18px;">Réservations</h2>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID Réservation</th>
-                    <th>Utilisateur</th>
-                    <th>Date</th>
-                    <th>Statut paiement</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($reservations as $reservation)
-                <tr>
-                    <td>{{ $reservation['id_reservation'] }}</td>
-                    <td>{{ $reservation['id_utilisateur'] }}</td>
-                    <td>{{ \App\Helpers\DateHelper::formatFrench($reservation['date_reservation']) }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $reservation['statut_paiement'])) }}</td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 24px;">Aucune réservation.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <form action="{{ route('admin.catalogue.refuser', $item['id_annonce']) }}" method="POST" style="flex: 2; display: flex; flex-direction: column; gap: 12px; background: rgba(255,0,0,0.05); padding: 20px; border: 2px dashed var(--cherry);">
+            @csrf
+            @method('PUT')
+            <label class="form-label" style="margin: 0;">Motif du refus (obligatoire)</label>
+            <input type="text" name="motif_refus" class="form-input" placeholder="Pourquoi cette annonce est-elle rejetée ?" required>
+            <button type="submit" class="btn-danger" style="align-self: flex-end;">✗ REFUSER</button>
+        </form>
     </div>
 </div>
+@endif
 @endsection
