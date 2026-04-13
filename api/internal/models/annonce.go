@@ -24,3 +24,11 @@ type Annonce struct {
 type AnnonceValidationRequest struct {
 	MotifRefus *string `json:"motif_refus"`
 }
+
+type CreateAnnonceRequest struct {
+	Titre          string   `json:"titre"`
+	Description    string   `json:"description"`
+	TypeAnnonce    string   `json:"type_annonce"` 
+	Prix           *float64 `json:"prix,omitempty"`
+	ModeRemise     string   `json:"mode_remise"` 
+}

@@ -192,3 +192,29 @@ func AttenteAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "annonce remise en attente"})
 }
+
+func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
+	var req models.CreateAnnonceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
+		return
+	}
+
+	query := `INSERT INTO annonces (id_particulier, titre, description, type_annonce, prix, mode_remise, statut) VALUES (?, ?, ?, ?, ?, ?, 'en_attente')`
+	res, err := database.DB.Exec(query, userId, req.Titre, req.Description, req.TypeAnnonce, req.Prix, req.ModeRemise)
+	if err != nil {
+		fmt.Printf("CreateAnnonce db err: %v\n", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la création de l'annonce"})
+		return
+	}
+
+	id, _ := res.LastInsertId()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{"message": "annonce créée avec succès", "id_annonce": id})
+}
+

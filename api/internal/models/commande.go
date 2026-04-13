@@ -23,3 +23,8 @@ type Commande struct {
 type UpdateCommandeStatutRequest struct {
 	Statut string `json:"statut"`
 }
+
+type CreateCommandeRequest struct {
+	IDAnnonce    int  `json:"id_annonce"`
+	IDConteneur  *int `json:"id_conteneur,omitempty"`
+}

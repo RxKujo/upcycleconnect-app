@@ -77,6 +77,17 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if match(path, "/api/v1/annonces") && method == "POST" {
+		if role != "particulier" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"erreur": "accès refusé: seuls les particuliers peuvent poster des annonces"})
+			return
+		}
+		handlers.CreateAnnonce(w, req, userId)
+		return
+	}
+
 	if role != "admin" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
