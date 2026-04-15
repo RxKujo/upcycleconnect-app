@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\PrestationController;
@@ -11,12 +12,38 @@ use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CatalogueController;
 
 Route::get('/', function () {
-    return redirect()->route('admin.login');
+    return view('auth.login');
 });
 
+// Routes publiques d'authentification (particuliers)
+Route::get('/register', function () {
+    return view('auth.register');
+})->name('particulier.register');
+
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('particulier.login');
+
+// Auth routes (unified session management)
+Route::post('/auth/set-admin-session', [SessionController::class, 'setAdminSession'])
+    ->name('auth.set-admin-session');
+
+// Particulier routes (Task 3 & 4)
+Route::prefix('particulier')->group(function () {
+    Route::get('/annonces/create', function () {
+        return view('particulier.annonces.create');
+    })->name('particulier.annonces.create');
+
+    Route::get('/profile', function () {
+        return view('particulier.profile.show');
+    })->name('particulier.profile.show');
+});
+
+// Admin routes
 Route::prefix('admin')->group(function () {
-    Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
-    Route::post('/login', [AdminAuthController::class, 'login']);
+    // Redirect old admin login to unified login
+    Route::get('/login', fn() => redirect('/login'))->name('admin.login');
+
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('admin.auth')->group(function () {
@@ -26,6 +53,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/utilisateurs/{id}', [UtilisateurController::class, 'show'])->name('admin.utilisateurs.show');
         Route::post('/utilisateurs/{id}/ban', [UtilisateurController::class, 'ban'])->name('admin.utilisateurs.ban');
         Route::post('/utilisateurs/{id}/unban', [UtilisateurController::class, 'unban'])->name('admin.utilisateurs.unban');
+        Route::delete('/utilisateurs/{id}', [UtilisateurController::class, 'delete'])->name('admin.utilisateurs.delete');
 
         Route::get('/categories', [CategorieController::class, 'index'])->name('admin.categories.index');
         Route::get('/categories/create', [CategorieController::class, 'create'])->name('admin.categories.create');
@@ -44,7 +72,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('/catalogue/{id}', [CatalogueController::class, 'destroy'])->name('admin.catalogue.destroy');
         Route::put('/catalogue/{id}/valider', [CatalogueController::class, 'valider'])->name('admin.catalogue.valider');
         Route::put('/catalogue/{id}/refuser', [CatalogueController::class, 'refuser'])->name('admin.catalogue.refuser');
-        
+
         Route::get('/commandes', [\App\Http\Controllers\Admin\CommandeController::class, 'index'])->name('admin.commandes.index');
         Route::get('/commandes/{id}', [\App\Http\Controllers\Admin\CommandeController::class, 'show'])->name('admin.commandes.show');
         Route::put('/commandes/{id}/statut', [\App\Http\Controllers\Admin\CommandeController::class, 'updateStatut'])->name('admin.commandes.updateStatut');

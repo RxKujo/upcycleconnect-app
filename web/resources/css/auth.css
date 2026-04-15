@@ -1,0 +1,62 @@
+/* Auth Pages CSS - Neo-Brutalism Theme */
+:root {
+    --cherry: #A4243B;
+    --wheat: #D8C99B;
+    --coffee: #120309;
+    --forest: #244F26;
+    --teal: #18607D;
+    --cream: #F5F0E1;
+    --shadow: 5px 5px 0px #120309;
+    --shadow-sm: 3px 3px 0px #120309;
+    --shadow-hover: 2px 2px 0px #120309;
+    --border: 3px solid #120309;
+}
+
+/* Typography */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap');
+
+body {
+    background-color: var(--cream);
+    font-family: 'Outfit', sans-serif;
+    color: var(--coffee);
+}
+
+.font-bebas {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.font-mono {
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Layout utilities */
+.auth-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.auth-card {
+    background: var(--cream);
+    border: var(--border);
+    box-shadow: var(--shadow);
+    padding: 48px 40px;
+    transition: all 0.2s ease;
+}
+
+.auth-card:hover {
+    transform: translate(3px, 3px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .auth-card {
+        padding: 32px 24px;
+    }
+}
