@@ -11,7 +11,7 @@ class CommandeController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8888/api/v1/admin/commandes');
+            ->get('http://localhost:8080/api/v1/admin/commandes');
 
         $commandes = $response->successful() ? $response->json() : [];
 
@@ -21,7 +21,7 @@ class CommandeController extends Controller
     public function show($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get("http://localhost:8888/api/v1/admin/commandes/{$id}");
+            ->get("http://localhost:8080/api/v1/admin/commandes/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.commandes.index')->with('error', 'Commande introuvable');
@@ -37,7 +37,7 @@ class CommandeController extends Controller
         
         $payload = ['statut' => $request->statut];
         $response = Http::withToken(session('admin_token'))
-            ->put("http://localhost:8888/api/v1/admin/commandes/{$id}/statut", $payload);
+            ->put("http://localhost:8080/api/v1/admin/commandes/{$id}/statut", $payload);
 
         if ($response->failed()) {
             return back()->with('error', 'Erreur lors de la mise à jour du statut');

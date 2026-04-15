@@ -28,8 +28,13 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 	method := req.Method
 
+	// Public routes
 	if match(path, "/api/v1/auth/register") && method == "POST" {
 		handlers.Register(w, req)
+		return
+	}
+	if match(path, "/api/v1/auth/register-particulier") && method == "POST" {
+		handlers.RegisterParticulier(w, req)
 		return
 	}
 	if match(path, "/api/v1/auth/login") && method == "POST" {
@@ -37,11 +42,13 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Authenticated routes
 	userId, role, ok := middleware.AuthRequired(w, req)
 	if !ok {
 		return
 	}
 
+	// === User profile routes (Task 4) ===
 	if match(path, "/api/v1/utilisateurs/me") && method == "GET" {
 		handlers.GetMe(w, req, userId)
 		return
@@ -50,7 +57,44 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handlers.UpdateMe(w, req, userId)
 		return
 	}
+	if match(path, "/api/v1/utilisateurs/me/notifications") && method == "PUT" {
+		handlers.UpdateNotifications(w, req, userId)
+		return
+	}
+	if match(path, "/api/v1/utilisateurs/me/evenements-inscrits") && method == "GET" {
+		handlers.GetEnrolledEvents(w, req, userId)
+		return
+	}
+	if match(path, "/api/v1/utilisateurs/me/export-pdf") && method == "GET" {
+		handlers.ExportPDF(w, req, userId)
+		return
+	}
 
+	// === Annonces routes for authenticated users (Task 3) ===
+	if match(path, "/api/v1/annonces") && method == "POST" {
+		if role != "particulier" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"erreur": "acces refuse: seuls les particuliers peuvent poster des annonces"})
+			return
+		}
+		handlers.CreateAnnonce(w, req, userId)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/annonces"); len(parts) == 1 && method == "GET" {
+		handlers.GetAnnonceAuth(w, req, parts[0], userId, role)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/annonces"); len(parts) == 2 && parts[1] == "annuler" && method == "PUT" {
+		handlers.CancelAnnonce(w, req, parts[0], userId)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/annonces"); len(parts) == 1 && method == "DELETE" {
+		handlers.DeleteAnnonce(w, req, parts[0], userId, role)
+		return
+	}
+
+	// === Catalogue routes ===
 	if match(path, "/api/catalogue") && method == "GET" {
 		handlers.GetCatalogueItems(w, req, role)
 		return
@@ -63,12 +107,11 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handlers.DeleteCatalogueItem(w, req, parts[0], userId, role)
 		return
 	}
-
 	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "valider" && method == "PUT" {
 		handlers.ValiderCatalogueItem(w, req, parts[0], userId, role)
 		return
 	}
-    if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "refuser" && method == "PUT" {
+	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "refuser" && method == "PUT" {
 		handlers.RefuserCatalogueItem(w, req, parts[0], userId, role)
 		return
 	}
@@ -77,30 +120,33 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if match(path, "/api/v1/annonces") && method == "POST" {
-		if role != "particulier" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusForbidden)
-			json.NewEncoder(w).Encode(map[string]string{"erreur": "accès refusé: seuls les particuliers peuvent poster des annonces"})
-			return
-		}
-		handlers.CreateAnnonce(w, req, userId)
-		return
-	}
-
+	// === Admin routes (require admin role) ===
 	if role != "admin" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "accès refusé: privilèges d'administrateur requis"})
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "acces refuse: privileges d'administrateur requis"})
 		return
 	}
 
+	// Admin: Utilisateurs (Task 5)
 	if match(path, "/api/v1/admin/utilisateurs") && method == "GET" {
 		handlers.GetAllUtilisateurs(w, req)
 		return
 	}
+	if match(path, "/api/v1/admin/abonnements") && method == "GET" {
+		handlers.GetAbonnements(w, req)
+		return
+	}
 	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 1 && method == "GET" {
 		handlers.GetUtilisateur(w, req, parts[0])
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 1 && method == "DELETE" {
+		handlers.DeleteUtilisateur(w, req, parts[0], userId)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "role" && method == "PUT" {
+		handlers.ChangeRole(w, req, parts[0])
 		return
 	}
 	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "ban" && method == "PUT" {
@@ -111,7 +157,16 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handlers.UnbanUtilisateur(w, req, parts[0])
 		return
 	}
+	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "subscription" && method == "POST" {
+		handlers.AssignSubscription(w, req, parts[0], userId)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 3 && parts[1] == "subscription" && method == "DELETE" {
+		handlers.RemoveSubscription(w, req, parts[0], parts[2], userId)
+		return
+	}
 
+	// Admin: Commandes
 	if match(path, "/api/v1/admin/commandes") && method == "GET" {
 		handlers.GetCommandes(w, req)
 		return
@@ -125,6 +180,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Admin: Categories
 	if match(path, "/api/v1/admin/categories") && method == "GET" {
 		handlers.GetCategories(w, req)
 		return
@@ -142,6 +198,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Admin: Prestations
 	if match(path, "/api/v1/admin/prestations") && method == "GET" {
 		handlers.GetPrestations(w, req)
 		return
@@ -163,6 +220,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Admin: Evenements
 	if match(path, "/api/v1/admin/evenements") && method == "GET" {
 		handlers.GetEvenements(w, req)
 		return
@@ -196,6 +254,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Admin: Annonces
 	if match(path, "/api/v1/admin/annonces") && method == "GET" {
 		handlers.GetAnnonces(w, req)
 		return
@@ -217,6 +276,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Admin: Conteneurs
 	if match(path, "/api/v1/admin/conteneurs") && method == "GET" {
 		handlers.GetAllConteneurs(w, req)
 		return
@@ -244,7 +304,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	json.NewEncoder(w).Encode(map[string]string{"erreur": "route non trouvée"})
+	json.NewEncoder(w).Encode(map[string]string{"erreur": "route non trouvee"})
 }
 
 func match(path, pattern string) bool {
