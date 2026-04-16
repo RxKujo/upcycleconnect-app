@@ -29,6 +29,14 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	method := req.Method
 
 	// Public routes
+	if match(path, "/api/v1/evenements/catalogue") && method == "GET" {
+		handlers.GetCatalogueEvenements(w, req)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/evenements"); len(parts) == 1 && method == "GET" {
+		handlers.GetEvenement(w, req, parts[0])
+		return
+	}
 	if match(path, "/api/v1/auth/register") && method == "POST" {
 		handlers.Register(w, req)
 		return
@@ -63,6 +71,16 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	if match(path, "/api/v1/utilisateurs/me/evenements-inscrits") && method == "GET" {
 		handlers.GetEnrolledEvents(w, req, userId)
+		return
+	}
+
+	// === Evenements (Public/User) ===
+	if parts := splitPath(path, "/api/v1/evenements"); len(parts) == 2 && parts[1] == "ticket" && method == "GET" {
+		handlers.GetTicketPDF(w, req, parts[0])
+		return
+	}
+	if parts := splitPath(path, "/api/v1/evenements"); len(parts) == 2 && parts[1] == "inscrire" && method == "POST" {
+		handlers.InscrireEvenement(w, req, parts[0])
 		return
 	}
 	if match(path, "/api/v1/utilisateurs/me/export-pdf") && method == "GET" {

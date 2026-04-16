@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Mon Espace') — UpcycleConnect</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -112,9 +113,10 @@
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span></a>
         <div class="navbar-links">
-            <a href="/particulier/annonces/create" class="{{ request()->is('particulier/annonces*') ? 'active' : '' }}">Deposer une annonce</a>
+            <a href="/evenements" class="{{ request()->is('evenements*') ? 'active' : '' }}">Événements</a>
+            <a href="/particulier/annonces/create" class="{{ request()->is('particulier/annonces*') ? 'active' : '' }}">Dépôt d'annonce</a>
             <a href="/particulier/profile" class="{{ request()->is('particulier/profile*') ? 'active' : '' }}">Mon profil</a>
-            <button class="btn-logout" onclick="logout()">Deconnexion</button>
+            <button class="btn-logout" onclick="logout()">Déconnexion</button>
         </div>
     </nav>
 
@@ -131,7 +133,7 @@
         }
 
         function logout() {
-            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('auth_token');
             window.location.href = '/login';
         }
 
@@ -157,7 +159,7 @@
             options.headers = { ...defaultHeaders, ...options.headers };
             const response = await fetch(API_BASE + url, options);
             if (response.status === 401) {
-                localStorage.removeItem('jwt_token');
+                localStorage.removeItem('auth_token');
                 window.location.href = '/login';
                 return null;
             }
