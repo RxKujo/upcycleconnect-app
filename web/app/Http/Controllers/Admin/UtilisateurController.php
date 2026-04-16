@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class UtilisateurController extends Controller
 {
-    private $apiUrl = 'http://localhost:8080/api/v1/admin/utilisateurs';
+    private $apiUrl = 'http://localhost:8888/api/v1/admin/utilisateurs';
 
     public function index(Request $request)
     {
@@ -59,7 +59,7 @@ class UtilisateurController extends Controller
 
         // Get available subscription plans
         $plansResp = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8080/api/v1/admin/abonnements');
+            ->get('http://localhost:8888/api/v1/admin/abonnements');
         $abonnements = $plansResp->successful() ? $plansResp->json() : [];
 
         return view('admin.utilisateurs.show', compact('utilisateur', 'subscription', 'abonnements'));

@@ -234,7 +234,7 @@ Route::get('/register', fn() => view('auth.register'))->name('auth.register');<b
 Route::get('/login', fn() => view('auth.login'))->name('auth.login');
                     </div>
                 </li>
-                <li>Vérifier que l'API est accessible à <code>http://localhost:8080/api/v1</code></li>
+                <li>Vérifier que l'API est accessible à <code>http://localhost:8888/api/v1</code></li>
                 <li>Les URLs API sont codées en dur - à adapter si différentes</li>
                 <li>CORS: Configurer l'API pour accepter les requests depuis le frontend</li>
                 <li>Après login: Créer une route protégée <code>/particulier/dashboard</code></li>

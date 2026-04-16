@@ -3,11 +3,16 @@
 
 @section('styles')
 <style>
-    .step-indicator { display: flex; gap: 0; margin-bottom: 32px; }
-    .step { flex: 1; padding: 14px; text-align: center; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.08em; border: var(--border); cursor: pointer; }
-    .step.active { background: var(--cherry); color: var(--cream); }
-    .step.completed { background: var(--forest); color: var(--cream); }
-    .step.inactive { background: var(--wheat); color: var(--coffee); }
+    .neo-progress-container { margin-bottom: 40px; }
+    .neo-progress-header { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 0.85rem; font-weight: 600; color: var(--teal); margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .neo-progress-track { width: 100%; height: 12px; border: var(--border); background: var(--cream); position: relative; margin-bottom: 12px; }
+    .neo-progress-fill { height: 100%; background: var(--cherry); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .neo-progress-labels { display: flex; justify-content: space-between; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.08em; color: var(--coffee); position: relative; }
+    .neo-progress-label { flex: 1; text-align: center; cursor: pointer; opacity: 0.5; transition: all 0.2s; position: relative; }
+    .neo-progress-label:first-child { text-align: left; }
+    .neo-progress-label:last-child { text-align: right; }
+    .neo-progress-label.active { opacity: 1; color: var(--cherry); }
+    .neo-progress-label.completed { opacity: 1; text-decoration: underline; text-decoration-color: var(--cherry); text-underline-offset: 4px; }
 
     .step-content { display: none; }
     .step-content.active { display: block; }
@@ -44,7 +49,7 @@
     .progress-fill { height: 100%; background: var(--forest); transition: width 0.3s; }
     .progress-text { text-align: center; font-family: 'DM Mono', monospace; font-size: 0.8rem; margin-top: 4px; }
 
-    .form-container { max-width: 900px; }
+    .form-container { max-width: 900px; margin: 0 auto; }
     .btn-row { display: flex; gap: 16px; margin-top: 24px; }
 </style>
 @endsection
@@ -55,9 +60,18 @@
         <h1 class="page-title">Deposer une annonce</h1>
     </div>
 
-    <div class="step-indicator">
-        <div class="step active" id="step-ind-1" onclick="goToStep(1)">1. Details de l'annonce</div>
-        <div class="step inactive" id="step-ind-2" onclick="goToStep(2)">2. Ajouter des objets</div>
+    <div class="neo-progress-container">
+        <div class="neo-progress-header">
+            <span id="step-counter">ETAPE 1 SUR 3</span>
+        </div>
+        <div class="neo-progress-track">
+            <div class="neo-progress-fill" id="step-fill" style="width: 33.33%;"></div>
+        </div>
+        <div class="neo-progress-labels">
+            <div class="neo-progress-label active" id="label-1" onclick="goToStep(1)">DESCRIPTION</div>
+            <div class="neo-progress-label" id="label-2" onclick="goToStep(2)">PHOTOS & LIVRAISON</div>
+            <div class="neo-progress-label" id="label-3" onclick="goToStep(3)">CONFIRMATION</div>
+        </div>
     </div>
 
     <form id="annonce-form" onsubmit="return false;">
@@ -95,19 +109,7 @@
                     <input type="number" class="form-input" id="prix" placeholder="0.00" min="0" step="0.01" style="max-width: 200px;">
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Mode de remise *</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" name="mode_remise" id="mode_conteneur" value="conteneur">
-                            <label for="mode_conteneur">Conteneur</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="mode_remise" id="mode_main" value="main_propre">
-                            <label for="mode_main">Main propre</label>
-                        </div>
-                    </div>
-                </div>
+
 
                 <div class="btn-row">
                     <x-btn onclick="goToStep(2)">Suivant</x-btn>
@@ -124,13 +126,43 @@
                     + Ajouter un objet
                 </x-btn>
 
+                <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 2px dashed var(--coffee);">
+                    <label class="form-label">Mode de remise *</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" name="mode_remise" id="mode_conteneur" value="conteneur">
+                            <label for="mode_conteneur">Conteneur</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="mode_remise" id="mode_main" value="main_propre">
+                            <label for="mode_main">Main propre</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <x-btn variant="secondary" onclick="goToStep(1)">Precedent</x-btn>
+                    <x-btn onclick="goToStep(3)">Suivant</x-btn>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-content" id="step-3">
+            <div class="card" style="text-align: center; padding: 40px 20px;">
+                <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; margin-bottom: 16px;">PRET A PUBLIER ?</h3>
+                <p style="margin-bottom: 32px; font-size: 1.1rem;">Verifiez bien toutes les informations avant de creer votre annonce.</p>
+                
+                <div id="recap-container" style="text-align: left; background: white; border: 2px solid var(--coffee); padding: 24px; margin-bottom: 32px; box-shadow: var(--shadow-sm);">
+                </div>
+                
                 <div class="progress-bar" id="progress-bar">
                     <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
                 </div>
                 <div class="progress-text" id="progress-text"></div>
 
-                <div class="btn-row">
-                    <x-btn variant="secondary" onclick="goToStep(1)">Precedent</x-btn>
+                <div class="btn-row" style="justify-content: center;">
+                    <x-btn variant="secondary" onclick="goToStep(2)">Precedent</x-btn>
                     <x-btn id="submit-btn" onclick="submitAnnonce()">Creer l'annonce</x-btn>
                     <x-btn variant="secondary" href="/">Annuler</x-btn>
                 </div>
@@ -147,22 +179,57 @@ let objetCount = 0;
 let objets = {};
 
 function goToStep(step) {
-    if (step === 2 && !validateStep1()) return;
+    if (step > 1 && !validateStep1()) return;
+    if (step > 2 && !validateStep2()) return;
 
     document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
     document.getElementById('step-' + step).classList.add('active');
 
-    document.querySelectorAll('.step').forEach((el, i) => {
-        el.classList.remove('active', 'completed', 'inactive');
-        if (i + 1 === step) el.classList.add('active');
-        else if (i + 1 < step) el.classList.add('completed');
-        else el.classList.add('inactive');
-    });
+    document.getElementById('step-counter').innerText = `ETAPE ${step} SUR 3`;
+    document.getElementById('step-fill').style.width = `${(step / 3) * 100}%`;
+
+    for (let i = 1; i <= 3; i++) {
+        const lbl = document.getElementById('label-' + i);
+        lbl.classList.remove('active', 'completed');
+        if (i === step) lbl.classList.add('active');
+        else if (i < step) lbl.classList.add('completed');
+    }
+
+    if (step === 3) {
+        buildRecap();
+    }
 
     currentStep = step;
     if (step === 2 && Object.keys(objets).length === 0) {
         addObjet();
     }
+}
+
+function buildRecap() {
+    const recapContainer = document.getElementById('recap-container');
+    const titre = document.getElementById('titre').value;
+    const typeObj = document.querySelector('input[name="type_annonce"]:checked');
+    const type = typeObj ? typeObj.value : '';
+    const prix = type === 'vente' ? document.getElementById('prix').value : '';
+    const modeObj = document.querySelector('input[name="mode_remise"]:checked');
+    const mode = modeObj ? modeObj.value : '';
+    const objetIds = Object.keys(objets);
+    let totalPhotos = 0;
+    
+    objetIds.forEach(id => { totalPhotos += objets[id].photos.length; });
+
+    let html = `
+        <h4 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin-bottom: 16px; border-bottom: 2px solid var(--coffee); padding-bottom: 8px;">RESUME DE L'ANNONCE</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--coffee);">
+            <div><strong>Titre :</strong> ${titre}</div>
+            <div><strong>Type :</strong> ${type.toUpperCase()}${type === 'vente' ? ' (' + prix + ' €)' : ''}</div>
+            <div><strong>Remise :</strong> ${mode.replace('_', ' ').toUpperCase()}</div>
+            <div><strong>Nombre d'objets :</strong> ${objetIds.length}</div>
+            <div><strong>Total Photos :</strong> ${totalPhotos}</div>
+        </div>
+    `;
+
+    recapContainer.innerHTML = html;
 }
 
 function validateField(field) {
@@ -203,6 +270,33 @@ function validateStep1() {
     if (!document.querySelector('input[name="type_annonce"]:checked')) {
         showAlert('Veuillez choisir un type d\'annonce', 'error');
         valid = false;
+    }
+    return valid;
+}
+
+function validateStep2() {
+    let valid = true;
+    const objetIds = Object.keys(objets);
+    if (objetIds.length === 0) {
+        showAlert('Ajoutez au moins un objet', 'error');
+        valid = false;
+    } else {
+        for (const id of objetIds) {
+            const cat = document.getElementById('cat-' + id).value.trim();
+            const mat = document.getElementById('mat-' + id).value;
+            const etat = document.getElementById('etat-' + id).value;
+            
+            if (!cat || !mat || !etat) {
+                showAlert('Veuillez remplir tous les champs obligatoires des objets', 'error');
+                valid = false;
+                break;
+            }
+            if (objets[id].photos.length === 0) {
+                showAlert('Au moins une photo est requise pour chaque objet', 'error');
+                valid = false;
+                break;
+            }
+        }
     }
     if (!document.querySelector('input[name="mode_remise"]:checked')) {
         showAlert('Veuillez choisir un mode de remise', 'error');
@@ -343,28 +437,21 @@ function removePhoto(objetId, photoIndex) {
 }
 
 async function submitAnnonce() {
-    if (!validateStep1()) { goToStep(1); return; }
-
-    // Validate objects
-    const objetIds = Object.keys(objets);
-    if (objetIds.length === 0) {
-        showAlert('Ajoutez au moins un objet', 'error');
-        return;
+    if (!validateStep1() || !validateStep2()) { 
+        if (!validateStep1()) goToStep(1);
+        else goToStep(2);
+        return; 
     }
 
     let totalPhotos = 0;
     const objetsData = [];
+    const objetIds = Object.keys(objets);
 
     for (const id of objetIds) {
         const cat = document.getElementById('cat-' + id).value.trim();
         const mat = document.getElementById('mat-' + id).value;
         const etat = document.getElementById('etat-' + id).value;
         const poids = document.getElementById('poids-' + id).value;
-
-        if (!cat) { showAlert('Categorie requise pour l\'objet #' + id, 'error'); return; }
-        if (!mat) { showAlert('Materiau requis pour l\'objet #' + id, 'error'); return; }
-        if (!etat) { showAlert('Etat requis pour l\'objet #' + id, 'error'); return; }
-        if (objets[id].photos.length === 0) { showAlert('Au moins une photo pour l\'objet #' + id, 'error'); return; }
 
         totalPhotos += objets[id].photos.length;
 
