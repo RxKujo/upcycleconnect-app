@@ -37,3 +37,7 @@ go.work.sum
 web/bootstrap/cache/*.php
 web/storage/
 web/database/database.sqlite
+
+# User uploads
+web/public/uploads/*
+!web/public/uploads/.gitkeep
