@@ -359,7 +359,7 @@
 
             <div id="alertContainer"></div>
 
-            <form id="registerForm" method="POST" action="http://localhost:8080/api/v1/auth/register-particulier" novalidate>
+            <form id="registerForm" method="POST" action="http://localhost:8888/api/v1/auth/register-particulier" novalidate>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="nom" class="form-label">Nom</label>

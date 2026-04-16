@@ -344,7 +344,7 @@
 
             <div id="alertContainer"></div>
 
-            <form id="loginForm" method="POST" action="http://localhost:8080/api/v1/auth/login" novalidate>
+            <form id="loginForm" method="POST" action="http://localhost:8888/api/v1/auth/login" novalidate>
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
                     <input

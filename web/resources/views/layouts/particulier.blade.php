@@ -124,7 +124,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:8080';
+        const API_BASE = 'http://localhost:8888';
 
         function getToken() {
             return localStorage.getItem('auth_token');

@@ -190,7 +190,7 @@
 </x-modal>
 
 <script>
-const API_BASE = 'http://localhost:8080';
+const API_BASE = 'http://localhost:8888';
 const TOKEN = '{{ session("admin_token") }}';
 const USER_ID = {{ $utilisateur['id_utilisateur'] }};
 
