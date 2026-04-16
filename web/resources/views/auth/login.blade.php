@@ -43,6 +43,24 @@
             padding: 20px;
         }
 
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--coffee);
+            text-decoration: none;
+            margin-bottom: 12px;
+            opacity: 0.6;
+            transition: opacity 0.15s;
+            align-self: flex-start;
+        }
+        .back-link:hover { opacity: 1; }
+        .back-link svg { flex-shrink: 0; }
+
         .auth-container {
             width: 100%;
             max-width: 500px;
@@ -339,6 +357,13 @@
     </div>
 
     <div class="auth-container">
+        <a href="{{ route('home') }}" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+            </svg>
+            Retour
+        </a>
+
         <div class="auth-card">
             <h1 class="auth-title">Se connecter</h1>
 

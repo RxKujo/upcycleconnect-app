@@ -7,6 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func GetEvenements(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +50,47 @@ func GetEvenements(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(evenements)
 }
 
+func GetCatalogueEvenements(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[DEBUG] GetCatalogueEvenements appelé\n")
+	rows, err := database.DB.Query(`
+		SELECT id_evenement, id_createur, titre, description, type_evenement, format, lieu, date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut, valide_par, date_creation 
+		FROM evenements 
+		WHERE statut = 'valide' AND date_debut > NOW()
+		ORDER BY date_debut ASC
+	`)
+	if err != nil {
+		fmt.Printf("GetCatalogueEvenements Query err: %v\n", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+	defer rows.Close()
+
+	var evenements []models.Evenement
+	for rows.Next() {
+		var e models.Evenement
+		var lieu sql.NullString
+		var validePar sql.NullInt64
+		if err := rows.Scan(&e.IDEvenement, &e.IDCreateur, &e.Titre, &e.Description, &e.TypeEvenement, &e.Format, &lieu, &e.DateDebut, &e.DateFin, &e.NbPlacesTotal, &e.NbPlacesDispo, &e.Prix, &e.Statut, &validePar, &e.DateCreation); err == nil {
+			if lieu.Valid {
+				e.Lieu = &lieu.String
+			}
+			if validePar.Valid {
+				v := int(validePar.Int64)
+				e.ValidePar = &v
+			}
+			evenements = append(evenements, e)
+		}
+	}
+	if evenements == nil {
+		evenements = []models.Evenement{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(evenements)
+}
+
 func GetEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	var e models.Evenement
 	var lieu sql.NullString
@@ -66,6 +111,29 @@ func GetEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		v := int(validePar.Int64)
 		e.ValidePar = &v
 	}
+
+	// Optionnel : vérifier si l'utilisateur est inscrit
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		// On tente de décoder le JWT sans bloquer si invalide (vue publique)
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			tokenString := parts[1]
+			secret := os.Getenv("JWT_SECRET")
+			claims := jwt.MapClaims{}
+			token, _ := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+				return []byte(secret), nil
+			})
+
+			if token != nil && token.Valid {
+				userId := int(claims["id"].(float64))
+				var exists bool
+				database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM inscriptions_evenements WHERE id_evenement = ? AND id_utilisateur = ?)", e.IDEvenement, userId).Scan(&exists)
+				e.IsRegistered = exists
+			}
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(e)

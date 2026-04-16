@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CatalogueController;
+use App\Http\Controllers\EvenementCatalogueController;
 
 Route::get('/', fn() => view('landing'))->name('home');
 
@@ -36,6 +37,10 @@ Route::prefix('particulier')->group(function () {
         return view('particulier.profile.show');
     })->name('particulier.profile.show');
 });
+
+// Catalogue Événements & Formations (Public)
+Route::get('/evenements', [EvenementCatalogueController::class, 'index'])->name('evenements.index');
+Route::get('/evenements/{id}', [EvenementCatalogueController::class, 'show'])->name('evenements.show');
 
 // Admin routes
 Route::prefix('admin')->group(function () {

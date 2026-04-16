@@ -18,6 +18,7 @@ type Evenement struct {
 	Statut         string    `json:"statut"`
 	ValidePar      *int      `json:"valide_par,omitempty"`
 	DateCreation   time.Time `json:"date_creation"`
+	IsRegistered   bool      `json:"is_registered,omitempty"`
 }
 
 type CreateEvenementRequest struct {
