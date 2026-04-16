@@ -228,6 +228,78 @@
         }
 
         /* =============================================
+           USER DROPDOWN
+        ============================================= */
+        .auth-wrapper {
+            position: relative;
+        }
+        .user-menu-btn {
+            background: transparent;
+            border: 2px solid transparent;
+            color: var(--cream);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .user-menu-btn:hover,
+        .user-menu-btn[aria-expanded="true"] {
+            background: var(--cherry);
+            border-color: var(--cherry);
+            color: var(--cream);
+        }
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 15px);
+            right: 0;
+            background: var(--cream);
+            border: 3px solid var(--coffee);
+            box-shadow: var(--shadow);
+            display: none;
+            flex-direction: column;
+            min-width: 180px;
+            z-index: 300;
+        }
+        .user-dropdown.active {
+            display: flex;
+        }
+        .user-dropdown a, 
+        .user-dropdown button {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--coffee);
+            padding: 12px 16px;
+            text-align: left;
+            background: var(--cream);
+            border: none;
+            border-bottom: 2px solid var(--coffee);
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        .user-dropdown a:last-child,
+        .user-dropdown button:last-child {
+            border-bottom: none;
+        }
+        .user-dropdown a:hover {
+            background: var(--wheat);
+            color: var(--coffee);
+        }
+        .user-dropdown button#logout-btn {
+            background: var(--cherry);
+            color: var(--cream);
+            font-weight: bold;
+        }
+        .user-dropdown button#logout-btn:hover {
+            background: var(--coffee);
+            color: var(--wheat);
+        }
+
+        /* =============================================
            HERO
         ============================================= */
         .hero {
@@ -616,9 +688,27 @@
                 <a href="#about">À Propos</a>
             </div>
 
-            <x-btn variant="primary" size="sm" href="{{ route('particulier.login') }}">
-                Connexion
-            </x-btn>
+            <div class="auth-wrapper" id="auth-wrapper" style="visibility: hidden;">
+                <!-- Connexion Bouton -->
+                <x-btn id="auth-login-btn" variant="primary" size="sm" href="{{ route('particulier.login') }}">
+                    Connexion
+                </x-btn>
+
+                <!-- Utilisateur Dropdown -->
+                <div id="auth-user-menu" style="display: none;">
+                    <button class="user-menu-btn" id="user-menu-btn" aria-label="Menu utilisateur" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        </svg>
+                    </button>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <a href="/particulier/profile">Mon profil</a>
+                        <a href="/particulier/profile#annonces">Mes annonces</a>
+                        <button id="logout-btn">Déconnexion</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -917,6 +1007,56 @@
             const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 40);
             window.addEventListener('scroll', onScroll, { passive: true });
         })();
+
+        // Auth state check
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('auth_token');
+            const authWrapper = document.getElementById('auth-wrapper');
+            const loginBtn = document.getElementById('auth-login-btn');
+            const userMenu = document.getElementById('auth-user-menu');
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userDropdown = document.getElementById('user-dropdown');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            if (token) {
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (userMenu) userMenu.style.display = 'block';
+
+                // Dropdown handler
+                if (userMenuBtn && userDropdown) {
+                    userMenuBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const isExpanded = userMenuBtn.getAttribute('aria-expanded') === 'true';
+                        userMenuBtn.setAttribute('aria-expanded', !isExpanded);
+                        userDropdown.classList.toggle('active');
+                    });
+
+                    // Close when clicking outside
+                    document.addEventListener('click', (e) => {
+                        if (!userMenu.contains(e.target)) {
+                            userMenuBtn.setAttribute('aria-expanded', 'false');
+                            userDropdown.classList.remove('active');
+                        }
+                    });
+                }
+
+                // Logout
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        localStorage.removeItem('auth_token');
+                        window.location.reload();
+                    });
+                }
+            } else {
+                if (loginBtn) loginBtn.style.display = 'inline-flex';
+                if (userMenu) userMenu.style.display = 'none';
+            }
+
+            // Reveal component to prevent flicker
+            if (authWrapper) {
+                authWrapper.style.visibility = 'visible';
+            }
+        });
     </script>
 
 </body>
