@@ -1,0 +1,155 @@
+version: '3.9'
+
+# ============================================================
+# UpcycleConnect — Stack de développement
+#
+# Démarrage : docker compose -f docker-compose.dev.yml up --build
+#
+# Services   Ports
+# ---------  -----
+# MySQL      3306
+# PHPMyAdmin 8081
+# Go API     8888   (hot reload via Air)
+# Laravel    8000   (hot reload via volume mount)
+# Vite HMR   5173   (hot reload assets Vue/Tailwind)
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Base de données MySQL
+  # ----------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: uc_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: upcycleconnect
+      MYSQL_USER: uc_user
+      MYSQL_PASSWORD: uc_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "uc_user", "-puc_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - uc_network
+
+  # ----------------------------------------------------------
+  # PHPMyAdmin
+  # ----------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: uc_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: uc_user
+      PMA_PASSWORD: uc_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    networks:
+      - uc_network
+
+  # ----------------------------------------------------------
+  # Go API — hot reload avec Air
+  # Le code source est monté en volume : chaque sauvegarde
+  # d'un fichier .go déclenche une recompilation automatique.
+  # ----------------------------------------------------------
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    container_name: uc_api_dev
+    restart: unless-stopped
+    volumes:
+      - ./api:/app                      # Code source monté
+      - go_pkg_cache:/root/go/pkg/mod   # Cache modules Go (persistant)
+      - go_build_cache:/root/.cache/go  # Cache build Go (persistant)
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: uc_user
+      DB_PASSWORD: uc_password
+      DB_NAME: upcycleconnect
+      JWT_SECRET: upcycleconnect_secret_key_2026
+      API_PORT: "8888"
+    ports:
+      - "8888:8888"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - uc_network
+
+  # ----------------------------------------------------------
+  # Laravel — hot reload via volume mount
+  # Artisan serve + rechargement PHP natif à chaque modif.
+  # Les assets sont gérés par le service Vite.
+  # ----------------------------------------------------------
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    container_name: uc_web_dev
+    restart: unless-stopped
+    volumes:
+      - ./web:/var/www/html              # Code source monté
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:8000"
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: upcycleconnect
+      DB_USERNAME: uc_user
+      DB_PASSWORD: uc_password
+      SESSION_DRIVER: database
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      API_URL: "http://api:8888"
+      VITE_DEV_SERVER_URL: "http://localhost:5173"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks:
+      - uc_network
+
+  # ----------------------------------------------------------
+  # Vite — hot reload assets (Vue, Tailwind, HMR)
+  # Le navigateur se connecte à localhost:5173 pour recevoir
+  # les mises à jour CSS/JS en temps réel.
+  # ----------------------------------------------------------
+  vite:
+    image: node:20-alpine
+    container_name: uc_vite_dev
+    working_dir: /app
+    volumes:
+      - ./web:/app                       # Code source monté
+    command: >
+      sh -c "npm install --frozen-lockfile && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    networks:
+      - uc_network
+
+volumes:
+  mysql_data:
+  go_pkg_cache:
+  go_build_cache:
+
+networks:
+  uc_network:
+    driver: bridge

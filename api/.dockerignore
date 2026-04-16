@@ -1,0 +1,9 @@
+tmp/
+vendor/
+.env
+server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
