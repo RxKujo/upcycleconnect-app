@@ -1,0 +1,32 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  # Commande de build
+  cmd = "go build -o ./tmp/server ./cmd/server"
+  # Binaire à exécuter
+  bin = "./tmp/server"
+  # Délai avant rebuild (ms) — évite les rebuilds en rafale
+  delay = 1000
+  # Dossiers à ignorer
+  exclude_dir = ["tmp", "vendor", "migrations"]
+  # Extensions à surveiller
+  include_ext = ["go"]
+  # Stop si erreur de build
+  stop_on_error = true
+  # Log des erreurs de build
+  log = "tmp/build-errors.log"
+  kill_delay = "0s"
+  send_interrupt = false
+
+[log]
+  time = true
+
+[color]
+  main    = "magenta"
+  watcher = "cyan"
+  build   = "yellow"
+  runner  = "green"
+
+[misc]
+  clean_on_exit = true
