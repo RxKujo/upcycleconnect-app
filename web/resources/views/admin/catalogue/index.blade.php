@@ -1,11 +1,8 @@
 @extends('layouts.admin')
-
 @section('title', 'Gestion des Annonces')
 
 @section('content')
-<div class="page-header">
-    <h2 class="page-title">Annonces (Catalogue)</h2>
-</div>
+<x-page-header title="Annonces (Catalogue)" />
 
 <div class="table-container">
     <table>
@@ -31,31 +28,31 @@
                 <td>{{ $item['mode_remise'] == 'conteneur' ? 'Conteneur' : 'Main Propre' }}</td>
                 <td>
                     @if($item['statut'] === 'validee')
-                        <span class="badge badge-valid">Validée</span>
+                        <x-badge variant="valid">Validée</x-badge>
                     @elseif($item['statut'] === 'en_attente')
-                        <span class="badge badge-waiting">En attente</span>
+                        <x-badge>En attente</x-badge>
                     @elseif($item['statut'] === 'vendue')
-                        <span class="badge" style="background-color: var(--coffee); color: white;">Vendue</span>
+                        <x-badge style="background-color: var(--coffee); color: white;">Vendue</x-badge>
                     @else
-                        <span class="badge badge-refused">{{ ucfirst($item['statut']) }}</span>
+                        <x-badge variant="refused">{{ ucfirst($item['statut']) }}</x-badge>
                     @endif
                 </td>
                 <td style="white-space: nowrap;">{{ date('d/m/Y H:i', strtotime($item['date_creation'])) }}</td>
                 <td class="action-cell">
-                    <a href="{{ route('admin.catalogue.show', $item['id_annonce']) }}" class="btn-secondary btn-sm" style="font-family: 'DM Mono', monospace; letter-spacing: 0;">Voir</a>
-                    
+                    <x-btn variant="secondary" size="sm" href="{{ route('admin.catalogue.show', $item['id_annonce']) }}">Voir</x-btn>
+
                     @if($item['statut'] === 'en_attente')
                     <form action="{{ route('admin.catalogue.valider', $item['id_annonce']) }}" method="POST" style="display:inline;">
                         @csrf
                         @method('PUT')
-                        <button type="submit" class="btn-success btn-sm">Valider</button>
+                        <x-btn variant="success" size="sm" type="submit">Valider</x-btn>
                     </form>
                     @endif
 
                     <form action="{{ route('admin.catalogue.destroy', $item['id_annonce']) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?');" style="display:inline;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn-danger btn-sm" style="font-family: 'DM Mono', monospace; font-size: 0.9rem;">Supprimer</button>
+                        <x-btn variant="danger" size="sm" type="submit">Supprimer</x-btn>
                     </form>
                 </td>
             </tr>

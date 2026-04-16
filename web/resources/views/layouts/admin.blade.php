@@ -44,7 +44,7 @@
         .btn-danger { background-color: var(--cherry); color: var(--cream); border: 3px solid var(--coffee); padding: 8px 20px; font-size: 1rem; }
         .btn-success { background-color: var(--forest); color: var(--cream); border: 3px solid var(--coffee); padding: 8px 20px; font-size: 1rem; }
         .btn-sm { padding: 6px 16px; font-size: 1rem; }
-        .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover, .btn-success:hover { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
+        .btn-primary:active, .btn-secondary:active, .btn-danger:active, .btn-success:active { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
 
         /* Tables */
         .table-container { width: 100%; overflow-x: auto; border: var(--border); box-shadow: var(--shadow); background: var(--cream); margin-bottom: 32px; zoom: 0.8; }
@@ -63,8 +63,7 @@
         .badge-refused { background-color: var(--cherry); color: var(--cream); }
 
         /* Cards & Forms */
-        .card { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 40px; margin-bottom: 32px; transition: transform 0.2s, box-shadow 0.2s; }
-        .card:hover { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
+        .card { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 40px; margin-bottom: 32px; }
 
         .form-group { margin-bottom: 28px; }
         .form-label { font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; font-weight: bold; letter-spacing: 0.05em; color: var(--coffee); margin-bottom: 10px; display: block; }
@@ -129,14 +128,10 @@
         <main class="main-content">
             <div class="content-container">
                 @if(session('success'))
-                    <div class="alert alert-success">
-                        <span style="font-size: 1.4rem;">✓</span> {{ session('success') }}
-                    </div>
+                    <x-alert type="success">{{ session('success') }}</x-alert>
                 @endif
                 @if(session('error'))
-                    <div class="alert alert-error">
-                        <span style="font-size: 1.4rem;">⚠</span> {{ session('error') }}
-                    </div>
+                    <x-alert type="error">{{ session('error') }}</x-alert>
                 @endif
 
                 @yield('content')

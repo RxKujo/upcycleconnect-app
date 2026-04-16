@@ -38,9 +38,7 @@
 @endsection
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">Mon Profil</h1>
-</div>
+<x-page-header title="Mon Profil" />
 
 <div id="loading" class="loading">Chargement...</div>
 
@@ -50,7 +48,7 @@
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title">Mes Informations</h3>
-                <button class="btn-secondary btn-sm" id="edit-toggle" onclick="toggleEdit()">Modifier</button>
+                <x-btn variant="secondary" size="sm" id="edit-toggle" onclick="toggleEdit()">Modifier</x-btn>
             </div>
 
             <div class="avatar-section">
@@ -93,8 +91,8 @@
             </div>
 
             <div id="edit-buttons" style="display: none; margin-top: 16px; display: flex; gap: 12px;">
-                <button class="btn-primary btn-sm" onclick="saveProfile()" id="save-btn" style="display: none;">Sauvegarder</button>
-                <button class="btn-secondary btn-sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;">Annuler</button>
+                <x-btn size="sm" onclick="saveProfile()" id="save-btn" style="display: none;">Sauvegarder</x-btn>
+                <x-btn variant="secondary" size="sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;">Annuler</x-btn>
             </div>
         </div>
 
@@ -146,13 +144,13 @@
         <div class="card">
             <h3 class="card-title">Donnees Personnelles</h3>
             <p style="margin-bottom: 16px; font-size: 0.95rem;">Recuperez un fichier contenant toutes vos informations</p>
-            <button class="btn-primary btn-sm" onclick="downloadPDF()">Telecharger mes donnees</button>
+            <x-btn size="sm" onclick="downloadPDF()">Telecharger mes donnees</x-btn>
         </div>
 
         <!-- Securite -->
         <div class="card full-width">
             <h3 class="card-title">Securite</h3>
-            <button class="btn-secondary btn-sm btn-disabled">Modifier mon mot de passe</button>
+            <x-btn variant="secondary" size="sm" class="btn-disabled" disabled>Modifier mon mot de passe</x-btn>
             <p style="font-size: 0.8rem; margin-top: 8px; color: rgba(18,3,9,0.5);">Fonctionnalite a venir</p>
         </div>
     </div>

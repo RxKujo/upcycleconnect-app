@@ -27,44 +27,54 @@
             box-sizing: border-box;
         }
 
-        html, body {
-            height: 100%;
-        }
-
         body {
             background-color: var(--cream);
             font-family: 'Outfit', sans-serif;
             color: var(--coffee);
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
+            padding: 32px 20px;
         }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--coffee);
+            text-decoration: none;
+            margin-bottom: 12px;
+            opacity: 0.6;
+            transition: opacity 0.15s;
+            align-self: flex-start;
+        }
+        .back-link:hover { opacity: 1; }
+        .back-link svg { flex-shrink: 0; }
 
         .auth-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 680px;
+            margin: 0 auto;
         }
 
         .auth-card {
             background: var(--cream);
             border: var(--border);
             box-shadow: var(--shadow);
-            padding: 48px 40px;
-            transition: all 0.2s ease;
-        }
-
-        .auth-card:hover {
-            transform: translate(3px, 3px);
-            box-shadow: var(--shadow-hover);
+            padding: 40px 44px;
         }
 
         .auth-title {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 3.5rem;
+            font-size: 2.8rem;
             color: var(--coffee);
-            margin-bottom: 40px;
+            margin-bottom: 24px;
             letter-spacing: 0.1em;
             line-height: 1;
             text-transform: uppercase;
@@ -112,7 +122,7 @@
         }
 
         .form-group {
-            margin-bottom: 28px;
+            margin-bottom: 16px;
         }
 
         .form-group.required .form-label::after {
@@ -136,6 +146,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+            margin-bottom: 20px;
         }
 
         .form-row .form-group {
@@ -146,10 +157,11 @@
             .form-row {
                 grid-template-columns: 1fr;
                 gap: 0;
+                margin-bottom: 0;
             }
 
             .form-row .form-group {
-                margin-bottom: 28px;
+                margin-bottom: 20px;
             }
         }
 
@@ -159,8 +171,8 @@
             border: 3px solid var(--coffee);
             background: white;
             font-family: 'Outfit', sans-serif;
-            font-size: 1.05rem;
-            padding: 14px 16px;
+            font-size: 1rem;
+            padding: 10px 14px;
             outline: none;
             transition: all 0.2s ease;
             box-shadow: 3px 3px 0px rgba(18, 3, 9, 0.1);
@@ -181,7 +193,7 @@
 
         .form-textarea {
             resize: vertical;
-            min-height: 120px;
+            min-height: 72px;
             font-family: 'Outfit', sans-serif;
         }
 
@@ -222,7 +234,7 @@
             font-weight: 600;
         }
 
-        .btn-submit:hover:not(:disabled) {
+        .btn-submit:active:not(:disabled) {
             transform: translate(3px, 3px);
             box-shadow: var(--shadow-hover);
         }
@@ -255,7 +267,7 @@
         }
 
         .auth-footer {
-            margin-top: 32px;
+            margin-top: 20px;
             text-align: center;
             font-size: 1rem;
             color: var(--coffee);
@@ -319,12 +331,12 @@
 
         @media (max-width: 600px) {
             .auth-card {
-                padding: 32px 24px;
+                padding: 32px 20px;
             }
 
             .auth-title {
                 font-size: 2.5rem;
-                margin-bottom: 32px;
+                margin-bottom: 24px;
             }
         }
     </style>
@@ -335,6 +347,13 @@
     </div>
 
     <div class="auth-container">
+        <a href="{{ route('home') }}" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+            </svg>
+            Retour
+        </a>
+
         <div class="auth-card">
             <h1 class="auth-title">Créer un compte</h1>
 
@@ -369,53 +388,58 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        class="form-input"
-                        placeholder="votre@email.com"
-                        required
-                    >
-                    <div class="error-message">Veuillez entrer une adresse email valide</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            class="form-input"
+                            placeholder="votre@email.com"
+                            required
+                        >
+                        <div class="error-message">Veuillez entrer une adresse email valide</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telephone" class="form-label">Téléphone (optionnel)</label>
+                        <input
+                            type="tel"
+                            id="telephone"
+                            name="telephone"
+                            class="form-input"
+                            placeholder="+33 6 12 34 56 78"
+                        >
+                        <div class="error-message">Veuillez entrer un numéro de téléphone valide</div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="telephone" class="form-label">Téléphone (optionnel)</label>
-                    <input
-                        type="tel"
-                        id="telephone"
-                        name="telephone"
-                        class="form-input"
-                        placeholder="+33 6 12 34 56 78"
-                    >
-                    <div class="error-message">Veuillez entrer un numéro de téléphone valide</div>
-                </div>
+                <div class="form-row">
+                    <div class="form-group required">
+                        <label for="ville" class="form-label">Ville</label>
+                        <input
+                            type="text"
+                            id="ville"
+                            name="ville"
+                            class="form-input"
+                            placeholder="Ville"
+                            required
+                        >
+                        <div class="error-message">La ville est obligatoire</div>
+                    </div>
 
-                <div class="form-group required">
-                    <label for="ville" class="form-label">Ville</label>
-                    <input
-                        type="text"
-                        id="ville"
-                        name="ville"
-                        class="form-input"
-                        placeholder="Ville"
-                        required
-                    >
-                    <div class="error-message">La ville est obligatoire</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="adresse_complete" class="form-label">Adresse complète (optionnel)</label>
-                    <textarea
-                        id="adresse_complete"
-                        name="adresse_complete"
-                        class="form-textarea"
-                        placeholder="123 Rue de..."
-                    ></textarea>
-                    <div class="error-message">L'adresse est trop longue (max 255 caractères)</div>
+                    <div class="form-group">
+                        <label for="adresse_complete" class="form-label">Adresse complète (optionnel)</label>
+                        <input
+                            type="text"
+                            id="adresse_complete"
+                            name="adresse_complete"
+                            class="form-input"
+                            placeholder="123 Rue de..."
+                        >
+                        <div class="error-message">L'adresse est trop longue (max 255 caractères)</div>
+                    </div>
                 </div>
 
                 <div class="form-row">
@@ -431,7 +455,7 @@
                                 required
                             >
                             <button type="button" class="password-toggle" data-target="mot_de_passe" aria-label="Afficher/masquer le mot de passe">
-                                <span class="toggle-icon">👁</span>
+                                <span class="toggle-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></span>
                             </button>
                         </div>
                         <div class="error-message">Le mot de passe doit contenir au moins 8 caractères</div>
@@ -449,7 +473,7 @@
                                 required
                             >
                             <button type="button" class="password-toggle" data-target="password_confirmation" aria-label="Afficher/masquer le mot de passe">
-                                <span class="toggle-icon">👁</span>
+                                <span class="toggle-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></span>
                             </button>
                         </div>
                         <div class="error-message">Les mots de passe ne correspondent pas</div>
@@ -488,7 +512,9 @@
                 const input = document.getElementById(targetId);
                 const isPassword = input.type === 'password';
                 input.type = isPassword ? 'text' : 'password';
-                button.innerHTML = `<span class="toggle-icon">${isPassword ? '🙈' : '👁'}</span>`;
+                const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>`;
+                const eyeSlashIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7 7 0 0 0-2.79.588l.77.771A6 6 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755q-.247.248-.517.486z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829"/><path d="M3.35 5.47q-.27.24-.518.487A13 13 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7 7 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12z"/></svg>`;
+                button.innerHTML = `<span class="toggle-icon">${isPassword ? eyeSlashIcon : eyeIcon}</span>`;
             });
         });
 
@@ -553,7 +579,11 @@
 
             const icon = document.createElement('div');
             icon.className = 'alert-icon';
-            icon.textContent = type === 'error' ? '⚠' : '✓';
+            const icons = {
+                error: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/></svg>`,
+                success: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg>`,
+            };
+            icon.innerHTML = icons[type] || icons.error;
 
             const content = document.createElement('div');
             content.className = 'alert-content';
