@@ -8,20 +8,17 @@
     .modal { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 32px; max-width: 500px; width: 90%; }
     .modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; margin-bottom: 16px; }
     .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
-    .danger-zone { border-color: var(--cherry); border-width: 3px; }
     .user-avatar { width: 120px; height: 120px; border: var(--border); background: var(--wheat); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--coffee); overflow: hidden; border-radius: 50%; }
     .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 </style>
 
-<div class="page-header">
-    <h1 class="page-title">Utilisateur #{{ $utilisateur['id_utilisateur'] }}</h1>
-    <a href="{{ route('admin.utilisateurs.index') }}" class="btn-secondary btn-sm">Retour</a>
-</div>
+<x-page-header title="Utilisateur #{{ $utilisateur['id_utilisateur'] }}">
+    <x-btn variant="secondary" size="sm" href="{{ route('admin.utilisateurs.index') }}">Retour</x-btn>
+</x-page-header>
 
 <div class="info-grid">
-    <!-- Informations Generales -->
-    <div class="card" style="cursor: default; transform: none; grid-column: 1 / -1;">
-        <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; margin-bottom: 20px; border-bottom: 3px solid var(--coffee); padding-bottom: 12px;">Informations Generales</h3>
+    {{-- Informations Générales --}}
+    <x-card title="Informations Generales" style="grid-column: 1 / -1;">
         <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
             <div class="user-avatar">
                 @if(isset($utilisateur['photo_profil_url']) && $utilisateur['photo_profil_url'])
@@ -31,33 +28,15 @@
                 @endif
             </div>
             <div style="flex: 1;" class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Nom</span>
-                    <p class="info-value">{{ $utilisateur['nom'] }}</p>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Prenom</span>
-                    <p class="info-value">{{ $utilisateur['prenom'] }}</p>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Email</span>
-                    <p class="info-value">{{ $utilisateur['email'] }}</p>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Telephone</span>
-                    <p class="info-value">{{ $utilisateur['telephone'] ?? '---' }}</p>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Ville</span>
-                    <p class="info-value">{{ $utilisateur['ville'] ?? '---' }}</p>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Adresse</span>
-                    <p class="info-value">{{ $utilisateur['adresse_complete'] ?? '---' }}</p>
-                </div>
+                <div class="info-item"><span class="info-label">Nom</span><p class="info-value">{{ $utilisateur['nom'] }}</p></div>
+                <div class="info-item"><span class="info-label">Prenom</span><p class="info-value">{{ $utilisateur['prenom'] }}</p></div>
+                <div class="info-item"><span class="info-label">Email</span><p class="info-value">{{ $utilisateur['email'] }}</p></div>
+                <div class="info-item"><span class="info-label">Telephone</span><p class="info-value">{{ $utilisateur['telephone'] ?? '---' }}</p></div>
+                <div class="info-item"><span class="info-label">Ville</span><p class="info-value">{{ $utilisateur['ville'] ?? '---' }}</p></div>
+                <div class="info-item"><span class="info-label">Adresse</span><p class="info-value">{{ $utilisateur['adresse_complete'] ?? '---' }}</p></div>
                 <div class="info-item">
                     <span class="info-label">Role</span>
-                    <p class="info-value"><span class="badge badge-waiting">{{ ucfirst($utilisateur['role']) }}</span></p>
+                    <p class="info-value"><x-badge>{{ ucfirst($utilisateur['role']) }}</x-badge></p>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Inscription</span>
@@ -67,9 +46,9 @@
                     <span class="info-label">Statut</span>
                     <p class="info-value">
                         @if($utilisateur['est_banni'])
-                            <span class="badge badge-refused">Banni</span>
+                            <x-badge variant="refused">Banni</x-badge>
                         @else
-                            <span class="badge badge-valid">Actif</span>
+                            <x-badge variant="valid">Actif</x-badge>
                         @endif
                     </p>
                 </div>
@@ -79,11 +58,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </x-card>
 
-    <!-- Gestion du Role -->
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; margin-bottom: 16px; border-bottom: 3px solid var(--coffee); padding-bottom: 10px;">Gestion du Role</h3>
+    {{-- Gestion du Rôle --}}
+    <x-card title="Gestion du Role">
         <form id="role-form" onsubmit="return changeRole(event)">
             <div class="form-group">
                 <select class="form-select" id="role-select" style="font-size: 1rem; padding: 10px;">
@@ -93,148 +71,135 @@
                     <option value="admin" {{ $utilisateur['role'] === 'admin' ? 'selected' : '' }}>Admin</option>
                 </select>
             </div>
-            <button type="submit" class="btn-primary btn-sm">Appliquer</button>
+            <x-btn type="submit" size="sm">Appliquer</x-btn>
         </form>
-    </div>
+    </x-card>
 
-    <!-- Bannissement -->
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; margin-bottom: 16px; border-bottom: 3px solid var(--coffee); padding-bottom: 10px;">Bannissement</h3>
+    {{-- Bannissement --}}
+    <x-card title="Bannissement">
         @if($utilisateur['est_banni'])
             <p style="margin-bottom: 12px;">
                 @if(isset($utilisateur['date_fin_ban']) && $utilisateur['date_fin_ban'])
-                    <span class="badge badge-refused">Banni jusqu'au {{ \Carbon\Carbon::parse($utilisateur['date_fin_ban'])->format('d/m/Y') }}</span>
+                    <x-badge variant="refused">Banni jusqu'au {{ \Carbon\Carbon::parse($utilisateur['date_fin_ban'])->format('d/m/Y') }}</x-badge>
                 @else
-                    <span class="badge badge-refused">Banni de maniere permanente</span>
+                    <x-badge variant="refused">Banni de maniere permanente</x-badge>
                 @endif
             </p>
             <form action="{{ route('admin.utilisateurs.unban', $utilisateur['id_utilisateur']) }}" method="POST"
                   onsubmit="return confirm('Confirmer le debannissement ?')">
                 @csrf
-                <button type="submit" class="btn-success btn-sm">Debannir</button>
+                <x-btn variant="success" size="sm" type="submit">Debannir</x-btn>
             </form>
         @else
             <p style="margin-bottom: 12px; font-size: 0.95rem;">L'utilisateur est actuellement actif.</p>
-            <button class="btn-danger btn-sm" onclick="openBanModal()">Bannir</button>
+            <x-btn variant="danger" size="sm" onclick="openBanModal()">Bannir</x-btn>
         @endif
-    </div>
+    </x-card>
 
-    <!-- Abonnement -->
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; margin-bottom: 16px; border-bottom: 3px solid var(--coffee); padding-bottom: 10px;">Abonnement</h3>
+    {{-- Abonnement --}}
+    <x-card title="Abonnement">
         @if(isset($subscription) && $subscription)
             <p style="margin-bottom: 8px;"><strong>Plan :</strong> {{ $subscription['nom_abonnement'] }}</p>
             <p style="margin-bottom: 8px;"><strong>Jusqu'au :</strong> {{ \Carbon\Carbon::parse($subscription['date_fin'])->format('d/m/Y') }}</p>
             @if($subscription['gere_par_admin'] ?? false)
-                <span class="badge badge-waiting" style="margin-bottom: 12px;">Gere par admin</span>
+                <x-badge style="margin-bottom: 12px;">Gere par admin</x-badge>
             @endif
             <br>
-            <button class="btn-secondary btn-sm" onclick="openSubModal()" style="margin-top: 8px;">Modifier abonnement</button>
+            <x-btn variant="secondary" size="sm" style="margin-top: 8px;" onclick="openSubModal()">Modifier abonnement</x-btn>
         @else
             <p style="margin-bottom: 12px; color: rgba(18,3,9,0.5);">Aucun abonnement actif</p>
-            <button class="btn-success btn-sm" onclick="openSubModal()">Attribuer un abonnement</button>
+            <x-btn variant="success" size="sm" onclick="openSubModal()">Attribuer un abonnement</x-btn>
         @endif
-    </div>
+    </x-card>
 
-    <!-- Donnees -->
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; margin-bottom: 16px; border-bottom: 3px solid var(--coffee); padding-bottom: 10px;">Donnees</h3>
-        <button class="btn-secondary btn-sm" style="opacity: 0.5; cursor: not-allowed;" disabled>Telecharger donnees PDF</button>
+    {{-- Données --}}
+    <x-card title="Donnees">
+        <x-btn variant="secondary" size="sm" style="opacity: 0.5; cursor: not-allowed;" disabled>Telecharger donnees PDF</x-btn>
         <p style="font-size: 0.8rem; margin-top: 8px; color: rgba(18,3,9,0.5);">Fonctionnalite a venir</p>
-    </div>
+    </x-card>
 
-    <!-- Actions Dangereuses -->
-    <div class="card danger-zone" style="cursor: default; transform: none;">
-        <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; margin-bottom: 16px; border-bottom: 3px solid var(--cherry); padding-bottom: 10px; color: var(--cherry);">Actions Dangereuses</h3>
-        <button class="btn-danger btn-sm" onclick="openDeleteModal()">Supprimer le compte</button>
+    {{-- Actions Dangereuses --}}
+    <x-card title="Actions Dangereuses" :danger="true">
+        <x-btn variant="danger" size="sm" onclick="openDeleteModal()">Supprimer le compte</x-btn>
         <p style="font-size: 0.8rem; margin-top: 8px; color: var(--cherry);">Cette action est irreversible</p>
-    </div>
+    </x-card>
 </div>
 
-<!-- Ban Modal -->
-<div class="modal-overlay" id="ban-modal">
-    <div class="modal">
-        <h3>Bannir l'utilisateur</h3>
-        <form action="{{ route('admin.utilisateurs.ban', $utilisateur['id_utilisateur']) }}" method="POST" id="ban-form">
-            @csrf
-            <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="ban-permanent" onchange="toggleBanDate()">
-                    <span class="form-label" style="margin: 0;">Ban permanent</span>
-                </label>
-            </div>
-            <div class="form-group" id="ban-date-group">
-                <label class="form-label">Date de fin (si temporaire)</label>
-                <input type="date" class="form-input" name="date_fin_ban" id="ban-date" value="{{ now()->addMonth()->format('Y-m-d') }}">
-            </div>
-            <div class="modal-actions">
-                <button type="submit" class="btn-danger">Bannir</button>
-                <button type="button" class="btn-secondary" onclick="closeBanModal()">Annuler</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Subscription Modal -->
-<div class="modal-overlay" id="sub-modal">
-    <div class="modal">
-        <h3>Gerer l'abonnement</h3>
-        <form id="sub-form" onsubmit="return assignSubscription(event)">
-            <div class="form-group">
-                <label class="form-label">Plan</label>
-                <select class="form-select" id="sub-plan">
-                    @if(isset($abonnements))
-                        @foreach($abonnements as $ab)
-                            <option value="{{ $ab['id_abonnement'] }}">{{ $ab['nom'] }} ({{ number_format($ab['prix_mensuel'], 2, ',', ' ') }} EUR/mois)</option>
-                        @endforeach
-                    @endif
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Date de fin</label>
-                <input type="date" class="form-input" id="sub-date" value="{{ now()->addYear()->format('Y-m-d') }}">
-            </div>
-            <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="sub-admin" checked>
-                    <span class="form-label" style="margin: 0;">Gere par admin</span>
-                </label>
-            </div>
-            <div class="modal-actions">
-                <button type="submit" class="btn-success">Appliquer</button>
-                <button type="button" class="btn-secondary" onclick="closeSubModal()">Annuler</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Delete Modal -->
-<div class="modal-overlay" id="delete-modal">
-    <div class="modal">
-        <h3 style="color: var(--cherry);">Supprimer le compte</h3>
-        <p style="margin-bottom: 16px;">Etes-vous sur ? Cette action est irreversible. Toutes les donnees de l'utilisateur seront supprimees.</p>
-        <div class="modal-actions">
-            <form action="{{ route('admin.utilisateurs.delete', $utilisateur['id_utilisateur']) }}" method="POST">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn-danger">Supprimer definitivement</button>
-            </form>
-            <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Annuler</button>
+{{-- Modal Ban --}}
+<x-modal id="ban-modal" title="Bannir l'utilisateur">
+    <form action="{{ route('admin.utilisateurs.ban', $utilisateur['id_utilisateur']) }}" method="POST" id="ban-form">
+        @csrf
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="ban-permanent" onchange="toggleBanDate()">
+                <span class="form-label" style="margin: 0;">Ban permanent</span>
+            </label>
         </div>
+        <div class="form-group" id="ban-date-group">
+            <label class="form-label">Date de fin (si temporaire)</label>
+            <input type="date" class="form-input" name="date_fin_ban" id="ban-date" value="{{ now()->addMonth()->format('Y-m-d') }}">
+        </div>
+        <div class="modal-actions">
+            <x-btn variant="danger" type="submit">Bannir</x-btn>
+            <x-btn variant="secondary" onclick="closeBanModal()">Annuler</x-btn>
+        </div>
+    </form>
+</x-modal>
+
+{{-- Modal Abonnement --}}
+<x-modal id="sub-modal" title="Gerer l'abonnement">
+    <form id="sub-form" onsubmit="return assignSubscription(event)">
+        <div class="form-group">
+            <label class="form-label">Plan</label>
+            <select class="form-select" id="sub-plan">
+                @if(isset($abonnements))
+                    @foreach($abonnements as $ab)
+                        <option value="{{ $ab['id_abonnement'] }}">{{ $ab['nom'] }} ({{ number_format($ab['prix_mensuel'], 2, ',', ' ') }} EUR/mois)</option>
+                    @endforeach
+                @endif
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Date de fin</label>
+            <input type="date" class="form-input" id="sub-date" value="{{ now()->addYear()->format('Y-m-d') }}">
+        </div>
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="sub-admin" checked>
+                <span class="form-label" style="margin: 0;">Gere par admin</span>
+            </label>
+        </div>
+        <div class="modal-actions">
+            <x-btn variant="success" type="submit">Appliquer</x-btn>
+            <x-btn variant="secondary" onclick="closeSubModal()">Annuler</x-btn>
+        </div>
+    </form>
+</x-modal>
+
+{{-- Modal Suppression --}}
+<x-modal id="delete-modal" title="Supprimer le compte" title-style="color: var(--cherry);">
+    <p style="margin-bottom: 16px;">Etes-vous sur ? Cette action est irreversible. Toutes les donnees de l'utilisateur seront supprimees.</p>
+    <div class="modal-actions">
+        <form action="{{ route('admin.utilisateurs.delete', $utilisateur['id_utilisateur']) }}" method="POST">
+            @csrf
+            @method('DELETE')
+            <x-btn variant="danger" type="submit">Supprimer definitivement</x-btn>
+        </form>
+        <x-btn variant="secondary" onclick="closeDeleteModal()">Annuler</x-btn>
     </div>
-</div>
+</x-modal>
 
 <script>
-const API_BASE = 'http://localhost:8888';
+const API_BASE = 'http://localhost:8080';
 const TOKEN = '{{ session("admin_token") }}';
 const USER_ID = {{ $utilisateur['id_utilisateur'] }};
 
-function openBanModal() { document.getElementById('ban-modal').classList.add('active'); }
-function closeBanModal() { document.getElementById('ban-modal').classList.remove('active'); }
-function openSubModal() { document.getElementById('sub-modal').classList.add('active'); }
-function closeSubModal() { document.getElementById('sub-modal').classList.remove('active'); }
+function openBanModal()    { document.getElementById('ban-modal').classList.add('active'); }
+function closeBanModal()   { document.getElementById('ban-modal').classList.remove('active'); }
+function openSubModal()    { document.getElementById('sub-modal').classList.add('active'); }
+function closeSubModal()   { document.getElementById('sub-modal').classList.remove('active'); }
 function openDeleteModal() { document.getElementById('delete-modal').classList.add('active'); }
-function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('active'); }
+function closeDeleteModal(){ document.getElementById('delete-modal').classList.remove('active'); }
 
 function toggleBanDate() {
     const permanent = document.getElementById('ban-permanent').checked;
@@ -296,7 +261,6 @@ async function assignSubscription(e) {
     return false;
 }
 
-// Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function(e) {
         if (e.target === this) this.classList.remove('active');

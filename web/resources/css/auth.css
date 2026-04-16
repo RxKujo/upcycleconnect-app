@@ -46,12 +46,6 @@ body {
     border: var(--border);
     box-shadow: var(--shadow);
     padding: 48px 40px;
-    transition: all 0.2s ease;
-}
-
-.auth-card:hover {
-    transform: translate(3px, 3px);
-    box-shadow: var(--shadow-hover);
 }
 
 /* Responsive */

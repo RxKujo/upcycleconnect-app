@@ -2,12 +2,9 @@
 @section('title', 'Annonces')
 
 @section('content')
-<div class="page-header" style="align-items: center; justify-content: space-between;">
-    <h1 class="page-title">Annonces</h1>
-</div>
+<x-page-header title="Annonces" />
 
 <div class="table-container">
-
 <table>
     <thead>
         <tr>
@@ -25,25 +22,25 @@
         <tr>
             <td>{{ $a['id_annonce'] }}</td>
             <td style="font-weight: 600;">{{ $a['titre'] }}</td>
-            <td><span class="badge badge-waiting">{{ ucfirst($a['type_annonce']) }}</span></td>
+            <td><x-badge>{{ ucfirst($a['type_annonce']) }}</x-badge></td>
             <td>{{ ucfirst(str_replace('_', ' ', $a['mode_remise'])) }}</td>
             <td>{{ isset($a['prix']) && $a['prix'] > 0 ? number_format($a['prix'], 2, ',', ' ') . ' €' : 'Gratuit' }}</td>
             <td>
                 @if($a['statut'] === 'validee')
-                    <span class="badge badge-valid">Validée</span>
+                    <x-badge variant="valid">Validée</x-badge>
                 @elseif($a['statut'] === 'refusee')
-                    <span class="badge badge-refused">Refusée</span>
+                    <x-badge variant="refused">Refusée</x-badge>
                 @elseif($a['statut'] === 'annulee')
-                    <span class="badge badge-refused">Annulée</span>
+                    <x-badge variant="refused">Annulée</x-badge>
                 @elseif($a['statut'] === 'vendue')
-                    <span class="badge badge-valid">Vendue / Donnée</span>
+                    <x-badge variant="valid">Vendue / Donnée</x-badge>
                 @else
-                    <span class="badge badge-waiting">En attente</span>
+                    <x-badge>En attente</x-badge>
                 @endif
             </td>
             <td>
                 <div class="action-cell">
-                    <a href="{{ route('admin.annonces.show', $a['id_annonce']) }}" class="btn-secondary btn-sm">Voir</a>
+                    <x-btn variant="secondary" size="sm" href="{{ route('admin.annonces.show', $a['id_annonce']) }}">Voir</x-btn>
                 </div>
             </td>
         </tr>

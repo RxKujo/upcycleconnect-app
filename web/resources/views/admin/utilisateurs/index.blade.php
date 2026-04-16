@@ -2,12 +2,9 @@
 @section('title', 'Utilisateurs')
 
 @section('content')
-<div class="page-header">
-    <h1 class="page-title">Utilisateurs</h1>
-</div>
+<x-page-header title="Utilisateurs" />
 
-<!-- Filters -->
-<div class="card" style="cursor: default; transform: none; padding: 24px; margin-bottom: 32px;">
+<x-card style="padding: 24px; margin-bottom: 32px;">
     <form method="GET" action="{{ route('admin.utilisateurs.index') }}" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
         <div style="flex: 1; min-width: 160px;">
             <label class="form-label" style="margin-bottom: 6px;">Role</label>
@@ -31,9 +28,9 @@
             <label class="form-label" style="margin-bottom: 6px;">Recherche</label>
             <input type="text" name="search" class="form-input" style="padding: 10px 14px; font-size: 0.95rem;" placeholder="Chercher par email ou nom" value="{{ request('search') }}">
         </div>
-        <button type="submit" class="btn-primary btn-sm" style="height: 44px;">Filtrer</button>
+        <x-btn type="submit" size="sm" style="height: 44px;">Filtrer</x-btn>
     </form>
-</div>
+</x-card>
 
 <div class="table-container">
 <table>
@@ -56,18 +53,18 @@
             <td>{{ $u['nom'] }}</td>
             <td>{{ $u['prenom'] }}</td>
             <td>{{ $u['email'] }}</td>
-            <td><span class="badge badge-waiting">{{ ucfirst($u['role']) }}</span></td>
+            <td><x-badge>{{ ucfirst($u['role']) }}</x-badge></td>
             <td>{{ $u['ville'] ?? '---' }}</td>
             <td>
                 @if($u['est_banni'])
-                    <span class="badge badge-refused">Banni</span>
+                    <x-badge variant="refused">Banni</x-badge>
                 @else
-                    <span class="badge badge-valid">Actif</span>
+                    <x-badge variant="valid">Actif</x-badge>
                 @endif
             </td>
             <td>
                 <div class="action-cell">
-                    <a href="{{ route('admin.utilisateurs.show', $u['id_utilisateur']) }}" class="btn-secondary btn-sm">Voir</a>
+                    <x-btn variant="secondary" size="sm" href="{{ route('admin.utilisateurs.show', $u['id_utilisateur']) }}">Voir</x-btn>
                 </div>
             </td>
         </tr>
@@ -83,8 +80,11 @@
 @if(isset($pagination) && $pagination['total_pages'] > 1)
 <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
     @for($p = 1; $p <= $pagination['total_pages']; $p++)
-        <a href="?page={{ $p }}&role={{ request('role') }}&est_banni={{ request('est_banni') }}&search={{ request('search') }}"
-           class="{{ $p == ($pagination['page'] ?? 1) ? 'btn-primary' : 'btn-secondary' }} btn-sm">{{ $p }}</a>
+        <x-btn
+            variant="{{ $p == ($pagination['page'] ?? 1) ? 'primary' : 'secondary' }}"
+            size="sm"
+            href="?page={{ $p }}&role={{ request('role') }}&est_banni={{ request('est_banni') }}&search={{ request('search') }}"
+        >{{ $p }}</x-btn>
     @endfor
 </div>
 @endif

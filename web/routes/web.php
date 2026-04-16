@@ -11,9 +11,7 @@ use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CatalogueController;
 
-Route::get('/', function () {
-    return view('auth.login');
-});
+Route::get('/', fn() => view('landing'))->name('home');
 
 // Routes publiques d'authentification (particuliers)
 Route::get('/register', function () {

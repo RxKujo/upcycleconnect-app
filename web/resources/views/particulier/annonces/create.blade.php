@@ -21,7 +21,7 @@
     .objet-card { border: var(--border); padding: 24px; margin-bottom: 20px; background: white; box-shadow: var(--shadow-sm); position: relative; }
     .objet-card h4 { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; margin-bottom: 16px; }
     .objet-remove { position: absolute; top: 12px; right: 12px; background: var(--cherry); color: var(--cream); border: 2px solid var(--coffee); width: 32px; height: 32px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
-    .objet-remove:hover { transform: translate(2px, 2px); }
+    .objet-remove:active { transform: translate(2px, 2px); }
 
     .objet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 768px) { .objet-grid { grid-template-columns: 1fr; } }
@@ -34,7 +34,7 @@
     .photo-preview { position: relative; width: 80px; height: 80px; border: 2px solid var(--coffee); }
     .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
     .photo-preview .remove-photo { position: absolute; top: -8px; right: -8px; background: var(--cherry); color: var(--cream); border: 1px solid var(--coffee); width: 20px; height: 20px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .photo-preview .remove-photo:hover { transform: scale(1.1); }
+    .photo-preview .remove-photo:active { transform: scale(1.1); }
 
     .prix-group { display: none; }
     .prix-group.visible { display: block; }
@@ -110,7 +110,7 @@
                 </div>
 
                 <div class="btn-row">
-                    <button class="btn-primary" onclick="goToStep(2)">Suivant</button>
+                    <x-btn onclick="goToStep(2)">Suivant</x-btn>
                 </div>
             </div>
         </div>
@@ -120,9 +120,9 @@
             <div class="card">
                 <div id="objets-container"></div>
 
-                <button type="button" class="btn-secondary" onclick="addObjet()" style="margin-bottom: 24px;">
+                <x-btn variant="secondary" onclick="addObjet()" style="margin-bottom: 24px;">
                     + Ajouter un objet
-                </button>
+                </x-btn>
 
                 <div class="progress-bar" id="progress-bar">
                     <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
@@ -130,9 +130,9 @@
                 <div class="progress-text" id="progress-text"></div>
 
                 <div class="btn-row">
-                    <button class="btn-secondary" onclick="goToStep(1)">Precedent</button>
-                    <button class="btn-primary" id="submit-btn" onclick="submitAnnonce()">Creer l'annonce</button>
-                    <a href="/" class="btn-secondary">Annuler</a>
+                    <x-btn variant="secondary" onclick="goToStep(1)">Precedent</x-btn>
+                    <x-btn id="submit-btn" onclick="submitAnnonce()">Creer l'annonce</x-btn>
+                    <x-btn variant="secondary" href="/">Annuler</x-btn>
                 </div>
             </div>
         </div>

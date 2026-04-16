@@ -31,7 +31,7 @@
         .navbar-links a { color: var(--cream); text-decoration: none; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; padding: 8px 16px; border: 2px solid transparent; }
         .navbar-links a:hover, .navbar-links a.active { border-color: var(--cherry); color: var(--wheat); }
         .navbar-links .btn-logout { background: var(--cherry); color: var(--cream); border: 2px solid var(--cream); padding: 8px 16px; cursor: pointer; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.85rem; }
-        .navbar-links .btn-logout:hover { transform: translate(2px, 2px); }
+        .navbar-links .btn-logout:active { transform: translate(2px, 2px); }
 
         /* Main */
         .main-content { max-width: 1200px; margin: 0 auto; padding: 48px 24px; }
@@ -41,7 +41,7 @@
         .btn-secondary { display: inline-flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; box-shadow: var(--shadow-sm); border-radius: 0; background-color: var(--cream); color: var(--coffee); border: 3px solid var(--coffee); padding: 12px 28px; font-size: 1.2rem; text-decoration: none; }
         .btn-success { display: inline-flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; box-shadow: var(--shadow-sm); border-radius: 0; background-color: var(--forest); color: var(--cream); border: 3px solid var(--coffee); padding: 10px 24px; font-size: 1.1rem; text-decoration: none; }
         .btn-danger { display: inline-flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; box-shadow: var(--shadow-sm); border-radius: 0; background-color: var(--cherry); color: var(--cream); border: 3px solid var(--coffee); padding: 10px 24px; font-size: 1.1rem; text-decoration: none; }
-        .btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
+        .btn-primary:active, .btn-secondary:active, .btn-success:active, .btn-danger:active { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
         .btn-sm { padding: 6px 16px; font-size: 1rem; }
         .btn-disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
