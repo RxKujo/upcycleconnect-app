@@ -18,6 +18,9 @@ tmp_dir = "tmp"
   log = "tmp/build-errors.log"
   kill_delay = "0s"
   send_interrupt = false
+  # Polling mode — nécessaire sur Windows/Docker (pas d'inotify sur bind mounts)
+  poll = true
+  poll_interval = 2000
 
 [log]
   time = true

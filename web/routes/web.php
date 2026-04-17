@@ -19,6 +19,10 @@ Route::get('/register', function () {
     return view('auth.register');
 })->name('particulier.register');
 
+Route::get('/register-pro', function () {
+    return view('auth.register-pro');
+})->name('professionnel.register');
+
 Route::get('/login', function () {
     return view('auth.login');
 })->name('particulier.login');
@@ -36,6 +40,13 @@ Route::prefix('particulier')->group(function () {
     Route::get('/profile', function () {
         return view('particulier.profile.show');
     })->name('particulier.profile.show');
+});
+
+// Professionnel routes
+Route::prefix('professionnel')->group(function () {
+    Route::get('/profile', function () {
+        return view('professionnel.profile.show');
+    })->name('professionnel.profile.show');
 });
 
 // Catalogue Événements & Formations (Public)

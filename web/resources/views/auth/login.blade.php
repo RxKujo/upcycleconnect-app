@@ -414,6 +414,9 @@
                 <div class="auth-footer-text">
                     Pas de compte? <a href="/register" class="auth-link">S'inscrire</a>
                 </div>
+                <div class="auth-footer-text">
+                    Professionnel / Artisan? <a href="/register-pro" class="auth-link">Inscription pro</a>
+                </div>
             </div>
         </div>
     </div>
@@ -650,6 +653,14 @@
                             submitBtn.classList.remove('loading');
                             loadingOverlay.classList.remove('active');
                         });
+                    } else if (userRole === 'professionnel') {
+                        // Professionnel: store token and redirect to pro profile
+                        showAlert('Connexion réussie! Redirection...', 'success');
+                        localStorage.setItem('auth_token', token);
+
+                        setTimeout(() => {
+                            window.location.href = '/professionnel/profile';
+                        }, 1500);
                     } else {
                         // Regular user: store token in localStorage
                         showAlert('Connexion réussie! Redirection...', 'success');
