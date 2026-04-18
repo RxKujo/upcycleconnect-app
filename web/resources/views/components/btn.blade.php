@@ -1,6 +1,9 @@
-@props(['variant' => 'primary', 'size' => null, 'href' => null, 'type' => 'button'])
+@props(['variant' => 'primary', 'size' => null, 'href' => null, 'type' => 'button', 'block' => false])
 @php
-    $cls = 'btn-' . $variant . ($size ? ' btn-' . $size : '');
+    $classes = ['btn', 'btn-' . $variant];
+    if ($size) $classes[] = 'btn-' . $size;
+    if ($block) $classes[] = 'btn-block';
+    $cls = implode(' ', $classes);
 @endphp
 
 @if ($href)

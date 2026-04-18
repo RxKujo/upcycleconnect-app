@@ -25,6 +25,17 @@ func New() *Router {
 	mux.HandleFunc("POST /api/v1/auth/login", handlers.Login)
 
 	// ---------------------------------------------------------------
+	// Public: marketplace & contenu
+	// ---------------------------------------------------------------
+	mux.HandleFunc("GET /api/v1/public/annonces", handlers.GetPublicAnnonces)
+	mux.HandleFunc("GET /api/v1/public/annonces/{id}", withId(handlers.GetPublicAnnonce))
+	mux.HandleFunc("GET /api/v1/public/articles", handlers.GetPublicArticles)
+	mux.HandleFunc("GET /api/v1/public/articles/{id}", withId(handlers.GetPublicArticle))
+	mux.HandleFunc("GET /api/v1/public/forum", handlers.GetPublicForumSujets)
+	mux.HandleFunc("GET /api/v1/public/forum/{id}", withId(handlers.GetPublicForumSujet))
+	mux.HandleFunc("GET /api/v1/public/stats", handlers.GetPublicStats)
+
+	// ---------------------------------------------------------------
 	// Authenticated: profil utilisateur
 	// ---------------------------------------------------------------
 	mux.HandleFunc("GET /api/v1/utilisateurs/me", authUid(handlers.GetMe))
