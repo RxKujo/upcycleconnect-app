@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class UtilisateurController extends Controller
 {
-    private $apiUrl = 'http://localhost:8888/api/v1/admin/utilisateurs';
+    private $apiUrl = 'http://api:8888/api/v1/admin/utilisateurs';
 
     public function index(Request $request)
     {
@@ -57,9 +57,8 @@ class UtilisateurController extends Controller
         $utilisateur = $data['utilisateur'] ?? $data;
         $subscription = $data['subscription'] ?? null;
 
-        // Get available subscription plans
         $plansResp = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8888/api/v1/admin/abonnements');
+            ->get('http://api:8888/api/v1/admin/abonnements');
         $abonnements = $plansResp->successful() ? $plansResp->json() : [];
 
         return view('admin.utilisateurs.show', compact('utilisateur', 'subscription', 'abonnements'));
@@ -88,10 +87,10 @@ class UtilisateurController extends Controller
             ->put("{$this->apiUrl}/{$id}/unban");
 
         if ($response->failed()) {
-            return back()->with('error', 'Erreur lors du debannissement.');
+            return back()->with('error', 'Erreur lors du débannissement.');
         }
 
-        return back()->with('success', 'Utilisateur debanni.');
+        return back()->with('success', 'Utilisateur débanni.');
     }
 
     public function delete($id)
@@ -103,6 +102,6 @@ class UtilisateurController extends Controller
             return redirect()->route('admin.utilisateurs.index')->with('error', 'Erreur lors de la suppression.');
         }
 
-        return redirect()->route('admin.utilisateurs.index')->with('success', 'Compte supprime.');
+        return redirect()->route('admin.utilisateurs.index')->with('success', 'Compte supprimé.');
     }
 }

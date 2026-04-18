@@ -10,7 +10,7 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class ConteneurController extends Controller
 {
-    private $apiUrl = 'http://localhost:8888/api/v1/admin/conteneurs';
+    private $apiUrl = 'http://api:8888/api/v1/admin/conteneurs';
 
     public function index()
     {
