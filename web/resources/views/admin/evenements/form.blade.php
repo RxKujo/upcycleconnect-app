@@ -29,18 +29,18 @@
             <div class="form-group">
                 <label class="form-label" for="titre">Titre</label>
                 <input id="titre" name="titre" class="form-input" value="{{ old('titre', $evenement['titre'] ?? '') }}" required>
-                @error('titre')
-                    <span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>
-                @enderror
+                @error('titre')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
             </div>
+
             <div class="form-group">
-                <label class="form-label" for="type_evenement">Type d'événement</label>
+                <label class="form-label" for="type_evenement">Type</label>
                 <select id="type_evenement" name="type_evenement" class="form-select" required>
                     @foreach($types as $key => $label)
                         <option value="{{ $key }}" {{ old('type_evenement', $evenement['type_evenement'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
+
             <div class="form-group">
                 <label class="form-label" for="format">Format</label>
                 <select id="format" name="format" class="form-select" required>
@@ -49,101 +49,94 @@
                     @endforeach
                 </select>
             </div>
+
             <div class="form-group">
                 <label class="form-label" for="lieu">Lieu</label>
                 <input id="lieu" name="lieu" class="form-input" value="{{ old('lieu', $evenement['lieu'] ?? '') }}">
             </div>
+
             <div class="form-group">
                 <label class="form-label" for="date_debut">Date début</label>
-                <div style="display: flex; gap: 12px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Date</label>
-                        <input id="date_debut_date" type="date" class="form-input" value="{{ old('date_debut_date', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('Y-m-d') : '') }}" min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" required>
-                    </div>
-                    <div style="flex: 0.8;">
-                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Heure</label>
-                        <input id="date_debut_hour" type="number" min="0" max="23" class="form-input" placeholder="00" value="{{ old('date_debut_hour', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('H') : '') }}" required>
-                    </div>
-                    <div style="flex: 0.8;">
-                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Min</label>
-                        <input id="date_debut_minute" type="number" min="0" max="59" step="5" class="form-input" placeholder="00" value="{{ old('date_debut_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('i') : '') }}" required>
-                    </div>
+                <div style="display: flex; gap: 12px;">
+                    <input id="date_debut_date" type="date" class="form-input" style="flex:1"
+                        value="{{ old('date_debut_date', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('Y-m-d') : '') }}"
+                        min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" required>
+                    <input id="date_debut_hour" type="number" min="0" max="23" class="form-input" style="flex:0.5" placeholder="HH"
+                        value="{{ old('date_debut_hour', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('H') : '') }}" required>
+                    <input id="date_debut_minute" type="number" min="0" max="59" step="5" class="form-input" style="flex:0.5" placeholder="MM"
+                        value="{{ old('date_debut_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('i') : '') }}" required>
                 </div>
-                <input id="date_debut" name="date_debut" type="hidden" value="{{ old('date_debut', '') }}">
-                @error('date_debut')
-                    <span style="color: #A4243B; font-size: 0.85rem; display: block; margin-top: 4px;">{{ $message }}</span>
-                @enderror
+                <input id="date_debut" name="date_debut" type="hidden">
+                @error('date_debut')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
             </div>
+
             <div class="form-group">
                 <label class="form-label" for="date_fin">Date fin</label>
-                <div style="display: flex; gap: 12px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Date</label>
-                        <input id="date_fin_date" type="date" class="form-input" value="{{ old('date_fin_date', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('Y-m-d') : '') }}" min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" required>
-                    </div>
-                    <div style="flex: 0.8;">
-                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Heure</label>
-                        <input id="date_fin_hour" type="number" min="0" max="23" class="form-input" placeholder="00" value="{{ old('date_fin_hour', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('H') : '') }}" required>
-                    </div>
-                    <div style="flex: 0.8;">
-                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Min</label>
-                        <input id="date_fin_minute" type="number" min="0" max="59" step="5" class="form-input" placeholder="00" value="{{ old('date_fin_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('i') : '') }}" required>
-                    </div>
+                <div style="display: flex; gap: 12px;">
+                    <input id="date_fin_date" type="date" class="form-input" style="flex:1"
+                        value="{{ old('date_fin_date', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('Y-m-d') : '') }}"
+                        min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" required>
+                    <input id="date_fin_hour" type="number" min="0" max="23" class="form-input" style="flex:0.5" placeholder="HH"
+                        value="{{ old('date_fin_hour', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('H') : '') }}" required>
+                    <input id="date_fin_minute" type="number" min="0" max="59" step="5" class="form-input" style="flex:0.5" placeholder="MM"
+                        value="{{ old('date_fin_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('i') : '') }}" required>
                 </div>
-                <input id="date_fin" name="date_fin" type="hidden" value="{{ old('date_fin', '') }}">
-                @error('date_fin')
-                    <span style="color: #A4243B; font-size: 0.85rem; display: block; margin-top: 4px;">{{ $message }}</span>
-                @enderror
+                <input id="date_fin" name="date_fin" type="hidden">
+                @error('date_fin')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
             </div>
 
-            <script>
-                function formatDate() {
-                    const dateDebut = document.getElementById('date_debut_date').value;
-                    const hourDebut = String(document.getElementById('date_debut_hour').value || '00').padStart(2, '0');
-                    const minDebut = String(document.getElementById('date_debut_minute').value || '00').padStart(2, '0');
-                    
-                    if (dateDebut) {
-                        // Format ISO pour Laravel et Go : Y-m-d H:i:s
-                        document.getElementById('date_debut').value = `${dateDebut} ${hourDebut}:${minDebut}:00`;
-                    }
-
-                    const dateFin = document.getElementById('date_fin_date').value;
-                    const hourFin = String(document.getElementById('date_fin_hour').value || '00').padStart(2, '0');
-                    const minFin = String(document.getElementById('date_fin_minute').value || '00').padStart(2, '0');
-                    
-                    if (dateFin) {
-                        // Format ISO pour Laravel et Go : Y-m-d H:i:s
-                        document.getElementById('date_fin').value = `${dateFin} ${hourFin}:${minFin}:00`;
-                    }
-                }
-
-                document.getElementById('date_debut_date').addEventListener('change', formatDate);
-                document.getElementById('date_debut_hour').addEventListener('input', formatDate);
-                document.getElementById('date_debut_minute').addEventListener('input', formatDate);
-                document.getElementById('date_fin_date').addEventListener('change', formatDate);
-                document.getElementById('date_fin_hour').addEventListener('input', formatDate);
-                document.getElementById('date_fin_minute').addEventListener('input', formatDate);
-
-                window.addEventListener('load', formatDate);
-            </script>
             <div class="form-group">
                 <label class="form-label" for="nb_places_total">Capacité</label>
                 <input id="nb_places_total" name="nb_places_total" type="number" min="1" class="form-input" value="{{ old('nb_places_total', $evenement['nb_places_total'] ?? '') }}" required>
             </div>
+
             <div class="form-group">
                 <label class="form-label" for="prix">Prix (€)</label>
                 <input id="prix" name="prix" type="number" step="0.01" min="0" class="form-input" value="{{ old('prix', $evenement['prix'] ?? '') }}" required>
             </div>
+
+            @if(count($users) > 0)
+            <div class="form-group full-width">
+                <label class="form-label">Animateurs</label>
+                @php
+                    $selectedIds = collect($evenement['animateurs'] ?? [])->pluck('id_utilisateur')->toArray();
+                @endphp
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    @foreach($users as $user)
+                    <label style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                        <input type="checkbox" name="animateurs[]" value="{{ $user['id_utilisateur'] }}"
+                            {{ in_array($user['id_utilisateur'], old('animateurs', $selectedIds)) ? 'checked' : '' }}>
+                        {{ $user['prenom'] }} {{ $user['nom'] }}
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             <div class="form-group full-width">
                 <label class="form-label" for="description">Description</label>
                 <textarea id="description" name="description" class="form-textarea" required>{{ old('description', $evenement['description'] ?? '') }}</textarea>
-                @error('description')
-                    <span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>
-                @enderror
+                @error('description')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
             </div>
         </div>
 
         <button type="submit" class="btn-primary">{{ isset($evenement) ? 'Enregistrer' : 'Créer' }}</button>
     </form>
 </div>
+
+<script>
+function buildDate(dateId, hourId, minId, hiddenId) {
+    const d = document.getElementById(dateId).value;
+    const h = String(document.getElementById(hourId).value || '0').padStart(2, '0');
+    const m = String(document.getElementById(minId).value || '0').padStart(2, '0');
+    if (d) document.getElementById(hiddenId).value = `${d} ${h}:${m}:00`;
+}
+function syncDates() {
+    buildDate('date_debut_date', 'date_debut_hour', 'date_debut_minute', 'date_debut');
+    buildDate('date_fin_date', 'date_fin_hour', 'date_fin_minute', 'date_fin');
+}
+['date_debut_date','date_debut_hour','date_debut_minute','date_fin_date','date_fin_hour','date_fin_minute']
+    .forEach(id => document.getElementById(id).addEventListener('change', syncDates));
+syncDates();
+</script>
 @endsection

@@ -249,7 +249,7 @@ CREATE TABLE evenements (
     id_template     INT NULL,
     titre           VARCHAR(200) NOT NULL,
     description     TEXT NOT NULL,
-    type_evenement  ENUM('formation','atelier','conference') NOT NULL,
+    type_evenement  ENUM('formation','atelier','conference','conseil') NOT NULL,
     format          ENUM('presentiel','distanciel') NOT NULL,
     lieu            VARCHAR(300),
     date_debut      DATETIME NOT NULL,
