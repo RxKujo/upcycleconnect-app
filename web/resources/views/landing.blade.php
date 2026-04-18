@@ -233,6 +233,11 @@
         .auth-wrapper {
             position: relative;
         }
+        #auth-login-btn:hover,
+        #auth-register-btn:hover {
+            transform: none;
+            box-shadow: var(--shadow-sm);
+        }
         .user-menu-btn {
             background: transparent;
             border: 2px solid transparent;
@@ -688,7 +693,11 @@
                 <a href="#about">À Propos</a>
             </div>
 
-            <div class="auth-wrapper" id="auth-wrapper" style="visibility: hidden;">
+            <div class="auth-wrapper" id="auth-wrapper" style="visibility: hidden; display: flex; gap: 12px; align-items: center;">
+                <!-- Inscription Bouton -->
+                <x-btn id="auth-register-btn" variant="secondary" size="sm" href="{{ route('particulier.register') }}">
+                    Inscription
+                </x-btn>
                 <!-- Connexion Bouton -->
                 <x-btn id="auth-login-btn" variant="primary" size="sm" href="{{ route('particulier.login') }}">
                     Connexion
@@ -1013,13 +1022,15 @@
             const token = localStorage.getItem('auth_token');
             const authWrapper = document.getElementById('auth-wrapper');
             const loginBtn = document.getElementById('auth-login-btn');
+            const registerBtn = document.getElementById('auth-register-btn');
             const userMenu = document.getElementById('auth-user-menu');
             const userMenuBtn = document.getElementById('user-menu-btn');
             const userDropdown = document.getElementById('user-dropdown');
             const logoutBtn = document.getElementById('logout-btn');
-            
+
             if (token) {
                 if (loginBtn) loginBtn.style.display = 'none';
+                if (registerBtn) registerBtn.style.display = 'none';
                 if (userMenu) userMenu.style.display = 'block';
 
                 // Dropdown handler

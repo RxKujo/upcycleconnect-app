@@ -30,7 +30,7 @@ func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 
 	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, adresse_complete, photo_profil_url,
 	          role, est_banni, date_fin_ban, nom_entreprise, numero_siret,
-	          COALESCE(upcycling_score, 0), COALESCE(est_certifie, 0),
+	          COALESCE(siret_verifie, 0), COALESCE(upcycling_score, 0), COALESCE(est_certifie, 0),
 	          date_creation
 	          FROM utilisateurs WHERE id_utilisateur = ?`
 
@@ -39,7 +39,7 @@ func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 		&telephone, &ville, &adresse, &photoProfil,
 		&u.Role, &u.EstBanni, &dateFinBan,
 		&nomEntreprise, &numeroSiret,
-		&u.UpcyclingScore, &u.EstCertifie,
+		&u.SiretVerifie, &u.UpcyclingScore, &u.EstCertifie,
 		&u.DateCreation)
 
 	// Set default notification settings (since columns don't exist yet)

@@ -4,10 +4,15 @@ import (
 	"api/internal/models"
 	"api/pkg/database"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -107,6 +112,240 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func isValidEmail(email string) bool {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return emailRegex.MatchString(email)
+}
+
+// isValidSiretFormat vérifie que le SIRET est composé de 14 chiffres
+func isValidSiretFormat(siret string) bool {
+	if len(siret) != 14 {
+		return false
+	}
+	for _, c := range siret {
+		if !unicode.IsDigit(c) {
+			return false
+		}
+	}
+	return true
+}
+
+// verifySiretAPI appelle l'API Recherche d'Entreprises (api.gouv.fr) pour vérifier l'existence du SIRET
+func verifySiretAPI(siret string) (bool, error) {
+	apiURL := fmt.Sprintf("https://recherche-entreprises.api.gouv.fr/search?q=%s&mtm_campaign=upcycleconnect", siret)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(apiURL)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("API SIRENE: statut %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	var result struct {
+		TotalResults int `json:"total_results"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return false, err
+	}
+
+	return result.TotalResults > 0, nil
+}
+
+// verifyRecaptcha vérifie le token reCAPTCHA v2 auprès de Google
+func verifyRecaptcha(token string) (bool, error) {
+	secret := os.Getenv("RECAPTCHA_SECRET_KEY")
+	if secret == "" {
+		// Si pas de clé configurée, on skip la vérification (dev)
+		return true, nil
+	}
+
+	resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify", url.Values{
+		"secret":   {secret},
+		"response": {token},
+	})
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Success bool `json:"success"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false, err
+	}
+
+	return result.Success, nil
+}
+
+func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
+	var req models.RegisterProfessionnelRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
+		return
+	}
+
+	// Validation des champs obligatoires
+	if req.Nom == "" || req.Prenom == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "nom et prénom sont obligatoires"})
+		return
+	}
+
+	if req.Email == "" || !isValidEmail(req.Email) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "format email invalide"})
+		return
+	}
+
+	if req.MotDePasse == "" || len(req.MotDePasse) < 8 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "mot de passe doit contenir au minimum 8 caractères"})
+		return
+	}
+
+	if req.Ville == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "ville est obligatoire"})
+		return
+	}
+
+	if req.NomEntreprise == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "nom de l'entreprise est obligatoire"})
+		return
+	}
+
+	// Nettoyage du SIRET (supprimer espaces)
+	req.NumeroSiret = strings.ReplaceAll(req.NumeroSiret, " ", "")
+
+	// Validation format SIRET (14 chiffres + Luhn)
+	if !isValidSiretFormat(req.NumeroSiret) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "numéro SIRET invalide (14 chiffres requis)"})
+		return
+	}
+
+	// Vérification reCAPTCHA
+	if req.CaptchaToken == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "veuillez valider le captcha"})
+		return
+	}
+
+	captchaOk, err := verifyRecaptcha(req.CaptchaToken)
+	if err != nil || !captchaOk {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "échec de vérification captcha"})
+		return
+	}
+
+	// Vérifier email unique
+	var emailCount int
+	err = database.DB.QueryRow(`SELECT COUNT(*) FROM utilisateurs WHERE email = ?`, req.Email).Scan(&emailCount)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+	if emailCount > 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "email déjà utilisé"})
+		return
+	}
+
+	// Vérifier SIRET unique
+	var siretCount int
+	err = database.DB.QueryRow(`SELECT COUNT(*) FROM utilisateurs WHERE numero_siret = ?`, req.NumeroSiret).Scan(&siretCount)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+	if siretCount > 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "ce numéro SIRET est déjà enregistré"})
+		return
+	}
+
+	// Vérification SIRET via API SIRENE
+	siretVerifie := false
+	siretExists, err := verifySiretAPI(req.NumeroSiret)
+	if err == nil && siretExists {
+		siretVerifie = true
+	}
+
+	// Hasher le mot de passe
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.MotDePasse), 10)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+
+	// Insérer l'utilisateur
+	query := `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe_hash, telephone, ville, adresse_complete, nom_entreprise, numero_siret, siret_verifie, role, est_banni, date_creation)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`
+
+	res, err := database.DB.Exec(query, req.Nom, req.Prenom, req.Email, string(hash), req.Telephone, req.Ville, req.AdresseComplete, req.NomEntreprise, req.NumeroSiret, siretVerifie, "professionnel", false)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+
+	idUtilisateur, err := res.LastInsertId()
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+
+	// Générer le JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":   idUtilisateur,
+		"role": "professionnel",
+		"exp":  time.Now().Add(time.Hour * 72).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(models.RegisterProfessionnelResponse{
+		Message:       "compte professionnel créé avec succès",
+		IDUtilisateur: idUtilisateur,
+		Token:         tokenString,
+	})
 }
 
 func RegisterParticulier(w http.ResponseWriter, r *http.Request) {

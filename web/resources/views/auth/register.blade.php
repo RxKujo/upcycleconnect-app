@@ -362,19 +362,6 @@
             <form id="registerForm" method="POST" action="http://localhost:8888/api/v1/auth/register-particulier" novalidate>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="nom" class="form-label">Nom</label>
-                        <input
-                            type="text"
-                            id="nom"
-                            name="nom"
-                            class="form-input"
-                            placeholder="Votre nom"
-                            required
-                        >
-                        <div class="error-message">Le nom est obligatoire</div>
-                    </div>
-
-                    <div class="form-group">
                         <label for="prenom" class="form-label">Prénom</label>
                         <input
                             type="text"
@@ -385,6 +372,19 @@
                             required
                         >
                         <div class="error-message">Le prénom est obligatoire</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nom" class="form-label">Nom</label>
+                        <input
+                            type="text"
+                            id="nom"
+                            name="nom"
+                            class="form-input"
+                            placeholder="Votre nom"
+                            required
+                        >
+                        <div class="error-message">Le nom est obligatoire</div>
                     </div>
                 </div>
 
@@ -485,7 +485,10 @@
 
             <div class="auth-footer">
                 <div class="auth-footer-text">
-                    Déjà inscrit? <a href="/login" class="auth-link">Se connecter</a>
+                    Vous êtes un professionnel ? <a href="/register-pro" class="auth-link">Inscription pro / artisan</a>
+                </div>
+                <div class="auth-footer-text">
+                    Déjà inscrit ? <a href="/login" class="auth-link">Se connecter</a>
                 </div>
             </div>
         </div>
