@@ -41,3 +41,9 @@ web/database/database.sqlite
 # User uploads
 web/public/uploads/*
 !web/public/uploads/.gitkeep
+
+# Go build & hot-reload artifacts
+api/tmp/
+api/server
+api/*.exe
+
