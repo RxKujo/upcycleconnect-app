@@ -8,10 +8,30 @@ use App\Http\Controllers\Admin\PrestationController;
 use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CatalogueController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MarcheController;
+use App\Http\Controllers\ForumController;
+use App\Http\Controllers\EvenementCatalogueController;
+use App\Http\Controllers\ConseilController;
 
-Route::get('/', function () {
-    return redirect()->route('admin.login');
-});
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/marche', [MarcheController::class, 'index'])->name('marche.index');
+Route::get('/marche/{id}', [MarcheController::class, 'show'])->name('marche.show');
+
+Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
+Route::get('/forum/{id}', [ForumController::class, 'show'])->name('forum.show');
+
+Route::get('/catalogue', [EvenementCatalogueController::class, 'index'])->name('catalogue.index');
+Route::get('/catalogue/{id}', [EvenementCatalogueController::class, 'show'])->name('catalogue.show');
+
+Route::get('/conseils', [ConseilController::class, 'index'])->name('conseils.index');
+Route::get('/conseils/{id}', [ConseilController::class, 'show'])->name('conseils.show');
+
+Route::get('/a-propos', fn() => view('public.a-propos'))->name('a-propos');
+Route::get('/cgu', fn() => view('public.cgu'))->name('cgu');
+Route::get('/rgpd', fn() => view('public.rgpd'))->name('rgpd');
+Route::get('/services-pro', fn() => view('public.services-pro'))->name('services-pro');
 
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
