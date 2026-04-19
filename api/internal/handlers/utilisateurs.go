@@ -19,8 +19,6 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
-// ==================== PROFILE (Task 4) ====================
-
 func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 	log.Printf("[INFO] %s | GetMe | User %d fetching profile\n", time.Now().Format(time.RFC3339), id)
 
@@ -42,7 +40,6 @@ func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 		&u.SiretVerifie, &u.UpcyclingScore, &u.EstCertifie,
 		&u.DateCreation)
 
-	// Set default notification settings (since columns don't exist yet)
 	u.NotifPushActive = true
 	u.NotifEmailActive = true
 
@@ -98,7 +95,6 @@ func UpdateMe(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	// Handle photo upload
 	var photoURL *string
 	if req.PhotoProfil != nil && *req.PhotoProfil != "" {
 		ext, data, err := decodeBase64Image(*req.PhotoProfil)
@@ -170,10 +166,6 @@ func UpdateNotifications(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	// Note: notif_push_active and notif_email_active columns don't exist yet
-	// For now, we just log the preference and return success
-	// TODO: Add these columns to database schema
-
 	pushFlag := "unchanged"
 	emailFlag := "unchanged"
 	if req.NotifPushActive != nil {
@@ -242,7 +234,6 @@ func GetEnrolledEvents(w http.ResponseWriter, r *http.Request, userId int) {
 func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 	log.Printf("[INFO] %s | ExportPDF | User %d exporting profile data\n", time.Now().Format(time.RFC3339), userId)
 
-	// Get user info
 	var nom, prenom, email, role string
 	var telephone, ville sql.NullString
 	var dateCreation time.Time
@@ -261,7 +252,6 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Get ads
 	adRows, _ := database.DB.Query(`SELECT titre, statut, date_creation FROM annonces WHERE id_particulier = ? ORDER BY date_creation DESC`, userId)
 	var ads []map[string]string
 	if adRows != nil {
@@ -275,7 +265,6 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 		}
 	}
 
-	// Get enrolled events
 	evRows, _ := database.DB.Query(`
 		SELECT e.titre, e.date_debut, COALESCE(i.statut_paiement, 'inconnu')
 		FROM inscriptions_evenements i
@@ -293,12 +282,10 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 		}
 	}
 
-	// Generate PDF using gofpdf (without UTF-8 accents)
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetFont("Arial", "", 10)
 	pdf.AddPage()
 
-	// Title
 	pdf.SetFont("Arial", "B", 16)
 	pdf.CellFormat(0, 10, "UPCYCLECONNECT", "", 1, "C", false, 0, "")
 	pdf.CellFormat(0, 8, "Export Donnees Personnelles", "", 1, "C", false, 0, "")
@@ -308,7 +295,6 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 	pdf.CellFormat(0, 6, fmt.Sprintf("Date d'export: %s", now.Format("02/01/2006 15:04")), "", 1, "C", false, 0, "")
 	pdf.Ln(5)
 
-	// Personal Info
 	pdf.SetFont("Arial", "B", 11)
 	pdf.CellFormat(0, 8, "INFORMATIONS PERSONNELLES", "", 1, "", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
@@ -351,7 +337,6 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 
 	pdf.Ln(5)
 
-	// Ads
 	pdf.SetFont("Arial", "B", 11)
 	pdf.CellFormat(0, 8, "ANNONCES PUBLIEES", "", 1, "", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
@@ -366,7 +351,6 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 
 	pdf.Ln(3)
 
-	// Events
 	pdf.SetFont("Arial", "B", 11)
 	pdf.CellFormat(0, 8, "EVENEMENTS INSCRITS", "", 1, "", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
@@ -379,12 +363,10 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 		}
 	}
 
-	// Footer
 	pdf.Ln(10)
 	pdf.SetFont("Arial", "I", 8)
 	pdf.CellFormat(0, 6, "Document genere automatiquement par UpcycleConnect", "", 1, "C", false, 0, "")
 
-	// Output PDF
 	var buf bytes.Buffer
 	if err := pdf.Output(&buf); err != nil {
 		log.Printf("[ERROR] %s | ExportPDF | PDF generation err: %v\n", time.Now().Format(time.RFC3339), err)
@@ -404,15 +386,12 @@ func ExportPDF(w http.ResponseWriter, r *http.Request, userId int) {
 	log.Printf("[INFO] %s | ExportPDF | User %d exported profile data\n", time.Now().Format(time.RFC3339), userId)
 }
 
-// ==================== ADMIN (Task 5) ====================
-
 func GetAllUtilisateurs(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] %s | GetUsers | Admin listing users\n", time.Now().Format(time.RFC3339))
 
 	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, est_banni, photo_profil_url, date_creation FROM utilisateurs WHERE 1=1`
 	var args []interface{}
 
-	// Filters
 	params := r.URL.Query()
 	if roleFilter := params.Get("role"); roleFilter != "" {
 		query += " AND role = ?"
@@ -431,12 +410,8 @@ func GetAllUtilisateurs(w http.ResponseWriter, r *http.Request) {
 		args = append(args, s, s, s)
 	}
 
-	// Exclude soft-deleted (Note: deleted_at column not implemented yet)
-	// query += " AND deleted_at IS NULL"
-
 	query += " ORDER BY date_creation DESC"
 
-	// Pagination
 	page := 1
 	limit := 20
 	if p := params.Get("page"); p != "" {
@@ -450,9 +425,8 @@ func GetAllUtilisateurs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Count total
 	countQuery := strings.Replace(query, "SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, est_banni, photo_profil_url, date_creation", "SELECT COUNT(*)", 1)
-	// Remove ORDER BY for count
+	
 	if idx := strings.Index(countQuery, " ORDER BY"); idx != -1 {
 		countQuery = countQuery[:idx]
 	}
@@ -460,7 +434,7 @@ func GetAllUtilisateurs(w http.ResponseWriter, r *http.Request) {
 	err := database.DB.QueryRow(countQuery, args...).Scan(&total)
 	if err != nil {
 		log.Printf("[ERROR] %s | GetUsers | Count query err: %v | Query: %s\n", time.Now().Format(time.RFC3339), err, countQuery)
-		// Ignore count error, continue anyway
+		
 	}
 
 	offset := (page - 1) * limit
@@ -535,7 +509,6 @@ func GetUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	var u models.Utilisateur
 	var adresse, photoProfil, telephone, ville sql.NullString
 
-	// Parse ID to int
 	userID, err := strconv.Atoi(id)
 	if err != nil {
 		log.Printf("[ERROR] %s | GetUtilisateur | Invalid ID: %s\n", time.Now().Format(time.RFC3339), id)
@@ -545,7 +518,6 @@ func GetUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Use the exact same query structure as GetAllUtilisateurs which works
 	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, est_banni, photo_profil_url, date_creation FROM utilisateurs WHERE id_utilisateur = ?`
 
 	log.Printf("[DEBUG] %s | GetUtilisateur | Executing query for userID: %d\n", time.Now().Format(time.RFC3339), userID)
@@ -579,7 +551,6 @@ func GetUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 		u.PhotoProfilURL = &photoProfil.String
 	}
 
-	// Also get current subscription
 	var subscription map[string]interface{}
 	var idSouscription int
 	var nomAbonnement string
@@ -651,11 +622,10 @@ func BanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 		DateFinBan *string `json:"date_fin_ban"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		// Try without body (permanent ban)
+		
 		req.DateFinBan = nil
 	}
 
-	// Cannot ban admin
 	var role string
 	err := database.DB.QueryRow("SELECT role FROM utilisateurs WHERE id_utilisateur = ?", id).Scan(&role)
 	if err != nil {
@@ -692,7 +662,6 @@ func BanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Stub email notification
 	log.Printf("[INFO] %s | BanUser | Email notification stub: user %s has been banned\n", time.Now().Format(time.RFC3339), id)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -721,7 +690,6 @@ func UnbanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 func DeleteUtilisateur(w http.ResponseWriter, r *http.Request, id string, adminId int) {
 	log.Printf("[WARN] %s | DeleteUser | Admin %d deleting user %s\n", time.Now().Format(time.RFC3339), adminId, id)
 
-	// Soft delete
 	_, err := database.DB.Exec("UPDATE utilisateurs SET deleted_at = NOW() WHERE id_utilisateur = ?", id)
 	if err != nil {
 		log.Printf("[ERROR] %s | DeleteUser | DB err: %v\n", time.Now().Format(time.RFC3339), err)
@@ -760,10 +728,8 @@ func AssignSubscription(w http.ResponseWriter, r *http.Request, id string, admin
 		return
 	}
 
-	// Deactivate existing subscriptions
 	_, _ = tx.Exec("UPDATE souscriptions SET est_active = 0 WHERE id_utilisateur = ? AND est_active = 1", id)
 
-	// Insert new subscription
 	res, err := tx.Exec(`INSERT INTO souscriptions (id_utilisateur, id_abonnement, date_debut, date_fin, est_active, gere_par_admin) VALUES (?, ?, NOW(), ?, 1, ?)`,
 		id, req.IDAbonnement, req.DateFin, req.GereParAdmin)
 	if err != nil {
@@ -805,7 +771,6 @@ func RemoveSubscription(w http.ResponseWriter, r *http.Request, userId string, s
 	json.NewEncoder(w).Encode(map[string]string{"message": "abonnement desactive"})
 }
 
-// GetAbonnements returns all available subscription plans (for admin dropdown)
 func GetAbonnements(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query("SELECT id_abonnement, nom, prix_mensuel FROM abonnements ORDER BY prix_mensuel")
 	if err != nil {

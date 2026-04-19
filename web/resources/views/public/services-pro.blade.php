@@ -11,7 +11,7 @@
         <p class="section-subtitle" style="margin:0 auto 56px;">Des outils avancés pour développer votre activité d'upcycling</p>
 
         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:28px; text-align:left; align-items:start;">
-            {{-- Freemium --}}
+            
             <div class="card" style="display:flex; flex-direction:column;">
                 <p class="font-mono" style="font-size:0.82rem; margin-bottom:16px;">Freemium</p>
                 <p style="font-family:'Bebas Neue',sans-serif; font-size:3.5rem; letter-spacing:0.04em; line-height:1; margin-bottom:28px;">0&euro;<span class="font-mono" style="font-size:0.78rem; opacity:0.6;"> /mois</span></p>
@@ -24,7 +24,6 @@
                 <a href="{{ route('professionnel.register') }}" class="btn btn-secondary btn-block">Commencer</a>
             </div>
 
-            {{-- Essential Pro --}}
             <div class="card" style="display:flex; flex-direction:column; border-color:var(--forest);">
                 <p class="font-mono" style="font-size:0.82rem; margin-bottom:16px; color:var(--forest);">Essential Pro</p>
                 <p style="font-family:'Bebas Neue',sans-serif; font-size:3.5rem; letter-spacing:0.04em; line-height:1; margin-bottom:28px;">15,99&euro;<span class="font-mono" style="font-size:0.78rem; opacity:0.6;"> /mois</span></p>
@@ -38,7 +37,6 @@
                 <a href="{{ route('professionnel.register') }}" class="btn btn-success btn-block">S'abonner</a>
             </div>
 
-            {{-- Expert Pro --}}
             <div class="card" style="display:flex; flex-direction:column; border-color:var(--cherry); box-shadow:5px 5px 0px var(--cherry);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                     <p class="font-mono" style="font-size:0.82rem; color:var(--cherry);">Expert Pro</p>

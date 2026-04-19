@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// StartRappelWorker lance une goroutine qui vérifie périodiquement les événements à venir.
 func StartRappelWorker() {
 	ticker := time.NewTicker(1 * time.Hour)
 	go func() {
@@ -23,7 +22,7 @@ func StartRappelWorker() {
 }
 
 func processRappels() {
-	// 1. Trouver les événements validés, non rappelés, commençant dans les prochaines 48h
+	
 	query := `
 		SELECT id_evenement, titre, date_debut 
 		FROM evenements 
@@ -48,8 +47,7 @@ func processRappels() {
 		}
 
 		log.Printf("[WORKER] Envoi des rappels pour l'événement #%d: %s", id, titre)
-		
-		// 2. Récupérer les emails des inscrits
+
 		userRows, err := database.DB.Query(`
 			SELECT u.email, u.prenom 
 			FROM inscriptions_evenements i
@@ -72,7 +70,6 @@ func processRappels() {
 		}
 		userRows.Close()
 
-		// 3. Marquer comme envoyé
 		_, err = database.DB.Exec("UPDATE evenements SET rappel_envoye = TRUE WHERE id_evenement = ?", id)
 		if err != nil {
 			log.Printf("[WORKER] Erreur update rappel_envoye pour #%d: %v", id, err)

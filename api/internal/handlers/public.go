@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-// =============================================
-// PUBLIC ANNONCES — marketplace publique
-// =============================================
-
 type PublicAnnonceVendeur struct {
 	Prenom       string `json:"prenom"`
 	NomInitiale  string `json:"nom_initiale"`
@@ -85,13 +81,11 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 			a.DateCreation = dateCreation.Format("2006-01-02T15:04:05Z")
 			a.Ville = a.Vendeur.Ville
 
-			// Anonymisation RGPD: initiale du nom seulement
 			if len(nom) > 0 {
 				a.Vendeur.NomInitiale = string([]rune(nom)[:1]) + "."
 			}
 			a.Vendeur.Certifie = a.Vendeur.Score >= 500
 
-			// Load objets + photos
 			a.Objets = loadPublicObjets(a.IDAnnonce)
 
 			annonces = append(annonces, a)
@@ -199,10 +193,6 @@ func loadPublicPhotos(objetId int) []PublicAnnoncePhoto {
 	return photos
 }
 
-// =============================================
-// PUBLIC ARTICLES / CONSEILS
-// =============================================
-
 type PublicArticle struct {
 	IDArticle       int     `json:"id_article"`
 	Titre           string  `json:"titre"`
@@ -303,10 +293,6 @@ func GetPublicArticle(w http.ResponseWriter, r *http.Request, id string) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(a)
 }
-
-// =============================================
-// PUBLIC FORUM
-// =============================================
 
 type PublicForumSujet struct {
 	IDSujet       int    `json:"id_sujet"`
@@ -412,7 +398,6 @@ func GetPublicForumSujet(w http.ResponseWriter, r *http.Request, id string) {
 		s.CreateurNom = string([]rune(nom)[:1]) + "."
 	}
 
-	// Load messages
 	msgRows, err := database.DB.Query(`
 		SELECT fm.id_message, fm.contenu, fm.date_publication,
 			   u.prenom, u.nom
@@ -445,10 +430,6 @@ func GetPublicForumSujet(w http.ResponseWriter, r *http.Request, id string) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(s)
 }
-
-// =============================================
-// PUBLIC STATS (home page)
-// =============================================
 
 type PublicStats struct {
 	ObjetsSauves int `json:"objets_sauves"`

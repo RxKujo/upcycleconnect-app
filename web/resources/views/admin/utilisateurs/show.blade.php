@@ -17,7 +17,7 @@
 </x-page-header>
 
 <div class="info-grid">
-    {{-- Informations Générales --}}
+    
     <x-card title="Informations Generales" style="grid-column: 1 / -1;">
         <div style="display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap;">
             <div class="user-avatar">
@@ -60,7 +60,6 @@
         </div>
     </x-card>
 
-    {{-- Gestion du Rôle --}}
     <x-card title="Gestion du Role">
         <form id="role-form" onsubmit="return changeRole(event)">
             <div class="form-group">
@@ -75,7 +74,6 @@
         </form>
     </x-card>
 
-    {{-- Bannissement --}}
     <x-card title="Bannissement">
         @if($utilisateur['est_banni'])
             <p style="margin-bottom: 12px;">
@@ -96,7 +94,6 @@
         @endif
     </x-card>
 
-    {{-- Abonnement --}}
     <x-card title="Abonnement">
         @if(isset($subscription) && $subscription)
             <p style="margin-bottom: 8px;"><strong>Plan :</strong> {{ $subscription['nom_abonnement'] }}</p>
@@ -112,20 +109,17 @@
         @endif
     </x-card>
 
-    {{-- Données --}}
     <x-card title="Donnees">
         <x-btn variant="secondary" size="sm" style="opacity: 0.5; cursor: not-allowed;" disabled>Telecharger donnees PDF</x-btn>
         <p style="font-size: 0.8rem; margin-top: 8px; color: rgba(18,3,9,0.5);">Fonctionnalite a venir</p>
     </x-card>
 
-    {{-- Actions Dangereuses --}}
     <x-card title="Actions Dangereuses" :danger="true">
         <x-btn variant="danger" size="sm" onclick="openDeleteModal()">Supprimer le compte</x-btn>
         <p style="font-size: 0.8rem; margin-top: 8px; color: var(--cherry);">Cette action est irreversible</p>
     </x-card>
 </div>
 
-{{-- Modal Ban --}}
 <x-modal id="ban-modal" title="Bannir l'utilisateur">
     <form action="{{ route('admin.utilisateurs.ban', $utilisateur['id_utilisateur']) }}" method="POST" id="ban-form">
         @csrf
@@ -146,7 +140,6 @@
     </form>
 </x-modal>
 
-{{-- Modal Abonnement --}}
 <x-modal id="sub-modal" title="Gerer l'abonnement">
     <form id="sub-form" onsubmit="return assignSubscription(event)">
         <div class="form-group">
@@ -176,7 +169,6 @@
     </form>
 </x-modal>
 
-{{-- Modal Suppression --}}
 <x-modal id="delete-modal" title="Supprimer le compte" title-style="color: var(--cherry);">
     <p style="margin-bottom: 16px;">Etes-vous sur ? Cette action est irreversible. Toutes les donnees de l'utilisateur seront supprimees.</p>
     <div class="modal-actions">

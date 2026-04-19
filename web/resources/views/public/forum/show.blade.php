@@ -10,7 +10,6 @@
         Retour au forum
     </a>
 
-    {{-- En-tête du sujet --}}
     <div style="margin-bottom:40px;">
         @if(!empty($sujet['categorie']))
         <span class="badge badge-teal" style="margin-bottom:16px;">{{ $sujet['categorie'] }}</span>
@@ -23,7 +22,6 @@
         </p>
     </div>
 
-    {{-- Messages --}}
     <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:48px;">
         @forelse(($sujet['messages'] ?? []) as $index => $message)
         <div style="border:var(--border); padding:24px; background:{{ $index === 0 ? 'white' : 'var(--cream)' }}; {{ $index === 0 ? 'box-shadow:var(--shadow-sm);' : '' }}">
@@ -42,7 +40,6 @@
         @endforelse
     </div>
 
-    {{-- Répondre (mur d'inscription) --}}
     <div style="border:var(--border); padding:32px; background:white; box-shadow:var(--shadow-sm); text-align:center;">
         <p style="font-size:1rem; margin-bottom:16px; opacity:0.7;">Vous souhaitez participer à cette discussion ?</p>
         <a href="{{ route('particulier.login') }}?intent=forum_reponse&sujet={{ $sujet['id_sujet'] }}" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour répondre">

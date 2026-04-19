@@ -75,7 +75,7 @@
     </div>
 
     <form id="annonce-form" onsubmit="return false;">
-        <!-- Step 1 -->
+        
         <div class="step-content active" id="step-1">
             <div class="card">
                 <div class="form-group">
@@ -109,15 +109,12 @@
                     <input type="number" class="form-input" id="prix" placeholder="0.00" min="0" step="0.01" style="max-width: 200px;">
                 </div>
 
-
-
                 <div class="btn-row">
                     <x-btn onclick="goToStep(2)">Suivant</x-btn>
                 </div>
             </div>
         </div>
 
-        <!-- Step 2 -->
         <div class="step-content" id="step-2">
             <div class="card">
                 <div id="objets-container"></div>
@@ -147,7 +144,6 @@
             </div>
         </div>
 
-        <!-- Step 3 -->
         <div class="step-content" id="step-3">
             <div class="card" style="text-align: center; padding: 40px 20px;">
                 <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; margin-bottom: 16px;">PRET A PUBLIER ?</h3>

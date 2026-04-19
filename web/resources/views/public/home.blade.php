@@ -5,9 +5,6 @@
 
 @section('content')
 
-{{-- =============================================
-     1. HERO — Cream avec accents cherry
-============================================= --}}
 <section class="hero-section">
     <div class="hero-inner">
         <div class="hero-left">
@@ -63,9 +60,6 @@
     </div>
 </section>
 
-{{-- =============================================
-     2. COMMENT CA MARCHE — Wheat
-============================================= --}}
 <section class="section-wheat steps-section">
     <div class="section-inner">
         <div class="section-head">
@@ -95,9 +89,6 @@
     </div>
 </section>
 
-{{-- =============================================
-     3. DERNIERES ANNONCES — Cream
-============================================= --}}
 <section class="section-light">
     <div class="section-inner">
         <div class="section-head section-head-row">
@@ -154,9 +145,6 @@
     </div>
 </section>
 
-{{-- =============================================
-     4. STATS — Wheat (section dediee)
-============================================= --}}
 <section class="section-wheat">
     <div class="section-inner">
         <div class="section-head" style="text-align:center;">
@@ -185,9 +173,6 @@
     </div>
 </section>
 
-{{-- =============================================
-     5. EVENEMENTS — Cream
-============================================= --}}
 <section class="section-light">
     <div class="section-inner">
         <div class="section-head section-head-row">
@@ -243,9 +228,6 @@
     </div>
 </section>
 
-{{-- =============================================
-     6. BANDEAU PRO — Coffee (le seul moment sombre)
-============================================= --}}
 <section class="pro-section">
     <div class="section-inner">
         <div class="pro-grid">
@@ -283,9 +265,6 @@
     </div>
 </section>
 
-{{-- =============================================
-     7. CTA FINAL — Wheat
-============================================= --}}
 <section class="section-wheat cta-final">
     <div class="section-inner">
         <h2 class="cta-final-title">Prêt à donner<br>une seconde vie ?</h2>

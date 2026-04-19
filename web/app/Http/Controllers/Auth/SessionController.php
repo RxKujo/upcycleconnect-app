@@ -7,16 +7,11 @@ use Illuminate\Http\Request;
 
 class SessionController extends Controller
 {
-    /**
-     * Establish admin session from JWT token received from frontend
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
+    
     public function setAdminSession(Request $request)
     {
         try {
-            // Get token from request body or Authorization header
+            
             $token = $request->input('token');
 
             if (!$token && $request->bearerToken()) {
@@ -30,7 +25,6 @@ class SessionController extends Controller
                 ], 400);
             }
 
-            // Decode JWT and validate
             $decoded = $this->decodeJWT($token);
 
             if (!$decoded) {
@@ -40,7 +34,6 @@ class SessionController extends Controller
                 ], 401);
             }
 
-            // Verify role is admin
             if (($decoded['role'] ?? '') !== 'admin') {
                 return response()->json([
                     'success' => false,
@@ -48,7 +41,6 @@ class SessionController extends Controller
                 ], 403);
             }
 
-            // Set session keys
             session([
                 'admin_token' => $token,
                 'admin_role' => 'admin',
@@ -69,23 +61,16 @@ class SessionController extends Controller
         }
     }
 
-    /**
-     * Decode JWT token without signature verification (signature verified in Go API)
-     *
-     * @param string $token
-     * @return array|null
-     */
     private function decodeJWT($token)
     {
         try {
-            // Split JWT into parts
+            
             $parts = explode('.', $token);
 
             if (count($parts) !== 3) {
                 return null;
             }
 
-            // Decode payload (base64url)
             $payload = $this->base64UrlDecode($parts[1]);
             $decoded = json_decode($payload, true);
 
@@ -93,10 +78,9 @@ class SessionController extends Controller
                 return null;
             }
 
-            // Check expiration
             if (isset($decoded['exp'])) {
                 if (time() >= $decoded['exp']) {
-                    return null; // Token expired
+                    return null; 
                 }
             }
 
@@ -107,12 +91,6 @@ class SessionController extends Controller
         }
     }
 
-    /**
-     * Decode base64url encoded string
-     *
-     * @param string $input
-     * @return string
-     */
     private function base64UrlDecode($input)
     {
         $remainder = strlen($input) % 4;

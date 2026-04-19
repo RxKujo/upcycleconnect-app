@@ -9,7 +9,6 @@
     <h1 class="page-title">Forum</h1>
     <p class="page-subtitle">Échangez avec la communauté, posez vos questions et partagez vos retours d'expérience</p>
 
-    {{-- Bouton poster (mur d'inscription) --}}
     <div style="margin-bottom:32px;">
         <a href="{{ route('particulier.login') }}?intent=forum" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour poster">
             + Nouveau sujet

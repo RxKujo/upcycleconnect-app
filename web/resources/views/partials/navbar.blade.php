@@ -1,12 +1,11 @@
 <nav class="navbar-public" id="navbar" role="navigation" aria-label="Navigation principale">
     <div class="nav-inner">
-        {{-- Logo --}}
+        
         <a href="{{ route('home') }}" class="nav-brand" aria-label="UpcycleConnect — Accueil">
             <span class="nav-brand-logo" aria-hidden="true"></span>
             <span class="nav-brand-text">UpcycleConnect</span>
         </a>
 
-        {{-- Liens centraux --}}
         <ul class="nav-links-public">
             <li><a href="{{ route('marche.index') }}" class="{{ request()->routeIs('marche.*') ? 'active' : '' }}">Marché</a></li>
             <li><a href="{{ route('evenements.index') }}" class="{{ request()->routeIs('evenements.*') ? 'active' : '' }}">Événements</a></li>
@@ -14,12 +13,10 @@
             <li><a href="{{ route('forum.index') }}" class="{{ request()->routeIs('forum.*') ? 'active' : '' }}">Forum</a></li>
         </ul>
 
-        {{-- Zone droite : Auth --}}
         <div class="auth-wrapper" id="auth-wrapper">
             <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-ghost" id="nav-register-btn">Inscription</a>
             <a href="{{ route('particulier.login') }}" class="nav-btn nav-btn-primary" id="nav-login-btn">Connexion</a>
 
-            {{-- Menu utilisateur connecte --}}
             <div id="nav-user-menu" class="nav-user-menu">
                 <button id="nav-user-btn" class="nav-user-btn" aria-expanded="false" aria-label="Menu utilisateur">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
@@ -40,13 +37,11 @@
             </div>
         </div>
 
-        {{-- Burger mobile --}}
         <button class="nav-burger" id="nav-burger" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
     </div>
 
-    {{-- Menu mobile --}}
     <div class="nav-mobile" id="nav-mobile">
         <a href="{{ route('marche.index') }}">Marché</a>
         <a href="{{ route('evenements.index') }}">Événements</a>

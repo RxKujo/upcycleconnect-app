@@ -22,7 +22,6 @@ func main() {
 	}
 	defer database.DB.Close()
 
-	// Démarrer les tâches de fond
 	workers.StartRappelWorker()
 
 	r := router.New()

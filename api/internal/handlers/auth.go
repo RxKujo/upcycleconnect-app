@@ -108,13 +108,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(models.LoginResponse{Token: tokenString})
 }
 
-// Helper function pour valider le format email
 func isValidEmail(email string) bool {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return emailRegex.MatchString(email)
 }
 
-// isValidSiretFormat vérifie que le SIRET est composé de 14 chiffres
 func isValidSiretFormat(siret string) bool {
 	if len(siret) != 14 {
 		return false
@@ -127,7 +125,6 @@ func isValidSiretFormat(siret string) bool {
 	return true
 }
 
-// verifySiretAPI appelle l'API Recherche d'Entreprises (api.gouv.fr) pour vérifier l'existence du SIRET
 func verifySiretAPI(siret string) (bool, error) {
 	apiURL := fmt.Sprintf("https://recherche-entreprises.api.gouv.fr/search?q=%s&mtm_campaign=upcycleconnect", siret)
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -156,11 +153,10 @@ func verifySiretAPI(siret string) (bool, error) {
 	return result.TotalResults > 0, nil
 }
 
-// verifyRecaptcha vérifie le token reCAPTCHA v2 auprès de Google
 func verifyRecaptcha(token string) (bool, error) {
 	secret := os.Getenv("RECAPTCHA_SECRET_KEY")
 	if secret == "" {
-		// Si pas de clé configurée, on skip la vérification (dev)
+		
 		return true, nil
 	}
 
@@ -193,7 +189,6 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validation des champs obligatoires
 	if req.Nom == "" || req.Prenom == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -229,10 +224,8 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Nettoyage du SIRET (supprimer espaces)
 	req.NumeroSiret = strings.ReplaceAll(req.NumeroSiret, " ", "")
 
-	// Validation format SIRET (14 chiffres + Luhn)
 	if !isValidSiretFormat(req.NumeroSiret) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -240,7 +233,6 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérification reCAPTCHA
 	if req.CaptchaToken == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -256,7 +248,6 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérifier email unique
 	var emailCount int
 	err = database.DB.QueryRow(`SELECT COUNT(*) FROM utilisateurs WHERE email = ?`, req.Email).Scan(&emailCount)
 	if err != nil {
@@ -272,7 +263,6 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérifier SIRET unique
 	var siretCount int
 	err = database.DB.QueryRow(`SELECT COUNT(*) FROM utilisateurs WHERE numero_siret = ?`, req.NumeroSiret).Scan(&siretCount)
 	if err != nil {
@@ -288,14 +278,12 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérification SIRET via API SIRENE
 	siretVerifie := false
 	siretExists, err := verifySiretAPI(req.NumeroSiret)
 	if err == nil && siretExists {
 		siretVerifie = true
 	}
 
-	// Hasher le mot de passe
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.MotDePasse), 10)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -304,7 +292,6 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insérer l'utilisateur
 	query := `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe_hash, telephone, ville, adresse_complete, nom_entreprise, numero_siret, siret_verifie, role, est_banni, date_creation)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`
 
@@ -324,7 +311,6 @@ func RegisterProfessionnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Générer le JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":   idUtilisateur,
 		"role": "professionnel",
@@ -358,7 +344,6 @@ func RegisterParticulier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validation des champs obligatoires et format
 	if req.Nom == "" || req.Prenom == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -394,7 +379,6 @@ func RegisterParticulier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérifier que l'email n'existe pas déjà
 	var emailCount int
 	checkEmailQuery := `SELECT COUNT(*) FROM utilisateurs WHERE email = ?`
 	err = database.DB.QueryRow(checkEmailQuery, req.Email).Scan(&emailCount)
@@ -412,7 +396,6 @@ func RegisterParticulier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Hasher le mot de passe
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.MotDePasse), 10)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -421,7 +404,6 @@ func RegisterParticulier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insérer l'utilisateur
 	query := `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe_hash, telephone, ville, adresse_complete, role, est_banni, date_creation)
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`
 
@@ -441,7 +423,6 @@ func RegisterParticulier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Générer le JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":   idUtilisateur,
 		"role": "particulier",

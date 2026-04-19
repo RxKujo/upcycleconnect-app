@@ -17,7 +17,6 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// 1. Récupérer les infos de l'événement et de l'utilisateur
 	var event models.Evenement
 	var lieu sql.NullString
 	err := database.DB.QueryRow("SELECT id_evenement, titre, date_debut, date_fin, nb_places_dispo, prix, lieu FROM evenements WHERE id_evenement = ?", id).
@@ -39,7 +38,6 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Vérifier si déjà inscrit
 	var exists bool
 	database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM inscriptions_evenements WHERE id_evenement = ? AND id_utilisateur = ?)", event.IDEvenement, userId).Scan(&exists)
 	if exists {
@@ -57,7 +55,6 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// 2. Début de transaction
 	tx, err := database.DB.Begin()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -65,16 +62,14 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	}
 	defer tx.Rollback()
 
-	// 2a. Décrémenter places
 	_, err = tx.Exec("UPDATE evenements SET nb_places_dispo = nb_places_dispo - 1 WHERE id_evenement = ? AND nb_places_dispo > 0", event.IDEvenement)
 	if err != nil {
 		return
 	}
 
-	// 2b. Insérer inscription
 	statutPaiement := "gratuit"
 	if event.Prix > 0 {
-		statutPaiement = "paye" // Simulé car Stripe est repoussé
+		statutPaiement = "paye" 
 	}
 	_, err = tx.Exec("INSERT INTO inscriptions_evenements (id_utilisateur, id_evenement, statut_paiement, prix_paye) VALUES (?, ?, ?, ?)", 
 		userId, event.IDEvenement, statutPaiement, event.Prix)
@@ -82,20 +77,17 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// 2c. Ajouter au planning personnel
 	_, err = tx.Exec("INSERT INTO planning_utilisateurs (id_utilisateur, titre_creneau, date_debut, date_fin, type_creneau, id_evenement) VALUES (?, ?, ?, ?, 'evenement', ?)",
 		userId, event.Titre, event.DateDebut, event.DateFin, event.IDEvenement)
 	if err != nil {
 		return
 	}
 
-	// 3. Commit transaction
 	if err = tx.Commit(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Générer PDF et Envoyer Email (hors transaction)
 	pdfBytes, err := services.GenerateTicketPDF(user, event)
 	if err == nil {
 		subject := fmt.Sprintf("Confirmation d'inscription : %s", event.Titre)
@@ -117,7 +109,6 @@ func GetTicketPDF(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// 1. Vérifier si l'utilisateur est inscrit
 	var exists bool
 	database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM inscriptions_evenements WHERE id_evenement = ? AND id_utilisateur = ?)", id, userId).Scan(&exists)
 	if !exists {
@@ -127,7 +118,6 @@ func GetTicketPDF(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// 2. Récupérer les données pour le PDF
 	var event models.Evenement
 	var lieu sql.NullString
 	err := database.DB.QueryRow("SELECT id_evenement, titre, date_debut, date_fin, nb_places_dispo, prix, lieu FROM evenements WHERE id_evenement = ?", id).
@@ -148,14 +138,12 @@ func GetTicketPDF(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// 3. Générer le PDF
 	pdfBytes, err := services.GenerateTicketPDF(user, event)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Envoyer le PDF
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"billet_%s.pdf\"", id))
 	w.WriteHeader(http.StatusOK)

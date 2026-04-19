@@ -677,9 +677,6 @@
 </head>
 <body>
 
-    {{-- =============================================
-         NAVBAR
-    ============================================= --}}
     <nav class="landing-nav" id="landing-nav" role="navigation" aria-label="Navigation principale">
         <div class="nav-inner">
             <a href="/" class="nav-brand" aria-label="UpcycleConnect — Accueil">
@@ -694,16 +691,15 @@
             </div>
 
             <div class="auth-wrapper" id="auth-wrapper" style="visibility: hidden; display: flex; gap: 12px; align-items: center;">
-                <!-- Inscription Bouton -->
+                
                 <x-btn id="auth-register-btn" variant="secondary" size="sm" href="{{ route('particulier.register') }}">
                     Inscription
                 </x-btn>
-                <!-- Connexion Bouton -->
+                
                 <x-btn id="auth-login-btn" variant="primary" size="sm" href="{{ route('particulier.login') }}">
                     Connexion
                 </x-btn>
 
-                <!-- Utilisateur Dropdown -->
                 <div id="auth-user-menu" style="display: none;">
                     <button class="user-menu-btn" id="user-menu-btn" aria-label="Menu utilisateur" aria-expanded="false">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
@@ -721,10 +717,6 @@
         </div>
     </nav>
 
-
-    {{-- =============================================
-         HERO
-    ============================================= --}}
     <section class="hero section-light" id="hero" aria-labelledby="hero-title">
         <div class="hero-inner">
             <h1 class="hero-title" id="hero-title">Upcyclez Ensemble</h1>
@@ -745,10 +737,6 @@
         </div>
     </section>
 
-
-    {{-- =============================================
-         SERVICES
-    ============================================= --}}
     <section class="section section-light" id="services" aria-labelledby="services-title">
         <div class="section-inner">
             <p class="section-label">Ce que nous offrons</p>
@@ -788,10 +776,6 @@
         </div>
     </section>
 
-
-    {{-- =============================================
-         STATS / IMPACT
-    ============================================= --}}
     <section class="section section-wheat" id="impact" aria-labelledby="impact-title">
         <div class="section-inner">
             <p class="section-label">Notre impact</p>
@@ -818,10 +802,6 @@
         </div>
     </section>
 
-
-    {{-- =============================================
-         COMMENT ÇA MARCHE
-    ============================================= --}}
     <section class="section section-light" id="how-it-works" aria-labelledby="how-title">
         <div class="section-inner">
             <p class="section-label">Simple &amp; Efficace</p>
@@ -857,10 +837,6 @@
         </div>
     </section>
 
-
-    {{-- =============================================
-         ABONNEMENTS / TARIFS
-    ============================================= --}}
     <section class="section section-light" id="abonnements" aria-labelledby="pricing-title">
         <div class="section-inner">
             <p class="section-label">Tarifs</p>
@@ -869,7 +845,6 @@
 
             <div class="pricing-grid">
 
-                {{-- GRATUIT --}}
                 <div class="pricing-card-wrapper">
                     <div class="pricing-badge-row" aria-hidden="true" style="visibility:hidden;">
                         <x-badge variant="cherry">Populaire</x-badge>
@@ -892,7 +867,6 @@
                     </x-card>
                 </div>
 
-                {{-- ECO-CITIZEN (populaire) --}}
                 <div class="pricing-card-wrapper">
                     <div class="pricing-badge-row" aria-label="Plan populaire">
                         <x-badge variant="cherry">Populaire</x-badge>
@@ -915,7 +889,6 @@
                     </x-card>
                 </div>
 
-                {{-- ESSENTIAL PRO --}}
                 <div class="pricing-card-wrapper">
                     <div class="pricing-badge-row" aria-hidden="true" style="visibility:hidden;">
                         <x-badge variant="cherry">Populaire</x-badge>
@@ -942,10 +915,6 @@
         </div>
     </section>
 
-
-    {{-- =============================================
-         CTA BANNER
-    ============================================= --}}
     <section class="cta-banner" id="about" aria-labelledby="cta-title">
         <div class="section-inner cta-inner">
             <h2 class="cta-title" id="cta-title">Prêt à transformer ?</h2>
@@ -958,10 +927,6 @@
         </div>
     </section>
 
-
-    {{-- =============================================
-         FOOTER
-    ============================================= --}}
     <footer class="footer" role="contentinfo">
         <div class="section-inner footer-inner">
 
@@ -1007,7 +972,6 @@
             <p>© 2026 UpcycleConnect — Digital Worm Mission 1 | Design System v1.0 | Neo Brutalism Vintage</p>
         </div>
     </footer>
-
 
     <script>
         // Navbar: ombre au scroll

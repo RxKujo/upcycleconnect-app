@@ -127,7 +127,7 @@ func RefuserCatalogueItem(w http.ResponseWriter, r *http.Request, id string, adm
 
 func DeleteCatalogueItem(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	if role != "admin" {
-		// Only admin handles deletions here
+		
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "accès refusé"})

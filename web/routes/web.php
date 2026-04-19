@@ -16,38 +16,24 @@ use App\Http\Controllers\MarcheController;
 use App\Http\Controllers\ConseilController;
 use App\Http\Controllers\ForumController;
 
-// =============================================
-// ROUTES PUBLIQUES (accessibles sans auth)
-// =============================================
-
-// Accueil
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Marche (marketplace publique)
 Route::get('/marche', [MarcheController::class, 'index'])->name('marche.index');
 Route::get('/marche/{id}', [MarcheController::class, 'show'])->name('marche.show');
 
-// Evenements
 Route::get('/evenements', [EvenementCatalogueController::class, 'index'])->name('evenements.index');
 Route::get('/evenements/{id}', [EvenementCatalogueController::class, 'show'])->name('evenements.show');
 
-// Conseils (articles)
 Route::get('/conseils', [ConseilController::class, 'index'])->name('conseils.index');
 Route::get('/conseils/{id}', [ConseilController::class, 'show'])->name('conseils.show');
 
-// Forum (lecture publique)
 Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
 Route::get('/forum/{id}', [ForumController::class, 'show'])->name('forum.show');
 
-// Pages institutionnelles
 Route::get('/services-pro', fn() => view('public.services-pro'))->name('services-pro');
 Route::get('/a-propos', fn() => view('public.a-propos'))->name('a-propos');
 Route::view('/cgu', 'public.cgu')->name('cgu');
 Route::view('/rgpd', 'public.rgpd')->name('rgpd');
-
-// =============================================
-// AUTHENTIFICATION
-// =============================================
 
 Route::get('/register', function () {
     return view('auth.register');
@@ -63,10 +49,6 @@ Route::get('/login', function () {
 
 Route::post('/auth/set-admin-session', [SessionController::class, 'setAdminSession'])
     ->name('auth.set-admin-session');
-
-// =============================================
-// ESPACES PRIVES (particulier, pro)
-// =============================================
 
 Route::prefix('particulier')->group(function () {
     Route::get('/annonces/create', function () {
@@ -84,9 +66,8 @@ Route::prefix('professionnel')->group(function () {
     })->name('professionnel.profile.show');
 });
 
-// Admin routes
 Route::prefix('admin')->group(function () {
-    // Redirect old admin login to unified login
+    
     Route::get('/login', fn() => redirect('/login'))->name('admin.login');
 
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');

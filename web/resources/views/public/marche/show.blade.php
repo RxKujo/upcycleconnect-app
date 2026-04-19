@@ -26,7 +26,7 @@
     </a>
 
     <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:48px; align-items:start;">
-        {{-- Photos --}}
+        
         <div>
             <div style="border:var(--border); box-shadow:var(--shadow); background:var(--wheat); height:400px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:16px;">
                 @if(!empty($annonce['objets']) && !empty($annonce['objets'][0]['photos']))
@@ -46,7 +46,6 @@
             @endif
         </div>
 
-        {{-- Details --}}
         <div>
             <div style="display:flex; gap:8px; margin-bottom:16px;">
                 <span class="badge {{ ($annonce['type_annonce'] ?? '') === 'don' ? 'badge-valid' : 'badge-cherry' }}">{{ ($annonce['type_annonce'] ?? '') === 'don' ? 'Don' : 'Vente' }}</span>
@@ -66,7 +65,6 @@
 
             <p style="font-size:1rem; line-height:1.7; margin-bottom:32px; white-space:pre-line;">{{ $annonce['description'] }}</p>
 
-            {{-- Vendeur (anonymisé RGPD) --}}
             <div style="border:var(--border); padding:20px; margin-bottom:24px; background:white;">
                 <p class="font-mono" style="font-size:0.75rem; color:var(--teal); margin-bottom:10px;">Vendeur</p>
                 <p style="font-size:1.05rem; font-weight:600;">
@@ -83,7 +81,6 @@
                 @endif
             </div>
 
-            {{-- Actions (mur d'inscription) --}}
             <div style="display:flex; flex-direction:column; gap:12px;">
                 <a href="{{ route('particulier.login') }}?intent=commande&annonce={{ $annonce['id_annonce'] }}"
                    class="btn btn-primary btn-lg btn-block"
@@ -103,7 +100,6 @@
                 </a>
             </div>
 
-            {{-- Infos objet --}}
             @if(!empty($annonce['objets']))
             <div style="margin-top:32px; border:var(--border); padding:20px; background:white;">
                 <p class="font-mono" style="font-size:0.75rem; color:var(--teal); margin-bottom:12px;">Caractéristiques</p>

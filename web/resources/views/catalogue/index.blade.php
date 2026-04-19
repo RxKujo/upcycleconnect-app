@@ -9,7 +9,6 @@
     <h1 class="page-title">Événements &amp; formations</h1>
     <p class="page-subtitle">Ateliers, formations et conférences organisés par la communauté</p>
 
-    {{-- Filtres --}}
     <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:36px;" id="filters">
         <button class="filter-btn active" data-filter="all">Tout</button>
         <button class="filter-btn" data-filter="atelier">Ateliers</button>

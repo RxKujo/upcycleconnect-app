@@ -32,9 +32,8 @@
 
     <div class="event-show-grid" x-data="eventPage({{ $evenement['id_evenement'] }})">
 
-        {{-- Colonne gauche : Description + modalités --}}
         <div>
-            {{-- Header --}}
+            
             <div class="event-head">
                 <div class="event-head-tags">
                     <span class="event-tag event-tag-{{ $evenement['type_evenement'] }}">{{ $typeLabels[$evenement['type_evenement']] ?? '' }}</span>
@@ -43,13 +42,11 @@
                 <h1 class="event-title">{{ $evenement['titre'] }}</h1>
             </div>
 
-            {{-- Description --}}
             <div class="event-card-block">
                 <h2 class="event-block-title">Description</h2>
                 <div class="event-description">{{ $evenement['description'] }}</div>
             </div>
 
-            {{-- Modalités --}}
             <div class="event-card-block">
                 <h2 class="event-block-title">Modalités</h2>
                 <div class="event-modalites-grid">
@@ -73,15 +70,13 @@
             </div>
         </div>
 
-        {{-- Colonne droite : Inscription --}}
         <aside class="event-sidebar">
-            {{-- Date block --}}
+            
             <div class="event-sidebar-date">
                 <span class="event-sidebar-day">{{ $date->format('d') }}</span>
                 <span class="event-sidebar-month">{{ strtoupper($date->locale('fr')->isoFormat('MMMM Y')) }}</span>
             </div>
 
-            {{-- Prix --}}
             <div class="event-sidebar-price-block">
                 @if(($evenement['prix'] ?? 0) > 0)
                 <span class="event-sidebar-price">{{ number_format($evenement['prix'], 2) }}&euro;</span>
@@ -91,7 +86,6 @@
                 @endif
             </div>
 
-            {{-- Places --}}
             <div class="event-sidebar-places">
                 <div class="event-places-header">
                     <span class="event-places-label">Places restantes</span>
@@ -102,7 +96,6 @@
                 </div>
             </div>
 
-            {{-- Actions --}}
             @if(($evenement['nb_places_dispo'] ?? 0) > 0)
                 <div x-show="!subscribed">
                     <button type="button" class="btn btn-primary btn-lg btn-block" x-on:click="subscribe()" x-bind:disabled="loading">
@@ -120,7 +113,6 @@
                 <button type="button" class="btn btn-secondary btn-block" disabled>Événement complet</button>
             @endif
 
-            {{-- Info connexion --}}
             <p class="event-sidebar-note">
                 Vous devez être connecté pour vous inscrire. L'inscription est confirmée par email.
             </p>

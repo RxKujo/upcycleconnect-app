@@ -39,7 +39,7 @@
 
 <div id="profile-content" style="display: none;">
     <div class="profile-grid">
-        <!-- Mes Informations -->
+        
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title">Mes Informations</h3>
@@ -91,7 +91,6 @@
             </div>
         </div>
 
-        <!-- Informations Entreprise -->
         <div class="card">
             <h3 class="card-title">Mon Entreprise</h3>
             <div class="info-row">
@@ -108,7 +107,6 @@
             </div>
         </div>
 
-        <!-- Notifications -->
         <div class="card">
             <h3 class="card-title">Preferences de Notifications</h3>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(18,3,9,0.1);">
@@ -133,14 +131,12 @@
             </div>
         </div>
 
-        <!-- Donnees personnelles -->
         <div class="card">
             <h3 class="card-title">Donnees Personnelles</h3>
             <p style="margin-bottom: 16px; font-size: 0.95rem;">Recuperez un fichier contenant toutes vos informations</p>
             <x-btn size="sm" onclick="downloadPDF()">Telecharger mes donnees</x-btn>
         </div>
 
-        <!-- Securite -->
         <div class="card full-width">
             <h3 class="card-title">Securite</h3>
             <x-btn variant="secondary" size="sm" class="btn-disabled" disabled>Modifier mon mot de passe</x-btn>

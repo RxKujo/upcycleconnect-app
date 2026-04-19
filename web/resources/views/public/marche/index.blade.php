@@ -9,7 +9,6 @@
     <h1 class="page-title">Le Marché</h1>
     <p class="page-subtitle">Parcourez les annonces de don et de vente de la communauté</p>
 
-    {{-- Filtres --}}
     <div class="filters-row" id="filters">
         <button class="filter-btn active" data-filter="all">Tout</button>
         <button class="filter-btn" data-filter="don">Dons</button>

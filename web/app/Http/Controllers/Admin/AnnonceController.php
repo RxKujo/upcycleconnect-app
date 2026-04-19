@@ -40,20 +40,12 @@ class AnnonceController extends Controller
         }
 
         $data = $response->json();
-        
-        // Si dépôt conteneur, génération du code-barre
+
         if (!empty($data['requires_barcode']) && $data['requires_barcode'] === true) {
             $codeValeur = strtoupper(uniqid('UC-DEPOT-'));
-            
-            // Appel API pour générer en base le barcode lié à l'annonce (grâce au alter table)
-            // On utilise la route existante ou une spécifique. Si la route conteneurs ne prend pas id_annonce
-            // On peut l'insérer via une nouvelle route qu'on a fait ou utiliser le code métier.
-            // Pour l'instant, on laisse l'alerte à l'écran :
+
             return back()->with('success', "Annonce validée. Code-barre à envoyer au vendeur : {$codeValeur}");
-            /*
-            Dans un cas réel de production, on ferait l'envoi de mail ici :
-            Mail::to($vendeur)->send(new BarcodeMail($codeValeur));
-            */
+            
         }
 
         return back()->with('success', 'Annonce validée et publiée.');

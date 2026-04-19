@@ -44,7 +44,7 @@
 
 <div id="profile-content" style="display: none;">
     <div class="profile-grid">
-        <!-- Mes Informations -->
+        
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title">Mes Informations</h3>
@@ -96,7 +96,6 @@
             </div>
         </div>
 
-        <!-- Upcycling Score -->
         <div class="card">
             <h3 class="card-title">Upcycling Score</h3>
             <div class="score-display">
@@ -106,7 +105,6 @@
             </div>
         </div>
 
-        <!-- Evenements inscrits -->
         <div class="card full-width">
             <h3 class="card-title">Mes Evenements Inscrits</h3>
             <div id="events-container">
@@ -114,7 +112,6 @@
             </div>
         </div>
 
-        <!-- Notifications -->
         <div class="card">
             <h3 class="card-title">Preferences de Notifications</h3>
             <div class="toggle-row">
@@ -140,14 +137,12 @@
             <p style="font-size: 0.8rem; margin-top: 12px; color: rgba(18,3,9,0.5);">Vous recevrez les mises a jour sur vos annonces et evenements</p>
         </div>
 
-        <!-- Donnees personnelles -->
         <div class="card">
             <h3 class="card-title">Donnees Personnelles</h3>
             <p style="margin-bottom: 16px; font-size: 0.95rem;">Recuperez un fichier contenant toutes vos informations</p>
             <x-btn size="sm" onclick="downloadPDF()">Telecharger mes donnees</x-btn>
         </div>
 
-        <!-- Securite -->
         <div class="card full-width">
             <h3 class="card-title">Securite</h3>
             <x-btn variant="secondary" size="sm" class="btn-disabled" disabled>Modifier mon mot de passe</x-btn>

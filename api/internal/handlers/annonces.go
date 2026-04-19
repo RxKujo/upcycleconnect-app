@@ -84,7 +84,6 @@ func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId in
 		return
 	}
 
-	// Particulier can only see their own annonce
 	if role != "admin" && a.IDParticulier != userId {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
@@ -109,7 +108,6 @@ func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId in
 		a.ValidePar = &v
 	}
 
-	// Load objects
 	objRows, err := database.DB.Query("SELECT id_objet, id_annonce, categorie, materiau, etat, poids_kg FROM objets_annonces WHERE id_annonce = ?", id)
 	if err == nil {
 		defer objRows.Close()
@@ -121,7 +119,7 @@ func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId in
 					p := poids.Float64
 					o.PoidsKg = &p
 				}
-				// Load photos for this object
+				
 				photoRows, err := database.DB.Query("SELECT id_photo, id_objet, url, ordre FROM photos_objets WHERE id_objet = ? ORDER BY ordre", o.IDObjet)
 				if err == nil {
 					for photoRows.Next() {
@@ -197,7 +195,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Validate titre
 	if len(req.Titre) < 3 || len(req.Titre) > 200 {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -205,7 +202,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Validate description
 	if len(req.Description) < 10 || len(req.Description) > 5000 {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -213,7 +209,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Validate type_annonce
 	if req.TypeAnnonce != "don" && req.TypeAnnonce != "vente" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -221,7 +216,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Validate mode_remise
 	if req.ModeRemise != "conteneur" && req.ModeRemise != "main_propre" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -229,7 +223,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// At least 1 object required
 	if len(req.Objets) == 0 {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -237,7 +230,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Validate objects and count total photos
 	validMateriaux := map[string]bool{"bois": true, "metal": true, "textile": true, "plastique": true, "verre": true, "electronique": true, "autre": true}
 	validEtats := map[string]bool{"neuf": true, "bon": true, "use": true, "a_reparer": true}
 	totalPhotos := 0
@@ -271,7 +263,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Begin transaction
 	tx, err := database.DB.Begin()
 	if err != nil {
 		log.Printf("[ERROR] %s | CreateAnnonce | TX begin err: %v\n", time.Now().Format(time.RFC3339), err)
@@ -281,7 +272,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Insert annonce
 	res, err := tx.Exec(`INSERT INTO annonces (id_particulier, titre, description, type_annonce, prix, mode_remise, statut) VALUES (?, ?, ?, ?, ?, ?, 'en_attente')`,
 		userId, req.Titre, req.Description, req.TypeAnnonce, req.Prix, req.ModeRemise)
 	if err != nil {
@@ -295,7 +285,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 
 	annonceId, _ := res.LastInsertId()
 
-	// Ensure upload dir exists
 	uploadDir := getUploadDir()
 	os.MkdirAll(uploadDir, 0755)
 
@@ -316,7 +305,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		for _, photoB64 := range obj.Photos {
 			photoOrdre++
 
-			// Decode base64 and detect type
 			ext, data, err := decodeBase64Image(photoB64)
 			if err != nil {
 				tx.Rollback()
@@ -390,7 +378,6 @@ func CancelAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		return
 	}
 
-	// Check annonce exists and belongs to user
 	var annonceUserId int
 	var statut string
 	err := database.DB.QueryRow("SELECT id_particulier, statut FROM annonces WHERE id_annonce = ?", id).Scan(&annonceUserId, &statut)
@@ -447,7 +434,6 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		return
 	}
 
-	// Only creator or admin can delete
 	if role != "admin" && annonceUserId != userId {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
@@ -462,7 +448,6 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		return
 	}
 
-	// Delete photos from disk
 	uploadDir := getUploadDir()
 	rows, err := database.DB.Query(`SELECT po.url_photo FROM photos_objets po JOIN objets_annonces oa ON po.id_objet = oa.id_objet WHERE oa.id_annonce = ?`, id)
 	if err == nil {
@@ -476,7 +461,6 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		}
 	}
 
-	// Soft delete
 	_, err = database.DB.Exec("UPDATE annonces SET statut = 'supprimee' WHERE id_annonce = ?", id)
 	if err != nil {
 		log.Printf("[ERROR] %s | DeleteAnnonce | Update err: %v\n", time.Now().Format(time.RFC3339), err)
@@ -592,7 +576,6 @@ func AttenteAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "annonce remise en attente"})
 }
 
-// Helper: get upload directory
 func getUploadDir() string {
 	dir := os.Getenv("UPLOAD_DIR")
 	if dir == "" {
@@ -601,15 +584,14 @@ func getUploadDir() string {
 	return dir
 }
 
-// Helper: decode base64 image
 func decodeBase64Image(b64 string) (string, []byte, error) {
-	// Handle data URI scheme
+	
 	if strings.HasPrefix(b64, "data:image/") {
 		parts := strings.SplitN(b64, ",", 2)
 		if len(parts) != 2 {
 			return "", nil, fmt.Errorf("format base64 invalide")
 		}
-		header := parts[0] // e.g. data:image/jpeg;base64
+		header := parts[0] 
 		b64 = parts[1]
 
 		ext := "jpg"
@@ -623,7 +605,7 @@ func decodeBase64Image(b64 string) (string, []byte, error) {
 
 		data, err := base64.StdEncoding.DecodeString(b64)
 		if err != nil {
-			// Try with padding
+			
 			data, err = base64.RawStdEncoding.DecodeString(b64)
 			if err != nil {
 				return "", nil, fmt.Errorf("decodage base64 echoue: %v", err)
@@ -632,7 +614,6 @@ func decodeBase64Image(b64 string) (string, []byte, error) {
 		return ext, data, nil
 	}
 
-	// Raw base64 without header - try to detect from magic bytes
 	data, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
 		data, err = base64.RawStdEncoding.DecodeString(b64)
@@ -641,7 +622,7 @@ func decodeBase64Image(b64 string) (string, []byte, error) {
 		}
 	}
 
-	ext := "jpg" // default
+	ext := "jpg" 
 	if len(data) >= 4 {
 		if data[0] == 0x89 && data[1] == 0x50 {
 			ext = "png"
@@ -653,7 +634,6 @@ func decodeBase64Image(b64 string) (string, []byte, error) {
 	return ext, data, nil
 }
 
-// generateUUID creates a UUID v4 string without external dependency
 func generateUUID() string {
 	b := make([]byte, 16)
 	rand.Read(b)

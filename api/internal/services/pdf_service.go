@@ -8,22 +8,18 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
-// GenerateTicketPDF crée un billet PDF en mémoire et retourne les octets.
 func GenerateTicketPDF(user models.Utilisateur, event models.Evenement) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A5", "")
 	pdf.AddPage()
 
-	// Titre Billet
 	pdf.SetFont("Arial", "B", 20)
 	pdf.CellFormat(130, 15, "BILLET D'ENTREE", "0", 1, "C", false, 0, "")
 	pdf.Ln(5)
 
-	// Nom de l'événement
 	pdf.SetFont("Arial", "B", 16)
 	pdf.CellFormat(130, 10, event.Titre, "0", 1, "C", false, 0, "")
 	pdf.Ln(5)
 
-	// Détails
 	pdf.SetFont("Arial", "", 12)
 	pdf.CellFormat(40, 10, "Participant:", "0", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "B", 12)
@@ -43,7 +39,7 @@ func GenerateTicketPDF(user models.Utilisateur, event models.Evenement) ([]byte,
 	pdf.SetFont("Arial", "", 12)
 	pdf.CellFormat(40, 10, "Lieu:", "0", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "B", 12)
-	// Mutliline for lieu in case it's long
+	
 	pdf.MultiCell(90, 10, lieuStr, "0", "R", false)
 
 	pdf.Ln(10)
