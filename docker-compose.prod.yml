@@ -1,28 +1,7 @@
 version: '3.9'
 
-# ============================================================
-# UpcycleConnect — Stack de production
-#
-# Prérequis : copier example.env.prod → .env.prod et remplir
-#
-# Démarrage : docker compose -f docker-compose.prod.yml \
-#               --env-file .env.prod up -d --build
-#
-# Services   Ports (exposés à l'extérieur)
-# ---------  ------
-# MySQL      interne uniquement
-# PHPMyAdmin 8081
-# Go API     8888
-# Nginx      80
-# ----------------------------------------------------------
-# PHP-FPM (web) communique avec Nginx sur le réseau interne
-# ============================================================
-
 services:
 
-  # ----------------------------------------------------------
-  # Base de données MySQL
-  # ----------------------------------------------------------
   db:
     image: mysql:8.0
     container_name: uc_mysql
@@ -42,11 +21,7 @@ services:
       retries: 10
     networks:
       - uc_network
-    # Pas de port exposé à l'extérieur en prod (sécurité)
 
-  # ----------------------------------------------------------
-  # PHPMyAdmin (désactivez ce service si non nécessaire en prod)
-  # ----------------------------------------------------------
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: uc_phpmyadmin
@@ -62,9 +37,6 @@ services:
     networks:
       - uc_network
 
-  # ----------------------------------------------------------
-  # Go API — binaire compilé, image <15 MB
-  # ----------------------------------------------------------
   api:
     build:
       context: ./api
@@ -87,11 +59,6 @@ services:
     networks:
       - uc_network
 
-  # ----------------------------------------------------------
-  # Laravel — PHP-FPM (image multi-stage avec assets compilés)
-  # Ne communique pas directement avec l'extérieur, uniquement
-  # via Nginx sur le réseau interne (port 9000).
-  # ----------------------------------------------------------
   web:
     build:
       context: ./web
@@ -124,10 +91,6 @@ services:
     networks:
       - uc_network
 
-  # ----------------------------------------------------------
-  # Nginx — reverse proxy + fichiers statiques
-  # Sert les assets compilés (Vite build) et proxyfie le PHP
-  # ----------------------------------------------------------
   nginx:
     build:
       context: ./web

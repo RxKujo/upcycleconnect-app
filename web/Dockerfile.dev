@@ -1,13 +1,7 @@
-# ============================================================
-# Dev — PHP CLI avec Artisan serve
-# Le code source est monté en volume → hot reload natif
-# Les assets sont servis par le container Vite (port 5173)
-# ============================================================
 FROM php:8.2-cli
 
 WORKDIR /var/www/html
 
-# Dépendances système
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         curl \
@@ -31,7 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         bcmath \
     && rm -rf /var/lib/apt/lists/*
 
-# Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 
 EXPOSE 8000
