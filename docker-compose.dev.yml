@@ -82,7 +82,7 @@ services:
       DB_NAME: upcycleconnect
       JWT_SECRET: upcycleconnect_secret_key_2026
       API_PORT: "8888"
-      RECAPTCHA_SECRET_KEY: "6LcKF7wsAAAAAOCYCFqGYBUrfY-ZAmjuS2y9-eVq"
+      RECAPTCHA_SECRET_KEY: "6LcgKb8sAAAAAJIQVzLVHQtvYnRsLFQhcxJf_Onp"
     ports:
       - "8888:8888"
     depends_on:
@@ -117,7 +117,7 @@ services:
       QUEUE_CONNECTION: database
       CACHE_STORE: database
       API_URL: "http://api:8888"
-      RECAPTCHA_SITE_KEY: "6LcKF7wsAAAAADc2rRSo1WppoZr8OxRf0FtMItsB"
+      RECAPTCHA_SITE_KEY: "6LcgKb8sAAAAAGoRZ2kw89Uz3oo-8TEf_qu1iC5z"
       VITE_DEV_SERVER_URL: "http://localhost:5173"
     ports:
       - "8000:8000"
