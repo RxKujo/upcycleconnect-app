@@ -10,7 +10,7 @@ class PrestationController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://api:8888/api/v1/admin/prestations');
+            ->get(config('services.api.url') . '/api/v1/admin/prestations');
 
         $prestations = $response->successful() ? $response->json() : [];
 
@@ -20,7 +20,7 @@ class PrestationController extends Controller
     public function show($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get("http://api:8888/api/v1/admin/prestations/{$id}");
+            ->get(config('services.api.url') . "/api/v1/admin/prestations/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.prestations.index')->with('error', 'Prestation introuvable.');
@@ -32,7 +32,7 @@ class PrestationController extends Controller
     public function valider($id)
     {
         Http::withToken(session('admin_token'))
-            ->put("http://api:8888/api/v1/admin/prestations/{$id}/valider");
+            ->put(config('services.api.url') . "/api/v1/admin/prestations/{$id}/valider");
 
         return back()->with('success', 'Prestation validée.');
     }
@@ -40,7 +40,7 @@ class PrestationController extends Controller
     public function refuser($id)
     {
         Http::withToken(session('admin_token'))
-            ->put("http://api:8888/api/v1/admin/prestations/{$id}/refuser");
+            ->put(config('services.api.url') . "/api/v1/admin/prestations/{$id}/refuser");
 
         return back()->with('success', 'Prestation refusée.');
     }

@@ -10,7 +10,12 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class AnnonceController extends Controller
 {
-    private $apiUrl = 'http://api:8888/api/v1/admin/annonces';
+    private $apiUrl;
+
+    public function __construct()
+    {
+        $this->apiUrl = config('services.api.url') . '/api/v1/admin/annonces';
+    }
 
     public function index()
     {

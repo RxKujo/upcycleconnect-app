@@ -1,45 +1,39 @@
-# Binaires compilés
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 
-# Binaires de test (go test -c)
+# Test binary, built with `go test -c`
 *.test
 
-# Couverture de code et artefacts de test
+# Code coverage profiles and other test artifacts
 *.out
 coverage.*
 *.coverprofile
 profile.cov
 
-# Dossiers de dépendances
+# Dependency directories (remove the comment below to include it)
 vendor/
 node_modules/
 public/build/
 
-# Fichier workspace Go
+# Go workspace file
 go.work
 go.work.sum
 
-# Fichiers d'environnement
+# env file
 .env
 
-# Éditeurs/IDE
+# Editor/IDE
 # .idea/
 # .vscode/
 
-# Cache, logs et fichiers générés par Laravel
+# Laravel cache, logs & generated files
 web/bootstrap/cache/*.php
 web/storage/
 web/database/database.sqlite
-
-# Uploads utilisateurs
-web/public/uploads/*
-!web/public/uploads/.gitkeep
-
-# Artefacts de build et hot-reload Go
-api/tmp/
-api/server
-api/*.exe

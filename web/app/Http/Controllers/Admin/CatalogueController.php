@@ -11,48 +11,167 @@ class CatalogueController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://api:8888/api/catalogue');
+            ->get(config('services.api.url') . '/api/catalogue');
 
         $items = $response->successful() ? $response->json() : [];
 
         return view('admin.catalogue.index', compact('items'));
     }
 
-    public function show($id)
+    public function create()
     {
+        $categories = [
+            'formation' => __('admin.formation'),
+            'atelier' => __('admin.atelier'),
+            'evenement' => __('admin.evenement'),
+            'conseil' => __('admin.conseil'),
+        ];
+        $formats = [
+            'presentiel' => __('admin.presentiel'),
+            'distanciel' => __('admin.distanciel'),
+        ];
+
+        return view('admin.catalogue.form', compact('categories', 'formats'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'titre' => 'required|string|max:200',
+            'description' => 'required|string',
+            'categorie' => 'required|string',
+            'format' => 'required|string',
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date',
+            'nb_places_total' => 'required|integer|min:1',
+            'prix' => 'required|numeric|min:0',
+        ]);
+
+        $payload = [
+            'id_createur' => (int) session('admin_id'),
+            'titre' => $request->titre,
+            'description' => $request->description,
+            'categorie' => $request->categorie,
+            'format' => $request->format,
+            'lieu' => $request->lieu,
+            'date_debut' => $request->date_debut . ':00Z',
+            'date_fin' => $request->date_fin . ':00Z',
+            'nb_places_total' => (int) $request->nb_places_total,
+            'prix' => (float) $request->prix,
+        ];
+
         $response = Http::withToken(session('admin_token'))
-            ->get("http://api:8888/api/catalogue/{$id}");
+            ->post('http://localhost:8888/api/catalogue', $payload);
 
         if ($response->failed()) {
-            return redirect()->route('admin.catalogue.index')->with('error', 'Annonce introuvable');
+            return back()->withInput()->with('error', __('admin.erreur_creation'));
+        }
+
+        return redirect()->route('admin.catalogue.index')->with('success', __('admin.catalogue_create_success'));
+    }
+
+    public function edit($id)
+    {
+        $response = Http::withToken(session('admin_token'))
+            ->get(config('services.api.url') . "/api/catalogue/{$id}");
+
+        if ($response->failed()) {
+            return redirect()->route('admin.catalogue.index')->with('error', __('admin.element_introuvable'));
         }
 
         $item = $response->json();
-        return view('admin.catalogue.show', compact('item'));
+        $categories = [
+            'formation' => __('admin.formation'),
+            'atelier' => __('admin.atelier'),
+            'evenement' => __('admin.evenement'),
+            'conseil' => __('admin.conseil'),
+        ];
+        $formats = [
+            'presentiel' => __('admin.presentiel'),
+            'distanciel' => __('admin.distanciel'),
+        ];
+
+        return view('admin.catalogue.form', compact('item', 'categories', 'formats'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'titre' => 'required|string|max:200',
+            'description' => 'required|string',
+            'categorie' => 'required|string',
+            'format' => 'required|string',
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date',
+            'nb_places_total' => 'required|integer|min:1',
+            'prix' => 'required|numeric|min:0',
+        ]);
+
+        $payload = [
+            'titre' => $request->titre,
+            'description' => $request->description,
+            'categorie' => $request->categorie,
+            'format' => $request->format,
+            'lieu' => $request->lieu,
+            'date_debut' => $request->date_debut . ':00Z',
+            'date_fin' => $request->date_fin . ':00Z',
+            'nb_places_total' => (int) $request->nb_places_total,
+            'prix' => (float) $request->prix,
+        ];
+
+        $response = Http::withToken(session('admin_token'))
+            ->put("http://localhost:8888/api/catalogue/{$id}", $payload);
+
+        if ($response->failed()) {
+            return back()->withInput()->with('error', __('admin.erreur_mise_a_jour'));
+        }
+
+        return redirect()->route('admin.catalogue.index')->with('success', __('admin.catalogue_update_success'));
     }
 
     public function destroy($id)
     {
         Http::withToken(session('admin_token'))
-            ->delete("http://api:8888/api/catalogue/{$id}");
+            ->delete(config('services.api.url') . "/api/catalogue/{$id}");
 
-        return redirect()->route('admin.catalogue.index')->with('success', 'Annonce supprimée avec succès');
+        return redirect()->route('admin.catalogue.index')->with('success', __('admin.catalogue_delete_success'));
+    }
+
+    public function show($id)
+    {
+        $response = Http::withToken(session('admin_token'))
+            ->get("http://localhost:8888/api/catalogue/{$id}");
+
+        if ($response->failed()) {
+            return redirect()->route('admin.catalogue.index')->with('error', __('admin.element_introuvable'));
+        }
+
+        $item = $response->json();
+        $reservations = [];
+        $reservationsResponse = Http::withToken(session('admin_token'))
+            ->get("http://localhost:8888/api/catalogue/{$id}/reservations");
+
+        if ($reservationsResponse->successful()) {
+            $reservations = $reservationsResponse->json();
+        }
+
+        return view('admin.catalogue.show', compact('item', 'reservations'));
     }
 
     public function valider($id)
     {
         Http::withToken(session('admin_token'))
-            ->put("http://api:8888/api/catalogue/{$id}/valider");
+            ->put(config('services.api.url') . "/api/catalogue/{$id}/valider");
 
-        return back()->with('success', 'Annonce validée');
+        return back()->with('success', __('admin.catalogue_valide_success'));
     }
 
-    public function refuser(Request $request, $id)
+    public function reservations($id)
     {
         $request->validate(['motif_refus' => 'required|string']);
         
         Http::withToken(session('admin_token'))
-            ->put("http://api:8888/api/catalogue/{$id}/refuser", [
+            ->put(config('services.api.url') . "/api/catalogue/{$id}/refuser", [
                 'motif_refus' => $request->motif_refus
             ]);
 

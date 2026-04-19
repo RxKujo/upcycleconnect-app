@@ -2,11 +2,13 @@
 @section('title', 'Catégories')
 
 @section('content')
-<x-page-header title="Catégories">
-    <x-btn href="{{ route('admin.categories.create') }}" size="sm">+ Nouvelle</x-btn>
-</x-page-header>
+<div class="page-header">
+    <h1 class="page-title">Catégories</h1>
+    <a href="{{ route('admin.categories.create') }}" class="btn-primary btn-sm">+ Nouvelle</a>
+</div>
 
 <div class="table-container">
+
 <table>
     <thead>
         <tr>
@@ -24,11 +26,11 @@
             <td>{{ $cat['description'] }}</td>
             <td>
                 <div class="action-cell">
-                    <x-btn variant="secondary" size="sm" href="{{ route('admin.categories.edit', $cat['id_categorie']) }}">Modifier</x-btn>
+                    <a href="{{ route('admin.categories.edit', $cat['id_categorie']) }}" class="btn-secondary btn-sm">Modifier</a>
                     <form action="{{ route('admin.categories.destroy', $cat['id_categorie']) }}" method="POST" style="margin: 0;">
                         @csrf
                         @method('DELETE')
-                        <x-btn variant="danger" type="submit" onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</x-btn>
+                        <button type="submit" class="btn-danger" onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</button>
                     </form>
                 </div>
             </td>

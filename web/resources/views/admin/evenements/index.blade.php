@@ -2,11 +2,12 @@
 @section('title', 'Événements')
 
 @section('content')
-<x-page-header title="Événements">
-    <x-btn href="{{ route('admin.evenements.create') }}">Créer un Événement</x-btn>
-</x-page-header>
+<div class="page-header">
+    <h1 class="page-title">Événements</h1>
+</div>
 
 <div class="table-container">
+
 <table>
     <thead>
         <tr>
@@ -25,32 +26,26 @@
         <tr>
             <td>{{ $e['id_evenement'] }}</td>
             <td style="font-weight: 600;">{{ $e['titre'] }}</td>
-            <td><x-badge>{{ $e['type_evenement'] }}</x-badge></td>
+            <td><span class="badge badge-waiting">{{ $e['type_evenement'] }}</span></td>
             <td>{{ $e['format'] }}</td>
             <td>{{ \Carbon\Carbon::parse($e['date_debut'])->format('d/m/Y H:i') }}</td>
             <td>{{ $e['nb_places_dispo'] }}/{{ $e['nb_places_total'] }}</td>
             <td>
                 @if($e['statut'] === 'valide')
-                    <x-badge variant="valid">Validé</x-badge>
+                    <span class="badge badge-valid">Validé</span>
                 @elseif($e['statut'] === 'refuse')
-                    <x-badge variant="refused">Refusé</x-badge>
+                    <span class="badge badge-refused">Refusé</span>
                 @elseif($e['statut'] === 'annule')
-                    <x-badge variant="refused">Annulé</x-badge>
+                    <span class="badge badge-refused">Annulé</span>
                 @elseif($e['statut'] === 'termine')
-                    <x-badge variant="valid">Terminé</x-badge>
+                    <span class="badge badge-valid">Terminé</span>
                 @else
-                    <x-badge>En attente</x-badge>
+                    <span class="badge badge-waiting">En attente</span>
                 @endif
             </td>
             <td>
                 <div class="action-cell">
-                    <x-btn variant="secondary" size="sm" href="{{ route('admin.evenements.show', $e['id_evenement']) }}">Voir</x-btn>
-                    <x-btn variant="secondary" size="sm" href="{{ route('admin.evenements.edit', $e['id_evenement']) }}" style="border-color: var(--cherry); color: var(--cherry);">Modifier</x-btn>
-                    <form action="{{ route('admin.evenements.destroy', $e['id_evenement']) }}" method="POST" onsubmit="return confirm('Supprimer cet événement ?');" style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-                        <x-btn variant="danger" size="sm" type="submit">Suppr</x-btn>
-                    </form>
+                    <a href="{{ route('admin.evenements.show', $e['id_evenement']) }}" class="btn-secondary btn-sm">Voir</a>
                 </div>
             </td>
         </tr>

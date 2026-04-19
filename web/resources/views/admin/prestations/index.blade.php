@@ -2,9 +2,12 @@
 @section('title', 'Prestations')
 
 @section('content')
-<x-page-header title="Prestations" />
+<div class="page-header">
+    <h1 class="page-title">Prestations</h1>
+</div>
 
 <div class="table-container">
+
 <table>
     <thead>
         <tr>
@@ -23,16 +26,16 @@
             <td>{{ number_format($p['prix'], 2, ',', ' ') }} €</td>
             <td>
                 @if($p['statut'] === 'validee')
-                    <x-badge variant="valid">Validée</x-badge>
+                    <span class="badge badge-valid">Validée</span>
                 @elseif($p['statut'] === 'refusee')
-                    <x-badge variant="refused">Refusée</x-badge>
+                    <span class="badge badge-refused">Refusée</span>
                 @else
-                    <x-badge>En attente</x-badge>
+                    <span class="badge badge-waiting">En attente</span>
                 @endif
             </td>
             <td>
                 <div class="action-cell">
-                    <x-btn variant="secondary" size="sm" href="{{ route('admin.prestations.show', $p['id_prestation']) }}">Voir</x-btn>
+                    <a href="{{ route('admin.prestations.show', $p['id_prestation']) }}" class="btn-secondary btn-sm">Voir</a>
                 </div>
             </td>
         </tr>

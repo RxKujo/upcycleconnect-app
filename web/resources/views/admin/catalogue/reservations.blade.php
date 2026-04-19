@@ -23,7 +23,7 @@
             <tr>
                 <td>{{ $reservation['id_reservation'] }}</td>
                 <td>{{ $reservation['id_utilisateur'] }}</td>
-                <td>{{ \App\Helpers\DateHelper::formatFrench($reservation['date_reservation']) }}</td>
+                <td>{{ \Carbon\Carbon::parse($reservation['date_reservation'])->format('d/m/Y H:i') }}</td>
                 <td>{{ ucfirst(str_replace('_', ' ', $reservation['statut_paiement'])) }}</td>
                 <td>{{ $reservation['prix_paye'] ? number_format($reservation['prix_paye'], 2, ',', ' ') . ' €' : '—' }}</td>
             </tr>

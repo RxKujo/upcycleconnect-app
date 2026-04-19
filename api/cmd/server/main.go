@@ -2,7 +2,6 @@ package main
 
 import (
 	"api/internal/router"
-	"api/internal/workers"
 	"api/pkg/database"
 	"log"
 	"net/http"
@@ -21,8 +20,6 @@ func main() {
 		log.Fatalf("Échec de la connexion à la base de données: %v", err)
 	}
 	defer database.DB.Close()
-
-	workers.StartRappelWorker()
 
 	r := router.New()
 

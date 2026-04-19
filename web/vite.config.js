@@ -11,20 +11,7 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
-        // Écouter sur toutes les interfaces réseau (requis dans Docker)
-        host: '0.0.0.0',
-        port: 5173,
-        // HMR : le navigateur se connecte à localhost (machine hôte)
-        // même si Vite tourne dans un container Docker
-        hmr: {
-            host: 'localhost',
-            port: 5173,
-        },
         watch: {
-            // usePolling requis sur Windows/Mac car les événements
-            // filesystem ne se propagent pas depuis Docker
-            usePolling: true,
-            interval: 300,
             ignored: ['**/storage/framework/views/**'],
         },
     },
