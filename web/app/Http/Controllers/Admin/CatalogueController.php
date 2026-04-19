@@ -11,7 +11,7 @@ class CatalogueController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get('http://localhost:8888/api/catalogue');
+            ->get(config('services.api.url') . '/api/catalogue');
 
         $items = $response->successful() ? $response->json() : [];
 
@@ -73,7 +73,7 @@ class CatalogueController extends Controller
     public function edit($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get("http://localhost:8888/api/catalogue/{$id}");
+            ->get(config('services.api.url') . "/api/catalogue/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.catalogue.index')->with('error', __('admin.element_introuvable'));
@@ -132,7 +132,7 @@ class CatalogueController extends Controller
     public function destroy($id)
     {
         Http::withToken(session('admin_token'))
-            ->delete("http://localhost:8888/api/catalogue/{$id}");
+            ->delete(config('services.api.url') . "/api/catalogue/{$id}");
 
         return redirect()->route('admin.catalogue.index')->with('success', __('admin.catalogue_delete_success'));
     }
@@ -161,21 +161,20 @@ class CatalogueController extends Controller
     public function valider($id)
     {
         Http::withToken(session('admin_token'))
-            ->post("http://localhost:8888/api/catalogue/{$id}/valider");
+            ->put(config('services.api.url') . "/api/catalogue/{$id}/valider");
 
         return back()->with('success', __('admin.catalogue_valide_success'));
     }
 
     public function reservations($id)
     {
-        $response = Http::withToken(session('admin_token'))
-            ->get("http://localhost:8888/api/catalogue/{$id}/reservations");
+        $request->validate(['motif_refus' => 'required|string']);
+        
+        Http::withToken(session('admin_token'))
+            ->put(config('services.api.url') . "/api/catalogue/{$id}/refuser", [
+                'motif_refus' => $request->motif_refus
+            ]);
 
-        if ($response->failed()) {
-            return redirect()->route('admin.catalogue.index')->with('error', __('admin.erreur_chargement_reservations'));
-        }
-
-        $reservations = $response->json();
-        return view('admin.catalogue.reservations', compact('reservations', 'id'));
+        return back()->with('success', 'Annonce refusée');
     }
 }

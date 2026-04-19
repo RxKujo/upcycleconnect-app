@@ -7,6 +7,33 @@ use Illuminate\Support\Facades\Http;
 
 class EvenementController extends Controller
 {
+    private $apiUrl;
+
+    public function __construct()
+    {
+        $this->apiUrl = config('services.api.url') . '/api/v1/admin/evenements';
+    }
+
+    private $types = [
+        'formation'  => 'Formation',
+        'atelier'    => 'Atelier',
+        'conseil'    => 'Conseil',
+    ];
+
+    private $formats = [
+        'presentiel' => 'Présentiel',
+        'distanciel' => 'Distanciel',
+    ];
+
+    private function getUsers()
+    {
+        $resp = Http::withToken(session('admin_token'))
+            ->get(config('services.api.url') . '/api/v1/admin/utilisateurs', ['limit' => 200]);
+        if (!$resp->successful()) return [];
+        $data = $resp->json();
+        return $data['utilisateurs'] ?? [];
+    }
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))

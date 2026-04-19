@@ -8,7 +8,14 @@ use Illuminate\Support\Facades\Http;
 
 class UtilisateurController extends Controller
 {
-    public function index()
+    private $apiUrl;
+
+    public function __construct()
+    {
+        $this->apiUrl = config('services.api.url') . '/api/v1/admin/utilisateurs';
+    }
+
+    public function index(Request $request)
     {
         $response = Http::withToken(session('admin_token'))
             ->get('http://localhost:8888/api/v1/admin/utilisateurs');
@@ -29,7 +36,11 @@ class UtilisateurController extends Controller
 
         $utilisateur = $response->json();
 
-        return view('admin.utilisateurs.show', compact('utilisateur'));
+        $plansResp = Http::withToken(session('admin_token'))
+            ->get(config('services.api.url') . '/api/v1/admin/abonnements');
+        $abonnements = $plansResp->successful() ? $plansResp->json() : [];
+
+        return view('admin.utilisateurs.show', compact('utilisateur', 'subscription', 'abonnements'));
     }
 
     public function ban(Request $request, $id)
