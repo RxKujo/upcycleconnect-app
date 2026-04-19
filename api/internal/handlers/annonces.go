@@ -120,7 +120,7 @@ func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId in
 					o.PoidsKg = &p
 				}
 				
-				photoRows, err := database.DB.Query("SELECT id_photo, id_objet, url, ordre FROM photos_objets WHERE id_objet = ? ORDER BY ordre", o.IDObjet)
+				photoRows, err := database.DB.Query("SELECT id_photo, id_objet, url_photo, ordre FROM photos_objets WHERE id_objet = ? ORDER BY ordre", o.IDObjet)
 				if err == nil {
 					for photoRows.Next() {
 						var ph models.PhotoObjet
@@ -176,6 +176,38 @@ func GetAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	if validePar.Valid {
 		v := int(validePar.Int64)
 		a.ValidePar = &v
+	}
+
+	objRows, err := database.DB.Query("SELECT id_objet, id_annonce, categorie, materiau, etat, poids_kg FROM objets_annonces WHERE id_annonce = ?", id)
+	if err == nil {
+		defer objRows.Close()
+		for objRows.Next() {
+			var o models.ObjetAnnonce
+			var poids sql.NullFloat64
+			if err := objRows.Scan(&o.IDObjet, &o.IDAnnonce, &o.Categorie, &o.Materiau, &o.Etat, &poids); err == nil {
+				if poids.Valid {
+					p := poids.Float64
+					o.PoidsKg = &p
+				}
+				photoRows, err := database.DB.Query("SELECT id_photo, id_objet, url_photo, ordre FROM photos_objets WHERE id_objet = ? ORDER BY ordre", o.IDObjet)
+				if err == nil {
+					for photoRows.Next() {
+						var ph models.PhotoObjet
+						if photoRows.Scan(&ph.IDPhoto, &ph.IDObjet, &ph.URL, &ph.Ordre) == nil {
+							o.Photos = append(o.Photos, ph)
+						}
+					}
+					photoRows.Close()
+				}
+				if o.Photos == nil {
+					o.Photos = []models.PhotoObjet{}
+				}
+				a.Objets = append(a.Objets, o)
+			}
+		}
+	}
+	if a.Objets == nil {
+		a.Objets = []models.ObjetAnnonce{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

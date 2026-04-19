@@ -9,7 +9,7 @@
         <nav aria-label="Plateforme">
             <p style="font-family:'DM Mono',monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--wheat); margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid rgba(245,240,225,0.15);">Plateforme</p>
             <ul style="display:flex; flex-direction:column; gap:10px;">
-                <li><a href="{{ route('marche.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Marché</a></li>
+                <li><a href="{{ route('annonces.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Marché</a></li>
                 <li><a href="{{ route('evenements.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Événements</a></li>
                 <li><a href="{{ route('conseils.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Conseils</a></li>
                 <li><a href="{{ route('forum.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Forum</a></li>

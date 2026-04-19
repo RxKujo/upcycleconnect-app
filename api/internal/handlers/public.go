@@ -449,3 +449,81 @@ func GetPublicStats(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(stats)
 }
+
+func GetPublicEvenements(w http.ResponseWriter, r *http.Request) {
+	rows, err := database.DB.Query("SELECT id_evenement, id_createur, titre, description, type_evenement, format, lieu, date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut, valide_par, date_creation FROM evenements WHERE statut = 'valide' ORDER BY date_debut ASC")
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var evenements []map[string]interface{}
+	for rows.Next() {
+		var e struct {
+			IDEvenement   int
+			IDCreateur    int
+			Titre         string
+			Description   string
+			TypeEvenement string
+			Format        string
+			Lieu          sql.NullString
+			DateDebut     time.Time
+			DateFin       time.Time
+			NbPlacesTotal int
+			NbPlacesDispo int
+			Prix          float64
+			Statut        string
+			ValidePar     sql.NullInt64
+			DateCreation  time.Time
+		}
+		if err := rows.Scan(&e.IDEvenement, &e.IDCreateur, &e.Titre, &e.Description, &e.TypeEvenement, &e.Format, &e.Lieu, &e.DateDebut, &e.DateFin, &e.NbPlacesTotal, &e.NbPlacesDispo, &e.Prix, &e.Statut, &e.ValidePar, &e.DateCreation); err != nil {
+			continue
+		}
+		item := map[string]interface{}{
+			"id_evenement": e.IDEvenement, "titre": e.Titre, "description": e.Description,
+			"type_evenement": e.TypeEvenement, "format": e.Format, "lieu": e.Lieu.String,
+			"date_debut": e.DateDebut, "date_fin": e.DateFin,
+			"nb_places_total": e.NbPlacesTotal, "nb_places_dispo": e.NbPlacesDispo,
+			"prix": e.Prix, "statut": e.Statut,
+		}
+		evenements = append(evenements, item)
+	}
+	if evenements == nil {
+		evenements = []map[string]interface{}{}
+	}
+	jsonOK(w, evenements, http.StatusOK)
+}
+
+func GetPublicEvenement(w http.ResponseWriter, r *http.Request, id string) {
+	var e struct {
+		IDEvenement   int
+		IDCreateur    int
+		Titre         string
+		Description   string
+		TypeEvenement string
+		Format        string
+		Lieu          sql.NullString
+		DateDebut     time.Time
+		DateFin       time.Time
+		NbPlacesTotal int
+		NbPlacesDispo int
+		Prix          float64
+		Statut        string
+		ValidePar     sql.NullInt64
+		DateCreation  time.Time
+	}
+	err := database.DB.QueryRow("SELECT id_evenement, id_createur, titre, description, type_evenement, format, lieu, date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut, valide_par, date_creation FROM evenements WHERE id_evenement = ? AND statut = 'valide'", id).
+		Scan(&e.IDEvenement, &e.IDCreateur, &e.Titre, &e.Description, &e.TypeEvenement, &e.Format, &e.Lieu, &e.DateDebut, &e.DateFin, &e.NbPlacesTotal, &e.NbPlacesDispo, &e.Prix, &e.Statut, &e.ValidePar, &e.DateCreation)
+	if err != nil {
+		jsonErr(w, "événement non trouvé", http.StatusNotFound)
+		return
+	}
+	jsonOK(w, map[string]interface{}{
+		"id_evenement": e.IDEvenement, "titre": e.Titre, "description": e.Description,
+		"type_evenement": e.TypeEvenement, "format": e.Format, "lieu": e.Lieu.String,
+		"date_debut": e.DateDebut, "date_fin": e.DateFin,
+		"nb_places_total": e.NbPlacesTotal, "nb_places_dispo": e.NbPlacesDispo,
+		"prix": e.Prix, "statut": e.Statut,
+	}, http.StatusOK)
+}

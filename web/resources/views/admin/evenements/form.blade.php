@@ -129,7 +129,7 @@ function buildDate(dateId, hourId, minId, hiddenId) {
     const d = document.getElementById(dateId).value;
     const h = String(document.getElementById(hourId).value || '0').padStart(2, '0');
     const m = String(document.getElementById(minId).value || '0').padStart(2, '0');
-    if (d) document.getElementById(hiddenId).value = `${d} ${h}:${m}:00`;
+    if (d) document.getElementById(hiddenId).value = `${d}T${h}:${m}:00Z`;
 }
 function syncDates() {
     buildDate('date_debut_date', 'date_debut_hour', 'date_debut_minute', 'date_debut');

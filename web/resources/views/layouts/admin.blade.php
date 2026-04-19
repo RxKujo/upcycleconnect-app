@@ -103,14 +103,14 @@
                 <a href="{{ route('admin.categories.index') }}" class="{{ request()->is('admin/categories*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories
                 </a>
-                <a href="{{ route('admin.prestations.index') }}" class="{{ request()->is('admin/prestations*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Prestations
-                </a>
-                <a href="{{ route('admin.catalogue.index') }}" class="{{ request()->is('admin/catalogue*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catalogue
+                <a href="{{ route('admin.annonces.index') }}" class="{{ request()->is('admin/annonces*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Annonces
                 </a>
                 <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements
+                </a>
+                <a href="{{ route('admin.commandes.index') }}" class="{{ request()->is('admin/commandes*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Commandes
                 </a>
                 <a href="{{ route('admin.conteneurs.index') }}" class="{{ request()->is('admin/conteneurs*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Conteneurs

@@ -7,7 +7,7 @@
         </a>
 
         <ul class="nav-links-public">
-            <li><a href="{{ route('marche.index') }}" class="{{ request()->routeIs('marche.*') ? 'active' : '' }}">Marché</a></li>
+            <li><a href="{{ route('annonces.index') }}" class="{{ request()->routeIs('annonces.*') ? 'active' : '' }}">Marché</a></li>
             <li><a href="{{ route('evenements.index') }}" class="{{ request()->routeIs('evenements.*') ? 'active' : '' }}">Événements</a></li>
             <li><a href="{{ route('conseils.index') }}" class="{{ request()->routeIs('conseils.*') ? 'active' : '' }}">Conseils</a></li>
             <li><a href="{{ route('forum.index') }}" class="{{ request()->routeIs('forum.*') ? 'active' : '' }}">Forum</a></li>
@@ -43,7 +43,7 @@
     </div>
 
     <div class="nav-mobile" id="nav-mobile">
-        <a href="{{ route('marche.index') }}">Marché</a>
+        <a href="{{ route('annonces.index') }}">Marché</a>
         <a href="{{ route('evenements.index') }}">Événements</a>
         <a href="{{ route('conseils.index') }}">Conseils</a>
         <a href="{{ route('forum.index') }}">Forum</a>
@@ -51,7 +51,7 @@
         <a href="{{ route('a-propos') }}">À propos</a>
         <div class="nav-mobile-auth" id="nav-mobile-auth">
             <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-ghost">Inscription</a>
-            <a href="{{ route('particulier.login') }}" class="nav-btn nav-btn-primary">Connexion</a>
+            <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-primary">Connexion</a>
         </div>
     </div>
 </nav>

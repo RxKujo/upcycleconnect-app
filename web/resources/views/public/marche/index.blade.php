@@ -23,7 +23,7 @@
     @if(count($annonces) > 0)
     <div class="grid-4" id="annonces-grid">
         @foreach($annonces as $annonce)
-        <a href="{{ route('marche.show', $annonce['id_annonce']) }}" class="card annonce-card"
+        <a href="{{ route('annonces.show', $annonce['id_annonce']) }}" class="card annonce-card"
            data-type="{{ $annonce['type_annonce'] }}"
            data-materiau="{{ !empty($annonce['objets']) ? $annonce['objets'][0]['materiau'] : '' }}"
            style="padding:0; display:flex; flex-direction:column; text-decoration:none;">

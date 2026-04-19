@@ -696,7 +696,7 @@
                     Inscription
                 </x-btn>
                 
-                <x-btn id="auth-login-btn" variant="primary" size="sm" href="{{ route('particulier.login') }}">
+                <x-btn id="auth-login-btn" variant="primary" size="sm" href="{{ route('particulier.register') }}">
                     Connexion
                 </x-btn>
 

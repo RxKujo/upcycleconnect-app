@@ -5,11 +5,10 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
-use App\Http\Controllers\Admin\PrestationController;
 use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
-use App\Http\Controllers\Admin\CatalogueController;
+use App\Http\Controllers\Admin\CommandeController;
 use App\Http\Controllers\EvenementCatalogueController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
@@ -18,8 +17,8 @@ use App\Http\Controllers\ForumController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/marche', [MarcheController::class, 'index'])->name('marche.index');
-Route::get('/marche/{id}', [MarcheController::class, 'show'])->name('marche.show');
+Route::get('/annonces', [MarcheController::class, 'index'])->name('annonces.index');
+Route::get('/annonces/{id}', [MarcheController::class, 'show'])->name('annonces.show');
 
 Route::get('/evenements', [EvenementCatalogueController::class, 'index'])->name('evenements.index');
 Route::get('/evenements/{id}', [EvenementCatalogueController::class, 'show'])->name('evenements.show');
@@ -61,7 +60,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/utilisateurs/{id}', [UtilisateurController::class, 'show'])->name('admin.utilisateurs.show');
         Route::post('/utilisateurs/{id}/ban', [UtilisateurController::class, 'ban'])->name('admin.utilisateurs.ban');
         Route::post('/utilisateurs/{id}/unban', [UtilisateurController::class, 'unban'])->name('admin.utilisateurs.unban');
+        Route::put('/utilisateurs/{id}/role', [UtilisateurController::class, 'changeRole'])->name('admin.utilisateurs.role');
         Route::delete('/utilisateurs/{id}', [UtilisateurController::class, 'delete'])->name('admin.utilisateurs.delete');
+        Route::post('/utilisateurs/{id}/abonnement', [UtilisateurController::class, 'assignAbonnement'])->name('admin.utilisateurs.abonnement.assign');
+        Route::delete('/utilisateurs/{id}/abonnement', [UtilisateurController::class, 'revokeAbonnement'])->name('admin.utilisateurs.abonnement.revoke');
 
         Route::get('/categories', [CategorieController::class, 'index'])->name('admin.categories.index');
         Route::get('/categories/create', [CategorieController::class, 'create'])->name('admin.categories.create');
@@ -70,20 +72,6 @@ Route::prefix('admin')->group(function () {
         Route::put('/categories/{id}', [CategorieController::class, 'update'])->name('admin.categories.update');
         Route::delete('/categories/{id}', [CategorieController::class, 'destroy'])->name('admin.categories.destroy');
 
-        Route::get('/prestations', [PrestationController::class, 'index'])->name('admin.prestations.index');
-        Route::get('/prestations/{id}', [PrestationController::class, 'show'])->name('admin.prestations.show');
-        Route::post('/prestations/{id}/valider', [PrestationController::class, 'valider'])->name('admin.prestations.valider');
-        Route::post('/prestations/{id}/refuser', [PrestationController::class, 'refuser'])->name('admin.prestations.refuser');
-
-        Route::get('/catalogue', [CatalogueController::class, 'index'])->name('admin.catalogue.index');
-        Route::get('/catalogue/{id}', [CatalogueController::class, 'show'])->name('admin.catalogue.show');
-        Route::delete('/catalogue/{id}', [CatalogueController::class, 'destroy'])->name('admin.catalogue.destroy');
-        Route::put('/catalogue/{id}/valider', [CatalogueController::class, 'valider'])->name('admin.catalogue.valider');
-        Route::put('/catalogue/{id}/refuser', [CatalogueController::class, 'refuser'])->name('admin.catalogue.refuser');
-
-        Route::get('/commandes', [\App\Http\Controllers\Admin\CommandeController::class, 'index'])->name('admin.commandes.index');
-        Route::get('/commandes/{id}', [\App\Http\Controllers\Admin\CommandeController::class, 'show'])->name('admin.commandes.show');
-        Route::put('/commandes/{id}/statut', [\App\Http\Controllers\Admin\CommandeController::class, 'updateStatut'])->name('admin.commandes.updateStatut');
 
         Route::get('/evenements', [EvenementController::class, 'index'])->name('admin.evenements.index');
         Route::get('/evenements/create', [EvenementController::class, 'create'])->name('admin.evenements.create');
@@ -102,11 +90,14 @@ Route::prefix('admin')->group(function () {
         Route::put('/annonces/{id}/refuser', [AnnonceController::class, 'refuser'])->name('admin.annonces.refuser');
         Route::put('/annonces/{id}/attente', [AnnonceController::class, 'attente'])->name('admin.annonces.attente');
 
+        Route::get('/commandes', [CommandeController::class, 'index'])->name('admin.commandes.index');
+        Route::get('/commandes/{id}', [CommandeController::class, 'show'])->name('admin.commandes.show');
+        Route::put('/commandes/{id}/statut', [CommandeController::class, 'updateStatut'])->name('admin.commandes.updateStatut');
+
         Route::get('/conteneurs', [ConteneurController::class, 'index'])->name('admin.conteneurs.index');
         Route::post('/conteneurs', [ConteneurController::class, 'store'])->name('admin.conteneurs.store');
         Route::get('/conteneurs/{id}', [ConteneurController::class, 'show'])->name('admin.conteneurs.show');
         Route::post('/conteneurs/{id}/scan', [ConteneurController::class, 'scanBarcode'])->name('admin.conteneurs.scan');
         Route::put('/conteneurs/{id}/tickets/{ticketId}/resolve', [ConteneurController::class, 'resolveTicket'])->name('admin.conteneurs.tickets.resolve');
-        Route::get('/commandes/{idCommande}/barcode', [ConteneurController::class, 'generateBarcodePdf'])->name('admin.commandes.barcode.pdf');
     });
 });

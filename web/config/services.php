@@ -24,7 +24,7 @@ return [
     ],
 
     'api' => [
-        'url' => env('API_URL', 'http://localhost:8888'),
+        'url' => env('API_URL', 'http://api:8888'),
     ],
 
 ];

@@ -22,7 +22,7 @@
                 Rejoignez une communauté engagée pour une économie circulaire.
             </p>
             <div class="hero-actions">
-                <a href="{{ route('marche.index') }}" class="btn btn-primary btn-lg">
+                <a href="{{ route('annonces.index') }}" class="btn btn-primary btn-lg">
                     Explorer le marché
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/></svg>
                 </a>
@@ -96,13 +96,13 @@
                 <p class="section-eyebrow">Marketplace</p>
                 <h2 class="section-heading">Dernières annonces</h2>
             </div>
-            <a href="{{ route('marche.index') }}" class="section-link">Tout voir &rarr;</a>
+            <a href="{{ route('annonces.index') }}" class="section-link">Tout voir &rarr;</a>
         </div>
 
         @if(count($annonces) > 0)
         <div class="cards-grid cards-grid-4">
             @foreach($annonces as $annonce)
-            <a href="{{ route('marche.show', $annonce['id_annonce']) }}" class="product-card">
+            <a href="{{ route('annonces.show', $annonce['id_annonce']) }}" class="product-card">
                 <div class="product-card-img">
                     @if(!empty($annonce['objets']) && !empty($annonce['objets'][0]['photos']))
                     <img src="/uploads/{{ $annonce['objets'][0]['photos'][0]['url'] }}" alt="{{ $annonce['titre'] }}">
@@ -271,7 +271,7 @@
         <p class="cta-final-sub">Rejoignez la communauté UpcycleConnect dès aujourd'hui. C'est gratuit.</p>
         <div class="hero-actions" style="justify-content:center;">
             <a href="{{ route('particulier.register') }}" class="btn btn-primary btn-lg">Créer un compte</a>
-            <a href="{{ route('marche.index') }}" class="btn btn-secondary btn-lg">Parcourir le marché</a>
+            <a href="{{ route('annonces.index') }}" class="btn btn-secondary btn-lg">Parcourir le marché</a>
         </div>
     </div>
 </section>

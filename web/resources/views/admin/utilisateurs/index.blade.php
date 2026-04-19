@@ -6,9 +6,23 @@
     <h1 class="page-title">Utilisateurs</h1>
 </div>
 
-<div class="table-container">
+<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+    <select id="filter-role" class="form-select" style="width: auto; min-width: 160px;" onchange="filterTable()">
+        <option value="">Tous les rôles</option>
+        <option value="particulier">Particulier</option>
+        <option value="professionnel">Professionnel</option>
+        <option value="salarie">Salarié</option>
+        <option value="admin">Admin</option>
+    </select>
+    <select id="filter-statut" class="form-select" style="width: auto; min-width: 160px;" onchange="filterTable()">
+        <option value="">Tous les statuts</option>
+        <option value="actif">Actif</option>
+        <option value="banni">Banni</option>
+    </select>
+</div>
 
-<table>
+<div class="table-container">
+<table id="utilisateurs-table">
     <thead>
         <tr>
             <th>ID</th>
@@ -22,7 +36,7 @@
     </thead>
     <tbody>
         @forelse($utilisateurs as $u)
-        <tr>
+        <tr data-role="{{ $u['role'] }}" data-statut="{{ $u['est_banni'] ? 'banni' : 'actif' }}">
             <td>{{ $u['id_utilisateur'] }}</td>
             <td>{{ $u['nom'] }}</td>
             <td>{{ $u['prenom'] }}</td>
@@ -49,4 +63,16 @@
     </tbody>
 </table>
 </div>
+
+<script>
+function filterTable() {
+    const role = document.getElementById('filter-role').value;
+    const statut = document.getElementById('filter-statut').value;
+    document.querySelectorAll('#utilisateurs-table tbody tr[data-role]').forEach(row => {
+        const matchRole = !role || row.dataset.role === role;
+        const matchStatut = !statut || row.dataset.statut === statut;
+        row.style.display = matchRole && matchStatut ? '' : 'none';
+    });
+}
+</script>
 @endsection
