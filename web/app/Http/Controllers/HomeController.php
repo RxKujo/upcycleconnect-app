@@ -10,7 +10,7 @@ class HomeController extends Controller
 {
     protected function apiUrl(): string
     {
-        return env('API_URL', 'http://localhost:8888');
+        return env('API_URL', 'http://api:8888');
     }
 
     public function index()

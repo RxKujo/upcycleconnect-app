@@ -61,7 +61,7 @@ class CatalogueController extends Controller
         ];
 
         $response = Http::withToken(session('admin_token'))
-            ->post('http://localhost:8888/api/catalogue', $payload);
+            ->post('http://api:8888/api/catalogue', $payload);
 
         if ($response->failed()) {
             return back()->withInput()->with('error', __('admin.erreur_creation'));
@@ -120,7 +120,7 @@ class CatalogueController extends Controller
         ];
 
         $response = Http::withToken(session('admin_token'))
-            ->put("http://localhost:8888/api/catalogue/{$id}", $payload);
+            ->put("http://api:8888/api/catalogue/{$id}", $payload);
 
         if ($response->failed()) {
             return back()->withInput()->with('error', __('admin.erreur_mise_a_jour'));
@@ -140,7 +140,7 @@ class CatalogueController extends Controller
     public function show($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get("http://localhost:8888/api/catalogue/{$id}");
+            ->get("http://api:8888/api/catalogue/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.catalogue.index')->with('error', __('admin.element_introuvable'));
@@ -149,7 +149,7 @@ class CatalogueController extends Controller
         $item = $response->json();
         $reservations = [];
         $reservationsResponse = Http::withToken(session('admin_token'))
-            ->get("http://localhost:8888/api/catalogue/{$id}/reservations");
+            ->get("http://api:8888/api/catalogue/{$id}/reservations");
 
         if ($reservationsResponse->successful()) {
             $reservations = $reservationsResponse->json();
