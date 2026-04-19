@@ -1,6 +1,3 @@
--- =============================================
--- CATALOGUE_ITEMS
--- =============================================
 CREATE TABLE catalogue_items (
     id_catalogue_item INT AUTO_INCREMENT PRIMARY KEY,
     id_createur INT NOT NULL,
@@ -21,9 +18,6 @@ CREATE TABLE catalogue_items (
     FOREIGN KEY (valide_par) REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- CATALOGUE_RESERVATIONS
--- =============================================
 CREATE TABLE catalogue_reservations (
     id_reservation INT AUTO_INCREMENT PRIMARY KEY,
     id_utilisateur INT NOT NULL,

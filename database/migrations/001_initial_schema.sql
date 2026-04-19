@@ -1,9 +1,6 @@
 CREATE DATABASE IF NOT EXISTS upcycleconnect CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE upcycleconnect;
 
--- =============================================
--- LANGUE
--- =============================================
 CREATE TABLE langue (
     id_langue  INT AUTO_INCREMENT PRIMARY KEY,
     code_iso   CHAR(5) NOT NULL UNIQUE,
@@ -12,9 +9,6 @@ CREATE TABLE langue (
     date_ajout DATETIME NOT NULL DEFAULT NOW()
 );
 
--- =============================================
--- SITE_UC
--- =============================================
 CREATE TABLE site_uc (
     id_site     INT AUTO_INCREMENT PRIMARY KEY,
     nom_site    VARCHAR(200) NOT NULL,
@@ -23,9 +17,6 @@ CREATE TABLE site_uc (
     code_postal VARCHAR(10)
 );
 
--- =============================================
--- UTILISATEUR
--- =============================================
 CREATE TABLE utilisateurs (
     id_utilisateur       INT AUTO_INCREMENT PRIMARY KEY,
     nom                  VARCHAR(100) NOT NULL,
@@ -57,9 +48,6 @@ CREATE TABLE utilisateurs (
     FOREIGN KEY (id_site_uc) REFERENCES site_uc(id_site)
 );
 
--- =============================================
--- ABONNEMENT
--- =============================================
 CREATE TABLE abonnements (
     id_abonnement       INT AUTO_INCREMENT PRIMARY KEY,
     nom                 VARCHAR(100) NOT NULL,
@@ -72,9 +60,6 @@ CREATE TABLE abonnements (
     badges_actives      BOOLEAN DEFAULT FALSE
 );
 
--- =============================================
--- SOUSCRIPTION
--- =============================================
 CREATE TABLE souscriptions (
     id_souscription        INT AUTO_INCREMENT PRIMARY KEY,
     id_utilisateur         INT NOT NULL,
@@ -88,9 +73,6 @@ CREATE TABLE souscriptions (
     FOREIGN KEY (id_abonnement)  REFERENCES abonnements(id_abonnement)
 );
 
--- =============================================
--- FACTURE
--- =============================================
 CREATE TABLE factures (
     id_facture        INT AUTO_INCREMENT PRIMARY KEY,
     numero_facture    VARCHAR(50) NOT NULL UNIQUE,
@@ -105,9 +87,6 @@ CREATE TABLE factures (
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- PUBLICITE
--- =============================================
 CREATE TABLE publicites (
     id_publicite     INT AUTO_INCREMENT PRIMARY KEY,
     id_professionnel INT NOT NULL,
@@ -125,9 +104,6 @@ CREATE TABLE publicites (
     FOREIGN KEY (valide_par)       REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- ANNONCE
--- =============================================
 CREATE TABLE annonces (
     id_annonce     INT AUTO_INCREMENT PRIMARY KEY,
     id_particulier INT NOT NULL,
@@ -145,9 +121,6 @@ CREATE TABLE annonces (
     FOREIGN KEY (valide_par)     REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- OBJET_ANNONCE
--- =============================================
 CREATE TABLE objets_annonces (
     id_objet   INT AUTO_INCREMENT PRIMARY KEY,
     id_annonce INT NOT NULL,
@@ -158,9 +131,6 @@ CREATE TABLE objets_annonces (
     FOREIGN KEY (id_annonce) REFERENCES annonces(id_annonce) ON DELETE CASCADE
 );
 
--- =============================================
--- PHOTO_OBJET
--- =============================================
 CREATE TABLE photos_objets (
     id_photo  INT AUTO_INCREMENT PRIMARY KEY,
     id_objet  INT NOT NULL,
@@ -169,9 +139,6 @@ CREATE TABLE photos_objets (
     FOREIGN KEY (id_objet) REFERENCES objets_annonces(id_objet) ON DELETE CASCADE
 );
 
--- =============================================
--- CONTENEUR
--- =============================================
 CREATE TABLE conteneurs (
     id_conteneur  INT AUTO_INCREMENT PRIMARY KEY,
     conteneur_ref VARCHAR(50) NOT NULL UNIQUE,
@@ -184,9 +151,6 @@ CREATE TABLE conteneurs (
     statut        ENUM('actif','plein','maintenance','hors_service') NOT NULL DEFAULT 'actif'
 );
 
--- =============================================
--- COMMANDE
--- =============================================
 CREATE TABLE commandes (
     id_commande              INT AUTO_INCREMENT PRIMARY KEY,
     id_annonce               INT NOT NULL,
@@ -203,9 +167,6 @@ CREATE TABLE commandes (
     FOREIGN KEY (id_conteneur)  REFERENCES conteneurs(id_conteneur)
 );
 
--- =============================================
--- CODE_BARRE
--- =============================================
 CREATE TABLE codes_barres (
     id_code_barre    INT AUTO_INCREMENT PRIMARY KEY,
     id_commande      INT NOT NULL,
@@ -217,9 +178,6 @@ CREATE TABLE codes_barres (
     FOREIGN KEY (id_commande) REFERENCES commandes(id_commande)
 );
 
--- =============================================
--- ALERTE_MATERIAU
--- =============================================
 CREATE TABLE alertes_materiaux (
     id_alerte        INT AUTO_INCREMENT PRIMARY KEY,
     id_professionnel INT NOT NULL,
@@ -230,9 +188,6 @@ CREATE TABLE alertes_materiaux (
     FOREIGN KEY (id_professionnel) REFERENCES utilisateurs(id_utilisateur) ON DELETE CASCADE
 );
 
--- =============================================
--- TEMPLATE_EVENEMENT
--- =============================================
 CREATE TABLE templates_evenements (
     id_template  INT AUTO_INCREMENT PRIMARY KEY,
     nom_template VARCHAR(150) NOT NULL,
@@ -240,16 +195,13 @@ CREATE TABLE templates_evenements (
     modele       JSON
 );
 
--- =============================================
--- EVENEMENT
--- =============================================
 CREATE TABLE evenements (
     id_evenement    INT AUTO_INCREMENT PRIMARY KEY,
     id_createur     INT NOT NULL,
     id_template     INT NULL,
     titre           VARCHAR(200) NOT NULL,
     description     TEXT NOT NULL,
-    type_evenement  ENUM('formation','atelier','conference') NOT NULL,
+    type_evenement  ENUM('formation','atelier','conference','conseil') NOT NULL,
     format          ENUM('presentiel','distanciel') NOT NULL,
     lieu            VARCHAR(300),
     date_debut      DATETIME NOT NULL,
@@ -266,9 +218,6 @@ CREATE TABLE evenements (
     FOREIGN KEY (valide_par)  REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- ANIMATEUR_EVENEMENT
--- =============================================
 CREATE TABLE animateurs_evenements (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     id_evenement INT NOT NULL,
@@ -277,9 +226,6 @@ CREATE TABLE animateurs_evenements (
     FOREIGN KEY (id_salarie)   REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- INSCRIPTION_EVENEMENT
--- =============================================
 CREATE TABLE inscriptions_evenements (
     id_inscription    INT AUTO_INCREMENT PRIMARY KEY,
     id_utilisateur    INT NOT NULL,
@@ -288,16 +234,13 @@ CREATE TABLE inscriptions_evenements (
     statut_paiement   ENUM('gratuit','paye','rembourse') NOT NULL DEFAULT 'gratuit',
     stripe_payment    VARCHAR(255) NULL,
     prix_paye         DECIMAL(10,2),
-    avis_satisfaction TINYINT NULL COMMENT '1 à 5',
+    avis_satisfaction TINYINT NULL,
     commentaire_avis  TEXT NULL,
     UNIQUE KEY unique_inscription (id_evenement, id_utilisateur),
     FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id_utilisateur),
     FOREIGN KEY (id_evenement)   REFERENCES evenements(id_evenement)
 );
 
--- =============================================
--- ARTICLE_NEWS
--- =============================================
 CREATE TABLE articles_news (
     id_article       INT AUTO_INCREMENT PRIMARY KEY,
     id_auteur        INT NOT NULL,
@@ -309,9 +252,6 @@ CREATE TABLE articles_news (
     FOREIGN KEY (id_auteur) REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- PLANNING_UTILISATEUR
--- =============================================
 CREATE TABLE planning_utilisateurs (
     id_planning    INT AUTO_INCREMENT PRIMARY KEY,
     id_utilisateur INT NOT NULL,
@@ -324,9 +264,6 @@ CREATE TABLE planning_utilisateurs (
     FOREIGN KEY (id_evenement)   REFERENCES evenements(id_evenement) ON DELETE SET NULL
 );
 
--- =============================================
--- FORUM_SUJET
--- =============================================
 CREATE TABLE forum_sujets (
     id_sujet      INT AUTO_INCREMENT PRIMARY KEY,
     id_createur   INT NOT NULL,
@@ -337,9 +274,6 @@ CREATE TABLE forum_sujets (
     FOREIGN KEY (id_createur) REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- FORUM_MESSAGE
--- =============================================
 CREATE TABLE forum_messages (
     id_message        INT AUTO_INCREMENT PRIMARY KEY,
     id_sujet          INT NOT NULL,
@@ -353,9 +287,6 @@ CREATE TABLE forum_messages (
     FOREIGN KEY (id_parent_message) REFERENCES forum_messages(id_message)
 );
 
--- =============================================
--- MOT_BANNI
--- =============================================
 CREATE TABLE mots_bannis (
     id_mot     INT AUTO_INCREMENT PRIMARY KEY,
     mot        VARCHAR(100) NOT NULL UNIQUE,
@@ -364,9 +295,6 @@ CREATE TABLE mots_bannis (
     FOREIGN KEY (ajoute_par) REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- SIGNALEMENT_FORUM
--- =============================================
 CREATE TABLE signalements_forum (
     id_signalement   INT AUTO_INCREMENT PRIMARY KEY,
     id_message       INT NOT NULL,
@@ -379,9 +307,6 @@ CREATE TABLE signalements_forum (
     FOREIGN KEY (id_signaleur) REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- BOITE_IDEES
--- =============================================
 CREATE TABLE boite_idees (
     id_idee          INT AUTO_INCREMENT PRIMARY KEY,
     id_auteur        INT NOT NULL,
@@ -392,9 +317,6 @@ CREATE TABLE boite_idees (
     FOREIGN KEY (id_auteur) REFERENCES utilisateurs(id_utilisateur)
 );
 
--- =============================================
--- NOTIFICATION
--- =============================================
 CREATE TABLE notifications (
     id_notif       INT AUTO_INCREMENT PRIMARY KEY,
     id_destinataire INT NOT NULL,
@@ -407,9 +329,6 @@ CREATE TABLE notifications (
     FOREIGN KEY (id_destinataire) REFERENCES utilisateurs(id_utilisateur) ON DELETE CASCADE
 );
 
--- =============================================
--- BADGE
--- =============================================
 CREATE TABLE badges (
     id_badge      INT AUTO_INCREMENT PRIMARY KEY,
     nom           VARCHAR(150) NOT NULL,
@@ -419,9 +338,6 @@ CREATE TABLE badges (
     icone_url     VARCHAR(500)
 );
 
--- =============================================
--- BADGE_UTILISATEUR
--- =============================================
 CREATE TABLE badges_utilisateurs (
     id             INT AUTO_INCREMENT PRIMARY KEY,
     id_utilisateur INT NOT NULL,
@@ -432,9 +348,6 @@ CREATE TABLE badges_utilisateurs (
     FOREIGN KEY (id_badge)       REFERENCES badges(id_badge)
 );
 
--- =============================================
--- MATERIEL
--- =============================================
 CREATE TABLE materiels (
     id_materiel    INT AUTO_INCREMENT PRIMARY KEY,
     nom            VARCHAR(200) NOT NULL,
@@ -446,9 +359,6 @@ CREATE TABLE materiels (
     FOREIGN KEY (id_site) REFERENCES site_uc(id_site)
 );
 
--- =============================================
--- RESERVATION_MATERIEL
--- =============================================
 CREATE TABLE reservations_materiels (
     id_reservation   INT AUTO_INCREMENT PRIMARY KEY,
     id_materiel      INT NOT NULL,
@@ -461,9 +371,6 @@ CREATE TABLE reservations_materiels (
     FOREIGN KEY (id_evenement) REFERENCES evenements(id_evenement) ON DELETE SET NULL
 );
 
--- =============================================
--- TICKET_INCIDENT
--- =============================================
 CREATE TABLE tickets_incidents (
     id_ticket       INT AUTO_INCREMENT PRIMARY KEY,
     glpi_ticket_id  VARCHAR(100),
@@ -478,9 +385,6 @@ CREATE TABLE tickets_incidents (
     FOREIGN KEY (id_conteneur) REFERENCES conteneurs(id_conteneur)
 );
 
--- =============================================
--- CATEGORIE_PRESTATION
--- =============================================
 CREATE TABLE categories_prestations (
     id_categorie INT AUTO_INCREMENT PRIMARY KEY,
     nom          VARCHAR(150) NOT NULL,
@@ -488,9 +392,6 @@ CREATE TABLE categories_prestations (
     date_creation DATETIME NOT NULL DEFAULT NOW()
 );
 
--- =============================================
--- PRESTATION
--- =============================================
 CREATE TABLE prestations (
     id_prestation INT AUTO_INCREMENT PRIMARY KEY,
     id_categorie  INT NOT NULL,
