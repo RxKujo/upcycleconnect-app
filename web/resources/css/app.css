@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+    --color-cherry: #A4243B;
+    --color-wheat: #D8C99B;
+    --color-coffee: #120309;
+    --color-forest: #244F26;
+    --color-teal: #18607D;
+    --color-cream: #F5F0E1;
+}
