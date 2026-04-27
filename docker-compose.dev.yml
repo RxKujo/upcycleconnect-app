@@ -7,17 +7,17 @@ services:
     container_name: uc_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: upcycleconnect
-      MYSQL_USER: uc_user
-      MYSQL_PASSWORD: uc_password
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "uc_user", "-puc_password"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USERNAME}", "-p${DB_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -30,8 +30,9 @@ services:
     restart: unless-stopped
     environment:
       PMA_HOST: db
-      PMA_USER: uc_user
-      PMA_PASSWORD: uc_password
+      PMA_ARBITRARY: 1
+      #PMA_USER: ${DB_USERNAME}
+      #PMA_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8081:80"
     depends_on:
@@ -50,19 +51,19 @@ services:
       - go_pkg_cache:/root/go/pkg/mod
       - go_build_cache:/root/.cache/go
     environment:
-      DB_HOST: db
-      DB_PORT: "3306"
-      DB_USER: uc_user
-      DB_PASSWORD: uc_password
-      DB_NAME: upcycleconnect
-      JWT_SECRET: upcycleconnect_secret_key_2026
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
       API_PORT: "8888"
-      RECAPTCHA_SECRET_KEY: "6LcgKb8sAAAAAJIQVzLVHQtvYnRsLFQhcxJf_Onp"
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY}
     ports:
       - "8888:8888"
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_started
     networks:
       - uc_network
 
@@ -78,37 +79,27 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: "http://localhost:8000"
-      DB_HOST: db
-      DB_PORT: "3306"
-      DB_DATABASE: upcycleconnect
-      DB_USERNAME: uc_user
-      DB_PASSWORD: uc_password
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
       SESSION_DRIVER: database
       QUEUE_CONNECTION: database
       CACHE_STORE: database
       API_URL: "http://api:8888"
-      RECAPTCHA_SITE_KEY: "6LcgKb8sAAAAAGoRZ2kw89Uz3oo-8TEf_qu1iC5z"
+      RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
       VITE_DEV_SERVER_URL: "http://localhost:5173"
     ports:
       - "8000:8000"
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_started
       api:
         condition: service_started
     networks:
       - uc_network
   
-  nginx-proxy:
-    image: 'jc21/nginx-proxy-manager:latest'
-    ports:
-      - '80:80'  
-      - '81:81' 
-      - '443:443'
-    volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
-
   vite:
     image: node:20-alpine
     container_name: uc_vite_dev
@@ -129,4 +120,5 @@ volumes:
 
 networks:
   uc_network:
+    name: uc_network
     driver: bridge

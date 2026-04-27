@@ -1,10 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "==> Installation des dépendances Composer si manquantes..."
-if [ ! -f "vendor/autoload.php" ]; then
-    composer install --no-interaction
-fi
+echo "==> Installation des dépendances Composer..."
+composer install --no-interaction
 
 echo "==> Génération de APP_KEY si manquante..."
 if grep -q "^APP_KEY=$" .env 2>/dev/null || ! grep -q "^APP_KEY=" .env 2>/dev/null; then
