@@ -339,6 +339,48 @@
                 margin-bottom: 24px;
             }
         }
+
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% - 3px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 3px solid var(--coffee);
+            border-top: none;
+            box-shadow: 5px 5px 0px rgba(18, 3, 9, 0.15);
+            z-index: 100;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .autocomplete-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(18, 3, 9, 0.1);
+            transition: background 0.1s;
+        }
+
+        .autocomplete-item:last-child { border-bottom: none; }
+
+        .autocomplete-item:hover {
+            background: var(--wheat);
+        }
+
+        #adresseAutoGroup.has-error #adresseSearch {
+            border-color: var(--cherry);
+            box-shadow: 3px 3px 0px rgba(164, 36, 59, 0.2);
+        }
+
+        #adresseAutoGroup.has-error .error-message {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -359,7 +401,8 @@
 
             <div id="alertContainer"></div>
 
-            <form id="registerForm" method="POST" action="http://localhost:8888/api/v1/auth/register-particulier" novalidate>
+            <form id="registerForm" method="POST" action="http://localhost:8888/api/v1/auth/register" novalidate>
+                <input type="hidden" name="role" value="particulier">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="prenom" class="form-label">Prénom</label>
@@ -415,30 +458,40 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group required">
-                        <label for="ville" class="form-label">Ville</label>
+                <div class="form-group required" id="adresseAutoGroup">
+                    <label for="adresseSearch" class="form-label">Adresse</label>
+                    <div class="autocomplete-wrapper">
                         <input
                             type="text"
-                            id="ville"
-                            name="ville"
+                            id="adresseSearch"
                             class="form-input"
-                            placeholder="Ville"
-                            required
+                            placeholder="Ex: 10 Rue de la Paix, Paris..."
+                            autocomplete="off"
                         >
-                        <div class="error-message">La ville est obligatoire</div>
+                        <div class="autocomplete-dropdown" id="adresseSuggestions"></div>
                     </div>
+                    <div class="error-message">Veuillez sélectionner une adresse dans la liste</div>
+                    <input type="hidden" name="adresse_complete" id="adresse_complete">
+                    <input type="hidden" name="ville" id="ville">
+                    <input type="hidden" name="code_postal" id="code_postal">
+                </div>
 
+                <div id="adresseFallback" style="display:none">
+                    <div class="form-row">
+                        <div class="form-group required">
+                            <label for="ville_manual" class="form-label">Ville</label>
+                            <input type="text" id="ville_manual" name="ville_manual" class="form-input" placeholder="Ville">
+                            <div class="error-message">La ville est obligatoire</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="adresse_manual" class="form-label">Adresse (optionnel)</label>
+                            <input type="text" id="adresse_manual" name="adresse_manual" class="form-input" placeholder="123 Rue de...">
+                            <div class="error-message">L'adresse est trop longue (max 255 caractères)</div>
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label for="adresse_complete" class="form-label">Adresse complète (optionnel)</label>
-                        <input
-                            type="text"
-                            id="adresse_complete"
-                            name="adresse_complete"
-                            class="form-input"
-                            placeholder="123 Rue de..."
-                        >
-                        <div class="error-message">L'adresse est trop longue (max 255 caractères)</div>
+                        <label for="code_postal_manual" class="form-label">Code postal (optionnel)</label>
+                        <input type="text" id="code_postal_manual" name="code_postal_manual" class="form-input" placeholder="75001">
                     </div>
                 </div>
 
@@ -521,11 +574,12 @@
             });
         });
 
+        let fallbackActive = false;
+
         // Live validation
         const validateField = (field) => {
             const value = field.value.trim();
             let isValid = true;
-            let errorMsg = '';
 
             switch (field.name) {
                 case 'nom':
@@ -538,10 +592,10 @@
                 case 'telephone':
                     isValid = patterns.phone.test(value);
                     break;
-                case 'ville':
-                    isValid = value.length > 0;
+                case 'ville_manual':
+                    isValid = !fallbackActive || value.length > 0;
                     break;
-                case 'adresse_complete':
+                case 'adresse_manual':
                     isValid = value.length <= 255;
                     break;
                 case 'mot_de_passe':
@@ -621,6 +675,18 @@
             let formIsValid = true;
             const errors = [];
 
+            if (!fallbackActive) {
+                if (!adresseSelected || !document.getElementById('ville').value) {
+                    setAdresseError(true);
+                    formIsValid = false;
+                    errors.push('Veuillez sélectionner une adresse dans la liste');
+                }
+            } else {
+                document.getElementById('adresse_complete').value = document.getElementById('adresse_manual').value;
+                document.getElementById('ville').value = document.getElementById('ville_manual').value;
+                document.getElementById('code_postal').value = document.getElementById('code_postal_manual').value;
+            }
+
             fields.forEach(field => {
                 if (!validateField(field)) {
                     formIsValid = false;
@@ -628,8 +694,8 @@
                     else if (field.name === 'prenom') errors.push('Le prénom est obligatoire');
                     else if (field.name === 'email') errors.push('Email invalide');
                     else if (field.name === 'telephone') errors.push('Téléphone invalide');
-                    else if (field.name === 'ville') errors.push('La ville est obligatoire');
-                    else if (field.name === 'adresse_complete') errors.push('Adresse trop longue');
+                    else if (field.name === 'ville_manual') errors.push('La ville est obligatoire');
+                    else if (field.name === 'adresse_manual') errors.push('Adresse trop longue');
                     else if (field.name === 'mot_de_passe') errors.push('Mot de passe minimum 8 caractères');
                     else if (field.name === 'password_confirmation') errors.push('Les mots de passe ne correspondent pas');
                 }
@@ -702,6 +768,79 @@
                 submitBtn.classList.remove('loading');
                 loadingOverlay.classList.remove('active');
             }
+        });
+        // === Autocomplete adresse ===
+        const adresseAutoGroup  = document.getElementById('adresseAutoGroup');
+        const adresseSearch     = document.getElementById('adresseSearch');
+        const adresseSuggestions= document.getElementById('adresseSuggestions');
+        const adresseFallback   = document.getElementById('adresseFallback');
+        let adresseSelected = false;
+        let debounceTimer   = null;
+
+        const activateFallback = () => {
+            fallbackActive = true;
+            adresseAutoGroup.style.display = 'none';
+            adresseFallback.style.display  = 'block';
+        };
+
+        const setAdresseError = (hasError) => {
+            adresseAutoGroup.classList.toggle('has-error', hasError);
+        };
+
+        const closeSuggestions = () => {
+            adresseSuggestions.style.display = 'none';
+            adresseSuggestions.innerHTML = '';
+        };
+
+        fetch('https://data.geopf.fr/geocodage/search/?q=Paris&limit=1').catch(() => activateFallback());
+
+        adresseSearch.addEventListener('input', () => {
+            const value = adresseSearch.value.trim();
+            adresseSelected = false;
+            document.getElementById('adresse_complete').value = '';
+            document.getElementById('ville').value = '';
+            document.getElementById('code_postal').value = '';
+            setAdresseError(false);
+            clearTimeout(debounceTimer);
+
+            if (value.length < 3) { closeSuggestions(); return; }
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const res  = await fetch(`https://data.geopf.fr/geocodage/search/?q=${encodeURIComponent(value)}&limit=5`);
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    const features = data.features || [];
+                    if (features.length === 0) { closeSuggestions(); return; }
+
+                    adresseSuggestions.innerHTML = '';
+                    features.forEach(feature => {
+                        const props = feature.properties;
+                        const item  = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        item.textContent = props.label;
+                        item.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            adresseSearch.value = props.label;
+                            document.getElementById('adresse_complete').value = props.name     || '';
+                            document.getElementById('ville').value            = props.city     || '';
+                            document.getElementById('code_postal').value      = props.postcode || '';
+                            adresseSelected = true;
+                            setAdresseError(false);
+                            closeSuggestions();
+                        });
+                        adresseSuggestions.appendChild(item);
+                    });
+                    adresseSuggestions.style.display = 'block';
+                } catch {
+                    activateFallback();
+                }
+            }, 300);
+        });
+
+        adresseSearch.addEventListener('blur', () => setTimeout(closeSuggestions, 150));
+        document.addEventListener('click', (e) => {
+            if (!adresseAutoGroup.contains(e.target)) closeSuggestions();
         });
     </script>
 </body>

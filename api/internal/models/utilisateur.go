@@ -19,15 +19,17 @@ type Utilisateur struct {
 }
 
 type RegisterRequest struct {
-	Nom            string  `json:"nom" binding:"required"`
-	Prenom         string  `json:"prenom" binding:"required"`
-	Email          string  `json:"email" binding:"required,email"`
-	MotDePasse     string  `json:"mot_de_passe" binding:"required,min=6"`
-	Telephone      *string `json:"telephone"`
-	Ville          *string `json:"ville"`
-	Role           string  `json:"role" binding:"required"`
-	NomEntreprise  *string `json:"nom_entreprise"`
-	NumeroSiret    *string `json:"numero_siret"`
+	Nom             string  `json:"nom" binding:"required"`
+	Prenom          string  `json:"prenom" binding:"required"`
+	Email           string  `json:"email" binding:"required,email"`
+	MotDePasse      string  `json:"mot_de_passe" binding:"required,min=6"`
+	Telephone       *string `json:"telephone"`
+	Ville           *string `json:"ville"`
+	AdresseComplete *string `json:"adresse_complete"`
+	CodePostal      *string `json:"code_postal"`
+	Role            string  `json:"role" binding:"required"`
+	NomEntreprise   *string `json:"nom_entreprise"`
+	NumeroSiret     *string `json:"numero_siret"`
 }
 
 type LoginRequest struct {

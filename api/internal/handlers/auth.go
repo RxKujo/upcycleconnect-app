@@ -30,10 +30,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe_hash, telephone, ville, role, nom_entreprise, numero_siret) 
-	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	
-	res, err := database.DB.Exec(query, req.Nom, req.Prenom, req.Email, string(hash), req.Telephone, req.Ville, req.Role, req.NomEntreprise, req.NumeroSiret)
+	query := `INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe_hash, telephone, ville, adresse_complete, code_postal, role, nom_entreprise, numero_siret)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	res, err := database.DB.Exec(query, req.Nom, req.Prenom, req.Email, string(hash), req.Telephone, req.Ville, req.AdresseComplete, req.CodePostal, req.Role, req.NomEntreprise, req.NumeroSiret)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
