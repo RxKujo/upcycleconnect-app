@@ -212,6 +212,7 @@
             token: localStorage.getItem('auth_token'),
         };
     </script>
+    <script src="/js/panier.js"></script>
     @yield('scripts')
 </body>
 </html>

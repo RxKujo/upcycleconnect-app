@@ -9,6 +9,10 @@ use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CommandeController;
+use App\Http\Controllers\Salarie\DashboardController as SalarieDashboardController;
+use App\Http\Controllers\Salarie\EvenementController as SalarieEvenementController;
+use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
+use App\Http\Controllers\Salarie\ModerationController as SalarieModerationController;
 use App\Http\Controllers\EvenementCatalogueController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
@@ -29,6 +33,9 @@ Route::get('/conseils/{id}', [ConseilController::class, 'show'])->name('conseils
 Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
 Route::get('/forum/{id}', [ForumController::class, 'show'])->name('forum.show');
 
+Route::view('/panier', 'public.panier.index')->name('panier.index');
+Route::view('/mes-commandes', 'public.commandes.index')->name('commandes.index');
+
 Route::get('/services-pro', fn() => view('public.services-pro'))->name('services-pro');
 Route::get('/a-propos', fn() => view('public.a-propos'))->name('a-propos');
 Route::view('/cgu', 'public.cgu')->name('cgu');
@@ -39,6 +46,7 @@ Route::get('/register-pro', fn() => view('auth.register-pro'))->name('profession
 Route::get('/login', fn() => view('auth.login'))->name('particulier.login');
 
 Route::post('/auth/set-admin-session', [SessionController::class, 'setAdminSession'])->name('auth.set-admin-session');
+Route::post('/auth/set-salarie-session', [SessionController::class, 'setSalarieSession'])->name('auth.set-salarie-session');
 
 Route::prefix('particulier')->group(function () {
     Route::get('/annonces/create', fn() => view('particulier.annonces.create'))->name('particulier.annonces.create');
@@ -99,5 +107,37 @@ Route::prefix('admin')->group(function () {
         Route::get('/conteneurs/{id}', [ConteneurController::class, 'show'])->name('admin.conteneurs.show');
         Route::post('/conteneurs/{id}/scan', [ConteneurController::class, 'scanBarcode'])->name('admin.conteneurs.scan');
         Route::put('/conteneurs/{id}/tickets/{ticketId}/resolve', [ConteneurController::class, 'resolveTicket'])->name('admin.conteneurs.tickets.resolve');
+    });
+});
+
+Route::prefix('salarie')->group(function () {
+    Route::post('/logout', [SalarieDashboardController::class, 'logout'])->name('salarie.logout');
+
+    Route::middleware('salarie.auth')->group(function () {
+        Route::get('/', fn() => redirect('/salarie/dashboard'));
+        Route::get('/dashboard', [SalarieDashboardController::class, 'index'])->name('salarie.dashboard');
+
+        Route::get('/evenements', [SalarieEvenementController::class, 'index'])->name('salarie.evenements.index');
+        Route::get('/evenements/create', [SalarieEvenementController::class, 'create'])->name('salarie.evenements.create');
+        Route::post('/evenements', [SalarieEvenementController::class, 'store'])->name('salarie.evenements.store');
+        Route::get('/evenements/{id}/edit', [SalarieEvenementController::class, 'edit'])->name('salarie.evenements.edit');
+        Route::put('/evenements/{id}', [SalarieEvenementController::class, 'update'])->name('salarie.evenements.update');
+
+        Route::get('/articles', [SalarieArticleController::class, 'index'])->name('salarie.articles.index');
+        Route::get('/articles/create', [SalarieArticleController::class, 'create'])->name('salarie.articles.create');
+        Route::post('/articles', [SalarieArticleController::class, 'store'])->name('salarie.articles.store');
+        Route::get('/articles/{id}/edit', [SalarieArticleController::class, 'edit'])->name('salarie.articles.edit');
+        Route::put('/articles/{id}', [SalarieArticleController::class, 'update'])->name('salarie.articles.update');
+        Route::delete('/articles/{id}', [SalarieArticleController::class, 'destroy'])->name('salarie.articles.destroy');
+
+        Route::get('/forum/signalements', [SalarieModerationController::class, 'signalements'])->name('salarie.forum.signalements');
+        Route::put('/forum/messages/{id}/masquer', [SalarieModerationController::class, 'masquerMessage'])->name('salarie.forum.masquer');
+        Route::put('/forum/messages/{id}/restaurer', [SalarieModerationController::class, 'restaurerMessage'])->name('salarie.forum.restaurer');
+        Route::get('/forum/sujets', [SalarieModerationController::class, 'sujets'])->name('salarie.forum.sujets');
+        Route::put('/forum/sujets/{id}/lock', [SalarieModerationController::class, 'lockSujet'])->name('salarie.forum.sujets.lock');
+        Route::put('/forum/sujets/{id}/unlock', [SalarieModerationController::class, 'unlockSujet'])->name('salarie.forum.sujets.unlock');
+        Route::get('/forum/mots-bannis', [SalarieModerationController::class, 'motsBannis'])->name('salarie.forum.mots-bannis');
+        Route::post('/forum/mots-bannis', [SalarieModerationController::class, 'addMotBanni'])->name('salarie.forum.mots-bannis.add');
+        Route::delete('/forum/mots-bannis/{id}', [SalarieModerationController::class, 'deleteMotBanni'])->name('salarie.forum.mots-bannis.delete');
     });
 });

@@ -98,7 +98,7 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(annonces)
 }
@@ -142,7 +142,7 @@ func GetPublicAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	a.Objets = loadPublicObjets(a.IDAnnonce)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(a)
 }
@@ -251,7 +251,7 @@ func GetPublicArticles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(articles)
 }
@@ -289,7 +289,7 @@ func GetPublicArticle(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(a)
 }
@@ -306,6 +306,7 @@ type PublicForumSujet struct {
 
 type PublicForumMessage struct {
 	IDMessage       int    `json:"id_message"`
+	IDParentMessage *int   `json:"id_parent_message"`
 	Contenu         string `json:"contenu"`
 	DatePublication string `json:"date_publication"`
 	AuteurPrenom    string `json:"auteur_prenom"`
@@ -364,7 +365,7 @@ func GetPublicForumSujets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(sujets)
 }
@@ -399,7 +400,7 @@ func GetPublicForumSujet(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	msgRows, err := database.DB.Query(`
-		SELECT fm.id_message, fm.contenu, fm.date_publication,
+		SELECT fm.id_message, fm.id_parent_message, fm.contenu, fm.date_publication,
 			   u.prenom, u.nom
 		FROM forum_messages fm
 		JOIN utilisateurs u ON fm.id_auteur = u.id_utilisateur
@@ -412,8 +413,13 @@ func GetPublicForumSujet(w http.ResponseWriter, r *http.Request, id string) {
 			var m PublicForumMessage
 			var datePub time.Time
 			var mNom string
-			if err := msgRows.Scan(&m.IDMessage, &m.Contenu, &datePub, &m.AuteurPrenom, &mNom); err == nil {
+			var parentID sql.NullInt64
+			if err := msgRows.Scan(&m.IDMessage, &parentID, &m.Contenu, &datePub, &m.AuteurPrenom, &mNom); err == nil {
 				m.DatePublication = datePub.Format("2006-01-02T15:04:05Z")
+				if parentID.Valid {
+					p := int(parentID.Int64)
+					m.IDParentMessage = &p
+				}
 				if len(mNom) > 0 {
 					m.AuteurNom = string([]rune(mNom)[:1]) + "."
 				}
@@ -426,7 +432,7 @@ func GetPublicForumSujet(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(s)
 }

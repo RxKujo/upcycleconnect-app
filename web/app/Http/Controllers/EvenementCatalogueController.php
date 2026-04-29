@@ -11,7 +11,7 @@ class EvenementCatalogueController extends Controller
 
     public function __construct()
     {
-        $this->apiUrl = env('API_URL', 'http://api:8888');
+        $this->apiUrl = config('services.api.url');
     }
 
     public function index()

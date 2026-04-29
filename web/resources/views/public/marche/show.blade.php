@@ -82,23 +82,24 @@
             </div>
 
             <div style="display:flex; flex-direction:column; gap:12px;">
-                <a href="{{ route('particulier.login') }}?intent=commande&annonce={{ $annonce['id_annonce'] }}"
-                   class="btn btn-primary btn-lg btn-block"
-                   data-requires-auth
-                   data-auth-title="Connectez-vous pour commander">
+                <button type="button"
+                        id="btnAddPanier"
+                        class="btn btn-primary btn-lg btn-block"
+                        data-id="{{ $annonce['id_annonce'] }}"
+                        data-titre="{{ $annonce['titre'] }}"
+                        data-prix="{{ $annonce['prix'] ?? 0 }}"
+                        data-type="{{ $annonce['type_annonce'] ?? 'vente' }}"
+                        data-mode="{{ $annonce['mode_remise'] ?? '' }}"
+                        data-vendeur="{{ ($annonce['vendeur']['prenom'] ?? '') . ' ' . ($annonce['vendeur']['nom_initiale'] ?? '') }}">
                     @if(($annonce['type_annonce'] ?? '') === 'don')
-                    Récupérer cet objet
+                    Ajouter au panier · Gratuit
                     @else
-                    Commander &middot; {{ number_format($annonce['prix'] ?? 0, 2) }}&euro;
+                    Ajouter au panier · {{ number_format($annonce['prix'] ?? 0, 2) }}€
                     @endif
-                </a>
-                <a href="{{ route('particulier.login') }}?intent=message&annonce={{ $annonce['id_annonce'] }}"
-                   class="btn btn-secondary btn-block"
-                   data-requires-auth
-                   data-auth-title="Connectez-vous pour contacter le vendeur">
-                   Contacter le vendeur
-                </a>
+                </button>
+                <a href="{{ route('panier.index') }}" class="btn btn-secondary btn-block">Voir mon panier</a>
             </div>
+            <p id="panierFlash" style="display:none; margin-top:12px; padding:10px 14px; background:#dff5e1; border-left:3px solid var(--forest,#3a7d44); font-size:0.9rem;"></p>
 
             @if(!empty($annonce['objets']))
             <div style="margin-top:32px; border:var(--border); padding:20px; background:white;">
@@ -130,4 +131,37 @@
 @media (max-width: 768px) {
     .page-container > div:last-of-type { grid-template-columns: 1fr !important; }
 }
+@endsection
+
+@section('scripts')
+<script>
+(function() {
+    var btn = document.getElementById('btnAddPanier');
+    if (!btn) return;
+    function setEtat() {
+        var id = btn.getAttribute('data-id');
+        if (window.UCPanier && window.UCPanier.has(id)) {
+            btn.textContent = '✓ Déjà dans le panier';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        }
+    }
+    setEtat();
+    btn.addEventListener('click', function() {
+        var added = window.UCPanier.add({
+            id_annonce: btn.getAttribute('data-id'),
+            titre: btn.getAttribute('data-titre'),
+            prix: btn.getAttribute('data-prix'),
+            type_annonce: btn.getAttribute('data-type'),
+            mode_remise: btn.getAttribute('data-mode'),
+            vendeur: btn.getAttribute('data-vendeur')
+        });
+        var flash = document.getElementById('panierFlash');
+        flash.textContent = added ? 'Ajouté au panier !' : 'Déjà dans votre panier.';
+        flash.style.display = 'block';
+        setEtat();
+        setTimeout(function() { flash.style.display = 'none'; }, 2500);
+    });
+})();
+</script>
 @endsection

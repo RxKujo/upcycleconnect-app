@@ -653,6 +653,32 @@
                             submitBtn.classList.remove('loading');
                             loadingOverlay.classList.remove('active');
                         });
+                    } else if (userRole === 'salarie') {
+                        showAlert('Connexion en tant que salarié... Redirection...', 'success');
+                        localStorage.setItem('auth_token', token);
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                        fetch('/auth/set-salarie-session', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: token })
+                        })
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.success) {
+                                setTimeout(() => { window.location.href = d.redirect || '/salarie/dashboard'; }, 800);
+                            } else {
+                                showAlert(d.message || 'Erreur session salarié', 'error');
+                                submitBtn.disabled = false;
+                                submitBtn.classList.remove('loading');
+                                loadingOverlay.classList.remove('active');
+                            }
+                        })
+                        .catch(() => {
+                            showAlert('Erreur réseau session salarié', 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('loading');
+                            loadingOverlay.classList.remove('active');
+                        });
                     } else if (userRole === 'professionnel') {
                         // Professionnel: store token and redirect to pro profile
                         showAlert('Connexion réussie! Redirection...', 'success');

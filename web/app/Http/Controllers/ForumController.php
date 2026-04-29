@@ -9,7 +9,7 @@ class ForumController extends Controller
 {
     protected function apiUrl(): string
     {
-        return env('API_URL', 'http://api:8888');
+        return config('services.api.url');
     }
 
     public function index()

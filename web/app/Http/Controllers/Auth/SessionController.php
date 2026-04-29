@@ -61,6 +61,38 @@ class SessionController extends Controller
         }
     }
 
+    public function setSalarieSession(Request $request)
+    {
+        try {
+            $token = $request->input('token') ?: $request->bearerToken();
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'Token manquant'], 400);
+            }
+            $decoded = $this->decodeJWT($token);
+            if (!$decoded) {
+                return response()->json(['success' => false, 'message' => 'Token invalide ou expiré'], 401);
+            }
+            $role = $decoded['role'] ?? '';
+            if (!in_array($role, ['salarie', 'admin'])) {
+                return response()->json(['success' => false, 'message' => 'Accès réservé au personnel'], 403);
+            }
+
+            session([
+                'salarie_token' => $token,
+                'salarie_role' => $role,
+                'salarie_id' => $decoded['id'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Session établie',
+                'redirect' => '/salarie/dashboard'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Erreur lors du traitement'], 500);
+        }
+    }
+
     private function decodeJWT($token)
     {
         try {

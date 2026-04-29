@@ -14,6 +14,12 @@
         </ul>
 
         <div class="auth-wrapper" id="auth-wrapper">
+            <a href="{{ route('panier.index') }}" class="nav-cart-link" aria-label="Panier" style="position:relative; display:inline-flex; align-items:center; padding:8px 14px; margin-right:8px; border:1px solid var(--border-color, rgba(0,0,0,0.15)); text-decoration:none; color:inherit;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                <span id="nav-cart-count" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--cherry,#a72f43); color:#fff; min-width:18px; height:18px; padding:0 5px; border-radius:9px; font-family:'DM Mono',monospace; font-size:0.65rem; align-items:center; justify-content:center;">0</span>
+            </a>
             <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-ghost" id="nav-register-btn">Inscription</a>
             <a href="{{ route('particulier.login') }}" class="nav-btn nav-btn-primary" id="nav-login-btn">Connexion</a>
 
@@ -30,6 +36,7 @@
                 </button>
                 <div id="nav-user-dropdown" class="nav-user-dropdown">
                     <a href="/particulier/profile">Mon espace</a>
+                    <a href="{{ route('commandes.index') }}">Mes commandes</a>
                     <a href="/particulier/annonces/create">Déposer une annonce</a>
                     <a href="/particulier/profile#score">Mon Upcycling Score</a>
                     <button id="nav-logout-btn">Déconnexion</button>
@@ -351,12 +358,43 @@ document.addEventListener('DOMContentLoaded', () => {
         loginBtn.style.display = 'none';
         userMenu.style.display = 'block';
 
+        let role = 'particulier';
         try {
             const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
             userName.textContent = payload.prenom || 'Compte';
+            role = payload.role || 'particulier';
         } catch(e) {
             userName.textContent = 'Compte';
         }
+
+        const roleConfig = {
+            admin:        { home: '/admin', label: 'Espace admin', extras: [] },
+            salarie:      { home: '/salarie/dashboard', label: 'Espace salarié', extras: [
+                { href: '/salarie/evenements', text: 'Mes événements' },
+                { href: '/salarie/articles', text: 'Articles & news' },
+                { href: '/salarie/forum/signalements', text: 'Modération' },
+            ]},
+            professionnel:{ home: '/professionnel/profile', label: 'Mon profil pro', extras: [
+                { href: '/mes-commandes', text: 'Mes commandes' },
+                { href: '/panier', text: 'Mon panier' },
+            ]},
+            particulier:  { home: '/particulier/profile', label: 'Mon espace', extras: [
+                { href: '/mes-commandes', text: 'Mes commandes' },
+                { href: '/panier', text: 'Mon panier' },
+                { href: '/particulier/annonces/create', text: "Déposer une annonce" },
+                { href: '/particulier/profile#score', text: 'Mon Upcycling Score' },
+            ]},
+        };
+        const cfg = roleConfig[role] || roleConfig.particulier;
+
+        const logoutHTML = '<button id="nav-logout-btn">Déconnexion</button>';
+        const extrasHTML = cfg.extras.map(x => `<a href="${x.href}">${x.text}</a>`).join('');
+        dropdown.innerHTML = `<a href="${cfg.home}">${cfg.label}</a>${extrasHTML}${logoutHTML}`;
+        const newLogout = document.getElementById('nav-logout-btn');
+        if (newLogout) newLogout.addEventListener('click', () => {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/';
+        });
 
         userBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -368,10 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dropdown.classList.remove('open');
                 userBtn.setAttribute('aria-expanded', 'false');
             }
-        });
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('auth_token');
-            window.location.href = '/';
         });
     }
 

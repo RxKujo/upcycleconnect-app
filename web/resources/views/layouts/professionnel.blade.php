@@ -101,7 +101,14 @@
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span> <span class="navbar-badge">Pro</span></a>
         <div class="navbar-links">
+            <a href="/annonces" class="{{ request()->is('annonces*') ? 'active' : '' }}">Marche</a>
             <a href="/evenements" class="{{ request()->is('evenements*') ? 'active' : '' }}">Evenements</a>
+            <a href="/forum" class="{{ request()->is('forum*') ? 'active' : '' }}">Forum</a>
+            <a href="/mes-commandes" class="{{ request()->is('mes-commandes*') ? 'active' : '' }}">Mes commandes</a>
+            <a href="/panier" class="{{ request()->is('panier*') ? 'active' : '' }}" style="position:relative;">
+                Panier
+                <span id="nav-cart-count" style="display:none; position:absolute; top:-6px; right:-10px; background:var(--cherry); color:var(--cream); min-width:18px; height:18px; padding:0 5px; border-radius:9px; font-family:'DM Mono',monospace; font-size:0.65rem; align-items:center; justify-content:center; border:1px solid var(--cream);">0</span>
+            </a>
             <a href="/professionnel/profile" class="{{ request()->is('professionnel/profile*') ? 'active' : '' }}">Mon profil</a>
             <button class="btn-logout" onclick="logout()">Deconnexion</button>
         </div>
@@ -153,6 +160,7 @@
             return response;
         }
     </script>
+    <script src="/js/panier.js"></script>
     @yield('scripts')
 </body>
 </html>

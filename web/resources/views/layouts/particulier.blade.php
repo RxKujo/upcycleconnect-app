@@ -113,7 +113,14 @@
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span></a>
         <div class="navbar-links">
+            <a href="/annonces" class="{{ request()->is('annonces*') ? 'active' : '' }}">Marché</a>
             <a href="/evenements" class="{{ request()->is('evenements*') ? 'active' : '' }}">Événements</a>
+            <a href="/forum" class="{{ request()->is('forum*') ? 'active' : '' }}">Forum</a>
+            <a href="/mes-commandes" class="{{ request()->is('mes-commandes*') ? 'active' : '' }}">Mes commandes</a>
+            <a href="/panier" class="{{ request()->is('panier*') ? 'active' : '' }}" style="position:relative;">
+                Panier
+                <span id="nav-cart-count" style="display:none; position:absolute; top:-6px; right:-10px; background:var(--cherry); color:var(--cream); min-width:18px; height:18px; padding:0 5px; border-radius:9px; font-family:'DM Mono',monospace; font-size:0.65rem; align-items:center; justify-content:center; border:1px solid var(--cream);">0</span>
+            </a>
             <a href="/particulier/annonces/create" class="{{ request()->is('particulier/annonces*') ? 'active' : '' }}">Dépôt d'annonce</a>
             <a href="/particulier/profile" class="{{ request()->is('particulier/profile*') ? 'active' : '' }}">Mon profil</a>
             <button class="btn-logout" onclick="logout()">Déconnexion</button>
@@ -166,6 +173,7 @@
             return response;
         }
     </script>
+    <script src="/js/panier.js"></script>
     @yield('scripts')
 </body>
 </html>

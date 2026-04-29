@@ -24,7 +24,9 @@ return [
     ],
 
     'api' => [
-        'url' => env('API_URL', 'http://api:8888'),
+        // Si API_URL est défini (cas Docker via env vars), on l'utilise.
+        // Sinon, fichier /.dockerenv présent => Docker, fallback http://api:8888 ; sinon local => http://localhost:8888.
+        'url' => env('API_URL') ?: (file_exists('/.dockerenv') ? 'http://api:8888' : 'http://localhost:8888'),
     ],
 
 ];
