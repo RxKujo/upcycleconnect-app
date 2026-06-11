@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,19 +15,42 @@ import (
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "données invalides", http.StatusBadRequest)
+		return
+	}
+
+	// Normalisation
+	req.Nom = strings.TrimSpace(req.Nom)
+	req.Prenom = strings.TrimSpace(req.Prenom)
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	req.Role = strings.TrimSpace(req.Role)
+
+	// Validation des entrées
+	if req.Nom == "" || req.Prenom == "" {
+		jsonErr(w, "le nom et le prénom sont obligatoires", http.StatusBadRequest)
+		return
+	}
+	if !isValidEmail(req.Email) {
+		jsonErr(w, "adresse email invalide", http.StatusBadRequest)
+		return
+	}
+	if len(req.MotDePasse) < 8 {
+		jsonErr(w, "le mot de passe doit contenir au moins 8 caractères", http.StatusBadRequest)
+		return
+	}
+	if req.Role != "particulier" && req.Role != "professionnel" {
+		jsonErr(w, "rôle invalide", http.StatusBadRequest)
+		return
+	}
+	if req.Role == "professionnel" && (req.NomEntreprise == nil || strings.TrimSpace(*req.NomEntreprise) == "") {
+		jsonErr(w, "le nom de l'entreprise est obligatoire pour un compte professionnel", http.StatusBadRequest)
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.MotDePasse), bcrypt.DefaultCost)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur de hashage"})
+		jsonErr(w, "erreur de hashage", http.StatusInternalServerError)
 		return
 	}
 
@@ -35,51 +59,50 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	res, err := database.DB.Exec(query, req.Nom, req.Prenom, req.Email, string(hash), req.Telephone, req.Ville, req.AdresseComplete, req.CodePostal, req.Role, req.NomEntreprise, req.NumeroSiret)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de créer l'utilisateur"})
+		jsonErr(w, "impossible de créer l'utilisateur", http.StatusInternalServerError)
 		return
 	}
 
 	id, _ := res.LastInsertId()
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{"message": "utilisateur créé avec succès", "id": id})
+	jsonOK(w, map[string]interface{}{"message": "utilisateur créé avec succès", "id": id}, http.StatusCreated)
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	var req models.LoginRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "données invalides", http.StatusBadRequest)
+		return
+	}
+
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	if req.Email == "" || req.MotDePasse == "" {
+		jsonErr(w, "email et mot de passe requis", http.StatusBadRequest)
 		return
 	}
 
 	var user models.Utilisateur
 	query := `SELECT id_utilisateur, mot_de_passe_hash, role, est_banni, date_fin_ban FROM utilisateurs WHERE email = ?`
-	err = database.DB.QueryRow(query, req.Email).Scan(&user.IDUtilisateur, &user.MotDePasseHash, &user.Role, &user.EstBanni, &user.DateFinBan)
+	err := database.DB.QueryRow(query, req.Email).Scan(&user.IDUtilisateur, &user.MotDePasseHash, &user.Role, &user.EstBanni, &user.DateFinBan)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "identifiants incorrects"})
+		jsonErr(w, "identifiants incorrects", http.StatusUnauthorized)
 		return
 	}
 
 	if user.EstBanni {
 		if user.DateFinBan == nil || user.DateFinBan.After(time.Now()) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusForbidden)
-			json.NewEncoder(w).Encode(map[string]string{"erreur": "ce compte est actuellement banni"})
+			jsonErr(w, "ce compte est actuellement banni", http.StatusForbidden)
 			return
 		}
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.MotDePasseHash), []byte(req.MotDePasse)); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "identifiants incorrects"})
+		jsonErr(w, "identifiants incorrects", http.StatusUnauthorized)
+		return
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		jsonErr(w, "configuration serveur invalide", http.StatusInternalServerError)
 		return
 	}
 
@@ -89,15 +112,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"exp":  time.Now().Add(time.Hour * 72).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de générer le token"})
+		jsonErr(w, "impossible de générer le token", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(models.LoginResponse{Token: tokenString})
+	jsonOK(w, models.LoginResponse{Token: tokenString}, http.StatusOK)
 }

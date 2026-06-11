@@ -308,7 +308,7 @@ async function downloadPDF() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'mes_donnees_upcycleconnect.txt';
+        a.download = 'mes_donnees_upcycleconnect.pdf';
         a.click();
         window.URL.revokeObjectURL(url);
         showAlert('Telechargement lance', 'success');

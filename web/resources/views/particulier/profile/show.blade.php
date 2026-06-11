@@ -112,6 +112,16 @@
             </div>
         </div>
 
+        <div class="card full-width">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="card-title">Mes Annonces</h3>
+                <x-btn size="sm" onclick="window.location.href='/particulier/annonces/create'">Deposer une annonce</x-btn>
+            </div>
+            <div id="annonces-container">
+                <div class="loading">Chargement des annonces...</div>
+            </div>
+        </div>
+
         <div class="card">
             <h3 class="card-title">Preferences de Notifications</h3>
             <div class="toggle-row">
@@ -194,8 +204,83 @@ async function loadProfile() {
 
         // Load events
         loadEvents();
+        loadAnnonces();
     } catch (err) {
         showAlert('Erreur de chargement du profil', 'error');
+    }
+}
+
+const ANNONCE_STATUTS = {
+    en_attente: { label: 'En attente', cls: 'badge-waiting' },
+    validee:    { label: 'Validee',    cls: 'badge-valid' },
+    refusee:    { label: 'Refusee',    cls: 'badge-cherry' },
+    vendue:     { label: 'Vendue',     cls: 'badge-valid' },
+    annulee:    { label: 'Annulee',    cls: 'badge-waiting' },
+    retiree:    { label: 'Retiree',    cls: 'badge-waiting' }
+};
+
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+async function loadAnnonces() {
+    const container = document.getElementById('annonces-container');
+    try {
+        const resp = await apiFetch('/api/v1/annonces/me');
+        if (!resp) return;
+        const annonces = await resp.json();
+
+        if (!annonces || annonces.length === 0) {
+            container.innerHTML = '<p style="text-align: center; padding: 20px; font-family: \'DM Mono\', monospace; color: rgba(18,3,9,0.5);">Vous n\'avez publie aucune annonce</p>';
+            return;
+        }
+
+        let html = '<div class="table-container"><table><thead><tr><th></th><th>Titre</th><th>Type</th><th>Prix</th><th>Statut</th><th>Date</th><th></th></tr></thead><tbody>';
+        annonces.forEach(a => {
+            const st = ANNONCE_STATUTS[a.statut] || { label: a.statut, cls: 'badge-waiting' };
+            const date = new Date(a.date_creation).toLocaleDateString('fr-FR');
+            const prix = a.type_annonce === 'don' ? 'Gratuit' : (parseFloat(a.prix || 0).toFixed(2) + ' €');
+            const thumb = a.photo
+                ? '<img src="/uploads/' + escapeHtml(a.photo) + '" alt="" style="width:48px;height:48px;object-fit:cover;border:1px solid rgba(18,3,9,0.15);">'
+                : '<div style="width:48px;height:48px;background:var(--wheat);"></div>';
+            const refus = (a.statut === 'refusee' && a.motif_refus)
+                ? '<div style="font-size:0.75rem;color:var(--cherry);margin-top:4px;">Motif : ' + escapeHtml(a.motif_refus) + '</div>' : '';
+            const cancelBtn = a.statut === 'en_attente'
+                ? '<button type="button" class="btn-cancel-annonce" data-id="' + a.id_annonce + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--cherry);background:none;border:1px solid var(--cherry);padding:4px 10px;cursor:pointer;">Annuler</button>'
+                : '';
+            html += '<tr>'
+                + '<td>' + thumb + '</td>'
+                + '<td><a href="/annonces/' + a.id_annonce + '" style="text-decoration:none;font-weight:600;">' + escapeHtml(a.titre) + '</a>' + refus + '</td>'
+                + '<td>' + (a.type_annonce === 'don' ? 'Don' : 'Vente') + '</td>'
+                + '<td>' + prix + '</td>'
+                + '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td>'
+                + '<td>' + date + '</td>'
+                + '<td>' + cancelBtn + '</td>'
+                + '</tr>';
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+
+        container.querySelectorAll('.btn-cancel-annonce').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!confirm('Annuler cette annonce ? Cette action est definitive.')) return;
+                btn.disabled = true;
+                const resp = await apiFetch('/api/v1/annonces/' + btn.dataset.id + '/annuler', {
+                    method: 'POST',
+                    body: JSON.stringify({ motif_retrait: 'Annulee par le vendeur' })
+                });
+                if (resp && resp.ok) {
+                    showAlert('Annonce annulee', 'success');
+                    loadAnnonces();
+                } else {
+                    btn.disabled = false;
+                    const d = resp ? await resp.json() : {};
+                    showAlert(d.erreur || 'Annulation impossible', 'error');
+                }
+            });
+        });
+    } catch (err) {
+        container.innerHTML = '<p style="color: var(--cherry);">Erreur de chargement</p>';
     }
 }
 
@@ -331,7 +416,7 @@ async function downloadPDF() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'mes_donnees_upcycleconnect.txt';
+        a.download = 'mes_donnees_upcycleconnect.pdf';
         a.click();
         window.URL.revokeObjectURL(url);
         showAlert('Telechargement lance', 'success');

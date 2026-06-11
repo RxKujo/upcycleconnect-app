@@ -14,6 +14,7 @@ use App\Http\Controllers\Salarie\EvenementController as SalarieEvenementControll
 use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
 use App\Http\Controllers\Salarie\ModerationController as SalarieModerationController;
 use App\Http\Controllers\EvenementCatalogueController;
+use App\Http\Controllers\FormationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
 use App\Http\Controllers\ConseilController;
@@ -29,6 +30,9 @@ Route::get('/evenements/{id}', [EvenementCatalogueController::class, 'show'])->n
 
 Route::get('/conseils', [ConseilController::class, 'index'])->name('conseils.index');
 Route::get('/conseils/{id}', [ConseilController::class, 'show'])->name('conseils.show');
+
+Route::get('/formations', [FormationController::class, 'index'])->name('formations.index');
+Route::get('/formations/{id}', [FormationController::class, 'show'])->name('formations.show');
 
 Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
 Route::get('/forum/{id}', [ForumController::class, 'show'])->name('forum.show');

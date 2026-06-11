@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class ForumController extends Controller
 {
@@ -14,12 +15,16 @@ class ForumController extends Controller
 
     public function index()
     {
-        try {
-            $response = Http::timeout(5)->get($this->apiUrl() . '/api/v1/public/forum');
-            $sujets = $response->successful() ? $response->json() : [];
-        } catch (\Exception $e) {
-            $sujets = [];
-        }
+        $base = $this->apiUrl();
+
+        $sujets = Cache::remember('forum.sujets', 30, function () use ($base) {
+            try {
+                $response = Http::timeout(5)->get($base . '/api/v1/public/forum');
+                return $response->successful() ? $response->json() : [];
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
 
         return view('public.forum.index', compact('sujets'));
     }

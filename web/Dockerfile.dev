@@ -23,7 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         xml \
         dom \
         bcmath \
+        opcache \
     && rm -rf /var/lib/apt/lists/*
+
+# Configuration PHP optimisée pour le dev (OPcache + realpath cache)
+COPY docker/php.dev.ini /usr/local/etc/php/conf.d/zz-dev.ini
 
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 

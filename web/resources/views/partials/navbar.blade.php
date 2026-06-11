@@ -9,6 +9,7 @@
         <ul class="nav-links-public">
             <li><a href="{{ route('annonces.index') }}" class="{{ request()->routeIs('annonces.*') ? 'active' : '' }}">Marché</a></li>
             <li><a href="{{ route('evenements.index') }}" class="{{ request()->routeIs('evenements.*') ? 'active' : '' }}">Événements</a></li>
+            <li><a href="{{ route('formations.index') }}" class="{{ request()->routeIs('formations.*') ? 'active' : '' }}">Formations</a></li>
             <li><a href="{{ route('conseils.index') }}" class="{{ request()->routeIs('conseils.*') ? 'active' : '' }}">Conseils</a></li>
             <li><a href="{{ route('forum.index') }}" class="{{ request()->routeIs('forum.*') ? 'active' : '' }}">Forum</a></li>
         </ul>
@@ -52,6 +53,7 @@
     <div class="nav-mobile" id="nav-mobile">
         <a href="{{ route('annonces.index') }}">Marché</a>
         <a href="{{ route('evenements.index') }}">Événements</a>
+        <a href="{{ route('formations.index') }}">Formations</a>
         <a href="{{ route('conseils.index') }}">Conseils</a>
         <a href="{{ route('forum.index') }}">Forum</a>
         <a href="{{ route('services-pro') }}">Services Pro</a>

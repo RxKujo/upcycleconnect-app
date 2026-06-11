@@ -66,6 +66,61 @@ func GetAnnonces(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(annonces)
 }
 
+func GetMesAnnonces(w http.ResponseWriter, r *http.Request, userId int) {
+	log.Printf("[INFO] %s | GetMesAnnonces | User %d listing own annonces\n", time.Now().Format(time.RFC3339), userId)
+
+	rows, err := database.DB.Query("SELECT id_annonce, titre, type_annonce, prix, statut, motif_refus, date_creation FROM annonces WHERE id_particulier = ? AND statut != 'supprimee' ORDER BY date_creation DESC", userId)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+	defer rows.Close()
+
+	type mesAnnonceItem struct {
+		IDAnnonce    int       `json:"id_annonce"`
+		Titre        string    `json:"titre"`
+		TypeAnnonce  string    `json:"type_annonce"`
+		Prix         *float64  `json:"prix"`
+		Statut       string    `json:"statut"`
+		MotifRefus   *string   `json:"motif_refus,omitempty"`
+		Photo        *string   `json:"photo,omitempty"`
+		DateCreation time.Time `json:"date_creation"`
+	}
+
+	items := []mesAnnonceItem{}
+	for rows.Next() {
+		var it mesAnnonceItem
+		var prix sql.NullFloat64
+		var motifRefus sql.NullString
+		if err := rows.Scan(&it.IDAnnonce, &it.Titre, &it.TypeAnnonce, &prix, &it.Statut, &motifRefus, &it.DateCreation); err != nil {
+			continue
+		}
+		if prix.Valid {
+			p := prix.Float64
+			it.Prix = &p
+		}
+		if motifRefus.Valid {
+			mr := motifRefus.String
+			it.MotifRefus = &mr
+		}
+		items = append(items, it)
+	}
+
+	for i := range items {
+		var url string
+		err := database.DB.QueryRow("SELECT po.url_photo FROM photos_objets po JOIN objets_annonces oa ON po.id_objet = oa.id_objet WHERE oa.id_annonce = ? ORDER BY oa.id_objet, po.ordre LIMIT 1", items[i].IDAnnonce).Scan(&url)
+		if err == nil {
+			items[i].Photo = &url
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(items)
+}
+
 func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	log.Printf("[INFO] %s | GetAnnonce | User %d viewing annonce %s\n", time.Now().Format(time.RFC3339), userId, id)
 

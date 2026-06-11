@@ -1,8 +1,25 @@
 #!/bin/bash
 set -e
 
+echo "==> Préparation des dossiers (montés sur volume rapide)..."
+# vendor, storage/framework et bootstrap/cache sont des volumes Docker (FS conteneur
+# rapide) et non le bind-mount : on s'assure que la structure attendue existe.
+mkdir -p \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache
+chmod -R 777 storage bootstrap/cache 2>/dev/null || true
+
 echo "==> Installation des dépendances Composer..."
-composer install --no-interaction
+# On n'exécute composer install que si les dépendances sont absentes ou ont changé,
+# pour accélérer les redémarrages de conteneur.
+if [ ! -f vendor/autoload.php ] || [ composer.lock -nt vendor/autoload.php ]; then
+    composer install --no-interaction
+else
+    echo "    vendor/ à jour, composer install ignoré."
+fi
 
 echo "==> Génération de APP_KEY si manquante..."
 if grep -q "^APP_KEY=$" .env 2>/dev/null || ! grep -q "^APP_KEY=" .env 2>/dev/null; then
@@ -34,4 +51,9 @@ echo "==> Symlink storage..."
 php artisan storage:link --quiet || true
 
 echo "==> Démarrage du serveur Laravel sur 0.0.0.0:8000..."
-exec php artisan serve --host=0.0.0.0 --port=8000
+# Plusieurs workers : "php artisan serve" est sinon mono-thread, ce qui sérialise
+# toutes les requêtes (un appel API bloquant fige alors toute la page).
+# --no-reload est requis pour qu'artisan serve respecte PHP_CLI_SERVER_WORKERS.
+# (OPcache en revalidate_freq=0 prend les modifs de code en compte sans reload.)
+export PHP_CLI_SERVER_WORKERS="${PHP_CLI_SERVER_WORKERS:-8}"
+exec php artisan serve --host=0.0.0.0 --port=8000 --no-reload

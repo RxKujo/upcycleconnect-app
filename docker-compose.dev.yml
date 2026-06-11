@@ -48,6 +48,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./api:/app
+      - ./web/public/uploads:/uploads
       - go_pkg_cache:/root/go/pkg/mod
       - go_build_cache:/root/.cache/go
     environment:
@@ -58,6 +59,7 @@ services:
       DB_NAME: ${DB_DATABASE}
       JWT_SECRET: ${JWT_SECRET}
       API_PORT: "8888"
+      UPLOAD_DIR: /uploads/photos
       RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY}
     ports:
       - "8888:8888"
@@ -75,6 +77,11 @@ services:
     restart: unless-stopped
     volumes:
       - ./web:/var/www/html
+      # Dossiers lourds en lecture/écriture déplacés sur le FS rapide du conteneur
+      # (le bind-mount Windows ci-dessus est ~14x plus lent pour ces accès).
+      - web_vendor:/var/www/html/vendor
+      - web_storage_fw:/var/www/html/storage/framework
+      - web_bootstrap_cache:/var/www/html/bootstrap/cache
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
@@ -84,9 +91,11 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      SESSION_DRIVER: database
+      SESSION_DRIVER: file
       QUEUE_CONNECTION: database
-      CACHE_STORE: database
+      CACHE_STORE: file
+      # Plusieurs workers pour le serveur de dev (sinon mono-thread)
+      PHP_CLI_SERVER_WORKERS: "8"
       API_URL: "http://api:8888"
       RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
       VITE_DEV_SERVER_URL: "http://localhost:5173"
@@ -106,6 +115,7 @@ services:
     working_dir: /app
     volumes:
       - ./web:/app
+      - vite_node_modules:/app/node_modules
     command: >
       sh -c "npm install --frozen-lockfile && npm run dev -- --host"
     ports:
@@ -117,6 +127,10 @@ volumes:
   mysql_data:
   go_pkg_cache:
   go_build_cache:
+  web_vendor:
+  web_storage_fw:
+  web_bootstrap_cache:
+  vite_node_modules:
 
 networks:
   uc_network:

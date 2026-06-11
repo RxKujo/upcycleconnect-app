@@ -65,6 +65,14 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handlers.GetPublicStats(w, req)
 		return
 	}
+	if match(path, "/api/v1/public/catalogue") && method == "GET" {
+		handlers.GetCatalogueItems(w, req, "")
+		return
+	}
+	if parts := splitPath(path, "/api/v1/public/catalogue"); len(parts) == 1 && method == "GET" {
+		handlers.GetCatalogueItem(w, req, parts[0], "")
+		return
+	}
 	if match(path, "/api/v1/evenements/catalogue") && method == "GET" {
 		handlers.GetPublicEvenements(w, req)
 		return
@@ -101,6 +109,10 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	if match(path, "/api/v1/annonces") && method == "POST" {
 		handlers.CreateAnnonce(w, req, userId)
+		return
+	}
+	if match(path, "/api/v1/annonces/me") && method == "GET" {
+		handlers.GetMesAnnonces(w, req, userId)
 		return
 	}
 	if parts := splitPath(path, "/api/v1/annonces"); len(parts) == 1 && method == "GET" {

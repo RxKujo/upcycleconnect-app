@@ -1,0 +1,10 @@
+# Binaires Go compilés
+/server
+*.exe
+*.exe~
+
+# Hot-reload (Air) : binaire et dossier temporaire
+/tmp/
+
+# Fichier d'environnement local
+.env

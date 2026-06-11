@@ -1,117 +1,112 @@
 # UpcycleConnect
 
-UpcycleConnect est une application web pour gérer un marché de réutilisation et de services écologiques. Les utilisateurs peuvent créer des comptes, proposer des services, organiser des événements et les administrateurs valident tout.
+UpcycleConnect est une application web de marketplace de réemploi et de services écologiques (style Vinted/Leboncoin). Les visiteurs consultent librement le marché, les événements, les conseils et le forum ; l'inscription n'est requise que pour agir (publier une annonce, s'inscrire à un événement, poster sur le forum). Les administrateurs et salariés valident et modèrent les contenus.
 
 ## Ce que c'est
 
-UpcycleConnect est composé de trois parties principales:
+UpcycleConnect est composé de trois parties principales :
 
-1. Une base de données MySQL qui stocke tous les utilisateurs, les services, les événements et les catégories
-2. Une API en Go qui gère toutes les opérations de base de données et l'authentification
-3. Un panneau administrateur en Laravel et Vue.js pour gérer le contenu
+1. Une base de données **MySQL** qui stocke utilisateurs, annonces, objets, commandes, événements, articles, forum et catégories.
+2. Une **API en Go** (bibliothèque standard `net/http`, sans framework) qui gère toute la logique métier, l'accès à la base de données et l'authentification JWT.
+3. Une application **Laravel** (vues Blade + assets compilés par Vite) qui sert le front public et les espaces admin / salarié. Laravel ne se connecte jamais directement à MySQL : il consomme l'API Go via HTTP.
 
 ## Structure du code
 
-Le projet est organisé comme ceci:
+```
+api/                       Serveur API en Go
+  cmd/server/main.go       Point de démarrage
+  internal/handlers/       Logique métier (auth, annonces, public, salarié, admin…)
+  internal/middleware/     Authentification JWT et configuration CORS
+  internal/router/         Routage des requêtes
+  internal/models/         Structures de données
+  internal/services/       PDF (tickets), email
+  pkg/database/            Connexion à MySQL
 
-api/: Le serveur API écrit en Go
-- cmd/server/main.go: Point de démarrage
-- internal/handlers/: Logique pour les utilisateurs, services, événements
-- internal/middleware/: Authentification JWT et configuration CORS
-- internal/router/: Routage des requêtes
-- pkg/database/: Connexion à MySQL
+web/                       Application Laravel
+  app/Http/Controllers/    Contrôleurs publics, Admin/ et Salarie/
+  app/Http/Middleware/     AdminAuth, SalarieAuth
+  resources/views/         Vues Blade (public, admin, salarié, auth…)
+  routes/web.php           Routes web
 
-web/: L'application Laravel
-- app/Http/Controllers/Admin/: Contrôleurs pour le panneau administrateur
-- app/Models/: Modèles de données
-- database/: Migrations et seeders
-- resources/views/: Pages HTML
-
-database/: Les fichiers de migration pour créer les tables
+database/migrations/       Scripts SQL de création des tables et seeds
+```
 
 ## Comment lancer l'application
 
-Vous avez besoin de quatre terminaux différents pour lancer l'application.
+### Option recommandée : Docker
 
-### Terminal 1: Base de données
-
-Allez à la racine du projet et démarrez Docker:
+À la racine du projet :
 
 ```
-cd d:\Code\upcycleconnect-app
-docker-compose up -d
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
-Cela lance MySQL sur le port 3306 et PHPMyAdmin sur le port 8081.
+Cela démarre :
 
-### Terminal 2: API Go
+- MySQL sur le port `3306` (migrations/seeds appliqués automatiquement au premier démarrage)
+- PHPMyAdmin sur `http://localhost:8081`
+- l'API Go sur `http://localhost:8888`
+- Laravel sur `http://localhost:8000`
+- Vite (assets) sur le port `5173`
 
-Allez dans le dossier api et lancez le serveur:
+Les variables sont lues depuis le fichier `.env` à la racine (voir section Configuration).
 
-```
-cd d:\Code\upcycleconnect-app\api
-go run cmd/server/main.go
-```
+### Option manuelle (sans Docker)
 
-L'API doit afficher "Serveur en écoute sur le port 8080".
+Quatre terminaux sont nécessaires.
 
-### Terminal 3: Assets
-
-Allez dans le dossier web et lancez Vite pour compiler les assets:
-
-```
-cd d:\Code\upcycleconnect-app\web
-npm run dev
-```
-
-Cela compile le JavaScript et le CSS et démarre un serveur sur le port 5173.
-
-### Terminal 4: Application Laravel
-
-Toujours dans le dossier web, lancez Laravel:
-
-```
-cd d:\Code\upcycleconnect-app\web
-php artisan serve
-```
-
-L'application démarre sur le port 8000.
+1. **Base de données** : `docker compose -f docker-compose.dev.yml up -d db`
+2. **API Go** : depuis `api/`, `go run cmd/server/main.go` — affiche « Serveur en écoute sur le port 8888 ».
+3. **Assets** : depuis `web/`, `npm install` puis `npm run dev` (port 5173).
+4. **Laravel** : depuis `web/`, `php artisan serve` (port 8000).
 
 ## Accéder à l'application
 
-Quand tout est lancé, ouvrez votre navigateur et allez à:
+- Front public : http://localhost:8000
+- Connexion (admin, salarié, particulier, professionnel) : http://localhost:8000/login
 
-http://localhost:8000/admin/login
-
-Connectez-vous avec:
-- Email: admin@upcycleconnect.com
-- Mot de passe: Admin123!
+Les identifiants des comptes de démonstration sont décrits dans `CREDENTIALS.md`.
 
 ## Endpoints de l'API
 
-L'API écoute sur http://localhost:8080 et propose:
+L'API écoute par défaut sur `http://localhost:8888`. Aperçu (liste non exhaustive) :
 
-Connexion et inscription:
-- POST /api/v1/auth/register: Créer un compte
-- POST /api/v1/auth/login: Se connecter
+Authentification :
+- `POST /api/v1/auth/register` — créer un compte
+- `POST /api/v1/auth/login` — se connecter (renvoie un token JWT)
 
-Profil utilisateur:
-- GET /api/v1/utilisateurs/me: Voir son profil
-- PUT /api/v1/utilisateurs/me: Modifier son profil
+Zone publique (sans authentification) :
+- `GET /api/v1/public/annonces` — lister les annonces validées
+- `GET /api/v1/public/annonces/{id}` — détail d'une annonce
+- `GET /api/v1/public/articles` — articles / conseils
+- `GET /api/v1/public/forum` — sujets du forum
+- `GET /api/v1/public/catalogue` — catalogue
+- `GET /api/v1/public/stats` — statistiques publiques
+- `GET /api/v1/evenements/catalogue` — événements à venir
 
-Administration:
-- GET /api/v1/admin/utilisateurs: Lister les utilisateurs
-- GET /api/v1/admin/utilisateurs/{id}/ban: Bannir un utilisateur
-- GET /api/v1/admin/categories: Lister les catégories
-- POST /api/v1/admin/categories: Créer une catégorie
-- GET /api/v1/admin/prestations: Lister les services
-- PUT /api/v1/admin/prestations/{id}/valider: Valider un service
-- GET /api/v1/admin/evenements: Lister les événements
-- PUT /api/v1/admin/evenements/{id}/valider: Valider un événement
+Profil utilisateur (authentifié) :
+- `GET /api/v1/utilisateurs/me` — voir son profil
+- `PUT /api/v1/utilisateurs/me` — modifier son profil
+- `GET /api/v1/utilisateurs/me/export-pdf` — export RGPD des données personnelles
+
+Annonces et commandes (authentifié) :
+- `POST /api/v1/annonces` — publier une annonce
+- `GET /api/v1/annonces/me` — ses annonces
+- `POST /api/v1/commandes/checkout` — valider le panier
+- `GET /api/v1/commandes/me` — ses commandes
+
+Administration (`role = admin`) :
+- `GET /api/v1/admin/utilisateurs` — lister les utilisateurs
+- `PUT /api/v1/admin/utilisateurs/{id}/ban` — bannir un utilisateur
+- `GET|POST /api/v1/admin/categories` — gérer les catégories
+- `GET /api/v1/admin/annonces`, `PUT /api/v1/admin/annonces/{id}/valider` — modération des annonces
+- `GET /api/v1/admin/evenements`, `PUT /api/v1/admin/evenements/{id}/valider` — modération des événements
 
 ## Configuration
 
-Le fichier .env à la racine de api/ configure la connexion à la base de données:
+Le fichier `.env` à la racine fournit les variables consommées par `docker-compose.dev.yml`.
+
+En exécution **hors Docker**, l'API lit directement les variables suivantes (noms attendus par `pkg/database`) :
 
 ```
 DB_HOST=localhost
@@ -119,22 +114,23 @@ DB_PORT=3306
 DB_USER=uc_user
 DB_PASSWORD=uc_password
 DB_NAME=upcycleconnect
-API_PORT=8080
-JWT_SECRET=upcycleconnect_secret_key_2026
+API_PORT=8888
+JWT_SECRET=<secret>
+# Origines autorisées par le CORS (séparées par des virgules).
+# localhost:8000 et localhost:5173 sont déjà autorisés par défaut.
+CORS_ALLOWED_ORIGINS=https://mon-domaine.fr
 ```
+
+Note : sous Docker, `docker-compose.dev.yml` traduit automatiquement `DB_USERNAME`/`DB_DATABASE` (utilisés par Laravel) en `DB_USER`/`DB_NAME` pour le conteneur de l'API.
 
 ## Arrêter l'application
 
-Pour arrêter tout proprement:
-
-1. Dans chaque terminal lancé en mode serveur, appuyez sur CTRL+C
-2. Pour arrêter Docker: docker-compose down
+- Docker : `docker compose -f docker-compose.dev.yml down`
+- Mode manuel : `CTRL+C` dans chaque terminal serveur.
 
 ## Problèmes courants
 
-L'API ne démarre pas: Vérifiez que MySQL fonctionne avec docker-compose up -d
-
-La connexion au panneau admin échoue: Assurez-vous que l'API Go fonctionne sur le port 8080
-
-Les assets ne se chargent pas: Vérifiez que npm run dev fonctionne sur le port 5173
-
+- **L'API ne démarre pas** : vérifiez que MySQL est lancé et que les variables `DB_*` sont correctes.
+- **La connexion admin échoue** : assurez-vous que l'API Go répond sur le port `8888`.
+- **Erreur CORS dans le navigateur** : ajoutez l'origine de votre front à `CORS_ALLOWED_ORIGINS`.
+- **Les assets ne se chargent pas** : vérifiez que Vite (`npm run dev`) tourne sur le port `5173`.

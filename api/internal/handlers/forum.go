@@ -21,6 +21,35 @@ type CreateMessageRequest struct {
 	IDParentMessage  *int   `json:"id_parent_message,omitempty"`
 }
 
+func contientMotBanni(textes ...string) (string, bool) {
+	rows, err := database.DB.Query("SELECT mot FROM mots_bannis")
+	if err != nil {
+		return "", false
+	}
+	defer rows.Close()
+
+	var mots []string
+	for rows.Next() {
+		var m string
+		if err := rows.Scan(&m); err == nil {
+			m = strings.ToLower(strings.TrimSpace(m))
+			if m != "" {
+				mots = append(mots, m)
+			}
+		}
+	}
+
+	for _, t := range textes {
+		lt := strings.ToLower(t)
+		for _, m := range mots {
+			if strings.Contains(lt, m) {
+				return m, true
+			}
+		}
+	}
+	return "", false
+}
+
 func CreateForumSujet(w http.ResponseWriter, r *http.Request, userId int) {
 	var req CreateSujetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -38,6 +67,13 @@ func CreateForumSujet(w http.ResponseWriter, r *http.Request, userId int) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "le titre et le contenu doivent faire au moins 5 caractères"})
+		return
+	}
+
+	if mot, found := contientMotBanni(req.Titre, req.Contenu); found {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "votre message contient un terme interdit : " + mot})
 		return
 	}
 
@@ -94,6 +130,13 @@ func CreateForumMessage(w http.ResponseWriter, r *http.Request, sujetID string, 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "message trop court"})
+		return
+	}
+
+	if mot, found := contientMotBanni(req.Contenu); found {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "votre message contient un terme interdit : " + mot})
 		return
 	}
 

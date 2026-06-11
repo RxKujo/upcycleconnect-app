@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class ConseilController extends Controller
 {
@@ -14,12 +15,16 @@ class ConseilController extends Controller
 
     public function index()
     {
-        try {
-            $response = Http::timeout(5)->get($this->apiUrl() . '/api/v1/public/articles');
-            $articles = $response->successful() ? $response->json() : [];
-        } catch (\Exception $e) {
-            $articles = [];
-        }
+        $base = $this->apiUrl();
+
+        $articles = Cache::remember('conseils.articles', 120, function () use ($base) {
+            try {
+                $response = Http::timeout(5)->get($base . '/api/v1/public/articles');
+                return $response->successful() ? $response->json() : [];
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
 
         return view('public.conseils.index', compact('articles'));
     }

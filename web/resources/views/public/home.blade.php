@@ -1,1026 +1,652 @@
 @extends('layouts.public')
 
 @section('title', 'Accueil')
-@section('meta_description', 'UpcycleConnect — Marketplace écologique. Donnez une seconde vie à vos objets. Trouvez des matériaux recyclés.')
+@section('meta_description', 'UpcycleConnect — la plateforme française de l\'économie circulaire. Vendez, donnez, échangez vos objets et matériaux, et apprenez l\'upcycling avec une communauté engagée.')
 
 @section('content')
+@php
+    $featured = $annonces[0] ?? null;
+    $imgClasses = ['lp-img--wheat', 'lp-img--teal', 'lp-img--cherry', 'lp-img--forest'];
+@endphp
 
-<section class="hero-section">
-    <div class="hero-inner">
-        <div class="hero-left">
-            <p class="hero-eyebrow">
-                <span class="hero-eyebrow-dot"></span>
-                Marketplace écologique
-            </p>
-            <h1 class="hero-title">
-                Donnez une<br>
-                <span class="hero-title-accent">seconde vie</span><br>
-                à vos objets.
-            </h1>
-            <p class="hero-subtitle">
-                Vendez, donnez ou trouvez des matériaux recyclés dans votre ville.<br>
-                Rejoignez une communauté engagée pour une économie circulaire.
-            </p>
-            <div class="hero-actions">
-                <a href="{{ route('annonces.index') }}" class="btn btn-primary btn-lg">
-                    Explorer le marché
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/></svg>
+<noscript><style>.lp .reveal{opacity:1!important;transform:none!important}</style></noscript>
+
+<div class="lp">
+
+    {{-- ============ RUBAN HAUT ============ --}}
+    <div class="lp-tape" aria-hidden="true">
+        <div class="lp-tape__inner" data-tape>
+            <span>Réduire les déchets</span><i class="sep"></i>
+            <span>Valoriser les matériaux</span><i class="sep"></i>
+            <span>Connecter les communautés</span><i class="sep"></i>
+            <span>100% récup'</span><i class="sep"></i>
+            <span>0% gaspi</span><i class="sep"></i>
+        </div>
+    </div>
+
+    {{-- ============ HERO ============ --}}
+    <header class="lp-hero">
+        <div class="lp-wrap lp-hero__grid">
+            <div>
+                <p class="lp-kicker"><span class="lp-tag">Plateforme française · économie circulaire</span></p>
+                <h1 class="lp-hero__title">Donne une <span class="lp-hl lp-hl--cherry">seconde vie</span> à <span class="lp-hl lp-hl--forest">tout.</span></h1>
+                <p class="lp-lead">Vends, donne ou échange tes objets et matériaux. Apprends l'upcycling avec des passionnés. Rejoins une communauté qui transforme les déchets des uns en trésors des autres.</p>
+                <div class="lp-hero__ctas">
+                    <a class="btn" href="{{ route('particulier.register') }}">Je m'inscris gratuitement</a>
+                    <a class="btn btn--ghost" href="{{ route('annonces.index') }}">Explorer le marché &darr;</a>
+                </div>
+                <p class="lp-hero__note">// inscription gratuite · sans engagement · sans carte bancaire</p>
+            </div>
+
+            <div class="lp-hero__card-zone">
+                <div class="lp-sticker lp-sticker--gaspi">0% Gaspi</div>
+                <div class="lp-sticker lp-sticker--recup">100% Récup'</div>
+                <div class="lp-sticker lp-sticker--star">Coup de cœur</div>
+
+                @if($featured)
+                    @php $fMat = $featured['objets'][0]['materiau'] ?? null; @endphp
+                    <a class="lp-annonce" data-tilt href="{{ route('annonces.show', $featured['id_annonce']) }}" aria-label="{{ $featured['titre'] }}">
+                        <div class="lp-annonce__img lp-img--wheat">
+                            @if(!empty($featured['objets'][0]['photos'][0]['url']))
+                                <img src="/uploads/{{ $featured['objets'][0]['photos'][0]['url'] }}" alt="{{ $featured['titre'] }}">
+                            @else
+                                <span class="lp-annonce__ph">{{ strtoupper(substr($fMat ?? '?', 0, 1)) }}</span>
+                            @endif
+                        </div>
+                        <div class="lp-annonce__body">
+                            <span class="lp-tag">{{ $fMat ? ucfirst($fMat) : 'Récup\'' }} · Matériaux</span>
+                            <h3>{{ $featured['titre'] }}</h3>
+                            <div class="lp-annonce__meta">
+                                <span class="lp-mono">{{ $featured['ville'] ?? 'France' }}</span>
+                                @if(($featured['type_annonce'] ?? '') === 'don')
+                                    <span class="lp-prix">Don</span>
+                                @else
+                                    <span class="lp-prix lp-prix--cherry">{{ number_format($featured['prix'] ?? 0, 0, ',', ' ') }}&euro;</span>
+                                @endif
+                            </div>
+                        </div>
+                    </a>
+                @else
+                    <article class="lp-annonce" data-tilt aria-label="Exemple d'annonce">
+                        <div class="lp-annonce__img lp-img--wheat"><span class="lp-annonce__ph">B</span></div>
+                        <div class="lp-annonce__body">
+                            <span class="lp-tag">Bois · Matériaux</span>
+                            <h3>Lot de palettes en chêne</h3>
+                            <div class="lp-annonce__meta">
+                                <span class="lp-mono">Ivry-sur-Seine · 94</span>
+                                <span class="lp-prix">Don</span>
+                            </div>
+                        </div>
+                    </article>
+                @endif
+            </div>
+        </div>
+    </header>
+
+    {{-- ============ STATS ============ --}}
+    <section class="lp-stats" aria-label="Notre impact">
+        <div class="lp-wrap lp-stats__grid">
+            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['objets_sauves'] ?? 0) }}">0</b><span>objets sauvés de la benne</span></div>
+            <div class="lp-stat reveal"><b data-count="48" data-suffix=" t">0</b><span>de CO&#8322; évité cette année</span></div>
+            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['membres'] ?? 0) }}">0</b><span>membres actifs</span></div>
+            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['ateliers_an'] ?? 0) }}">0</b><span>ateliers organisés</span></div>
+        </div>
+    </section>
+
+    {{-- ============ MARCHÉ ============ --}}
+    <section class="lp-marche" id="marche">
+        <div class="lp-wrap">
+            <div class="lp-sec-head reveal">
+                <h2>Le marché de la <em>récup'</em></h2>
+                <span class="lp-tag">Vendre · Donner · Échanger</span>
+            </div>
+
+            <div class="lp-filtres" role="toolbar" aria-label="Filtrer les annonces">
+                <button class="lp-chip on" data-filtre="tout">Tout voir</button>
+                <button class="lp-chip" data-filtre="vente">À vendre</button>
+                <button class="lp-chip" data-filtre="don">À donner</button>
+            </div>
+
+            @if(count($annonces) > 0)
+            <div class="lp-grille lp-grille--3" data-grille>
+                @foreach($annonces as $i => $annonce)
+                    @php
+                        $type = $annonce['type_annonce'] ?? 'vente';
+                        $mat  = $annonce['objets'][0]['materiau'] ?? null;
+                        $photo = $annonce['objets'][0]['photos'][0]['url'] ?? null;
+                    @endphp
+                    <a class="lp-carte reveal" data-type="{{ $type }}" href="{{ route('annonces.show', $annonce['id_annonce']) }}">
+                        <span class="lp-badge {{ $type === 'don' ? 'lp-badge--don' : 'lp-badge--vente' }}">{{ $type === 'don' ? 'Don' : 'Vente' }}</span>
+                        <div class="lp-carte__img {{ $imgClasses[$i % count($imgClasses)] }}">
+                            @if($photo)
+                                <img src="/uploads/{{ $photo }}" alt="{{ $annonce['titre'] }}">
+                            @else
+                                <span class="lp-annonce__ph">{{ strtoupper(substr($mat ?? '?', 0, 1)) }}</span>
+                            @endif
+                        </div>
+                        <div class="lp-carte__body">
+                            <h3>{{ $annonce['titre'] }}</h3>
+                            <p>{{ $mat ? ucfirst($mat) : 'Matériau' }} · {{ $annonce['vendeur']['prenom'] ?? 'Membre' }} {{ $annonce['vendeur']['nom_initiale'] ?? '' }}</p>
+                            <div class="lp-carte__foot">
+                                @if($type === 'don')
+                                    <span class="lp-prix-sm gratuit">Gratuit</span>
+                                @else
+                                    <span class="lp-prix-sm">{{ number_format($annonce['prix'] ?? 0, 0, ',', ' ') }}&nbsp;&euro;</span>
+                                @endif
+                                <span class="lp-mono">{{ $annonce['ville'] ?? '' }}</span>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+            @else
+            <div class="lp-empty">
+                <p>Aucune annonce pour le moment.</p>
+                <a class="btn" href="{{ route('particulier.register') }}">Être le premier à déposer</a>
+            </div>
+            @endif
+
+            <div class="lp-sec-cta">
+                <a class="btn btn--ghost" href="{{ route('annonces.index') }}">Voir tout le marché &rarr;</a>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============ RUBAN MATÉRIAUX ============ --}}
+    <div class="lp-tape lp-tape--forest" aria-hidden="true">
+        <div class="lp-tape__inner" data-tape>
+            <span>Bois</span><i class="sep"></i><span>Métal</span><i class="sep"></i><span>Textile</span><i class="sep"></i>
+            <span>Verre</span><i class="sep"></i><span>Mobilier</span><i class="sep"></i><span>Électronique</span><i class="sep"></i>
+            <span>Matériaux de chantier</span><i class="sep"></i>
+        </div>
+    </div>
+
+    {{-- ============ PILIERS / COMMUNAUTÉ ============ --}}
+    <section class="lp-piliers" id="communaute">
+        <div class="lp-wrap">
+            <div class="lp-sec-head reveal">
+                <h2>Bien plus qu'une <em>marketplace</em></h2>
+                <span class="lp-tag">Apprendre · Partager · Progresser</span>
+            </div>
+            <div class="lp-grille lp-grille--2">
+                <a class="lp-pilier reveal" href="{{ route('forum.index') }}">
+                    <h3>
+                        <span class="lp-pic">
+                            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.678 11.894a1 1 0 0 1 .287.801 10.97 10.97 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8.06 8.06 0 0 0 8 14c3.996 0 7-2.807 7-6 0-3.192-3.004-6-7-6S1 4.808 1 8c0 1.468.617 2.83 1.678 3.894zm-.493 3.905a21.682 21.682 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a9.68 9.68 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105z"/></svg>
+                        </span>Le forum d'entraide
+                    </h3>
+                    <p>Une question sur la restauration d'un meuble ? Un doute sur une peinture ? La communauté répond : bricoleurs du dimanche, artisans confirmés et passionnés de récup' s'entraident tous les jours.</p>
+                    <span class="lp-tag">Rejoindre les discussions &rarr;</span>
                 </a>
-                <a href="{{ route('particulier.register') }}" class="btn btn-secondary btn-lg">Créer un compte</a>
-            </div>
-            <div class="hero-trust">
-                <span class="hero-trust-dot hero-trust-dot-forest"></span>
-                <span>Gratuit &middot; Sans engagement &middot; Communauté vérifiée</span>
+                <a class="lp-pilier reveal" href="{{ route('formations.index') }}">
+                    <h3>
+                        <span class="lp-pic">
+                            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.282-.12a.5.5 0 0 0 .025-.917l-7.5-3.5ZM8 8.46 1.758 5.965 8 3.052l6.242 2.913L8 8.46Z"/><path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466 4.176 9.032Z"/></svg>
+                        </span>Formations &amp; ateliers
+                    </h3>
+                    <p>Des ateliers en ligne et en présentiel pour apprendre à transformer : menuiserie de récup', couture zéro déchet, soudure, rempaillage… Animés par des pros de la plateforme.</p>
+                    <span class="lp-tag">Voir le catalogue &rarr;</span>
+                </a>
+                <a class="lp-pilier reveal" href="{{ route('conseils.index') }}">
+                    <h3>
+                        <span class="lp-pic">
+                            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5Zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Z"/><path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2Z"/><path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Z"/></svg>
+                        </span>Conseils &amp; articles
+                    </h3>
+                    <p>Guides pratiques, tutos pas-à-pas et idées de projets pour passer à l'action : identifier un bois, chiner malin, réparer plutôt que jeter. Du concret, sans blabla.</p>
+                    <span class="lp-tag">Lire les guides &rarr;</span>
+                </a>
+                <a class="lp-pilier reveal" href="{{ route('annonces.index') }}">
+                    <h3>
+                        <span class="lp-pic">
+                            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"/><path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+                        </span>Le réseau local
+                    </h3>
+                    <p>Trouve les annonces, ateliers et événements près de chez toi. L'upcycling, c'est d'abord du circuit court : moins de transport, plus de rencontres.</p>
+                    <span class="lp-tag">Explorer ma région &rarr;</span>
+                </a>
             </div>
         </div>
+    </section>
 
-        <div class="hero-right">
-            <div class="hero-visual">
-                <div class="hero-visual-card hero-visual-card-1">
-                    <span class="hero-visual-tag hero-visual-tag-forest">Don</span>
-                    <div class="hero-visual-img" style="background:linear-gradient(135deg,#D8C99B 0%, #A4243B 100%);"></div>
-                    <p class="hero-visual-title">Planches de chêne</p>
-                    <p class="hero-visual-meta">Bordeaux &middot; Emma B.</p>
-                </div>
-                <div class="hero-visual-card hero-visual-card-2">
-                    <span class="hero-visual-tag hero-visual-tag-cherry">Vente</span>
-                    <div class="hero-visual-img" style="background:linear-gradient(135deg,#244F26 0%, #18607D 100%);"></div>
-                    <p class="hero-visual-title">Table en palette</p>
-                    <p class="hero-visual-meta">Lyon &middot; Lucas M. &#10003;</p>
-                    <p class="hero-visual-price">45&euro;</p>
-                </div>
-                <div class="hero-visual-card hero-visual-card-3">
-                    <span class="hero-visual-tag hero-visual-tag-teal">Atelier</span>
-                    <div class="hero-visual-img" style="background:linear-gradient(135deg,#18607D 0%, #D8C99B 100%);"></div>
-                    <p class="hero-visual-title">Upcycling textile</p>
-                    <p class="hero-visual-meta">15 mai &middot; Paris</p>
-                </div>
+    {{-- ============ ÉTAPES ============ --}}
+    <section class="lp-etapes" id="etapes">
+        <div class="lp-wrap">
+            <div class="lp-sec-head reveal">
+                <h2>Comment ça <em>marche</em> ?</h2>
+                <span class="lp-tag">3 étapes · 5 minutes</span>
+            </div>
+            <div class="lp-grille lp-grille--3">
+                <article class="lp-etape reveal">
+                    <div class="lp-num">1</div>
+                    <h3>Crée ton compte</h3>
+                    <p>Inscription gratuite en 2 minutes. Particulier ou pro, chacun a sa place. Pas de carte bancaire demandée.</p>
+                </article>
+                <article class="lp-etape reveal">
+                    <div class="lp-num">2</div>
+                    <h3>Publie ou chine</h3>
+                    <p>Poste une annonce en quelques clics — vente ou don — ou explore les trouvailles près de chez toi.</p>
+                </article>
+                <article class="lp-etape reveal">
+                    <div class="lp-num">3</div>
+                    <h3>Transforme &amp; partage</h3>
+                    <p>Donne une seconde vie à ta trouvaille, montre le résultat à la communauté et inspire les suivants.</p>
+                </article>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="section-wheat steps-section">
-    <div class="section-inner">
-        <div class="section-head">
-            <p class="section-eyebrow">Simple &amp; efficace</p>
-            <h2 class="section-heading">Comment ça marche</h2>
-        </div>
-
-        <div class="steps-grid">
-            <div class="step-card">
-                <span class="step-num">01</span>
-                <h3 class="step-title">Je dépose</h3>
-                <p class="step-desc">Publiez vos objets en don ou en vente. Notre équipe valide chaque annonce pour garantir la qualité.</p>
+    {{-- ============ PRO ============ --}}
+    <section class="lp-pro" id="pro">
+        <div class="lp-wrap">
+            <div class="lp-sec-head reveal">
+                <h2>Artisans &amp; pros, <em>c'est par ici</em></h2>
+                <span class="lp-tag lp-tag--wheat">Boutique · Visibilité · Outils</span>
             </div>
-            <div class="step-arrow" aria-hidden="true">&rarr;</div>
-            <div class="step-card">
-                <span class="step-num">02</span>
-                <h3 class="step-title">Je rencontre</h3>
-                <p class="step-desc">Les artisans et particuliers découvrent vos annonces. Échange en main propre ou via conteneur.</p>
-            </div>
-            <div class="step-arrow" aria-hidden="true">&rarr;</div>
-            <div class="step-card">
-                <span class="step-num">03</span>
-                <h3 class="step-title">Je gagne</h3>
-                <p class="step-desc">Votre Upcycling Score augmente à chaque échange. Débloquez badges et réductions.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="section-light">
-    <div class="section-inner">
-        <div class="section-head section-head-row">
-            <div>
-                <p class="section-eyebrow">Marketplace</p>
-                <h2 class="section-heading">Dernières annonces</h2>
-            </div>
-            <a href="{{ route('annonces.index') }}" class="section-link">Tout voir &rarr;</a>
-        </div>
-
-        @if(count($annonces) > 0)
-        <div class="cards-grid cards-grid-4">
-            @foreach($annonces as $annonce)
-            <a href="{{ route('annonces.show', $annonce['id_annonce']) }}" class="product-card">
-                <div class="product-card-img">
-                    @if(!empty($annonce['objets']) && !empty($annonce['objets'][0]['photos']))
-                    <img src="/uploads/{{ $annonce['objets'][0]['photos'][0]['url'] }}" alt="{{ $annonce['titre'] }}">
-                    @else
-                    <span class="product-card-placeholder">{{ strtoupper(substr($annonce['objets'][0]['materiau'] ?? '?', 0, 1)) }}</span>
-                    @endif
-                    <span class="product-card-badge {{ $annonce['type_annonce'] === 'don' ? 'badge-forest' : 'badge-cherry' }}">
-                        {{ $annonce['type_annonce'] === 'don' ? 'Don' : 'Vente' }}
-                    </span>
-                </div>
-                <div class="product-card-body">
-                    <p class="product-card-meta">
-                        @if(!empty($annonce['objets']))
-                        {{ ucfirst($annonce['objets'][0]['materiau']) }}
-                        @endif
-                    </p>
-                    <h3 class="product-card-title">{{ $annonce['titre'] }}</h3>
-                    <p class="product-card-seller">
-                        {{ $annonce['vendeur']['prenom'] ?? '' }} {{ $annonce['vendeur']['nom_initiale'] ?? '' }}
-                        @if($annonce['vendeur']['certifie'] ?? false)<span class="certified-mark" title="Certifie">&#10003;</span>@endif
-                        <span class="sep">&middot;</span> {{ $annonce['ville'] ?? '' }}
-                    </p>
-                    <div class="product-card-footer">
-                        @if($annonce['type_annonce'] === 'don')
-                        <span class="product-card-free">Gratuit</span>
-                        @else
-                        <span class="product-card-price">{{ number_format($annonce['prix'] ?? 0, 2) }}&euro;</span>
-                        @endif
-                    </div>
-                </div>
-            </a>
-            @endforeach
-        </div>
-        @else
-        <div class="empty-state">
-            <p>Aucune annonce pour le moment.</p>
-            <a href="{{ route('particulier.register') }}" class="btn btn-secondary btn-lg">Être le premier à déposer</a>
-        </div>
-        @endif
-    </div>
-</section>
-
-<section class="section-wheat">
-    <div class="section-inner">
-        <div class="section-head" style="text-align:center;">
-            <p class="section-eyebrow" style="justify-content:center;">Notre impact</p>
-            <h2 class="section-heading">La communauté en chiffres</h2>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-block">
-                <span class="stat-value">{{ number_format($stats['objets_sauves'] ?? 0) }}<span class="stat-plus">+</span></span>
-                <span class="stat-label">Objets sauvés des déchets</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-value">{{ number_format($stats['membres'] ?? 0) }}<span class="stat-plus">+</span></span>
-                <span class="stat-label">Membres actifs</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-value">{{ $stats['ateliers_an'] ?? 0 }}</span>
-                <span class="stat-label">Ateliers programmés cette année</span>
-            </div>
-            <div class="stat-block">
-                <span class="stat-value">48<span class="stat-unit">T</span></span>
-                <span class="stat-label">CO&#8322; évité cette année</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="section-light">
-    <div class="section-inner">
-        <div class="section-head section-head-row">
-            <div>
-                <p class="section-eyebrow">Agenda</p>
-                <h2 class="section-heading">Ateliers &amp; formations</h2>
-            </div>
-            <a href="{{ route('evenements.index') }}" class="section-link">Voir tout &rarr;</a>
-        </div>
-
-        @if(count($evenements) > 0)
-        <div class="cards-grid cards-grid-3">
-            @foreach($evenements as $event)
-            <a href="{{ route('evenements.show', $event['id_evenement']) }}" class="event-card">
-                <div class="event-card-header">
-                    @php $date = \Carbon\Carbon::parse($event['date_debut']); @endphp
-                    <div class="event-card-date">
-                        <span class="event-card-day">{{ $date->format('d') }}</span>
-                        <span class="event-card-month">{{ strtoupper($date->locale('fr')->isoFormat('MMM')) }}</span>
-                    </div>
-                    <div class="event-card-tags">
-                        @php
-                            $typeLabels = [
-                                'atelier' => 'Atelier',
-                                'formation' => 'Formation',
-                                'conference' => 'Conférence',
-                            ];
-                            $formatLabels = [
-                                'presentiel' => 'Présentiel',
-                                'distanciel' => 'Distanciel',
-                            ];
-                        @endphp
-                        <span class="event-card-tag event-card-tag-{{ $event['type_evenement'] ?? 'atelier' }}">{{ $typeLabels[$event['type_evenement'] ?? ''] ?? 'Événement' }}</span>
-                        <span class="event-card-format">{{ $formatLabels[$event['format'] ?? ''] ?? '' }}</span>
-                    </div>
-                </div>
-                <h3 class="event-card-title">{{ $event['titre'] }}</h3>
-                <p class="event-card-desc">{{ \Illuminate\Support\Str::limit($event['description'] ?? '', 110) }}</p>
-                <div class="event-card-footer">
-                    @if(($event['prix'] ?? 0) > 0)
-                    <span class="event-card-price">{{ number_format($event['prix'], 2) }}&euro;</span>
-                    @else
-                    <span class="event-card-free">Gratuit</span>
-                    @endif
-                    <span class="event-card-places">{{ $event['nb_places_dispo'] ?? 0 }} places</span>
-                </div>
-            </a>
-            @endforeach
-        </div>
-        @else
-        <div class="empty-state"><p>Aucun événement à venir.</p></div>
-        @endif
-    </div>
-</section>
-
-<section class="pro-section">
-    <div class="section-inner">
-        <div class="pro-grid">
-            <div class="pro-left">
-                <p class="pro-eyebrow">Professionnels &amp; Artisans</p>
-                <h2 class="pro-title">Boostez votre activité d'upcycling</h2>
-                <p class="pro-subtitle">
-                    Dashboard avancé, alertes matériaux géolocalisées, badges communautaires. Deux offres adaptées à votre besoin.
-                </p>
-                <a href="{{ route('services-pro') }}" class="btn btn-primary btn-lg">Découvrir les offres Pro</a>
-            </div>
-            <div class="pro-cards">
-                <div class="pro-card">
-                    <p class="pro-card-name">Essential Pro</p>
-                    <p class="pro-card-price">15,99<span>&euro;/mois</span></p>
+            <div class="lp-tickets">
+                <article class="lp-ticket lp-ticket--a reveal">
+                    <h3 class="lp-plan">Essential Pro</h3>
+                    <div class="lp-tarif">15,99&euro;<small>/mois</small></div>
+                    <span class="lp-mono lp-ticket__sub">Pour se lancer sérieusement</span>
                     <ul>
                         <li>Dashboard 30 jours</li>
-                        <li>3 alertes matériaux</li>
+                        <li>3 alertes matériaux géolocalisées</li>
                         <li>Statistiques locales</li>
+                        <li>Badge « Pro vérifié »</li>
                     </ul>
-                </div>
-                <div class="pro-card pro-card-featured">
-                    <span class="pro-card-badge">Populaire</span>
-                    <p class="pro-card-name">Expert Pro</p>
-                    <p class="pro-card-price">29,99<span>&euro;/mois</span></p>
+                    <a class="btn btn--forest" href="{{ route('services-pro') }}">Découvrir l'offre</a>
+                </article>
+                <article class="lp-ticket lp-ticket--b reveal">
+                    <span class="lp-tag lp-ticket__pop">Le + populaire</span>
+                    <h3 class="lp-plan">Expert Pro</h3>
+                    <div class="lp-tarif">29,99&euro;<small>/mois</small></div>
+                    <span class="lp-mono lp-ticket__sub">Pour développer son activité</span>
                     <ul>
-                        <li>Tout Essential +</li>
-                        <li>Alertes illimitées</li>
+                        <li>Tout Essential Pro, et&nbsp;:</li>
+                        <li>Alertes matériaux illimitées</li>
                         <li>Badges communautaires</li>
                         <li>Export PDF annuel</li>
                     </ul>
-                </div>
+                    <a class="btn" href="{{ route('services-pro') }}">Découvrir l'offre</a>
+                </article>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="section-wheat cta-final">
-    <div class="section-inner">
-        <h2 class="cta-final-title">Prêt à donner<br>une seconde vie ?</h2>
-        <p class="cta-final-sub">Rejoignez la communauté UpcycleConnect dès aujourd'hui. C'est gratuit.</p>
-        <div class="hero-actions" style="justify-content:center;">
-            <a href="{{ route('particulier.register') }}" class="btn btn-primary btn-lg">Créer un compte</a>
-            <a href="{{ route('annonces.index') }}" class="btn btn-secondary btn-lg">Parcourir le marché</a>
+    {{-- ============ TÉMOIGNAGES ============ --}}
+    <section class="lp-temoins">
+        <div class="lp-wrap">
+            <div class="lp-sec-head reveal">
+                <h2>Ils ont <em>sauvé</em> des trésors</h2>
+                <span class="lp-tag">La communauté témoigne</span>
+            </div>
+            <div class="lp-grille lp-grille--3">
+                <article class="lp-temoin reveal">
+                    <q>J'ai meublé tout mon atelier avec des matériaux trouvés ici. Et j'ai rencontré deux clients fidèles au passage.</q>
+                    <div class="lp-qui"><span class="lp-avatar">SK</span><div><b>Sarah K.</b><span>Ébéniste · Montreuil</span></div></div>
+                </article>
+                <article class="lp-temoin reveal">
+                    <q>Le forum m'a sauvé : je ne savais pas par où commencer pour restaurer ma commode. Trois réponses en une heure.</q>
+                    <div class="lp-qui"><span class="lp-avatar lp-avatar--teal">YB</span><div><b>Yanis B.</b><span>Débutant motivé · Lyon</span></div></div>
+                </article>
+                <article class="lp-temoin reveal">
+                    <q>Plutôt que de payer la déchetterie, je donne mes chutes de chantier. Elles partent en 48h et font des heureux.</q>
+                    <div class="lp-qui"><span class="lp-avatar lp-avatar--cherry">ML</span><div><b>Marc L.</b><span>Menuisier · Nantes</span></div></div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============ RUBAN CTA ============ --}}
+    <div class="lp-tape lp-tape--cherry" aria-hidden="true">
+        <div class="lp-tape__inner" data-tape>
+            <span>Rejoins la récup'</span><i class="sep"></i><span>Inscription gratuite</span><i class="sep"></i>
+            <span>Rejoins la récup'</span><i class="sep"></i><span>Inscription gratuite</span><i class="sep"></i>
         </div>
     </div>
-</section>
 
+    {{-- ============ CTA FINAL ============ --}}
+    <section class="lp-final" id="rejoindre">
+        <div class="lp-wrap">
+            <h2>Prêt&middot;e à <span class="lp-hl">chiner</span> ?</h2>
+            <p>Rejoins les membres qui réduisent les déchets, valorisent les matériaux et connectent les communautés. C'est gratuit, et ça commence maintenant.</p>
+            <form class="lp-final__form" data-register-url="{{ route('particulier.register') }}">
+                <input type="email" placeholder="ton@email.fr" aria-label="Ton adresse email" required>
+                <button class="btn" type="submit">Créer mon compte</button>
+            </form>
+            <p class="lp-final__mini">// gratuit pour les particuliers · offres dédiées pour les pros</p>
+        </div>
+    </section>
+
+</div>
 @endsection
 
 @section('styles')
-/* =============================================
-   HERO
-============================================= */
-.hero-section {
-    background: var(--cream);
-    border-bottom: var(--border);
-    padding: 64px 0 96px;
-    position: relative;
-    overflow: hidden;
+/* =====================================================
+   LANDING PAGE (.lp) — néo-brutalisme, isolé du global
+===================================================== */
+.lp{
+    --b: var(--border);
+    --sh: 6px 6px 0 var(--coffee);
+    --sh-big: 10px 10px 0 var(--coffee);
+    background-image: radial-gradient(var(--coffee) 0.6px, transparent 0.6px);
+    background-size: 26px 26px;
 }
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 10%;
-    right: -120px;
-    width: 280px;
-    height: 280px;
-    background: var(--wheat);
-    border: var(--border);
-    transform: rotate(15deg);
-    z-index: 0;
-}
-.hero-inner {
-    position: relative;
-    z-index: 1;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 32px;
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap: 64px;
-    align-items: center;
-    min-height: 560px;
-}
-.hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--teal);
-    margin-bottom: 24px;
-}
-.hero-eyebrow-dot {
-    width: 10px;
-    height: 10px;
-    background: var(--cherry);
-    border: 2px solid var(--coffee);
-    display: inline-block;
-}
-.hero-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(3.5rem, 7vw, 6rem);
-    letter-spacing: 0.04em;
-    line-height: 0.95;
-    color: var(--coffee);
-    margin-bottom: 28px;
-}
-.hero-title-accent {
-    color: var(--cherry);
-    position: relative;
-    display: inline-block;
-}
-.hero-title-accent::after {
-    content: '';
-    position: absolute;
-    bottom: 0.08em;
-    left: -0.05em;
-    right: -0.05em;
-    height: 0.18em;
-    background: var(--wheat);
-    z-index: -1;
-}
-.hero-subtitle {
-    font-size: 1.1rem;
-    color: var(--coffee);
-    opacity: 0.75;
-    line-height: 1.7;
-    margin-bottom: 40px;
-    max-width: 500px;
-}
-.hero-actions {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
-}
-.hero-trust {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.05em;
-    color: var(--coffee);
-    opacity: 0.7;
-}
-.hero-trust-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-}
-.hero-trust-dot-forest { background: var(--forest); }
+.lp .lp-wrap{ max-width:1180px; margin:0 auto; padding:0 24px; }
+.lp .lp-mono{ font-family:'DM Mono',monospace; }
+.lp h1,.lp h2,.lp h3{ font-family:'Bebas Neue',sans-serif; font-weight:400; letter-spacing:.5px; }
 
-/* Hero right — product cards */
-.hero-right {
-    position: relative;
-    height: 520px;
+/* Boutons (héritent du .btn global, on renforce le style brutal) */
+.lp .btn{
+    display:inline-flex; align-items:center; gap:.55rem;
+    font-family:'Bebas Neue',sans-serif; font-size:1.25rem; letter-spacing:1px;
+    padding:.7rem 1.6rem; border:var(--b); box-shadow:var(--sh);
+    background:var(--cherry); color:var(--cream); text-transform:none;
 }
-.hero-visual {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-.hero-visual-card {
-    position: absolute;
-    background: var(--cream);
-    border: 3px solid var(--coffee);
-    box-shadow: 6px 6px 0 var(--coffee);
-    padding: 16px;
-    width: 220px;
-    transition: transform 0.3s ease;
-}
-.hero-visual-card:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 9px 9px 0 var(--coffee);
-    z-index: 5;
-}
-.hero-visual-card-1 { top: 0; left: 10%; transform: rotate(-4deg); }
-.hero-visual-card-2 { top: 110px; right: 0; transform: rotate(3deg); z-index: 2; }
-.hero-visual-card-3 { bottom: 20px; left: 20%; transform: rotate(-2deg); }
-.hero-visual-card-1:hover { transform: rotate(-4deg) translate(-3px, -3px); }
-.hero-visual-card-2:hover { transform: rotate(3deg) translate(-3px, -3px); }
-.hero-visual-card-3:hover { transform: rotate(-2deg) translate(-3px, -3px); }
+.lp .btn:hover{ transform:translate(-3px,-3px); box-shadow:9px 9px 0 var(--coffee); }
+.lp .btn:active{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--coffee); }
+.lp .btn--ghost{ background:var(--cream); color:var(--coffee); }
+.lp .btn--forest{ background:var(--forest); color:var(--cream); }
 
-.hero-visual-img {
-    width: 100%;
-    height: 120px;
-    border: 2px solid var(--coffee);
-    margin-bottom: 12px;
+.lp .lp-tag{
+    font-family:'DM Mono',monospace; font-size:.75rem; letter-spacing:.08em;
+    text-transform:uppercase; padding:.3rem .7rem; border:2px solid var(--coffee);
+    background:var(--wheat); display:inline-block;
 }
-.hero-visual-tag {
-    display: inline-block;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border: 2px solid var(--coffee);
-    margin-bottom: 12px;
-}
-.hero-visual-tag-forest { background: var(--forest); color: var(--cream); }
-.hero-visual-tag-cherry { background: var(--cherry); color: var(--cream); }
-.hero-visual-tag-teal { background: var(--teal); color: var(--cream); }
-.hero-visual-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.15rem;
-    letter-spacing: 0.04em;
-    line-height: 1.1;
-    margin-bottom: 4px;
-}
-.hero-visual-meta {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--coffee);
-    opacity: 0.6;
-}
-.hero-visual-price {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.4rem;
-    color: var(--cherry);
-    margin-top: 8px;
-}
+.lp .lp-tag--wheat{ background:var(--wheat); }
 
-/* =============================================
-   SECTIONS communes
-============================================= */
-.section-light { background: var(--cream); border-bottom: var(--border); }
-.section-wheat { background: var(--wheat); border-bottom: var(--border); }
-.section-inner { max-width: 1280px; margin: 0 auto; padding: 96px 32px; }
-.section-head { margin-bottom: 56px; }
-.section-head-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 24px;
-    flex-wrap: wrap;
+/* ---------- rubans ---------- */
+.lp .lp-tape{
+    background:var(--coffee); color:var(--cream);
+    border-top:var(--b); border-bottom:var(--b);
+    overflow:hidden; white-space:nowrap; padding:.55rem 0;
 }
-.section-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--cherry);
-    margin-bottom: 14px;
-}
-.section-eyebrow::before {
-    content: '';
-    width: 32px;
-    height: 2px;
-    background: var(--cherry);
-}
-.section-heading {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.4rem, 4.5vw, 3.5rem);
-    letter-spacing: 0.04em;
-    line-height: 1;
-    color: var(--coffee);
-}
-.section-link {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--coffee);
-    padding: 10px 20px;
-    border: 2px solid var(--coffee);
-    transition: all 0.15s;
-}
-.section-link:hover { background: var(--coffee); color: var(--cream); }
+.lp .lp-tape--cherry{ background:var(--cherry); }
+.lp .lp-tape--forest{ background:var(--forest); }
+.lp .lp-tape__inner{ display:inline-flex; align-items:center; gap:2.4rem; animation:lp-scroll 28s linear infinite; will-change:transform; }
+.lp .lp-tape span{ font-family:'DM Mono',monospace; font-size:.85rem; letter-spacing:.14em; text-transform:uppercase; }
+.lp .lp-tape .sep{ width:7px; height:7px; background:var(--wheat); display:inline-block; transform:rotate(45deg); flex:none; }
+@keyframes lp-scroll{ to{ transform:translateX(-50%); } }
 
-.cards-grid { display: grid; gap: 24px; }
-.cards-grid-4 { grid-template-columns: repeat(4, 1fr); }
-.cards-grid-3 { grid-template-columns: repeat(3, 1fr); }
+/* ---------- hero ---------- */
+.lp .lp-hero{ padding:72px 0 96px; position:relative; }
+.lp .lp-hero__grid{ display:grid; grid-template-columns:1.25fr 1fr; gap:48px; align-items:center; }
+.lp .lp-kicker{ margin-bottom:1.2rem; }
+.lp .lp-hero__title{ font-size:clamp(3.2rem,8vw,6.6rem); line-height:.92; text-transform:uppercase; }
+.lp .lp-hl{ display:inline-block; padding:0 .18em; border:var(--b); box-shadow:var(--sh); transform:rotate(-1.5deg); }
+.lp .lp-hl--cherry{ background:var(--cherry); color:var(--cream); }
+.lp .lp-hl--forest{ background:var(--forest); color:var(--cream); transform:rotate(1.2deg); }
+.lp .lp-lead{ font-size:1.15rem; max-width:34rem; margin:1.6rem 0 2rem; line-height:1.55; }
+.lp .lp-hero__ctas{ display:flex; gap:1rem; flex-wrap:wrap; }
+.lp .lp-hero__note{ font-family:'DM Mono',monospace; font-size:.75rem; margin-top:1rem; opacity:.75; }
 
-/* =============================================
-   STEPS (Comment ça marche)
-============================================= */
-.steps-grid {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr auto 1fr;
-    gap: 16px;
-    align-items: stretch;
+.lp .lp-hero__card-zone{ position:relative; display:flex; justify-content:center; perspective:900px; }
+.lp .lp-annonce{
+    width:min(340px,100%); background:var(--cream); border:var(--b); box-shadow:var(--sh-big);
+    transform:rotate(2deg); transition:transform .2s ease; will-change:transform; color:var(--coffee); display:block;
 }
-.step-card {
-    background: var(--cream);
-    border: var(--border);
-    box-shadow: 5px 5px 0 var(--coffee);
-    padding: 36px 28px;
-    transition: transform 0.15s;
+.lp .lp-annonce__img{ height:200px; border-bottom:var(--b); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.lp .lp-annonce__img img{ width:100%; height:100%; object-fit:cover; }
+.lp .lp-annonce__ph{ font-family:'Bebas Neue',sans-serif; font-size:4.4rem; color:var(--coffee); opacity:.4; }
+.lp .lp-annonce__body{ padding:1rem 1.1rem 1.2rem; }
+.lp .lp-annonce__body h3{ font-size:1.6rem; text-transform:uppercase; margin-top:.6rem; }
+.lp .lp-annonce__meta{ display:flex; justify-content:space-between; align-items:center; margin-top:.8rem; }
+.lp .lp-annonce__meta .lp-mono{ font-size:.75rem; }
+.lp .lp-prix{
+    font-family:'Bebas Neue',sans-serif; font-size:1.7rem; background:var(--forest);
+    color:var(--cream); border:2px solid var(--coffee); padding:.05rem .7rem; transform:rotate(-3deg);
 }
-.step-card:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 7px 7px 0 var(--coffee);
-}
-.step-num {
-    display: block;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 3.5rem;
-    color: var(--cherry);
-    letter-spacing: 0.04em;
-    line-height: 1;
-    margin-bottom: 16px;
-}
-.step-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
-    letter-spacing: 0.05em;
-    margin-bottom: 12px;
-}
-.step-desc {
-    font-size: 0.95rem;
-    color: var(--coffee);
-    opacity: 0.75;
-    line-height: 1.6;
-}
-.step-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.2rem;
-    color: var(--coffee);
-    opacity: 0.4;
-}
+.lp .lp-prix--cherry{ background:var(--cherry); }
 
-/* =============================================
-   PRODUCT CARDS
-============================================= */
-.product-card {
-    display: flex;
-    flex-direction: column;
-    background: var(--cream);
-    border: var(--border);
-    box-shadow: 4px 4px 0 var(--coffee);
-    transition: all 0.15s;
-    overflow: hidden;
-}
-.product-card:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 7px 7px 0 var(--coffee);
-}
-.product-card-img {
-    position: relative;
-    height: 180px;
-    background: var(--wheat);
-    border-bottom: var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-.product-card-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.product-card-placeholder {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 3rem;
-    color: var(--coffee);
-    opacity: 0.3;
-}
-.product-card-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    border: 2px solid var(--coffee);
-}
-.badge-forest { background: var(--forest); color: var(--cream); }
-.badge-cherry { background: var(--cherry); color: var(--cream); }
-.product-card-body {
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-.product-card-meta {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--teal);
-    margin-bottom: 6px;
-}
-.product-card-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.2rem;
-    letter-spacing: 0.03em;
-    line-height: 1.15;
-    margin-bottom: 8px;
-    color: var(--coffee);
-}
-.product-card-seller {
-    font-size: 0.82rem;
-    color: var(--coffee);
-    opacity: 0.65;
-    margin-bottom: 14px;
-}
-.product-card-seller .sep { margin: 0 4px; }
-.certified-mark { color: var(--forest); font-weight: 700; margin-left: 3px; }
-.product-card-footer {
-    margin-top: auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.product-card-price {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    color: var(--cherry);
-    letter-spacing: 0.03em;
-}
-.product-card-free {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--forest);
-    padding: 5px 12px;
-    background: rgba(36, 79, 38, 0.1);
-    border: 2px solid var(--forest);
-}
+/* visuels colorés (placeholders sans image) */
+.lp .lp-img--wheat{ background:var(--wheat); }
+.lp .lp-img--teal{ background:var(--teal); }
+.lp .lp-img--cherry{ background:var(--cherry); }
+.lp .lp-img--forest{ background:var(--forest); }
+.lp .lp-img--teal .lp-annonce__ph,
+.lp .lp-img--cherry .lp-annonce__ph,
+.lp .lp-img--forest .lp-annonce__ph{ color:var(--cream); opacity:.55; }
 
-/* =============================================
-   EVENT CARDS
-============================================= */
-.event-card {
-    display: flex;
-    flex-direction: column;
-    background: var(--cream);
-    border: var(--border);
-    box-shadow: 4px 4px 0 var(--coffee);
-    padding: 28px;
-    transition: all 0.15s;
+.lp .lp-sticker{
+    position:absolute; font-family:'Bebas Neue',sans-serif; text-align:center;
+    border:var(--b); box-shadow:var(--sh); padding:.5rem 1rem; line-height:1; z-index:5; font-size:1.25rem;
 }
-.event-card:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 7px 7px 0 var(--coffee);
-}
-.event-card-header {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 20px;
-    align-items: flex-start;
-}
-.event-card-date {
-    flex-shrink: 0;
-    width: 64px;
-    padding: 8px 4px;
-    text-align: center;
-    background: var(--cherry);
-    color: var(--cream);
-    border: 2px solid var(--coffee);
-}
-.event-card-day {
-    display: block;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.6rem;
-    letter-spacing: 0.02em;
-    line-height: 1;
-}
-.event-card-month {
-    display: block;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-top: 2px;
-}
-.event-card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-}
-.event-card-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border: 2px solid var(--coffee);
-    background: var(--wheat);
-}
-.event-card-tag-atelier { background: var(--teal); color: var(--cream); }
-.event-card-tag-formation { background: var(--forest); color: var(--cream); }
-.event-card-tag-conference { background: var(--wheat); color: var(--coffee); }
-.event-card-format {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--coffee);
-    opacity: 0.6;
-    letter-spacing: 0.04em;
-}
-.event-card-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.4rem;
-    letter-spacing: 0.03em;
-    line-height: 1.15;
-    margin-bottom: 12px;
-}
-.event-card-desc {
-    font-size: 0.9rem;
-    color: var(--coffee);
-    opacity: 0.7;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    flex: 1;
-}
-.event-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 16px;
-    border-top: 2px solid rgba(18,3,9,0.1);
-}
-.event-card-price {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.4rem;
-    color: var(--cherry);
-    letter-spacing: 0.03em;
-}
-.event-card-free {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--forest);
-}
-.event-card-places {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--coffee);
-    opacity: 0.6;
-    letter-spacing: 0.04em;
-}
+.lp .lp-sticker--gaspi{ top:-26px; right:8%; background:var(--cherry); color:var(--cream); transform:rotate(8deg); }
+.lp .lp-sticker--recup{ bottom:-20px; left:4%; background:var(--teal); color:var(--cream); transform:rotate(-6deg); }
+.lp .lp-sticker--star{ top:34%; left:-14px; background:var(--wheat); transform:rotate(-12deg); font-size:1rem; }
 
-/* =============================================
-   STATS
-============================================= */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-}
-.stat-block {
-    background: var(--cream);
-    border: var(--border);
-    box-shadow: 5px 5px 0 var(--coffee);
-    padding: 32px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: transform 0.15s;
-}
-.stat-block:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 7px 7px 0 var(--coffee);
-}
-.stat-value {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.5rem, 4vw, 3.5rem);
-    letter-spacing: 0.02em;
-    line-height: 1;
-    color: var(--coffee);
-    display: flex;
-    align-items: baseline;
-    gap: 2px;
-}
-.stat-plus, .stat-unit {
-    color: var(--cherry);
-    font-size: 0.7em;
-}
-.stat-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--coffee);
-    opacity: 0.7;
-    line-height: 1.4;
-}
+/* ---------- stats ---------- */
+.lp .lp-stats{ background:var(--coffee); border-top:var(--b); border-bottom:var(--b); padding:56px 0; }
+.lp .lp-stats__grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+.lp .lp-stat{ background:var(--cream); border:var(--b); box-shadow:6px 6px 0 var(--cherry); padding:1.4rem 1.2rem; text-align:center; transform:rotate(-1deg); }
+.lp .lp-stat:nth-child(2n){ transform:rotate(1.2deg); box-shadow:6px 6px 0 var(--teal); }
+.lp .lp-stat:nth-child(3){ box-shadow:6px 6px 0 var(--forest); }
+.lp .lp-stat b{ font-family:'Bebas Neue',sans-serif; font-size:3.2rem; display:block; line-height:1; }
+.lp .lp-stat span{ font-family:'DM Mono',monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; }
 
-/* =============================================
-   PRO SECTION (coffee)
-============================================= */
-.pro-section {
-    background: var(--coffee);
-    color: var(--cream);
-    border-bottom: var(--border);
-}
-.pro-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 64px;
-    align-items: center;
-}
-.pro-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--wheat);
-    margin-bottom: 18px;
-}
-.pro-eyebrow::before {
-    content: '';
-    width: 32px;
-    height: 2px;
-    background: var(--wheat);
-}
-.pro-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2.4rem, 4vw, 3.3rem);
-    letter-spacing: 0.03em;
-    line-height: 1.05;
-    color: var(--cream);
-    margin-bottom: 24px;
-}
-.pro-subtitle {
-    font-size: 1.05rem;
-    color: rgba(245, 240, 225, 0.75);
-    line-height: 1.7;
-    margin-bottom: 32px;
-    max-width: 440px;
-}
-/* Pro section: inverser le contraste des boutons dans le fond sombre */
-.pro-section .btn {
-    border-color: var(--cream);
-    box-shadow: 5px 5px 0 var(--cream);
-}
-.pro-section .btn:hover {
-    box-shadow: 7px 7px 0 var(--cream);
-}
-.pro-section .btn:active {
-    box-shadow: 2px 2px 0 var(--cream);
-}
+/* ---------- têtes de section ---------- */
+.lp .lp-sec-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:42px; flex-wrap:wrap; }
+.lp .lp-sec-head h2{ font-size:clamp(2.6rem,5.5vw,4.4rem); line-height:.95; text-transform:uppercase; }
+.lp .lp-sec-head h2 em{ font-style:normal; color:var(--cherry); }
+.lp .lp-sec-head .lp-tag{ transform:rotate(-2deg); }
+.lp .lp-sec-cta{ margin-top:38px; text-align:center; }
 
-.pro-cards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+/* ---------- marché ---------- */
+.lp .lp-marche{ padding:96px 0; }
+.lp .lp-filtres{ display:flex; gap:.8rem; margin-bottom:34px; flex-wrap:wrap; }
+.lp .lp-chip{
+    font-family:'DM Mono',monospace; font-size:.8rem; text-transform:uppercase; letter-spacing:.08em;
+    padding:.5rem 1.1rem; border:var(--b); background:var(--cream); box-shadow:4px 4px 0 var(--coffee);
+    transition:transform .12s ease, box-shadow .12s ease; cursor:pointer; color:var(--coffee);
 }
-.pro-card {
-    background: rgba(245, 240, 225, 0.05);
-    border: 2px solid var(--wheat);
-    padding: 28px 24px;
-    position: relative;
-}
-.pro-card-featured {
-    border-color: var(--cherry);
-    background: rgba(164, 36, 59, 0.1);
-    box-shadow: 5px 5px 0 var(--cherry);
-}
-.pro-card-badge {
-    position: absolute;
-    top: -12px;
-    right: 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    background: var(--cherry);
-    color: var(--cream);
-    border: 2px solid var(--cream);
-}
-.pro-card-name {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.82rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--wheat);
-    margin-bottom: 14px;
-}
-.pro-card-price {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.4rem;
-    letter-spacing: 0.03em;
-    line-height: 1;
-    color: var(--cream);
-    margin-bottom: 20px;
-}
-.pro-card-price span {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    color: rgba(245,240,225,0.5);
-    margin-left: 4px;
-}
-.pro-card ul {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.pro-card li {
-    font-size: 0.9rem;
-    color: rgba(245, 240, 225, 0.85);
-    padding-left: 22px;
-    position: relative;
-}
-.pro-card li::before {
-    content: '\2713';
-    position: absolute;
-    left: 0;
-    color: var(--wheat);
-    font-weight: 700;
-}
-.pro-card-featured li::before { color: var(--cherry); }
+.lp .lp-chip:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--coffee); }
+.lp .lp-chip.on{ background:var(--coffee); color:var(--cream); }
 
-/* =============================================
-   CTA FINAL
-============================================= */
-.cta-final .section-inner { padding: 96px 32px; text-align: center; }
-.cta-final-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(3rem, 6vw, 5.5rem);
-    letter-spacing: 0.03em;
-    line-height: 1;
-    color: var(--coffee);
-    margin-bottom: 20px;
-}
-.cta-final-sub {
-    font-size: 1.15rem;
-    color: var(--coffee);
-    opacity: 0.75;
-    margin-bottom: 40px;
-}
+.lp .lp-grille{ display:grid; gap:28px; }
+.lp .lp-grille--2{ grid-template-columns:repeat(2,1fr); }
+.lp .lp-grille--3{ grid-template-columns:repeat(3,1fr); }
 
-/* =============================================
-   EMPTY STATE
-============================================= */
-.empty-state {
-    text-align: center;
-    padding: 64px 20px;
-    border: var(--border);
-    background: var(--cream);
-    box-shadow: 4px 4px 0 var(--coffee);
+.lp .lp-carte{
+    background:var(--cream); border:var(--b); box-shadow:var(--sh);
+    transition:transform .18s ease, box-shadow .18s ease, opacity .25s ease;
+    position:relative; color:var(--coffee); display:block;
 }
-.empty-state p { margin-bottom: 24px; opacity: 0.7; }
+.lp .lp-carte:hover{ transform:translate(-4px,-4px) rotate(-.6deg); box-shadow:10px 10px 0 var(--coffee); }
+.lp .lp-carte.hide{ display:none; }
+.lp .lp-carte__img{ height:150px; border-bottom:var(--b); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.lp .lp-carte__img img{ width:100%; height:100%; object-fit:cover; }
+.lp .lp-carte__body{ padding:1rem 1.1rem 1.2rem; }
+.lp .lp-carte__body h3{ font-size:1.45rem; text-transform:uppercase; }
+.lp .lp-carte__body p{ font-size:.9rem; opacity:.8; margin:.35rem 0 .9rem; }
+.lp .lp-carte__foot{ display:flex; justify-content:space-between; align-items:center; }
+.lp .lp-carte .lp-mono{ font-size:.7rem; opacity:.7; }
+.lp .lp-badge{
+    position:absolute; top:-12px; right:-10px; font-family:'DM Mono',monospace; font-size:.68rem;
+    text-transform:uppercase; letter-spacing:.06em; padding:.3rem .6rem; border:2px solid var(--coffee);
+    box-shadow:3px 3px 0 var(--coffee); transform:rotate(4deg); z-index:2;
+}
+.lp .lp-badge--don{ background:var(--forest); color:var(--cream); }
+.lp .lp-badge--vente{ background:var(--cherry); color:var(--cream); }
+.lp .lp-prix-sm{ font-family:'Bebas Neue',sans-serif; font-size:1.6rem; }
+.lp .lp-prix-sm.gratuit{ color:var(--forest); }
 
-/* =============================================
-   RESPONSIVE
-============================================= */
-@media (max-width: 1024px) {
-    .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-    .hero-right { height: 480px; }
-    .cards-grid-4 { grid-template-columns: repeat(2, 1fr); }
-    .steps-grid { grid-template-columns: 1fr; }
-    .step-arrow { display: none; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .pro-grid { grid-template-columns: 1fr; gap: 48px; }
+.lp .lp-empty{ text-align:center; padding:56px 20px; border:var(--b); background:var(--cream); box-shadow:var(--sh); }
+.lp .lp-empty p{ margin-bottom:20px; opacity:.75; }
+
+/* ---------- piliers ---------- */
+.lp .lp-piliers{ padding:96px 0; background:var(--wheat); border-top:var(--b); border-bottom:var(--b); }
+.lp .lp-pilier{ background:var(--cream); border:var(--b); box-shadow:var(--sh); padding:1.6rem 1.5rem; position:relative; overflow:hidden; color:var(--coffee); display:block; transition:transform .18s ease, box-shadow .18s ease; }
+.lp .lp-pilier:hover{ transform:translate(-4px,-4px); box-shadow:10px 10px 0 var(--coffee); }
+.lp .lp-pilier h3{ font-size:1.9rem; text-transform:uppercase; display:flex; align-items:center; gap:.7rem; }
+.lp .lp-pic{ width:46px; height:46px; display:inline-flex; align-items:center; justify-content:center; border:var(--b); background:var(--cream); flex:none; transform:rotate(-4deg); }
+.lp .lp-pic svg{ width:22px; height:22px; }
+.lp .lp-pilier p{ margin-top:.8rem; line-height:1.55; font-size:.98rem; }
+.lp .lp-pilier .lp-tag{ margin-top:1rem; }
+.lp .lp-pilier::after{ content:""; position:absolute; right:-34px; bottom:-34px; width:110px; height:110px; border:var(--b); transform:rotate(12deg); opacity:.12; background:var(--coffee); }
+
+/* ---------- étapes ---------- */
+.lp .lp-etapes{ padding:96px 0; }
+.lp .lp-etape{ background:var(--cream); border:var(--b); box-shadow:var(--sh); padding:1.6rem 1.4rem; }
+.lp .lp-num{
+    font-family:'Bebas Neue',sans-serif; font-size:2.6rem; width:64px; height:64px;
+    display:flex; align-items:center; justify-content:center; border:var(--b);
+    background:var(--cherry); color:var(--cream); box-shadow:4px 4px 0 var(--coffee);
+    transform:rotate(-5deg); margin-bottom:1rem;
 }
-@media (max-width: 768px) {
-    .hero-section { padding: 40px 0 60px; }
-    .hero-inner { padding: 0 20px; min-height: auto; }
-    .hero-right { height: 420px; }
-    .hero-visual-card { width: 180px; padding: 12px; }
-    .hero-visual-card-1 { left: 0; }
-    .hero-visual-card-2 { right: 0; top: 80px; }
-    .hero-visual-card-3 { left: 10%; bottom: 0; }
-    .section-inner { padding: 64px 20px; }
-    .cards-grid-4, .cards-grid-3 { grid-template-columns: 1fr; }
-    .stats-grid { grid-template-columns: 1fr; }
-    .pro-cards { grid-template-columns: 1fr; }
+.lp .lp-etape:nth-child(2) .lp-num{ background:var(--teal); transform:rotate(4deg); }
+.lp .lp-etape:nth-child(3) .lp-num{ background:var(--forest); transform:rotate(-3deg); }
+.lp .lp-etape h3{ font-size:1.7rem; text-transform:uppercase; }
+.lp .lp-etape p{ margin-top:.6rem; line-height:1.55; font-size:.95rem; }
+
+/* ---------- pro / tickets ---------- */
+.lp .lp-pro{ padding:96px 0; background:var(--teal); border-top:var(--b); border-bottom:var(--b); }
+.lp .lp-pro .lp-sec-head h2{ color:var(--cream); }
+.lp .lp-pro .lp-sec-head h2 em{ color:var(--wheat); }
+.lp .lp-tickets{ display:grid; grid-template-columns:repeat(2,1fr); gap:32px; max-width:880px; margin:0 auto; }
+.lp .lp-ticket{ background:var(--cream); border:var(--b); box-shadow:var(--sh-big); position:relative; padding:2rem 1.8rem 1.8rem; color:var(--coffee); }
+.lp .lp-ticket::before,.lp .lp-ticket::after{ content:""; position:absolute; width:22px; height:22px; background:var(--teal); border:var(--b); border-radius:50%; top:50%; transform:translateY(-50%); }
+.lp .lp-ticket::before{ left:-14px; }
+.lp .lp-ticket::after{ right:-14px; }
+.lp .lp-ticket--a{ transform:rotate(-1.2deg); }
+.lp .lp-ticket--b{ transform:rotate(1.2deg); }
+.lp .lp-plan{ font-size:2.2rem; text-transform:uppercase; }
+.lp .lp-tarif{ font-family:'Bebas Neue',sans-serif; font-size:3.6rem; line-height:1; margin:.6rem 0 .2rem; }
+.lp .lp-tarif small{ font-size:1.1rem; font-family:'DM Mono',monospace; letter-spacing:0; }
+.lp .lp-ticket__sub{ font-size:.75rem; opacity:.7; }
+.lp .lp-ticket ul{ list-style:none; margin:1.1rem 0 1.5rem; display:grid; gap:.55rem; padding:0; }
+.lp .lp-ticket li{ font-size:.95rem; display:flex; gap:.6rem; align-items:baseline; }
+.lp .lp-ticket li::before{ content:"+"; color:var(--forest); font-weight:700; font-family:'DM Mono',monospace; }
+.lp .lp-ticket__pop{ position:absolute; top:-14px; right:18px; transform:rotate(3deg); background:var(--cherry); color:var(--cream); }
+
+/* ---------- témoignages ---------- */
+.lp .lp-temoins{ padding:96px 0; }
+.lp .lp-temoins .lp-grille{ align-items:start; }
+.lp .lp-temoin{ background:var(--cream); border:var(--b); box-shadow:var(--sh); padding:1.5rem 1.4rem; position:relative; }
+.lp .lp-temoin:nth-child(1){ transform:rotate(-1deg); }
+.lp .lp-temoin:nth-child(2){ transform:rotate(.8deg); top:18px; }
+.lp .lp-temoin:nth-child(3){ transform:rotate(-.6deg); }
+.lp .lp-temoin q{ font-family:'Playfair Display',serif; font-style:italic; font-size:1.08rem; line-height:1.55; quotes:"\00ab\00a0" "\00a0\00bb"; }
+.lp .lp-qui{ margin-top:1.1rem; display:flex; align-items:center; gap:.7rem; }
+.lp .lp-avatar{ width:44px; height:44px; border:var(--b); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:1.3rem; background:var(--wheat); flex:none; }
+.lp .lp-avatar--teal{ background:var(--teal); color:var(--cream); }
+.lp .lp-avatar--cherry{ background:var(--cherry); color:var(--cream); }
+.lp .lp-qui b{ display:block; font-size:.95rem; }
+.lp .lp-qui span{ font-family:'DM Mono',monospace; font-size:.7rem; text-transform:uppercase; opacity:.7; }
+
+/* ---------- CTA final ---------- */
+.lp .lp-final{ background:var(--cherry); border-top:var(--b); padding:110px 0; text-align:center; color:var(--cream); overflow:hidden; }
+.lp .lp-final h2{ font-size:clamp(3.2rem,9vw,7rem); line-height:.9; text-transform:uppercase; }
+.lp .lp-final h2 .lp-hl{ background:var(--cream); color:var(--cherry); }
+.lp .lp-final p{ max-width:36rem; margin:1.6rem auto 2.2rem; font-size:1.1rem; line-height:1.55; }
+.lp .lp-final__form{ display:flex; gap:0; max-width:520px; margin:0 auto; flex-wrap:wrap; justify-content:center; align-items:stretch; }
+.lp .lp-final__form input{
+    font-family:'DM Mono',monospace; font-size:.95rem; padding:.95rem 1.1rem; border:var(--b);
+    background:var(--cream); color:var(--coffee); min-width:280px; flex:1; box-shadow:var(--sh);
 }
+.lp .lp-final__form input:focus{ outline:3px dashed var(--coffee); outline-offset:3px; }
+.lp .lp-final__form .btn{ background:var(--coffee); margin-left:14px; }
+.lp .lp-final__mini{ font-family:'DM Mono',monospace; font-size:.72rem; margin-top:1.1rem; opacity:.85; }
+
+/* ---------- reveal au scroll ---------- */
+.lp .reveal{ opacity:0; transform:translateY(26px) rotate(.3deg); }
+.lp .reveal.in{ opacity:1; transform:none; transition:opacity .6s ease, transform .6s cubic-bezier(.2,.9,.3,1.2); }
+
+/* ---------- responsive ---------- */
+@media (max-width:980px){
+    .lp .lp-hero__grid{ grid-template-columns:1fr; gap:64px; }
+    .lp .lp-stats__grid{ grid-template-columns:repeat(2,1fr); }
+    .lp .lp-grille--3{ grid-template-columns:repeat(2,1fr); }
+    .lp .lp-grille--2{ grid-template-columns:1fr; }
+}
+@media (max-width:640px){
+    .lp .lp-grille--3,.lp .lp-grille--2,.lp .lp-tickets,.lp .lp-stats__grid{ grid-template-columns:1fr; }
+    .lp .lp-temoin:nth-child(2){ top:0; }
+    .lp .lp-final__form .btn{ margin:14px 0 0; }
+    .lp .lp-hero{ padding-top:48px; }
+}
+@media (prefers-reduced-motion:reduce){
+    .lp *,.lp *::before,.lp *::after{ animation:none!important; transition:none!important; }
+    .lp .reveal{ opacity:1; transform:none; }
+}
+@endsection
+
+@section('scripts')
+<script>
+(function(){
+    const root = document.querySelector('.lp');
+    if(!root) return;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // marquees : dupliquer le contenu pour boucler proprement
+    root.querySelectorAll('[data-tape]').forEach(t => { t.innerHTML += t.innerHTML; });
+
+    // reveal au scroll
+    if('IntersectionObserver' in window){
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+        }, { threshold:.15 });
+        root.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    } else {
+        root.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    }
+
+    // compteurs animés
+    const fmt = n => n.toLocaleString('fr-FR');
+    const animate = (el) => {
+        const target = +el.dataset.count, suffix = el.dataset.suffix || '';
+        if(reduced){ el.textContent = fmt(target) + suffix; return; }
+        const dur = 1400, t0 = performance.now();
+        (function tick(now){
+            const p = Math.min((now - t0) / dur, 1), ease = 1 - Math.pow(1 - p, 3);
+            el.textContent = fmt(Math.round(target * ease)) + suffix;
+            if(p < 1) requestAnimationFrame(tick);
+        })(t0);
+    };
+    if('IntersectionObserver' in window){
+        const ioS = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if(e.isIntersecting){ animate(e.target); ioS.unobserve(e.target); } });
+        }, { threshold:.5 });
+        root.querySelectorAll('[data-count]').forEach(el => ioS.observe(el));
+    } else {
+        root.querySelectorAll('[data-count]').forEach(animate);
+    }
+
+    // filtres marketplace
+    const chips = root.querySelectorAll('.lp-chip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chips.forEach(c => c.classList.remove('on'));
+            chip.classList.add('on');
+            const f = chip.dataset.filtre;
+            root.querySelectorAll('[data-grille] .lp-carte').forEach(carte => {
+                carte.classList.toggle('hide', f !== 'tout' && carte.dataset.type !== f);
+            });
+        });
+    });
+
+    // tilt 3D de la carte hero
+    const tilt = root.querySelector('[data-tilt]');
+    if(tilt && !reduced){
+        const zone = tilt.parentElement;
+        zone.addEventListener('mousemove', e => {
+            const r = zone.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width - .5;
+            const y = (e.clientY - r.top) / r.height - .5;
+            tilt.style.transform = `rotate(2deg) rotateY(${x*14}deg) rotateX(${-y*14}deg)`;
+        });
+        zone.addEventListener('mouseleave', () => { tilt.style.transform = 'rotate(2deg)'; });
+    }
+
+    // CTA final : redirige vers l'inscription
+    const form = root.querySelector('.lp-final__form');
+    if(form){
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const email = form.querySelector('input').value.trim();
+            const url = form.dataset.registerUrl;
+            window.location.href = email ? url + '?email=' + encodeURIComponent(email) : url;
+        });
+    }
+})();
+</script>
 @endsection

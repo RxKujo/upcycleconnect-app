@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"api/internal/models"
+	"api/internal/services"
 	"api/pkg/database"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -309,18 +309,14 @@ func ExportUserData(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	export := fmt.Sprintf("EXPORT DONNEES UPCYCLECONNECT\nDate: %s\n\nID: %d\nNom: %s %s\nEmail: %s\nTelephone: %s\nVille: %s\nRole: %s\nInscrit le: %s\n",
-		time.Now().Format("02/01/2006 15:04"),
-		u.IDUtilisateur, u.Prenom, u.Nom,
-		u.Email,
-		func() string { if u.Telephone != nil { return *u.Telephone }; return "" }(),
-		func() string { if u.Ville != nil { return *u.Ville }; return "" }(),
-		u.Role,
-		u.DateCreation.Format("02/01/2006"),
-	)
+	pdfBytes, err := services.GenerateUserDataPDF(u, time.Now().Format("02/01/2006 15:04"))
+	if err != nil {
+		jsonErr(w, "erreur lors de la génération du PDF", http.StatusInternalServerError)
+		return
+	}
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("Content-Disposition", "attachment; filename=\"mes_donnees_upcycleconnect.txt\"")
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"mes_donnees_upcycleconnect.pdf\"")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(export))
+	w.Write(pdfBytes)
 }

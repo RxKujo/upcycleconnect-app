@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class MarcheController extends Controller
 {
@@ -14,12 +15,16 @@ class MarcheController extends Controller
 
     public function index()
     {
-        try {
-            $response = Http::timeout(5)->get($this->apiUrl() . '/api/v1/public/annonces');
-            $annonces = $response->successful() ? $response->json() : [];
-        } catch (\Exception $e) {
-            $annonces = [];
-        }
+        $base = $this->apiUrl();
+
+        $annonces = Cache::remember('marche.annonces', 60, function () use ($base) {
+            try {
+                $response = Http::timeout(5)->get($base . '/api/v1/public/annonces');
+                return $response->successful() ? $response->json() : [];
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
 
         return view('public.marche.index', compact('annonces'));
     }

@@ -45,10 +45,18 @@ func AuthRequired(w http.ResponseWriter, r *http.Request) (int, string, bool) {
 		return 0, "", false
 	}
 
-	userId := int(claims["id"].(float64))
-	role := claims["role"].(string)
+	// Assertions de type protégées : un token signé valide mais au format
+	// inattendu ne doit pas provoquer de panic du handler.
+	idClaim, okID := claims["id"].(float64)
+	role, okRole := claims["role"].(string)
+	if !okID || !okRole || role == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "token invalide ou expiré"})
+		return 0, "", false
+	}
 
-	return userId, role, true
+	return int(idClaim), role, true
 }
 
 func AdminRequired(role string) bool {

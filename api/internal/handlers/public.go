@@ -4,9 +4,9 @@ import (
 	"api/pkg/database"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -86,8 +86,6 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 			}
 			a.Vendeur.Certifie = a.Vendeur.Score >= 500
 
-			a.Objets = loadPublicObjets(a.IDAnnonce)
-
 			annonces = append(annonces, a)
 		} else {
 			log.Printf("[ERROR] %s | GetPublicAnnonces | Scan err: %v\n", time.Now().Format(time.RFC3339), err)
@@ -97,10 +95,95 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 		annonces = []PublicAnnonce{}
 	}
 
+	// Chargement groupé des objets et photos : évite le N+1
+	// (1 requête objets + 1 requête photos pour l'ensemble de la liste).
+	attachObjetsToAnnonces(annonces)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(annonces)
+}
+
+// attachObjetsToAnnonces charge en lot les objets puis leurs photos pour toutes
+// les annonces fournies, en un nombre constant de requêtes (au lieu de 1 + N + N*M).
+func attachObjetsToAnnonces(annonces []PublicAnnonce) {
+	if len(annonces) == 0 {
+		return
+	}
+
+	idxByAnnonce := make(map[int]int, len(annonces))
+	annonceIDs := make([]interface{}, 0, len(annonces))
+	placeholders := make([]string, 0, len(annonces))
+	for i := range annonces {
+		annonces[i].Objets = []PublicAnnonceObjet{}
+		idxByAnnonce[annonces[i].IDAnnonce] = i
+		annonceIDs = append(annonceIDs, annonces[i].IDAnnonce)
+		placeholders = append(placeholders, "?")
+	}
+
+	rows, err := database.DB.Query(
+		"SELECT id_objet, id_annonce, categorie, materiau, etat, poids_kg FROM objets_annonces WHERE id_annonce IN ("+strings.Join(placeholders, ",")+")",
+		annonceIDs...,
+	)
+	if err != nil {
+		log.Printf("[ERROR] %s | attachObjetsToAnnonces | objets query err: %v\n", time.Now().Format(time.RFC3339), err)
+		return
+	}
+
+	type objetRow struct {
+		objet     PublicAnnonceObjet
+		idAnnonce int
+	}
+	var objets []objetRow
+	objetIDs := make([]interface{}, 0)
+	objetPlaceholders := make([]string, 0)
+	for rows.Next() {
+		var o PublicAnnonceObjet
+		var idAnnonce int
+		var poids sql.NullFloat64
+		if err := rows.Scan(&o.IDObjet, &idAnnonce, &o.Categorie, &o.Materiau, &o.Etat, &poids); err == nil {
+			if poids.Valid {
+				p := poids.Float64
+				o.PoidsKg = &p
+			}
+			o.Photos = []PublicAnnoncePhoto{}
+			objets = append(objets, objetRow{objet: o, idAnnonce: idAnnonce})
+			objetIDs = append(objetIDs, o.IDObjet)
+			objetPlaceholders = append(objetPlaceholders, "?")
+		}
+	}
+	rows.Close()
+
+	// Photos groupées par objet en une seule requête.
+	photosByObjet := make(map[int][]PublicAnnoncePhoto)
+	if len(objetIDs) > 0 {
+		prows, err := database.DB.Query(
+			"SELECT id_objet, url_photo, ordre FROM photos_objets WHERE id_objet IN ("+strings.Join(objetPlaceholders, ",")+") ORDER BY ordre",
+			objetIDs...,
+		)
+		if err == nil {
+			for prows.Next() {
+				var idObjet int
+				var p PublicAnnoncePhoto
+				if err := prows.Scan(&idObjet, &p.URL, &p.Ordre); err == nil {
+					photosByObjet[idObjet] = append(photosByObjet[idObjet], p)
+				}
+			}
+			prows.Close()
+		}
+	}
+
+	// Assemblage final.
+	for _, or := range objets {
+		o := or.objet
+		if photos, ok := photosByObjet[o.IDObjet]; ok {
+			o.Photos = photos
+		}
+		if ai, ok := idxByAnnonce[or.idAnnonce]; ok {
+			annonces[ai].Objets = append(annonces[ai].Objets, o)
+		}
+	}
 }
 
 func GetPublicAnnonce(w http.ResponseWriter, r *http.Request, id string) {
@@ -448,7 +531,7 @@ func GetPublicStats(w http.ResponseWriter, r *http.Request) {
 
 	database.DB.QueryRow("SELECT COUNT(*) FROM annonces WHERE statut IN ('validee','vendue')").Scan(&stats.ObjetsSauves)
 	database.DB.QueryRow("SELECT COUNT(*) FROM utilisateurs WHERE role = 'particulier'").Scan(&stats.Membres)
-	database.DB.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM evenements WHERE YEAR(date_debut) = %d", time.Now().Year())).Scan(&stats.AteliersAn)
+	database.DB.QueryRow("SELECT COUNT(*) FROM evenements WHERE YEAR(date_debut) = ?", time.Now().Year()).Scan(&stats.AteliersAn)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "public, max-age=3600")
