@@ -21,6 +21,22 @@
     .siret-verified { background-color: var(--forest); color: var(--cream); }
     .siret-pending { background-color: var(--wheat); color: var(--coffee); }
 
+    .score-display { text-align: center; padding: 20px 12px 8px; }
+    .score-level { display: inline-block; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; padding: 4px 14px; border: 2px solid var(--coffee); background: var(--wheat); color: var(--cream); margin-bottom: 10px; }
+    .score-number { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; color: var(--coffee); line-height: 1; }
+    .score-label { font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.78rem; color: var(--cherry); margin-top: 4px; }
+    .certif-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; background: var(--forest); color: var(--cream); border: 2px solid var(--coffee); font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.8rem; margin-top: 12px; }
+    .score-progress { padding: 8px 12px 0; }
+    .score-progress-head { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .score-bar { height: 14px; border: 2px solid var(--coffee); background: var(--cream); overflow: hidden; }
+    .score-bar-fill { height: 100%; background: var(--cherry); width: 0; transition: width 0.6s ease; }
+    .score-ladder { margin-top: 18px; padding-top: 16px; border-top: 2px solid rgba(18,3,9,0.1); display: flex; flex-direction: column; gap: 6px; }
+    .ladder-item { display: flex; align-items: center; gap: 10px; font-family: 'DM Mono', monospace; font-size: 0.78rem; opacity: 0.45; }
+    .ladder-item.reached { opacity: 1; }
+    .ladder-dot { width: 12px; height: 12px; border: 2px solid var(--coffee); flex-shrink: 0; }
+    .ladder-name { flex: 1; text-transform: uppercase; letter-spacing: 0.04em; }
+    .ladder-seuil { color: var(--teal); }
+
     .edit-input { width: 100%; border: 2px solid var(--coffee); padding: 8px 12px; font-family: 'Outfit', sans-serif; font-size: 0.95rem; display: none; border-radius: 0; }
     .editing .info-val { display: none; }
     .editing .edit-input { display: block; }
@@ -105,6 +121,24 @@
                 <span class="info-key">Statut SIRET</span>
                 <span class="info-val" id="val-siret-status"></span>
             </div>
+        </div>
+
+        <div class="card" id="score-card">
+            <h3 class="card-title">Upcycling Score</h3>
+            <div class="score-display">
+                <div class="score-level" id="score-level" style="display:none;"></div>
+                <div class="score-number" id="score-value">0</div>
+                <div class="score-label">points &middot; <span id="score-dechets">0</span> kg de dechets evites</div>
+                <div id="certif-container"></div>
+            </div>
+            <div class="score-progress" id="score-progress" style="display:none;">
+                <div class="score-progress-head">
+                    <span id="score-next-label"></span>
+                    <span id="score-next-points"></span>
+                </div>
+                <div class="score-bar"><div class="score-bar-fill" id="score-bar-fill"></div></div>
+            </div>
+            <div class="score-ladder" id="score-ladder"></div>
         </div>
 
         <div class="card">
@@ -195,9 +229,60 @@ async function loadProfile() {
         document.getElementById('notif-push').checked = userData.notif_push_active;
         document.getElementById('notif-email').checked = userData.notif_email_active;
 
+        // Score
+        document.getElementById('score-value').textContent = userData.upcycling_score || 0;
+        loadScore();
+
     } catch (err) {
         showAlert('Erreur de chargement du profil', 'error');
     }
+}
+
+function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+async function loadScore() {
+    try {
+        const resp = await apiFetch('/api/v1/utilisateurs/me/score');
+        if (!resp || !resp.ok) return;
+        const s = await resp.json();
+
+        document.getElementById('score-value').textContent = s.score;
+        document.getElementById('score-dechets').textContent = (s.dechets_evites_kg || 0).toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+
+        const lvl = document.getElementById('score-level');
+        if (s.niveau_actuel && s.niveau_actuel.nom) {
+            lvl.textContent = s.niveau_actuel.nom;
+            lvl.style.background = s.niveau_actuel.couleur || 'var(--wheat)';
+            lvl.style.display = 'inline-block';
+        }
+
+        document.getElementById('certif-container').innerHTML = s.est_certifie
+            ? '<div class="certif-badge">Compte Certifie</div>' : '';
+
+        const prog = document.getElementById('score-progress');
+        if (s.prochain_palier) {
+            prog.style.display = 'block';
+            document.getElementById('score-next-label').textContent = 'Vers ' + s.prochain_palier.nom;
+            document.getElementById('score-next-points').textContent = s.points_manquants + ' pts';
+            document.getElementById('score-bar-fill').style.width = (s.progression_pct || 0) + '%';
+        } else {
+            prog.style.display = 'none';
+        }
+
+        if (Array.isArray(s.paliers)) {
+            document.getElementById('score-ladder').innerHTML = s.paliers.map(p => {
+                const reached = s.score >= p.seuil_min;
+                const cert = p.confere_certification ? ' &#10003;' : '';
+                return '<div class="ladder-item' + (reached ? ' reached' : '') + '">'
+                    + '<span class="ladder-dot" style="background:' + (reached ? (p.couleur || 'var(--forest)') : 'transparent') + ';"></span>'
+                    + '<span class="ladder-name">' + escapeHtml(p.nom) + cert + '</span>'
+                    + '<span class="ladder-seuil">' + p.seuil_min + '</span>'
+                    + '</div>';
+            }).join('');
+        }
+    } catch (err) { /* score indisponible */ }
 }
 
 function toggleEdit() {

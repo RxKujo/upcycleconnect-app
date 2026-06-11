@@ -95,6 +95,10 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		handlers.UpdateMe(w, req, userId)
 		return
 	}
+	if match(path, "/api/v1/utilisateurs/me/score") && method == "GET" {
+		handlers.GetMyScore(w, req, userId)
+		return
+	}
 	if match(path, "/api/v1/utilisateurs/me/export-pdf") && method == "GET" {
 		handlers.ExportUserData(w, req, userId)
 		return
@@ -422,6 +426,19 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	if parts := splitPath(path, "/api/v1/admin/conteneurs/tickets"); len(parts) == 2 && parts[1] == "resolve" && method == "PUT" {
 		handlers.ResolveTicket(w, req, parts[0])
+		return
+	}
+
+	if match(path, "/api/v1/admin/paliers") && method == "GET" {
+		handlers.GetPaliersAdmin(w, req)
+		return
+	}
+	if parts := splitPath(path, "/api/v1/admin/paliers"); len(parts) == 1 && method == "PUT" {
+		handlers.UpdatePalier(w, req, parts[0])
+		return
+	}
+	if match(path, "/api/v1/admin/scores/recompute") && method == "POST" {
+		handlers.RecomputeScores(w, req)
 		return
 	}
 

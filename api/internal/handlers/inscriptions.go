@@ -88,6 +88,9 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
+	// Participation à un événement : crédit de l'Upcycling Score.
+	services.AwardScoreForEvenement(userId, event.IDEvenement)
+
 	pdfBytes, err := services.GenerateTicketPDF(user, event)
 	if err == nil {
 		subject := fmt.Sprintf("Confirmation d'inscription : %s", event.Titre)

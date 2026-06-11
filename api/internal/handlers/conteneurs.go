@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"api/internal/models"
+	"api/internal/services"
 	"api/pkg/database"
 	"encoding/json"
 	"net/http"
@@ -137,6 +138,11 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 	}
 
 	database.DB.Exec("UPDATE commandes SET statut = ? WHERE id_commande = ?", newStatut, idCommande)
+
+	// Commande finalisée : on crédite l'Upcycling Score du vendeur et de l'acheteur.
+	if newStatut == "recuperee" {
+		services.AwardScoreForCommande(idCommande)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

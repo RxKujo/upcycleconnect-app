@@ -4,6 +4,7 @@ import (
 	"api/internal/models"
 	"api/internal/services"
 	"api/pkg/database"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -11,21 +12,58 @@ import (
 
 func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 	var u models.Utilisateur
-	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, est_banni, date_fin_ban, nom_entreprise, numero_siret, date_creation 
+	var adresse, photo sql.NullString
+	var siretVerifie, notifPush, estCertifie sql.NullBool
+	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, adresse_complete, photo_profil_url,
+	                 role, est_banni, date_fin_ban, nom_entreprise, numero_siret, siret_verifie, notif_push_active,
+	                 COALESCE(upcycling_score, 0), est_certifie, date_creation
 	          FROM utilisateurs WHERE id_utilisateur = ?`
-	
+
 	err := database.DB.QueryRow(query, id).Scan(
-		&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &u.Role, &u.EstBanni, &u.DateFinBan, &u.NomEntreprise, &u.NumeroSiret, &u.DateCreation)
-	
+		&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &adresse, &photo,
+		&u.Role, &u.EstBanni, &u.DateFinBan, &u.NomEntreprise, &u.NumeroSiret, &siretVerifie, &notifPush,
+		&u.UpcyclingScore, &estCertifie, &u.DateCreation)
+
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "utilisateur non trouvé"})
 		return
 	}
+
+	if adresse.Valid {
+		u.AdresseComplete = &adresse.String
+	}
+	if photo.Valid {
+		u.PhotoProfilURL = &photo.String
+	}
+	if siretVerifie.Valid {
+		u.SiretVerifie = &siretVerifie.Bool
+	}
+	if notifPush.Valid {
+		u.NotifPushActive = &notifPush.Bool
+	}
+	u.EstCertifie = estCertifie.Valid && estCertifie.Bool
+
+	// Niveau (palier) correspondant au score courant.
+	if paliers, perr := services.GetPaliers(); perr == nil {
+		u.NiveauScore = services.NiveauPourScore(paliers, u.UpcyclingScore).Nom
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(u)
+}
+
+// GetMyScore retourne le détail de l'Upcycling Score de l'utilisateur courant
+// (niveau, prochain palier, déchets évités, progression, barème complet).
+func GetMyScore(w http.ResponseWriter, r *http.Request, id int) {
+	detail, err := services.GetUserScoreDetail(id)
+	if err != nil {
+		jsonErr(w, "erreur lors du calcul du score", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, detail, http.StatusOK)
 }
 
 func UpdateMe(w http.ResponseWriter, r *http.Request, id int) {

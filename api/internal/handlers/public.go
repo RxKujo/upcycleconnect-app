@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"api/internal/services"
 	"api/pkg/database"
 	"database/sql"
 	"encoding/json"
@@ -15,6 +16,7 @@ type PublicAnnonceVendeur struct {
 	NomInitiale  string `json:"nom_initiale"`
 	Ville        string `json:"ville"`
 	Score        int    `json:"score_upcycling"`
+	Niveau       string `json:"niveau"`
 	Certifie     bool   `json:"certifie"`
 }
 
@@ -65,6 +67,9 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
+	// Barème des niveaux chargé une fois pour toute la liste.
+	paliers, _ := services.GetPaliers()
+
 	var annonces []PublicAnnonce
 	for rows.Next() {
 		var a PublicAnnonce
@@ -84,7 +89,7 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 			if len(nom) > 0 {
 				a.Vendeur.NomInitiale = string([]rune(nom)[:1]) + "."
 			}
-			a.Vendeur.Certifie = a.Vendeur.Score >= 500
+			a.Vendeur.Niveau = services.NiveauPourScore(paliers, a.Vendeur.Score).Nom
 
 			annonces = append(annonces, a)
 		} else {
@@ -220,7 +225,9 @@ func GetPublicAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	if len(nom) > 0 {
 		a.Vendeur.NomInitiale = string([]rune(nom)[:1]) + "."
 	}
-	a.Vendeur.Certifie = a.Vendeur.Score >= 500
+	if paliers, perr := services.GetPaliers(); perr == nil {
+		a.Vendeur.Niveau = services.NiveauPourScore(paliers, a.Vendeur.Score).Nom
+	}
 
 	a.Objets = loadPublicObjets(a.IDAnnonce)
 
