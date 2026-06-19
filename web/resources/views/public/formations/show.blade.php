@@ -73,7 +73,7 @@
         </div>
         <p style="font-size:0.95rem; opacity:0.75; margin-bottom:24px;">Pour réserver cette formation, connectez-vous ou créez un compte gratuit.</p>
         <div style="display:flex; flex-direction:column; gap:12px;">
-            <a href="/login?intent=reservation" class="btn btn-primary btn-block">Se connecter</a>
+            <a id="loginReturnLink" href="/login?return={{ urlencode(request()->getPathInfo()) }}" class="btn btn-primary btn-block">Se connecter</a>
             <a href="{{ route('particulier.register') }}" class="btn btn-secondary btn-block">Créer un compte</a>
         </div>
     </div>
@@ -82,7 +82,7 @@
 
 @section('scripts')
 <script>
-const API_BASE = 'http://localhost:8888';
+const API_BASE = '{{ config("services.api.url") }}';
 
 const authModal = document.getElementById('authModal');
 function openAuthModal() { authModal.style.display = 'flex'; }
@@ -126,7 +126,9 @@ document.getElementById('btnReserver')?.addEventListener('click', async function
         if (res.ok || res.status === 201) {
             result.style.background = '#dff5e1';
             result.style.borderLeft = '3px solid #3a7d44';
-            result.innerHTML = '<strong>Réservation confirmée !</strong> Retrouvez-la dans <a href="/particulier/profile" style="text-decoration:underline;">votre espace</a>.';
+            let profileHref = '/particulier/profile';
+            try { const r = JSON.parse(atob(token.split('.')[1])); if (r.role === 'professionnel') profileHref = '/professionnel/profile'; } catch(e) {}
+            result.innerHTML = '<strong>Réservation confirmée !</strong> Retrouvez-la dans <a href="' + profileHref + '" style="text-decoration:underline;">votre espace</a>.';
             btn.textContent = 'Réservé';
         } else {
             result.style.background = '#fde2e2';

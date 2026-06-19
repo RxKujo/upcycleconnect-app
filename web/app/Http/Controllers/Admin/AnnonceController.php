@@ -59,7 +59,7 @@ class AnnonceController extends Controller
     public function refuser(Request $request, $id)
     {
         $payload = ['motif_refus' => $request->input('motif_refus', 'Non conforme')];
-        $response = Http::withToken(session('admin_token'))->put("{$this->apiUrl}/{$id}/refuser", $payload);
+        $response = Http::withToken(session('admin_token'))->asJson()->put("{$this->apiUrl}/{$id}/refuser", $payload);
 
         if ($response->failed()) {
             return back()->with('error', 'Erreur lors du refus.');

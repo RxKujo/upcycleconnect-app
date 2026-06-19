@@ -63,7 +63,7 @@ class ModerationController extends Controller
     public function addMotBanni(Request $request)
     {
         $data = $request->validate(['mot' => 'required|string|max:100']);
-        $r = Http::withToken($this->token())->post($this->api() . '/api/v1/salarie/mots-bannis', $data);
+        $r = Http::withToken($this->token())->asJson()->post($this->api() . '/api/v1/salarie/mots-bannis', $data);
         if (!$r->successful()) return back()->withInput()->with('error', $r->json('erreur') ?? 'Erreur');
         return back()->with('success', 'Mot banni ajouté.');
     }

@@ -120,7 +120,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:8888';
+        const API_BASE = '{{ config("services.api.url") }}';
 
         function getToken() {
             return localStorage.getItem('auth_token');

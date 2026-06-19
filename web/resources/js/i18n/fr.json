@@ -1,0 +1,101 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "market": "Marché",
+    "events": "Événements",
+    "formations": "Formations",
+    "forum": "Forum",
+    "resources": "Ressources",
+    "planning": "Mon Planning",
+    "depot": "Dépôt conteneur",
+    "profile": "Mon Profil",
+    "cart": "Panier",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "Créer un compte"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "validate": "Valider",
+    "refuse": "Refuser",
+    "send": "Envoyer",
+    "close": "Fermer",
+    "yes": "Oui",
+    "no": "Non",
+    "error": "Erreur",
+    "success": "Succès",
+    "required": "Ce champ est requis",
+    "back": "Retour"
+  },
+  "auth": {
+    "email": "Adresse email",
+    "password": "Mot de passe",
+    "login": "Se connecter",
+    "register": "Créer un compte",
+    "forgot_password": "Mot de passe oublié ?",
+    "remember_me": "Se souvenir de moi",
+    "no_account": "Pas encore de compte ?",
+    "already_account": "Déjà un compte ?"
+  },
+  "planning": {
+    "title": "Mon Planning",
+    "add": "Ajouter un créneau",
+    "event_type": "Type",
+    "start": "Début",
+    "end": "Fin",
+    "type_event": "Événement",
+    "type_formation": "Formation",
+    "type_reunion": "Réunion",
+    "type_travail": "Travail",
+    "type_perso": "Personnel",
+    "delete_confirm": "Supprimer ce créneau ?"
+  },
+  "tutoriel": {
+    "title": "Guide & Tutoriels",
+    "step": "Étape",
+    "next": "Suivant",
+    "prev": "Précédent",
+    "finish": "Terminer",
+    "skip": "Passer le tutoriel",
+    "restart": "Relancer le tutoriel interactif"
+  },
+  "depot": {
+    "title": "Dépôt en conteneur",
+    "subtitle": "Déposez vos objets dans l'un de nos conteneurs partenaires",
+    "object_title": "Titre de l'objet",
+    "object_type": "Type d'objet",
+    "description": "Description",
+    "quantity": "Quantité",
+    "address": "Adresse de retrait",
+    "postal_code": "Code postal",
+    "city": "Ville",
+    "container": "Conteneur sélectionné",
+    "submit": "Envoyer ma demande",
+    "my_requests": "Mes demandes",
+    "status_waiting": "En attente",
+    "status_valid": "Validée",
+    "status_refused": "Refusée",
+    "status_code": "Code envoyé",
+    "barcode": "Code-barre"
+  },
+  "resources": {
+    "title": "Ressources Pédagogiques",
+    "subtitle": "Articles, conseils et forum de la communauté UpcycleConnect",
+    "tab_articles": "Articles & Conseils",
+    "tab_forum": "Forum",
+    "report": "Signaler",
+    "report_title": "Signaler un sujet",
+    "report_reason": "Raison du signalement",
+    "report_sent": "Signalement envoyé. Merci !"
+  },
+  "score": {
+    "title": "Score Upcycling",
+    "points": "points",
+    "certified": "Upcycler Certifié",
+    "next_level": "Prochain palier"
+  }
+}

@@ -45,7 +45,7 @@ class UtilisateurController extends Controller
     {
         $dateFin = $request->input('permanent') ? '2099-12-31' : $request->input('date_fin_ban');
         $response = Http::withToken(session('admin_token'))
-            ->put("{$this->apiUrl}/{$id}/ban", ['date_fin_ban' => $dateFin]);
+            ->asJson()->put("{$this->apiUrl}/{$id}/ban", ['date_fin_ban' => $dateFin]);
         return back()->with($response->successful() ? 'success' : 'error', $response->successful() ? 'Utilisateur banni.' : 'Erreur lors du bannissement.');
     }
 
@@ -58,7 +58,7 @@ class UtilisateurController extends Controller
     public function changeRole(Request $request, $id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->put("{$this->apiUrl}/{$id}/role", ['role' => $request->input('role')]);
+            ->asJson()->put("{$this->apiUrl}/{$id}/role", ['role' => $request->input('role')]);
         return back()->with($response->successful() ? 'success' : 'error', $response->successful() ? 'Rôle mis à jour.' : 'Erreur lors du changement de rôle.');
     }
 
@@ -76,7 +76,7 @@ class UtilisateurController extends Controller
             $payload['date_fin'] = $request->input('date_fin');
         }
         $response = Http::withToken(session('admin_token'))
-            ->post("{$this->apiUrl}/{$id}/abonnement", $payload);
+            ->asJson()->post("{$this->apiUrl}/{$id}/abonnement", $payload);
         return back()->with($response->successful() ? 'success' : 'error', $response->successful() ? 'Abonnement assigné.' : 'Erreur lors de l\'assignation.');
     }
 

@@ -1,7 +1,7 @@
 // Panier UpcycleConnect — stockage localStorage
 (function () {
     const KEY = 'uc_panier';
-    const API_BASE = 'http://localhost:8888';
+    const API_BASE = window.APP_API_BASE || 'http://localhost:8888';
 
     function read() {
         try { return JSON.parse(localStorage.getItem(KEY) || '[]'); }

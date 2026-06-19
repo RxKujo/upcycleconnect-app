@@ -61,6 +61,12 @@ services:
       API_PORT: "8888"
       UPLOAD_DIR: /uploads/photos
       RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_FROM: "noreply@upcycleconnect.fr"
     ports:
       - "8888:8888"
     depends_on:
@@ -97,8 +103,17 @@ services:
       # Plusieurs workers pour le serveur de dev (sinon mono-thread)
       PHP_CLI_SERVER_WORKERS: "8"
       API_URL: "http://api:8888"
+      JWT_SECRET: ${JWT_SECRET}
       RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
       VITE_DEV_SERVER_URL: "http://localhost:5173"
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_ENCRYPTION: ""
+      MAIL_FROM_ADDRESS: "noreply@upcycleconnect.fr"
+      MAIL_FROM_NAME: "UpcycleConnect"
     ports:
       - "8000:8000"
     depends_on:
@@ -106,9 +121,25 @@ services:
         condition: service_started
       api:
         condition: service_started
+      mailpit:
+        condition: service_started
     networks:
       - uc_network
   
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: uc_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - uc_network
+
   vite:
     image: node:20-alpine
     container_name: uc_vite_dev

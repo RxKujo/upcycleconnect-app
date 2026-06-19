@@ -79,7 +79,7 @@ class EvenementController extends Controller
             'animateurs'     => array_map('intval', $request->input('animateurs', [])),
         ];
 
-        $response = Http::withToken(session('admin_token'))->post($this->apiUrl, $payload);
+        $response = Http::withToken(session('admin_token'))->asJson()->post($this->apiUrl, $payload);
 
         if ($response->failed()) {
             return back()->withInput()->with('error', 'Impossible de créer l\'événement.');
@@ -142,7 +142,7 @@ class EvenementController extends Controller
             'animateurs'     => array_map('intval', $request->input('animateurs', [])),
         ];
 
-        $response = Http::withToken(session('admin_token'))->put("{$this->apiUrl}/{$id}", $payload);
+        $response = Http::withToken(session('admin_token'))->asJson()->put("{$this->apiUrl}/{$id}", $payload);
 
         if ($response->failed()) {
             return back()->withInput()->with('error', 'Impossible de modifier l\'événement.');

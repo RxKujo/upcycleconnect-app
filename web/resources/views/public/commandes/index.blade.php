@@ -9,7 +9,7 @@
 
     <div id="cmdLoginRequired" style="display:none; text-align:center; padding:60px 20px; border:var(--border); background:white;">
         <p style="margin-bottom:20px;">Connectez-vous pour consulter vos commandes.</p>
-        <a href="/login?intent=commandes" class="btn btn-primary">Se connecter</a>
+        <a href="/login?return=%2Fmes-commandes" class="btn btn-primary">Se connecter</a>
     </div>
 
     <div id="cmdLoading" style="text-align:center; padding:60px; opacity:0.5;">Chargement…</div>
@@ -26,7 +26,7 @@
 
 @section('scripts')
 <script>
-const API_BASE = 'http://localhost:8888';
+const API_BASE = '{{ config("services.api.url") }}';
 const STATUT_LABELS = {
     'commandee':    { txt: 'Commandée', bg: '#fff4d6' },
     'deposee':      { txt: 'Déposée',   bg: '#e3eefd' },

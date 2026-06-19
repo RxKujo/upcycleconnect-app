@@ -369,7 +369,7 @@
 
             <div id="alertContainer"></div>
 
-            <form id="loginForm" method="POST" action="http://localhost:8888/api/v1/auth/login" novalidate>
+            <form id="loginForm" method="POST" action="{{ config('services.api.url') }}/api/v1/auth/login" novalidate>
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
                     <input
@@ -665,7 +665,8 @@
                         .then(r => r.json())
                         .then(d => {
                             if (d.success) {
-                                setTimeout(() => { window.location.href = d.redirect || '/salarie/dashboard'; }, 800);
+                                const returnUrl = new URLSearchParams(window.location.search).get('return');
+                                setTimeout(() => { window.location.href = returnUrl || d.redirect || '/salarie/dashboard'; }, 800);
                             } else {
                                 showAlert(d.message || 'Erreur session salarié', 'error');
                                 submitBtn.disabled = false;
@@ -680,20 +681,18 @@
                             loadingOverlay.classList.remove('active');
                         });
                     } else if (userRole === 'professionnel') {
-                        // Professionnel: store token and redirect to pro profile
                         showAlert('Connexion réussie! Redirection...', 'success');
                         localStorage.setItem('auth_token', token);
-
                         setTimeout(() => {
-                            window.location.href = '/professionnel/profile';
+                            const returnUrl = new URLSearchParams(window.location.search).get('return');
+                            window.location.href = returnUrl || '/professionnel/profile';
                         }, 1500);
                     } else {
-                        // Regular user: store token in localStorage
                         showAlert('Connexion réussie! Redirection...', 'success');
                         localStorage.setItem('auth_token', token);
-
                         setTimeout(() => {
-                            window.location.href = '/particulier/profile';
+                            const returnUrl = new URLSearchParams(window.location.search).get('return');
+                            window.location.href = returnUrl || '/particulier/profile';
                         }, 1500);
                     }
                 } else if (response.status === 401) {

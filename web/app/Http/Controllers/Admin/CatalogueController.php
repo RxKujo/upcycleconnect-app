@@ -11,7 +11,7 @@ class CatalogueController extends Controller
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
-            ->get(config('services.api.url') . '/api/catalogue');
+            ->get(config('services.api.url') . '/api/v1/catalogue');
 
         $items = $response->successful() ? $response->json() : [];
 
@@ -61,7 +61,7 @@ class CatalogueController extends Controller
         ];
 
         $response = Http::withToken(session('admin_token'))
-            ->post('http://api:8888/api/catalogue', $payload);
+            ->asJson()->post(config('services.api.url') . '/api/v1/catalogue', $payload);
 
         if ($response->failed()) {
             return back()->withInput()->with('error', __('admin.erreur_creation'));
@@ -73,7 +73,7 @@ class CatalogueController extends Controller
     public function edit($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get(config('services.api.url') . "/api/catalogue/{$id}");
+            ->get(config('services.api.url') . "/api/v1/catalogue/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.catalogue.index')->with('error', __('admin.element_introuvable'));
@@ -120,7 +120,7 @@ class CatalogueController extends Controller
         ];
 
         $response = Http::withToken(session('admin_token'))
-            ->put("http://api:8888/api/catalogue/{$id}", $payload);
+            ->asJson()->put(config('services.api.url') . "/api/v1/catalogue/{$id}", $payload);
 
         if ($response->failed()) {
             return back()->withInput()->with('error', __('admin.erreur_mise_a_jour'));
@@ -132,7 +132,7 @@ class CatalogueController extends Controller
     public function destroy($id)
     {
         Http::withToken(session('admin_token'))
-            ->delete(config('services.api.url') . "/api/catalogue/{$id}");
+            ->delete(config('services.api.url') . "/api/v1/catalogue/{$id}");
 
         return redirect()->route('admin.catalogue.index')->with('success', __('admin.catalogue_delete_success'));
     }
@@ -140,7 +140,7 @@ class CatalogueController extends Controller
     public function show($id)
     {
         $response = Http::withToken(session('admin_token'))
-            ->get("http://api:8888/api/catalogue/{$id}");
+            ->get(config('services.api.url') . "/api/v1/catalogue/{$id}");
 
         if ($response->failed()) {
             return redirect()->route('admin.catalogue.index')->with('error', __('admin.element_introuvable'));
@@ -149,7 +149,7 @@ class CatalogueController extends Controller
         $item = $response->json();
         $reservations = [];
         $reservationsResponse = Http::withToken(session('admin_token'))
-            ->get("http://api:8888/api/catalogue/{$id}/reservations");
+            ->get(config('services.api.url') . "/api/v1/catalogue/{$id}/reservations");
 
         if ($reservationsResponse->successful()) {
             $reservations = $reservationsResponse->json();
@@ -161,20 +161,17 @@ class CatalogueController extends Controller
     public function valider($id)
     {
         Http::withToken(session('admin_token'))
-            ->put(config('services.api.url') . "/api/catalogue/{$id}/valider");
+            ->post(config('services.api.url') . "/api/v1/catalogue/{$id}/valider");
 
         return back()->with('success', __('admin.catalogue_valide_success'));
     }
 
     public function reservations($id)
     {
-        $request->validate(['motif_refus' => 'required|string']);
-        
-        Http::withToken(session('admin_token'))
-            ->put(config('services.api.url') . "/api/catalogue/{$id}/refuser", [
-                'motif_refus' => $request->motif_refus
-            ]);
+        $response = Http::withToken(session('admin_token'))
+            ->get(config('services.api.url') . "/api/v1/catalogue/{$id}/reservations");
 
-        return back()->with('success', 'Annonce refusée');
+        $reservations = $response->successful() ? $response->json() : [];
+        return view('admin.catalogue.reservations', compact('reservations', 'id'));
     }
 }

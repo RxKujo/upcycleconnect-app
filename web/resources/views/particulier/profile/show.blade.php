@@ -143,6 +143,23 @@
             </div>
         </div>
 
+        <div class="card full-width" id="card-commandes">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="card-title">Mes Achats</h3>
+                <a href="/mes-commandes" class="btn btn-secondary" style="font-size:0.85rem;padding:8px 16px;">Voir tout</a>
+            </div>
+            <div id="commandes-container">
+                <div class="loading">Chargement des commandes...</div>
+            </div>
+        </div>
+
+        <div class="card full-width" id="card-reservations">
+            <h3 class="card-title">Mes Réservations Formations</h3>
+            <div id="reservations-container">
+                <div class="loading">Chargement des réservations...</div>
+            </div>
+        </div>
+
         <div class="card">
             <h3 class="card-title">Preferences de Notifications</h3>
             <div class="toggle-row">
@@ -178,7 +195,44 @@
             <h3 class="card-title">Securite</h3>
             <x-btn variant="secondary" size="sm" class="btn-disabled" disabled>Modifier mon mot de passe</x-btn>
             <p style="font-size: 0.8rem; margin-top: 8px; color: rgba(18,3,9,0.5);">Fonctionnalite a venir</p>
+            <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(164,36,59,0.2);">
+                <p style="font-size:0.85rem; color:var(--cherry); margin-bottom:12px; font-family:'DM Mono',monospace; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.06em;">Zone dangereuse</p>
+                <button type="button" onclick="deleteMyAccount()" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:var(--cherry);background:none;border:2px solid var(--cherry);padding:8px 20px;cursor:pointer;letter-spacing:0.04em;">Supprimer mon compte</button>
+                <p style="font-size:0.75rem; color:rgba(18,3,9,0.5); margin-top:8px;">Vos donnees personnelles seront effacees (RGPD). Cette action est irreversible.</p>
+            </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal modification annonce -->
+<div id="modal-edit-annonce" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.55);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:32px;width:100%;max-width:520px;position:relative;">
+        <button id="modal-edit-annonce-close" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--coffee);">&times;</button>
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.06em;margin-bottom:24px;">Modifier l'annonce</h3>
+        <form id="form-edit-annonce">
+            <input type="hidden" id="edit-annonce-id">
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="edit-titre" class="form-label">Titre</label>
+                <input type="text" id="edit-titre" class="form-input" required maxlength="120">
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="edit-description" class="form-label">Description</label>
+                <textarea id="edit-description" class="form-input" rows="4" required style="resize:vertical;"></textarea>
+            </div>
+            <div id="edit-prix-row" class="form-group" style="margin-bottom:16px;">
+                <label for="edit-prix" class="form-label">Prix (€)</label>
+                <input type="number" id="edit-prix" class="form-input" step="0.01" min="0">
+            </div>
+            <div class="form-group" style="margin-bottom:24px;">
+                <label for="edit-mode" class="form-label">Mode de remise</label>
+                <select id="edit-mode" class="form-input">
+                    <option value="main_propre">En main propre</option>
+                    <option value="conteneur">Via conteneur</option>
+                </select>
+            </div>
+            <p style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--cherry);margin-bottom:16px;">La modification repasse l'annonce en attente de validation.</p>
+            <button type="submit" class="btn btn-primary btn-block">Enregistrer les modifications</button>
+        </form>
     </div>
 </div>
 @endsection
@@ -267,6 +321,9 @@ async function loadAnnonces() {
             const cancelBtn = a.statut === 'en_attente'
                 ? '<button type="button" class="btn-cancel-annonce" data-id="' + a.id_annonce + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--cherry);background:none;border:1px solid var(--cherry);padding:4px 10px;cursor:pointer;">Annuler</button>'
                 : '';
+            const editBtn = (a.statut === 'en_attente' || a.statut === 'validee')
+                ? '<button type="button" class="btn-edit-annonce" data-id="' + a.id_annonce + '" data-titre="' + escapeHtml(a.titre) + '" data-description="' + escapeHtml(a.description || '') + '" data-prix="' + (a.prix || '') + '" data-mode="' + (a.mode_remise || '') + '" data-type="' + a.type_annonce + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--teal);background:none;border:1px solid var(--teal);padding:4px 10px;cursor:pointer;margin-right:6px;">Modifier</button>'
+                : '';
             html += '<tr>'
                 + '<td>' + thumb + '</td>'
                 + '<td><a href="/annonces/' + a.id_annonce + '" style="text-decoration:none;font-weight:600;">' + escapeHtml(a.titre) + '</a>' + refus + '</td>'
@@ -274,7 +331,7 @@ async function loadAnnonces() {
                 + '<td>' + prix + '</td>'
                 + '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td>'
                 + '<td>' + date + '</td>'
-                + '<td>' + cancelBtn + '</td>'
+                + '<td>' + editBtn + cancelBtn + '</td>'
                 + '</tr>';
         });
         html += '</tbody></table></div>';
@@ -298,10 +355,69 @@ async function loadAnnonces() {
                 }
             });
         });
+        container.querySelectorAll('.btn-edit-annonce').forEach(btn => {
+            btn.addEventListener('click', () => openEditModal(btn));
+        });
     } catch (err) {
         container.innerHTML = '<p style="color: var(--cherry);">Erreur de chargement</p>';
     }
 }
+
+function openEditModal(btn) {
+    const isVente = btn.dataset.type === 'vente';
+    document.getElementById('edit-annonce-id').value = btn.dataset.id;
+    document.getElementById('edit-titre').value = btn.dataset.titre;
+    document.getElementById('edit-description').value = btn.dataset.description;
+    document.getElementById('edit-prix').value = btn.dataset.prix;
+    document.getElementById('edit-mode').value = btn.dataset.mode;
+    document.getElementById('edit-prix-row').style.display = isVente ? 'block' : 'none';
+    document.getElementById('modal-edit-annonce').style.display = 'flex';
+}
+
+async function deleteMyAccount() {
+    if (!confirm('Supprimer definitivement votre compte ? Vos donnees personnelles seront effacees. Cette action est irreversible.')) return;
+    const resp = await apiFetch('/api/v1/utilisateurs/me', { method: 'DELETE' });
+    if (resp && resp.ok) {
+        localStorage.removeItem('auth_token');
+        alert('Votre compte a ete supprime. Vous allez etre redirige vers l\'accueil.');
+        window.location.href = '/';
+    } else {
+        const d = resp ? await resp.json() : {};
+        showAlert(d.erreur || 'Erreur lors de la suppression', 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('modal-edit-annonce-close').addEventListener('click', () => {
+        document.getElementById('modal-edit-annonce').style.display = 'none';
+    });
+    document.getElementById('modal-edit-annonce').addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+    });
+    document.getElementById('form-edit-annonce').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('edit-annonce-id').value;
+        const body = {
+            titre: document.getElementById('edit-titre').value.trim(),
+            description: document.getElementById('edit-description').value.trim(),
+            mode_remise: document.getElementById('edit-mode').value,
+        };
+        const prixVal = document.getElementById('edit-prix').value;
+        if (prixVal) body.prix = parseFloat(prixVal);
+        const btn = this.querySelector('button[type=submit]');
+        btn.disabled = true;
+        const resp = await apiFetch('/api/v1/annonces/' + id, { method: 'PUT', body: JSON.stringify(body) });
+        btn.disabled = false;
+        if (resp && resp.ok) {
+            document.getElementById('modal-edit-annonce').style.display = 'none';
+            showAlert('Annonce mise a jour — repassee en attente de validation', 'success');
+            loadAnnonces();
+        } else {
+            const d = resp ? await resp.json() : {};
+            showAlert(d.erreur || 'Erreur lors de la modification', 'error');
+        }
+    });
+});
 
 async function loadEvents() {
     try {
@@ -315,10 +431,14 @@ async function loadEvents() {
             return;
         }
 
-        let html = '<div class="table-container"><table><thead><tr><th>Titre</th><th>Date</th><th>Statut Paiement</th></tr></thead><tbody>';
+        let html = '<div class="table-container"><table><thead><tr><th>Titre</th><th>Date</th><th>Statut</th><th></th></tr></thead><tbody>';
         events.forEach(ev => {
-            const date = new Date(ev.date_debut).toLocaleDateString('fr-FR');
-            html += '<tr><td>' + ev.titre + '</td><td>' + date + '</td><td><span class="badge badge-waiting">' + ev.statut_paiement + '</span></td></tr>';
+            const date = new Date(ev.date_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+            const payeBadge = ev.statut_paiement === 'paye'
+                ? '<span class="badge badge-valid">Payé</span>'
+                : '<span class="badge badge-waiting">' + ev.statut_paiement + '</span>';
+            const billetBtn = '<a href="' + (typeof API_BASE !== 'undefined' ? '' : '') + '/evenements/' + ev.id_evenement + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--teal);text-decoration:none;border:1px solid var(--teal);padding:3px 8px;">Voir</a>';
+            html += '<tr><td style="font-weight:600;">' + escapeHtml(ev.titre) + '</td><td style="white-space:nowrap;">' + date + '</td><td>' + payeBadge + '</td><td>' + billetBtn + '</td></tr>';
         });
         html += '</tbody></table></div>';
         container.innerHTML = html;
@@ -488,7 +608,71 @@ async function downloadPDF() {
     }
 }
 
+async function loadCommandes() {
+    const container = document.getElementById('commandes-container');
+    try {
+        const resp = await apiFetch('/api/v1/commandes/me');
+        if (!resp || !resp.ok) { container.innerHTML = ''; return; }
+        const commandes = await resp.json();
+        if (!commandes || commandes.length === 0) {
+            container.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;padding:12px 0;">Aucun achat pour le moment</p>';
+            return;
+        }
+        const STATUTS = { commandee:'Commandée', deposee:'Déposée', en_conteneur:'En conteneur', recuperee:'Récupérée', annulee:'Annulée' };
+        const STATUT_COLORS = { commandee:'#fff4d6', deposee:'#e3eefd', en_conteneur:'#e3eefd', recuperee:'#dff5e1', annulee:'#fde2e2' };
+        const recent = commandes.slice(0, 5);
+        container.innerHTML = recent.map(c => {
+            const st = STATUTS[c.statut] || c.statut;
+            const bg = STATUT_COLORS[c.statut] || '#eee';
+            const prix = c.type_annonce === 'don' ? 'Gratuit' : parseFloat(c.prix).toFixed(2).replace('.', ',') + ' €';
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(18,3,9,0.08);">
+                <div>
+                    <a href="/annonces/${c.id_annonce}" style="font-weight:600;font-size:0.9rem;text-decoration:none;">${c.titre.substring(0,40)}${c.titre.length>40?'…':''}</a>
+                    <p style="font-family:'DM Mono',monospace;font-size:0.68rem;opacity:0.5;margin-top:2px;">#${c.id_commande} · ${new Date(c.date_commande).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--cherry);">${prix}</span>
+                    <span style="background:${bg};font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;padding:3px 8px;border:1px solid rgba(18,3,9,0.15);">${st}</span>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        container.innerHTML = '';
+    }
+}
+
+async function loadReservations() {
+    const container = document.getElementById('reservations-container');
+    try {
+        const resp = await apiFetch('/api/v1/utilisateurs/me/reservations');
+        if (!resp || !resp.ok) { container.innerHTML = ''; return; }
+        const items = await resp.json();
+        if (!items || items.length === 0) {
+            container.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;padding:12px 0;">Aucune réservation pour le moment</p>';
+            return;
+        }
+        const STATUTS = { en_attente: 'En attente', confirme: 'Confirmée', annule: 'Annulée' };
+        container.innerHTML = items.map(r => {
+            const d = new Date(r.date_debut).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+            const st = STATUTS[r.statut_paiement] || r.statut_paiement;
+            const prix = r.prix === 0 ? 'Gratuit' : parseFloat(r.prix).toFixed(2).replace('.', ',') + ' €';
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(18,3,9,0.08);">
+                <div>
+                    <a href="/formations/${r.id_catalogue_item}" style="font-weight:600;font-size:0.9rem;text-decoration:none;">${r.titre}</a>
+                    <p style="font-family:'DM Mono',monospace;font-size:0.68rem;opacity:0.5;margin-top:2px;">${r.categorie} · ${d}${r.lieu ? ' · ' + r.lieu : ''}</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--cherry);">${prix}</span>
+                    <span style="font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;padding:3px 8px;border:1px solid rgba(18,3,9,0.15);">${st}</span>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        container.innerHTML = '';
+    }
+}
+
 // Load on page ready
-document.addEventListener('DOMContentLoaded', loadProfile);
+document.addEventListener('DOMContentLoaded', () => { loadProfile(); loadCommandes(); loadReservations(); });
 </script>
 @endsection

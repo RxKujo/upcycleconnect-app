@@ -37,7 +37,7 @@ class ConteneurController extends Controller
         $data = $request->all();
         $data['capacite'] = (int) $data['capacite'];
 
-        $response = Http::withToken(session('admin_token'))->post($this->apiUrl, $data);
+        $response = Http::withToken(session('admin_token'))->asJson()->post($this->apiUrl, $data);
 
         if ($response->failed()) {
             return back()->with('error', 'Erreur lors de la création du conteneur.');
@@ -70,7 +70,7 @@ class ConteneurController extends Controller
     {
         $request->validate(['code_valeur' => 'required']);
 
-        $response = Http::withToken(session('admin_token'))->post("{$this->apiUrl}/scan", [
+        $response = Http::withToken(session('admin_token'))->asJson()->post("{$this->apiUrl}/scan", [
             'code_valeur' => $request->code_valeur
         ]);
 
@@ -98,7 +98,7 @@ class ConteneurController extends Controller
         $typeCode = $request->get('type_code', 'depot_particulier');
         $codeValeur = strtoupper(uniqid('UC-'));
 
-        $response = Http::withToken(session('admin_token'))->post("{$this->apiUrl}/codes-barres", [
+        $response = Http::withToken(session('admin_token'))->asJson()->post("{$this->apiUrl}/codes-barres", [
             'id_commande' => (int) $idCommande,
             'code_valeur' => $codeValeur,
             'type_code' => $typeCode,

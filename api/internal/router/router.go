@@ -8,14 +8,53 @@ import (
 	"strings"
 )
 
+// Constantes de chemins — source unique de vérité pour toutes les routes.
+const (
+	prefixAuth         = "/api/v1/auth"
+	prefixPublic       = "/api/v1/public"
+	prefixMe           = "/api/v1/utilisateurs/me"
+	prefixPlanning     = "/api/v1/utilisateurs/me/planning"
+	prefixAnnonces     = "/api/v1/annonces"
+	prefixEvenements   = "/api/v1/evenements"
+	prefixForum        = "/api/v1/forum"
+	prefixCommandes    = "/api/v1/commandes"
+	prefixStripe       = "/api/v1/stripe"
+	prefixDepot        = "/api/v1/depot"
+	prefixTutoriel     = "/api/v1/tutoriel"
+	prefixCatalogue    = "/api/v1/catalogue"
+	prefixUtilisateurs = "/api/v1/utilisateurs"
+
+	prefixSalarie       = "/api/v1/salarie"
+	prefixSalarieEv     = "/api/v1/salarie/evenements"
+	prefixSalarieArt    = "/api/v1/salarie/articles"
+	prefixSalarieSujets = "/api/v1/salarie/sujets"
+	prefixSalarieMsg    = "/api/v1/salarie/messages"
+	prefixSalarieMots   = "/api/v1/salarie/mots-bannis"
+
+	prefixAdmin           = "/api/v1/admin"
+	prefixAdminUsers      = "/api/v1/admin/utilisateurs"
+	prefixAdminCategories = "/api/v1/admin/categories"
+	prefixAdminEv         = "/api/v1/admin/evenements"
+	prefixAdminAnnonces   = "/api/v1/admin/annonces"
+	prefixAdminCommandes  = "/api/v1/admin/commandes"
+	prefixAdminConteneurs = "/api/v1/admin/conteneurs"
+	prefixAdminDepot      = "/api/v1/admin/depot/demandes"
+	prefixAdminPaliers    = "/api/v1/admin/paliers"
+	prefixAdminTutoriel   = "/api/v1/admin/tutoriel/etapes"
+
+	// Segments de suffixes réutilisés — évitent les littéraux répétés.
+	segStats     = "/stats"
+	segCatalogue = "/catalogue"
+	segSujets    = "/sujets"
+	segTickets   = "/tickets"
+)
+
 type Router struct {
 	mux *http.ServeMux
 }
 
 func New() *Router {
-	return &Router{
-		mux: http.NewServeMux(),
-	}
+	return &Router{mux: http.NewServeMux()}
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -28,57 +67,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 	method := req.Method
 
-	if match(path, "/api/v1/auth/register") && method == "POST" {
-		handlers.Register(w, req)
-		return
-	}
-	if match(path, "/api/v1/auth/login") && method == "POST" {
-		handlers.Login(w, req)
-		return
-	}
-
-	if match(path, "/api/v1/public/annonces") && method == "GET" {
-		handlers.GetPublicAnnonces(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/public/annonces"); len(parts) == 1 && method == "GET" {
-		handlers.GetPublicAnnonce(w, req, parts[0])
-		return
-	}
-	if match(path, "/api/v1/public/articles") && method == "GET" {
-		handlers.GetPublicArticles(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/public/articles"); len(parts) == 1 && method == "GET" {
-		handlers.GetPublicArticle(w, req, parts[0])
-		return
-	}
-	if match(path, "/api/v1/public/forum") && method == "GET" {
-		handlers.GetPublicForumSujets(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/public/forum"); len(parts) == 1 && method == "GET" {
-		handlers.GetPublicForumSujet(w, req, parts[0])
-		return
-	}
-	if match(path, "/api/v1/public/stats") && method == "GET" {
-		handlers.GetPublicStats(w, req)
-		return
-	}
-	if match(path, "/api/v1/public/catalogue") && method == "GET" {
-		handlers.GetCatalogueItems(w, req, "")
-		return
-	}
-	if parts := splitPath(path, "/api/v1/public/catalogue"); len(parts) == 1 && method == "GET" {
-		handlers.GetCatalogueItem(w, req, parts[0], "")
-		return
-	}
-	if match(path, "/api/v1/evenements/catalogue") && method == "GET" {
-		handlers.GetPublicEvenements(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/evenements"); len(parts) == 1 && method == "GET" {
-		handlers.GetPublicEvenement(w, req, parts[0])
+	if routePublic(w, req, path, method) {
 		return
 	}
 
@@ -87,201 +76,15 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if match(path, "/api/v1/utilisateurs/me") && method == "GET" {
-		handlers.GetMe(w, req, userId)
-		return
-	}
-	if match(path, "/api/v1/utilisateurs/me") && method == "PUT" {
-		handlers.UpdateMe(w, req, userId)
-		return
-	}
-	if match(path, "/api/v1/utilisateurs/me/score") && method == "GET" {
-		handlers.GetMyScore(w, req, userId)
-		return
-	}
-	if match(path, "/api/v1/utilisateurs/me/export-pdf") && method == "GET" {
-		handlers.ExportUserData(w, req, userId)
-		return
-	}
-	if match(path, "/api/v1/utilisateurs/me/notifications") && method == "PUT" {
-		handlers.UpdateNotifications(w, req, userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/utilisateurs/me"); len(parts) == 1 && parts[0] == "evenements-inscrits" && method == "GET" {
-		handlers.GetMesEvenementsInscrits(w, req, userId)
-		return
-	}
-	if match(path, "/api/v1/annonces") && method == "POST" {
-		handlers.CreateAnnonce(w, req, userId)
-		return
-	}
-	if match(path, "/api/v1/annonces/me") && method == "GET" {
-		handlers.GetMesAnnonces(w, req, userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/annonces"); len(parts) == 1 && method == "GET" {
-		handlers.GetAnnonceAuth(w, req, parts[0], userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/annonces"); len(parts) == 2 && parts[1] == "annuler" && method == "POST" {
-		handlers.CancelAnnonce(w, req, parts[0], userId)
-		return
-	}
-	if (role == "salarie" || role == "admin") && match(path, "/api/v1/evenements") && method == "POST" {
-		handlers.CreateEvenement(w, req, userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/evenements"); len(parts) == 2 && parts[1] == "inscrire" && method == "POST" {
-		handlers.InscrireEvenement(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/evenements"); len(parts) == 2 && parts[1] == "ticket" && method == "GET" {
-		handlers.GetTicketPDF(w, req, parts[0])
+	if routeAuth(w, req, path, method, userId, role) {
 		return
 	}
 
-	if match(path, "/api/v1/forum/sujets") && method == "POST" {
-		handlers.CreateForumSujet(w, req, userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/forum/sujets"); len(parts) == 2 && parts[1] == "messages" && method == "POST" {
-		handlers.CreateForumMessage(w, req, parts[0], userId)
+	if (role == "salarie" || role == "admin") && routeSalarie(w, req, path, method, userId, role) {
 		return
 	}
 
-	if match(path, "/api/v1/commandes/checkout") && method == "POST" {
-		handlers.CheckoutPanier(w, req, userId)
-		return
-	}
-	if match(path, "/api/v1/commandes/me") && method == "GET" {
-		handlers.GetMesCommandes(w, req, userId)
-		return
-	}
-
-	if match(path, "/api/v1/forum/signaler") && method == "POST" {
-		handlers.SignalerMessage(w, req, userId)
-		return
-	}
-
-	if (role == "salarie" || role == "admin") {
-		if match(path, "/api/v1/salarie/stats") && method == "GET" {
-			handlers.GetSalarieStats(w, req, userId)
-			return
-		}
-		if match(path, "/api/v1/salarie/templates") && method == "GET" {
-			handlers.GetSalarieTemplates(w, req)
-			return
-		}
-		if match(path, "/api/v1/salarie/evenements") && method == "GET" {
-			handlers.GetSalarieEvenements(w, req, userId)
-			return
-		}
-		if match(path, "/api/v1/salarie/evenements") && method == "POST" {
-			handlers.CreateSalarieEvenement(w, req, userId)
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/evenements"); len(parts) == 1 && method == "GET" {
-			handlers.GetSalarieEvenement(w, req, parts[0], userId, role)
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/evenements"); len(parts) == 1 && method == "PUT" {
-			handlers.UpdateSalarieEvenement(w, req, parts[0], userId, role)
-			return
-		}
-
-		if match(path, "/api/v1/salarie/articles") && method == "GET" {
-			handlers.GetArticles(w, req)
-			return
-		}
-		if match(path, "/api/v1/salarie/articles") && method == "POST" {
-			handlers.CreateArticle(w, req, userId)
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/articles"); len(parts) == 1 && method == "GET" {
-			handlers.GetArticle(w, req, parts[0])
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/articles"); len(parts) == 1 && method == "PUT" {
-			handlers.UpdateArticle(w, req, parts[0], userId, role)
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/articles"); len(parts) == 1 && method == "DELETE" {
-			handlers.DeleteArticle(w, req, parts[0], userId, role)
-			return
-		}
-
-		if match(path, "/api/v1/salarie/signalements") && method == "GET" {
-			handlers.GetSignalements(w, req)
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/messages"); len(parts) == 2 && parts[1] == "masquer" && method == "PUT" {
-			handlers.MasquerMessage(w, req, parts[0])
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/messages"); len(parts) == 2 && parts[1] == "restaurer" && method == "PUT" {
-			handlers.RestaurerMessage(w, req, parts[0])
-			return
-		}
-		if match(path, "/api/v1/salarie/sujets") && method == "GET" {
-			handlers.GetSujetsModeration(w, req)
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/sujets"); len(parts) == 2 && parts[1] == "lock" && method == "PUT" {
-			handlers.LockSujet(w, req, parts[0])
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/sujets"); len(parts) == 2 && parts[1] == "unlock" && method == "PUT" {
-			handlers.UnlockSujet(w, req, parts[0])
-			return
-		}
-		if match(path, "/api/v1/salarie/mots-bannis") && method == "GET" {
-			handlers.GetMotsBannis(w, req)
-			return
-		}
-		if match(path, "/api/v1/salarie/mots-bannis") && method == "POST" {
-			handlers.AddMotBanni(w, req, userId)
-			return
-		}
-		if parts := splitPath(path, "/api/v1/salarie/mots-bannis"); len(parts) == 1 && method == "DELETE" {
-			handlers.DeleteMotBanni(w, req, parts[0])
-			return
-		}
-	}
-
-	if match(path, "/api/catalogue") && method == "GET" {
-		handlers.GetCatalogueItems(w, req, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "GET" {
-		handlers.GetCatalogueItem(w, req, parts[0], role)
-		return
-	}
-	if match(path, "/api/catalogue") && method == "POST" {
-		handlers.CreateCatalogueItem(w, req, userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "PUT" {
-		handlers.UpdateCatalogueItem(w, req, parts[0], userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 1 && method == "DELETE" {
-		handlers.DeleteCatalogueItem(w, req, parts[0], userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "valider" && method == "POST" {
-		handlers.ValiderCatalogueItem(w, req, parts[0], userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "reserver" && method == "POST" {
-		handlers.ReserverCatalogueItem(w, req, parts[0], userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/catalogue"); len(parts) == 2 && parts[1] == "reservations" && method == "GET" {
-		handlers.GetCatalogueReservations(w, req, parts[0], userId, role)
-		return
-	}
-	if parts := splitPath(path, "/api/utilisateurs"); len(parts) == 2 && parts[1] == "planning" && method == "GET" {
-		handlers.GetUtilisateurPlanning(w, req, parts[0], userId, role)
+	if routeCatalogue(w, req, path, method, userId, role) {
 		return
 	}
 
@@ -292,153 +95,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if match(path, "/api/v1/admin/utilisateurs") && method == "GET" {
-		handlers.GetAllUtilisateurs(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 1 && method == "GET" {
-		handlers.GetUtilisateur(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 1 && method == "DELETE" {
-		handlers.DeleteUtilisateur(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "ban" && method == "PUT" {
-		handlers.BanUtilisateur(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "unban" && method == "PUT" {
-		handlers.UnbanUtilisateur(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "role" && method == "PUT" {
-		handlers.UpdateUserRole(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "abonnement" && method == "GET" {
-		handlers.GetUserSouscription(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "abonnement" && method == "POST" {
-		handlers.AssignSouscription(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/utilisateurs"); len(parts) == 2 && parts[1] == "abonnement" && method == "DELETE" {
-		handlers.RevokeSouscription(w, req, parts[0])
-		return
-	}
-	if match(path, "/api/v1/admin/abonnements") && method == "GET" {
-		handlers.GetAbonnements(w, req)
-		return
-	}
-
-	if match(path, "/api/v1/admin/categories") && method == "GET" {
-		handlers.GetCategories(w, req)
-		return
-	}
-	if match(path, "/api/v1/admin/categories") && method == "POST" {
-		handlers.CreateCategorie(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/categories"); len(parts) == 1 && method == "PUT" {
-		handlers.UpdateCategorie(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/categories"); len(parts) == 1 && method == "DELETE" {
-		handlers.DeleteCategorie(w, req, parts[0])
-		return
-	}
-
-	if match(path, "/api/v1/admin/evenements") && method == "GET" {
-		handlers.GetEvenements(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 1 && method == "GET" {
-		handlers.GetEvenement(w, req, parts[0])
-		return
-	}
-	if match(path, "/api/v1/admin/evenements") && method == "POST" {
-		handlers.CreateEvenement(w, req, userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 1 && method == "PUT" {
-		handlers.UpdateEvenement(w, req, parts[0], userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 1 && method == "DELETE" {
-		handlers.DeleteEvenement(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 2 && parts[1] == "valider" && method == "PUT" {
-		handlers.ValiderEvenement(w, req, parts[0], userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 2 && parts[1] == "refuser" && method == "PUT" {
-		handlers.RefuserEvenement(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/evenements"); len(parts) == 2 && parts[1] == "attente" && method == "PUT" {
-		handlers.AttenteEvenement(w, req, parts[0])
-		return
-	}
-
-	if match(path, "/api/v1/admin/annonces") && method == "GET" {
-		handlers.GetAnnonces(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 1 && method == "GET" {
-		handlers.GetAnnonce(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 2 && parts[1] == "valider" && method == "PUT" {
-		handlers.ValiderAnnonce(w, req, parts[0], userId)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 2 && parts[1] == "refuser" && method == "PUT" {
-		handlers.RefuserAnnonce(w, req, parts[0])
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/annonces"); len(parts) == 2 && parts[1] == "attente" && method == "PUT" {
-		handlers.AttenteAnnonce(w, req, parts[0])
-		return
-	}
-
-	if match(path, "/api/v1/admin/conteneurs") && method == "GET" {
-		handlers.GetAllConteneurs(w, req)
-		return
-	}
-	if match(path, "/api/v1/admin/conteneurs") && method == "POST" {
-		handlers.CreateConteneur(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/conteneurs"); len(parts) == 1 && method == "GET" {
-		handlers.GetConteneurDetails(w, req, parts[0])
-		return
-	}
-	if match(path, "/api/v1/admin/conteneurs/scan") && method == "POST" {
-		handlers.ScanBarcodeAndUpdateCommande(w, req)
-		return
-	}
-	if match(path, "/api/v1/admin/conteneurs/codes-barres") && method == "POST" {
-		handlers.CreateCodeBarre(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/conteneurs/tickets"); len(parts) == 2 && parts[1] == "resolve" && method == "PUT" {
-		handlers.ResolveTicket(w, req, parts[0])
-		return
-	}
-
-	if match(path, "/api/v1/admin/paliers") && method == "GET" {
-		handlers.GetPaliersAdmin(w, req)
-		return
-	}
-	if parts := splitPath(path, "/api/v1/admin/paliers"); len(parts) == 1 && method == "PUT" {
-		handlers.UpdatePalier(w, req, parts[0])
-		return
-	}
-	if match(path, "/api/v1/admin/scores/recompute") && method == "POST" {
-		handlers.RecomputeScores(w, req)
+	if routeAdmin(w, req, path, method, userId) {
 		return
 	}
 
@@ -447,8 +104,568 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"erreur": "route non trouvée"})
 }
 
+// ─── Routes publiques ─────────────────────────────────────────────────────────
+
+func routePublic(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	if routePublicAuth(w, req, path, method) {
+		return true
+	}
+	if routePublicResources(w, req, path, method) {
+		return true
+	}
+	if routePublicEvenements(w, req, path, method) {
+		return true
+	}
+	switch {
+	case match(path, prefixStripe+"/webhook") && method == "POST":
+		handlers.StripeWebhook(w, req)
+	case match(path, prefixStripe+"/config") && method == "GET":
+		handlers.GetStripeConfig(w, req)
+	case match(path, prefixTutoriel+"/etapes") && method == "GET":
+		handlers.GetTutorielEtapes(w, req)
+	default:
+		return false
+	}
+	return true
+}
+
+func routePublicAuth(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	switch {
+	case match(path, prefixAuth+"/register") && method == "POST":
+		handlers.Register(w, req)
+	case match(path, prefixAuth+"/login") && method == "POST":
+		handlers.Login(w, req)
+	case match(path, prefixAuth+"/forgot-password") && method == "POST":
+		handlers.ForgotPassword(w, req)
+	case match(path, prefixAuth+"/reset-password") && method == "POST":
+		handlers.ResetPassword(w, req)
+	default:
+		return false
+	}
+	return true
+}
+
+func routePublicResources(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	// Précompute les splits coûteux une fois.
+	pAnn := splitPath(path, prefixPublic+"/annonces")
+	pArt := splitPath(path, prefixPublic+"/articles")
+	pFor := splitPath(path, prefixPublic+"/forum")
+	pCat := splitPath(path, prefixPublic+segCatalogue)
+
+	switch {
+	case match(path, prefixPublic+"/annonces") && method == "GET":
+		handlers.GetPublicAnnonces(w, req)
+	case len(pAnn) == 1 && method == "GET":
+		handlers.GetPublicAnnonce(w, req, pAnn[0])
+
+	case match(path, prefixPublic+"/articles") && method == "GET":
+		handlers.GetPublicArticles(w, req)
+	case len(pArt) == 1 && method == "GET":
+		handlers.GetPublicArticle(w, req, pArt[0])
+
+	case match(path, prefixPublic+"/forum") && method == "GET":
+		handlers.GetPublicForumSujets(w, req)
+	case len(pFor) == 1 && method == "GET":
+		handlers.GetPublicForumSujet(w, req, pFor[0])
+
+	case match(path, prefixPublic+"/abonnements") && method == "GET":
+		handlers.GetAbonnementsPublic(w, req)
+	case match(path, prefixPublic+segStats) && method == "GET":
+		handlers.GetPublicStats(w, req)
+	case match(path, prefixPublic+segCatalogue) && method == "GET":
+		handlers.GetCatalogueItems(w, req, "")
+	case len(pCat) == 1 && method == "GET":
+		handlers.GetCatalogueItem(w, req, pCat[0], "")
+	case match(path, prefixPublic+"/conteneurs") && method == "GET":
+		handlers.GetPublicConteneursAvecGeo(w, req)
+	case match(path, prefixPublic+"/categories") && method == "GET":
+		handlers.GetCategories(w, req)
+	case match(path, prefixPublic+"/evenements") && method == "GET":
+		handlers.GetPublicEvenements(w, req)
+
+	default:
+		return false
+	}
+	return true
+}
+
+func routePublicEvenements(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	pEv := splitPath(path, prefixEvenements)
+	switch {
+	case match(path, prefixEvenements+segCatalogue) && method == "GET":
+		handlers.GetPublicEvenements(w, req)
+	case len(pEv) == 1 && method == "GET":
+		handlers.GetPublicEvenement(w, req, pEv[0])
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes authentifiées (tous rôles) ───────────────────────────────────────
+
+func routeAuth(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	return routeAuthMe(w, req, path, method, userId) ||
+		routeAuthAnnonces(w, req, path, method, userId, role) ||
+		routeAuthCommandes(w, req, path, method, userId) ||
+		routeAuthStripe(w, req, path, method, userId) ||
+		routeAuthForum(w, req, path, method, userId) ||
+		routeAuthEvenements(w, req, path, method, userId, role) ||
+		routeAuthTutoriel(w, req, path, method, userId) ||
+		routeAuthDepot(w, req, path, method, userId)
+}
+
+func routeAuthMe(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	pPlan := splitPath(path, prefixPlanning)
+	switch {
+	case match(path, prefixMe) && method == "GET":
+		handlers.GetMe(w, req, userId)
+	case match(path, prefixMe) && method == "PUT":
+		handlers.UpdateMe(w, req, userId)
+	case match(path, prefixMe) && method == "DELETE":
+		handlers.DeleteMe(w, req, userId)
+	case match(path, prefixMe+"/score") && method == "GET":
+		handlers.GetMyScore(w, req, userId)
+	case match(path, prefixMe+"/export-pdf") && method == "GET":
+		handlers.ExportUserData(w, req, userId)
+	case match(path, prefixMe+"/notifications") && method == "PUT":
+		handlers.UpdateNotifications(w, req, userId)
+	case match(path, prefixMe+"/reservations") && method == "GET":
+		handlers.GetMesReservations(w, req, userId)
+	case parts(path, prefixMe) == "evenements-inscrits" && method == "GET":
+		handlers.GetMesEvenementsInscrits(w, req, userId)
+	case match(path, prefixPlanning) && method == "GET":
+		handlers.GetMonPlanning(w, req, userId)
+	case match(path, prefixPlanning) && method == "POST":
+		handlers.AddPlanningManuel(w, req, userId)
+	case len(pPlan) == 1 && method == "DELETE":
+		handlers.DeletePlanningItem(w, req, pPlan[0], userId)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAuthAnnonces(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	p := splitPath(path, prefixAnnonces)
+	switch {
+	case match(path, prefixAnnonces) && method == "POST":
+		handlers.CreateAnnonce(w, req, userId)
+	case match(path, prefixAnnonces+"/me") && method == "GET":
+		handlers.GetMesAnnonces(w, req, userId)
+	case len(p) == 1 && method == "GET":
+		handlers.GetAnnonceAuth(w, req, p[0], userId, role)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateAnnonce(w, req, p[0], userId)
+	case len(p) == 2 && p[1] == "annuler" && method == "POST":
+		handlers.CancelAnnonce(w, req, p[0], userId)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAuthCommandes(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	switch {
+	case match(path, prefixCommandes+"/checkout") && method == "POST":
+		handlers.CheckoutPanier(w, req, userId)
+	case match(path, prefixCommandes+"/me") && method == "GET":
+		handlers.GetMesCommandes(w, req, userId)
+	case match(path, "/api/v1/ventes/me") && method == "GET":
+		handlers.GetMesVentes(w, req, userId)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAuthStripe(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	switch {
+	case match(path, prefixStripe+"/abonnement/checkout") && method == "POST":
+		handlers.StripeCheckoutAbonnement(w, req, userId)
+	case match(path, prefixStripe+"/abonnement/portail") && method == "POST":
+		handlers.StripePortal(w, req, userId)
+	case match(path, prefixStripe+"/facturation") && method == "GET":
+		handlers.GetMaFacturation(w, req, userId)
+	case match(path, prefixStripe+"/payment-intent/commande") && method == "POST":
+		handlers.StripePaymentIntentCommande(w, req, userId)
+	case match(path, prefixStripe+"/payment-intent/evenement") && method == "POST":
+		handlers.StripePaymentIntentEvenement(w, req, userId)
+	case match(path, prefixStripe+"/payment-intent/panier") && method == "POST":
+		handlers.StripePaymentIntentPanier(w, req, userId)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAuthForum(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	pSuj := splitPath(path, prefixForum+segSujets)
+	switch {
+	case match(path, prefixForum+segSujets) && method == "POST":
+		handlers.CreateForumSujet(w, req, userId)
+	case len(pSuj) == 2 && pSuj[1] == "messages" && method == "POST":
+		handlers.CreateForumMessage(w, req, pSuj[0], userId)
+	case match(path, prefixForum+"/signaler") && method == "POST":
+		handlers.SignalerMessage(w, req, userId)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAuthEvenements(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	p := splitPath(path, prefixEvenements)
+	switch {
+	case (role == "salarie" || role == "admin") && match(path, prefixEvenements) && method == "POST":
+		handlers.CreateEvenement(w, req, userId)
+	case len(p) == 2 && p[1] == "inscrire" && method == "POST":
+		handlers.InscrireEvenement(w, req, p[0])
+	case len(p) == 2 && p[1] == "ticket" && method == "GET":
+		handlers.GetTicketPDF(w, req, p[0])
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAuthTutoriel(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	switch {
+	case match(path, prefixTutoriel+"/etapes") && method == "GET":
+		handlers.GetTutorielEtapes(w, req)
+	case match(path, prefixTutoriel+"/statut") && method == "GET":
+		handlers.GetTutorielStatut(w, req, userId)
+	case match(path, prefixTutoriel+"/termine") && method == "POST":
+		handlers.MarquerTutorielTermine(w, req, userId)
+	case match(path, prefixTutoriel+"/passer") && method == "POST":
+		handlers.PasserTutoriel(w, req, userId)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAuthDepot(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	switch {
+	case match(path, prefixDepot+"/demande") && method == "POST":
+		handlers.CreateDemandeDepot(w, req, userId)
+	case match(path, prefixDepot+"/demandes/me") && method == "GET":
+		handlers.GetMesDemandesDepot(w, req, userId)
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes salarié ───────────────────────────────────────────────────────────
+
+func routeSalarie(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	return routeSalarieGeneral(w, req, path, method, userId) ||
+		routeSalarieEvenements(w, req, path, method, userId, role) ||
+		routeSalarieArticles(w, req, path, method, userId, role) ||
+		routeSalarieModeration(w, req, path, method, userId)
+}
+
+func routeSalarieGeneral(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	switch {
+	case match(path, prefixSalarie+segStats) && method == "GET":
+		handlers.GetSalarieStats(w, req, userId)
+	case match(path, prefixSalarie+"/templates") && method == "GET":
+		handlers.GetSalarieTemplates(w, req)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeSalarieEvenements(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	p := splitPath(path, prefixSalarieEv)
+	switch {
+	case match(path, prefixSalarieEv) && method == "GET":
+		handlers.GetSalarieEvenements(w, req, userId)
+	case match(path, prefixSalarieEv) && method == "POST":
+		handlers.CreateSalarieEvenement(w, req, userId)
+	case len(p) == 1 && method == "GET":
+		handlers.GetSalarieEvenement(w, req, p[0], userId, role)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateSalarieEvenement(w, req, p[0], userId, role)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeSalarieArticles(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	p := splitPath(path, prefixSalarieArt)
+	switch {
+	case match(path, prefixSalarieArt) && method == "GET":
+		handlers.GetArticles(w, req)
+	case match(path, prefixSalarieArt) && method == "POST":
+		handlers.CreateArticle(w, req, userId)
+	case len(p) == 1 && method == "GET":
+		handlers.GetArticle(w, req, p[0])
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateArticle(w, req, p[0], userId, role)
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteArticle(w, req, p[0], userId, role)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeSalarieModeration(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	pMsg  := splitPath(path, prefixSalarieMsg)
+	pSuj  := splitPath(path, prefixSalarieSujets)
+	pMots := splitPath(path, prefixSalarieMots)
+	switch {
+	case match(path, prefixSalarie+"/signalements") && method == "GET":
+		handlers.GetSignalements(w, req)
+
+	case len(pMsg) == 2 && pMsg[1] == "masquer" && method == "PUT":
+		handlers.MasquerMessage(w, req, pMsg[0])
+	case len(pMsg) == 2 && pMsg[1] == "restaurer" && method == "PUT":
+		handlers.RestaurerMessage(w, req, pMsg[0])
+
+	case match(path, prefixSalarieSujets) && method == "GET":
+		handlers.GetSujetsModeration(w, req)
+	case len(pSuj) == 2 && pSuj[1] == "lock" && method == "PUT":
+		handlers.LockSujet(w, req, pSuj[0])
+	case len(pSuj) == 2 && pSuj[1] == "unlock" && method == "PUT":
+		handlers.UnlockSujet(w, req, pSuj[0])
+
+	case match(path, prefixSalarieMots) && method == "GET":
+		handlers.GetMotsBannis(w, req)
+	case match(path, prefixSalarieMots) && method == "POST":
+		handlers.AddMotBanni(w, req, userId)
+	case len(pMots) == 1 && method == "DELETE":
+		handlers.DeleteMotBanni(w, req, pMots[0])
+
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes catalogue (auth) ─────────────────────────────────────────────────
+
+func routeCatalogue(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	p    := splitPath(path, prefixCatalogue)
+	pUsr := splitPath(path, prefixUtilisateurs)
+	switch {
+	case match(path, prefixCatalogue) && method == "GET":
+		handlers.GetCatalogueItems(w, req, role)
+	case len(p) == 1 && method == "GET":
+		handlers.GetCatalogueItem(w, req, p[0], role)
+	case match(path, prefixCatalogue) && method == "POST":
+		handlers.CreateCatalogueItem(w, req, userId, role)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateCatalogueItem(w, req, p[0], userId, role)
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteCatalogueItem(w, req, p[0], userId, role)
+	case len(p) == 2 && p[1] == "valider" && method == "POST":
+		handlers.ValiderCatalogueItem(w, req, p[0], userId, role)
+	case len(p) == 2 && p[1] == "reserver" && method == "POST":
+		handlers.ReserverCatalogueItem(w, req, p[0], userId, role)
+	case len(p) == 2 && p[1] == "reservations" && method == "GET":
+		handlers.GetCatalogueReservations(w, req, p[0], userId, role)
+	case len(pUsr) == 2 && pUsr[1] == "planning" && method == "GET":
+		handlers.GetUtilisateurPlanning(w, req, pUsr[0], userId, role)
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes admin ─────────────────────────────────────────────────────────────
+
+func routeAdmin(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	return routeAdminUsers(w, req, path, method) ||
+		routeAdminCategories(w, req, path, method) ||
+		routeAdminEvenements(w, req, path, method, userId) ||
+		routeAdminAnnonces(w, req, path, method, userId) ||
+		routeAdminOrders(w, req, path, method) ||
+		routeAdminInfra(w, req, path, method) ||
+		routeAdminScoring(w, req, path, method)
+}
+
+func routeAdminUsers(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixAdminUsers)
+	switch {
+	case match(path, prefixAdmin+segStats) && method == "GET":
+		handlers.GetAdminStats(w, req)
+	case match(path, prefixAdminUsers) && method == "GET":
+		handlers.GetAllUtilisateurs(w, req)
+	case len(p) == 1 && method == "GET":
+		handlers.GetUtilisateur(w, req, p[0])
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteUtilisateur(w, req, p[0])
+	case len(p) == 2 && p[1] == "ban" && method == "PUT":
+		handlers.BanUtilisateur(w, req, p[0])
+	case len(p) == 2 && p[1] == "unban" && method == "PUT":
+		handlers.UnbanUtilisateur(w, req, p[0])
+	case len(p) == 2 && p[1] == "role" && method == "PUT":
+		handlers.UpdateUserRole(w, req, p[0])
+	case len(p) == 2 && p[1] == "abonnement" && method == "GET":
+		handlers.GetUserSouscription(w, req, p[0])
+	case len(p) == 2 && p[1] == "abonnement" && method == "POST":
+		handlers.AssignSouscription(w, req, p[0])
+	case len(p) == 2 && p[1] == "abonnement" && method == "DELETE":
+		handlers.RevokeSouscription(w, req, p[0])
+	case match(path, prefixAdmin+"/abonnements") && method == "GET":
+		handlers.GetAbonnements(w, req)
+	case match(path, prefixAdmin+"/stripe/sync-plans") && method == "POST":
+		handlers.AdminSyncStripePlans(w, req)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminCategories(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixAdminCategories)
+	switch {
+	case match(path, prefixAdminCategories) && method == "GET":
+		handlers.GetCategories(w, req)
+	case match(path, prefixAdminCategories) && method == "POST":
+		handlers.CreateCategorie(w, req)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateCategorie(w, req, p[0])
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteCategorie(w, req, p[0])
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminEvenements(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	p := splitPath(path, prefixAdminEv)
+	switch {
+	case match(path, prefixAdminEv) && method == "GET":
+		handlers.GetEvenements(w, req)
+	case match(path, prefixAdminEv) && method == "POST":
+		handlers.CreateEvenement(w, req, userId)
+	case len(p) == 1 && method == "GET":
+		handlers.GetEvenement(w, req, p[0])
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateEvenement(w, req, p[0], userId)
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteEvenement(w, req, p[0])
+	case len(p) == 2 && p[1] == "inscrits" && method == "GET":
+		handlers.GetEvenementInscrits(w, req, p[0])
+	case len(p) == 2 && p[1] == "valider" && method == "PUT":
+		handlers.ValiderEvenement(w, req, p[0], userId)
+	case len(p) == 2 && p[1] == "refuser" && method == "PUT":
+		handlers.RefuserEvenement(w, req, p[0])
+	case len(p) == 2 && p[1] == "attente" && method == "PUT":
+		handlers.AttenteEvenement(w, req, p[0])
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminAnnonces(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	p := splitPath(path, prefixAdminAnnonces)
+	switch {
+	case match(path, prefixAdminAnnonces) && method == "GET":
+		handlers.GetAnnonces(w, req)
+	case len(p) == 1 && method == "GET":
+		handlers.GetAnnonce(w, req, p[0])
+	case len(p) == 2 && p[1] == "valider" && method == "PUT":
+		handlers.ValiderAnnonce(w, req, p[0], userId)
+	case len(p) == 2 && p[1] == "refuser" && method == "PUT":
+		handlers.RefuserAnnonce(w, req, p[0])
+	case len(p) == 2 && p[1] == "attente" && method == "PUT":
+		handlers.AttenteAnnonce(w, req, p[0])
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminOrders(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixAdminCommandes)
+	switch {
+	case match(path, prefixAdminCommandes) && method == "GET":
+		handlers.GetCommandes(w, req)
+	case len(p) == 1 && method == "GET":
+		handlers.GetCommande(w, req, p[0])
+	case len(p) == 2 && p[1] == "statut" && method == "PUT":
+		handlers.UpdateCommandeStatut(w, req, p[0])
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminInfra(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	pCont   := splitPath(path, prefixAdminConteneurs)
+	pTick   := splitPath(path, prefixAdminConteneurs+segTickets)
+	pDep    := splitPath(path, prefixAdminDepot)
+	switch {
+	case match(path, prefixAdminConteneurs) && method == "GET":
+		handlers.GetAllConteneurs(w, req)
+	case match(path, prefixAdminConteneurs) && method == "POST":
+		handlers.CreateConteneur(w, req)
+	case match(path, prefixAdminConteneurs+"/scan") && method == "POST":
+		handlers.ScanBarcodeAndUpdateCommande(w, req)
+	case match(path, prefixAdminConteneurs+"/codes-barres") && method == "POST":
+		handlers.CreateCodeBarre(w, req)
+	case len(pCont) == 1 && method == "GET":
+		handlers.GetConteneurDetails(w, req, pCont[0])
+	case len(pTick) == 2 && pTick[1] == "resolve" && method == "PUT":
+		handlers.ResolveTicket(w, req, pTick[0])
+
+	case match(path, prefixAdminDepot) && method == "GET":
+		handlers.AdminGetDemandesDepot(w, req)
+	case len(pDep) == 2 && pDep[1] == "valider" && method == "PUT":
+		handlers.AdminValiderDemandeDepot(w, req, pDep[0])
+	case len(pDep) == 2 && pDep[1] == "refuser" && method == "PUT":
+		handlers.AdminRefuserDemandeDepot(w, req, pDep[0])
+
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminScoring(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	pPal := splitPath(path, prefixAdminPaliers)
+	pTut := splitPath(path, prefixAdminTutoriel)
+	switch {
+	case match(path, prefixAdminPaliers) && method == "GET":
+		handlers.GetPaliersAdmin(w, req)
+	case len(pPal) == 1 && method == "PUT":
+		handlers.UpdatePalier(w, req, pPal[0])
+	case match(path, prefixAdmin+"/scores/recompute") && method == "POST":
+		handlers.RecomputeScores(w, req)
+
+	case match(path, prefixAdminTutoriel) && method == "GET":
+		handlers.AdminGetTutorielEtapes(w, req)
+	case len(pTut) == 1 && method == "PUT":
+		handlers.AdminUpdateTutorielEtape(w, req, pTut[0])
+
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Helpers de routage ───────────────────────────────────────────────────────
+
 func match(path, pattern string) bool {
 	return path == pattern
+}
+
+// parts retourne le premier segment après le prefix, ou "" si absent/multiple.
+func parts(path, prefix string) string {
+	p := splitPath(path, prefix)
+	if len(p) == 1 {
+		return p[0]
+	}
+	return ""
 }
 
 func splitPath(path, prefix string) []string {

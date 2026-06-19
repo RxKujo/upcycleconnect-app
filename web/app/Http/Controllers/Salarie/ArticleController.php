@@ -26,7 +26,7 @@ class ArticleController extends Controller
     public function store(Request $request)
     {
         $data = $this->validatePayload($request);
-        $r = Http::withToken($this->token())->post($this->api() . '/api/v1/salarie/articles', $data);
+        $r = Http::withToken($this->token())->asJson()->post($this->api() . '/api/v1/salarie/articles', $data);
         if (!$r->successful()) return back()->withInput()->with('error', $r->json('erreur') ?? 'Erreur');
         return redirect()->route('salarie.articles.index')->with('success', 'Article créé.');
     }
@@ -41,7 +41,7 @@ class ArticleController extends Controller
     public function update(Request $request, $id)
     {
         $data = $this->validatePayload($request);
-        $r = Http::withToken($this->token())->put($this->api() . '/api/v1/salarie/articles/' . $id, $data);
+        $r = Http::withToken($this->token())->asJson()->put($this->api() . '/api/v1/salarie/articles/' . $id, $data);
         if (!$r->successful()) return back()->withInput()->with('error', $r->json('erreur') ?? 'Erreur');
         return redirect()->route('salarie.articles.index')->with('success', 'Article mis à jour.');
     }

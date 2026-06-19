@@ -10,7 +10,7 @@
     <p class="page-subtitle">Échangez avec la communauté, posez vos questions et partagez vos retours d'expérience</p>
 
     <div style="margin-bottom:32px;" id="newSujetSection">
-        <a href="{{ route('particulier.login') }}?intent=forum" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour poster" id="loginToPost" style="display:none;">
+        <a href="{{ route('particulier.login') }}?return=%2Fforum" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour poster" id="loginToPost" style="display:none;">
             + Nouveau sujet
         </a>
         <button type="button" class="btn btn-primary" onclick="document.getElementById('newSujetForm').style.display='block'; this.style.display='none';" id="openNewSujetForm" style="display:none;">
@@ -54,16 +54,15 @@
         var err = document.getElementById('newSujetError');
         err.style.display = 'none';
         var token = localStorage.getItem('auth_token');
-        if (!token) { window.location.href = '/login?intent=forum'; return false; }
+        if (!token) { window.location.href = '/login?return=%2Fforum'; return false; }
         var data = {
             titre: form.titre.value.trim(),
             categorie: form.categorie.value.trim(),
             contenu: form.contenu.value.trim()
         };
         try {
-            var res = await fetch('http://localhost:8888/api/v1/forum/sujets', {
+            var res = await apiFetch('/api/v1/forum/sujets', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                 body: JSON.stringify(data)
             });
             var body = await res.json();

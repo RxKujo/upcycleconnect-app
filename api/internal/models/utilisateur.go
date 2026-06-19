@@ -18,7 +18,8 @@ type Utilisateur struct {
 	NomEntreprise   *string   `json:"nom_entreprise,omitempty"`
 	NumeroSiret     *string   `json:"numero_siret,omitempty"`
 	SiretVerifie    *bool     `json:"siret_verifie,omitempty"`
-	NotifPushActive *bool     `json:"notif_push_active,omitempty"`
+	NotifPushActive  *bool     `json:"notif_push_active,omitempty"`
+	NotifEmailActive *bool     `json:"notif_email_active,omitempty"`
 	UpcyclingScore  int       `json:"upcycling_score"`
 	EstCertifie     bool      `json:"est_certifie"`
 	NiveauScore     string    `json:"niveau_score,omitempty"`

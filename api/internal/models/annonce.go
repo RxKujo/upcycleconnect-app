@@ -64,3 +64,10 @@ type CreateObjetRequest struct {
 type CancelAnnonceRequest struct {
 	MotifRetrait string `json:"motif_retrait"`
 }
+
+type UpdateAnnonceRequest struct {
+	Titre       string   `json:"titre"`
+	Description string   `json:"description"`
+	Prix        *float64 `json:"prix,omitempty"`
+	ModeRemise  string   `json:"mode_remise"`
+}

@@ -97,23 +97,43 @@
                 <span class="font-mono" style="font-size: 0.75rem; color: var(--cherry); font-weight: bold; margin-top: 8px; display: block;">Panel Administrateur</span>
             </div>
             <nav class="sidebar-nav">
+                <a href="{{ route('admin.dashboard') }}" class="{{ request()->is('admin') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tableau de bord
+                </a>
                 <a href="{{ route('admin.utilisateurs.index') }}" class="{{ request()->is('admin/utilisateurs*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Utilisateurs
                 </a>
                 <a href="{{ route('admin.categories.index') }}" class="{{ request()->is('admin/categories*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories
                 </a>
-                <a href="{{ route('admin.annonces.index') }}" class="{{ request()->is('admin/annonces*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Annonces
+                <a href="{{ route('admin.annonces.index') }}" class="{{ request()->is('admin/annonces*') ? 'active' : '' }}" style="justify-content:space-between;">
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Annonces</span>
+                    <span id="badge-annonces" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
                 </a>
-                <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements
+                <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}" style="justify-content:space-between;">
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements</span>
+                    <span id="badge-evenements" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
                 </a>
                 <a href="{{ route('admin.commandes.index') }}" class="{{ request()->is('admin/commandes*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Commandes
                 </a>
                 <a href="{{ route('admin.conteneurs.index') }}" class="{{ request()->is('admin/conteneurs*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Conteneurs
+                </a>
+                <a href="{{ route('admin.abonnements.index') }}" class="{{ request()->is('admin/abonnements*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Abonnements
+                </a>
+                <a href="{{ route('admin.catalogue.index') }}" class="{{ request()->is('admin/catalogue*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catalogue
+                </a>
+                <a href="{{ route('admin.scores.index') }}" class="{{ request()->is('admin/scores*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Upcycling Score
+                </a>
+                <a href="{{ route('admin.depot.index') }}" class="{{ request()->is('admin/depot*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Dépôts conteneur
+                </a>
+                <a href="{{ route('admin.tutoriel.index') }}" class="{{ request()->is('admin/tutoriel*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tutoriel
                 </a>
             </nav>
             <div class="sidebar-footer">
@@ -143,5 +163,25 @@
             </div>
         </main>
     </div>
+    @stack('scripts')
+<script>
+(async function() {
+    try {
+        const r = await fetch('{{ config("services.api.url") }}/api/v1/admin/stats', {
+            headers: { 'Authorization': 'Bearer {{ session("admin_token") }}' }
+        });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d.annonces_en_attente > 0) {
+            const b = document.getElementById('badge-annonces');
+            if (b) { b.textContent = d.annonces_en_attente; b.style.display = 'inline'; }
+        }
+        if (d.evenements_en_attente > 0) {
+            const b = document.getElementById('badge-evenements');
+            if (b) { b.textContent = d.evenements_en_attente; b.style.display = 'inline'; }
+        }
+    } catch(e) {}
+})();
+</script>
 </body>
 </html>

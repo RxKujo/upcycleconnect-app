@@ -401,7 +401,7 @@
 
             <div id="alertContainer"></div>
 
-            <form id="registerForm" method="POST" action="http://localhost:8888/api/v1/auth/register" novalidate>
+            <form id="registerForm" method="POST" action="{{ config('services.api.url') }}/api/v1/auth/register" novalidate>
                 <input type="hidden" name="role" value="particulier">
                 <div class="form-row">
                     <div class="form-group">

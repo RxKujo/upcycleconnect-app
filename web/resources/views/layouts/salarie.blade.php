@@ -100,8 +100,9 @@
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Articles & News
                 </a>
                 <p class="sidebar-section-label">Modération</p>
-                <a href="/salarie/forum/signalements" class="{{ request()->is('salarie/forum/signalements*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Signalements
+                <a href="/salarie/forum/signalements" class="{{ request()->is('salarie/forum/signalements*') ? 'active' : '' }}" style="justify-content:space-between;">
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Signalements</span>
+                    <span id="badge-signalements" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
                 </a>
                 <a href="/salarie/forum/sujets" class="{{ request()->is('salarie/forum/sujets*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Sujets forum
@@ -133,5 +134,20 @@
         </main>
     </div>
     @yield('scripts')
+<script>
+(async function() {
+    try {
+        const r = await fetch('{{ config("services.api.url") }}/api/v1/salarie/stats', {
+            headers: { 'Authorization': 'Bearer {{ session("salarie_token") }}' }
+        });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d.signalements > 0) {
+            const b = document.getElementById('badge-signalements');
+            if (b) { b.textContent = d.signalements; b.style.display = 'inline'; }
+        }
+    } catch(e) {}
+})();
+</script>
 </body>
 </html>

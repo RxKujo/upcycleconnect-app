@@ -12,6 +12,7 @@
             <li><a href="{{ route('formations.index') }}" class="{{ request()->routeIs('formations.*') ? 'active' : '' }}">Formations</a></li>
             <li><a href="{{ route('conseils.index') }}" class="{{ request()->routeIs('conseils.*') ? 'active' : '' }}">Conseils</a></li>
             <li><a href="{{ route('forum.index') }}" class="{{ request()->routeIs('forum.*') ? 'active' : '' }}">Forum</a></li>
+            <li><a href="{{ route('ressources.index') }}" class="{{ request()->routeIs('ressources.*') ? 'active' : '' }}">Ressources</a></li>
         </ul>
 
         <div class="auth-wrapper" id="auth-wrapper">
@@ -37,9 +38,16 @@
                 </button>
                 <div id="nav-user-dropdown" class="nav-user-dropdown">
                     <a href="/particulier/profile">Mon espace</a>
+                    <a href="{{ route('particulier.planning.index') }}">Mon Planning</a>
+                    <a href="{{ route('depot.index') }}">Dépôt conteneur</a>
                     <a href="{{ route('commandes.index') }}">Mes commandes</a>
                     <a href="/particulier/annonces/create">Déposer une annonce</a>
                     <a href="/particulier/profile#score">Mon Upcycling Score</a>
+                    <hr style="border:none;border-top:1px solid rgba(18,3,9,0.15);margin:4px 0;">
+                    <div style="display:flex;gap:8px;padding:8px 16px;">
+                        <button onclick="setLang('fr')" id="lang-fr" style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;background:none;border:2px solid var(--coffee);padding:4px 10px;cursor:pointer;">FR</button>
+                        <button onclick="setLang('en')" id="lang-en" style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;background:none;border:2px solid var(--coffee);padding:4px 10px;cursor:pointer;">EN</button>
+                    </div>
                     <button id="nav-logout-btn">Déconnexion</button>
                 </div>
             </div>

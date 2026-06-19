@@ -28,7 +28,7 @@ class CategorieController extends Controller
         $request->validate(['nom' => 'required', 'description' => 'required']);
 
         $response = Http::withToken(session('admin_token'))
-            ->post(config('services.api.url') . '/api/v1/admin/categories', [
+            ->asJson()->post(config('services.api.url') . '/api/v1/admin/categories', [
                 'nom' => $request->nom,
                 'description' => $request->description,
             ]);
@@ -60,7 +60,7 @@ class CategorieController extends Controller
         $request->validate(['nom' => 'required', 'description' => 'required']);
 
         $response = Http::withToken(session('admin_token'))
-            ->put(config('services.api.url') . "/api/v1/admin/categories/{$id}", [
+            ->asJson()->put(config('services.api.url') . "/api/v1/admin/categories/{$id}", [
                 'nom' => $request->nom,
                 'description' => $request->description,
             ]);

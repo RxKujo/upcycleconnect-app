@@ -37,7 +37,7 @@ class CommandeController extends Controller
         
         $payload = ['statut' => $request->statut];
         $response = Http::withToken(session('admin_token'))
-            ->put(config('services.api.url') . "/api/v1/admin/commandes/{$id}/statut", $payload);
+            ->asJson()->put(config('services.api.url') . "/api/v1/admin/commandes/{$id}/statut", $payload);
 
         if ($response->failed()) {
             return back()->with('error', 'Erreur lors de la mise à jour du statut');

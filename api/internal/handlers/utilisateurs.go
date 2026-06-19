@@ -6,23 +6,26 @@ import (
 	"api/pkg/database"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
 func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 	var u models.Utilisateur
 	var adresse, photo sql.NullString
-	var siretVerifie, notifPush, estCertifie sql.NullBool
+	var siretVerifie, notifPush, notifEmail, estCertifie sql.NullBool
 	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, adresse_complete, photo_profil_url,
 	                 role, est_banni, date_fin_ban, nom_entreprise, numero_siret, siret_verifie, notif_push_active,
-	                 COALESCE(upcycling_score, 0), est_certifie, date_creation
+	                 notif_email_active, COALESCE(upcycling_score, 0), est_certifie, date_creation
 	          FROM utilisateurs WHERE id_utilisateur = ?`
 
 	err := database.DB.QueryRow(query, id).Scan(
 		&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &adresse, &photo,
 		&u.Role, &u.EstBanni, &u.DateFinBan, &u.NomEntreprise, &u.NumeroSiret, &siretVerifie, &notifPush,
-		&u.UpcyclingScore, &estCertifie, &u.DateCreation)
+		&notifEmail, &u.UpcyclingScore, &estCertifie, &u.DateCreation)
 
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -42,6 +45,9 @@ func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 	}
 	if notifPush.Valid {
 		u.NotifPushActive = &notifPush.Bool
+	}
+	if notifEmail.Valid {
+		u.NotifEmailActive = &notifEmail.Bool
 	}
 	u.EstCertifie = estCertifie.Valid && estCertifie.Bool
 
@@ -68,20 +74,40 @@ func GetMyScore(w http.ResponseWriter, r *http.Request, id int) {
 
 func UpdateMe(w http.ResponseWriter, r *http.Request, id int) {
 	var req struct {
-		Telephone *string `json:"telephone"`
-		Ville     *string `json:"ville"`
+		Telephone       *string `json:"telephone"`
+		Ville           *string `json:"ville"`
+		AdresseComplete *string `json:"adresse_complete"`
+		PhotoProfil     *string `json:"photo_profil"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
 		return
 	}
 
-	query := `UPDATE utilisateurs SET telephone = COALESCE(?, telephone), ville = COALESCE(?, ville) WHERE id_utilisateur = ?`
-	_, err = database.DB.Exec(query, req.Telephone, req.Ville, id)
+	var photoURL *string
+	if req.PhotoProfil != nil && *req.PhotoProfil != "" {
+		filename, data, err := decodeBase64Image(*req.PhotoProfil)
+		if err == nil {
+			uploadDir := getUploadDir()
+			os.MkdirAll(uploadDir, 0755)
+			filePath := filepath.Join(uploadDir, filename)
+			if werr := os.WriteFile(filePath, data, 0644); werr == nil {
+				rel := "photos/" + filename
+				photoURL = &rel
+			}
+		}
+	}
+
+	query := `UPDATE utilisateurs SET
+		telephone = COALESCE(?, telephone),
+		ville = COALESCE(?, ville),
+		adresse_complete = COALESCE(?, adresse_complete),
+		photo_profil_url = COALESCE(?, photo_profil_url)
+		WHERE id_utilisateur = ?`
+	_, err := database.DB.Exec(query, req.Telephone, req.Ville, req.AdresseComplete, photoURL, id)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -122,10 +148,12 @@ func GetAllUtilisateurs(w http.ResponseWriter, r *http.Request) {
 
 func GetUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	var u models.Utilisateur
-	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, est_banni, date_fin_ban, nom_entreprise, numero_siret, date_creation 
+	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, est_banni, date_fin_ban, nom_entreprise, numero_siret, date_creation,
+	                 COALESCE(upcycling_score, 0), COALESCE(est_certifie, false)
 	          FROM utilisateurs WHERE id_utilisateur = ?`
 	err := database.DB.QueryRow(query, id).Scan(
-		&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &u.Role, &u.EstBanni, &u.DateFinBan, &u.NomEntreprise, &u.NumeroSiret, &u.DateCreation)
+		&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &u.Role, &u.EstBanni, &u.DateFinBan, &u.NomEntreprise, &u.NumeroSiret, &u.DateCreation,
+		&u.UpcyclingScore, &u.EstCertifie)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
@@ -215,6 +243,7 @@ func GetMesEvenementsInscrits(w http.ResponseWriter, r *http.Request, userId int
 func UpdateNotifications(w http.ResponseWriter, r *http.Request, userId int) {
 	var req struct {
 		NotifPushActive  *bool `json:"notif_push_active"`
+		NotifEmailActive *bool `json:"notif_email_active"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonErr(w, "données invalides", http.StatusBadRequest)
@@ -222,6 +251,9 @@ func UpdateNotifications(w http.ResponseWriter, r *http.Request, userId int) {
 	}
 	if req.NotifPushActive != nil {
 		database.DB.Exec("UPDATE utilisateurs SET notif_push_active = ? WHERE id_utilisateur = ?", *req.NotifPushActive, userId)
+	}
+	if req.NotifEmailActive != nil {
+		database.DB.Exec("UPDATE utilisateurs SET notif_email_active = ? WHERE id_utilisateur = ?", *req.NotifEmailActive, userId)
 	}
 	jsonOK(w, map[string]string{"message": "préférences mises à jour"}, http.StatusOK)
 }
@@ -233,6 +265,24 @@ func DeleteUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 	jsonOK(w, map[string]string{"message": "utilisateur supprimé"}, http.StatusOK)
+}
+
+func DeleteMe(w http.ResponseWriter, r *http.Request, userId int) {
+	anon := fmt.Sprintf("supprime_%d", userId)
+	_, err := database.DB.Exec(`
+		UPDATE utilisateurs SET
+			nom = ?, prenom = 'Utilisateur', email = ?,
+			mot_de_passe_hash = '', telephone = NULL, ville = NULL,
+			adresse_complete = NULL, photo_profil_url = NULL,
+			onesignal_player_id = NULL, nom_entreprise = NULL,
+			est_banni = TRUE
+		WHERE id_utilisateur = ?`,
+		anon, anon+"@supprime.invalid", userId)
+	if err != nil {
+		jsonErr(w, "erreur lors de la suppression du compte", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]string{"message": "compte anonymisé — vos données personnelles ont été effacées"}, http.StatusOK)
 }
 
 func UpdateUserRole(w http.ResponseWriter, r *http.Request, id string) {

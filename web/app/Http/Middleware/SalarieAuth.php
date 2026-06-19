@@ -11,7 +11,7 @@ class SalarieAuth
     {
         $role = session('salarie_role');
         if (!session('salarie_token') || !in_array($role, ['salarie', 'admin'])) {
-            return redirect('/login?intent=salarie');
+            return redirect('/login?return=' . urlencode($request->getPathInfo()));
         }
 
         return $next($request);

@@ -9,6 +9,11 @@
     <h1 class="page-title">Le Marché</h1>
     <p class="page-subtitle">Parcourez les annonces de don et de vente de la communauté</p>
 
+    <div style="margin-bottom:16px;">
+        <input type="search" id="search-marche" placeholder="Rechercher une annonce…"
+               style="width:100%;max-width:480px;padding:10px 16px;border:var(--border);font-family:'DM Mono',monospace;font-size:0.9rem;background:white;outline:none;">
+    </div>
+
     <div class="filters-row" id="filters">
         <button class="filter-btn active" data-filter="all">Tout</button>
         <button class="filter-btn" data-filter="don">Dons</button>
@@ -26,6 +31,7 @@
         <a href="{{ route('annonces.show', $annonce['id_annonce']) }}" class="card annonce-card"
            data-type="{{ $annonce['type_annonce'] }}"
            data-materiau="{{ !empty($annonce['objets']) ? $annonce['objets'][0]['materiau'] : '' }}"
+           data-titre="{{ strtolower($annonce['titre'] ?? '') }}"
            style="padding:0; display:flex; flex-direction:column; text-decoration:none;">
             <div style="height:200px; background:var(--wheat); border-bottom:var(--border); display:flex; align-items:center; justify-content:center; overflow:hidden;">
                 @if(!empty($annonce['objets']) && !empty($annonce['objets'][0]['photos']))
@@ -117,22 +123,30 @@
 
 @section('scripts')
 <script>
+let activeFilter = 'all';
+let searchTerm = '';
+
+function applyFilters() {
+    document.querySelectorAll('.annonce-card').forEach(card => {
+        const matchFilter = activeFilter === 'all'
+            || (activeFilter === 'don' || activeFilter === 'vente' ? card.dataset.type === activeFilter : card.dataset.materiau === activeFilter);
+        const matchSearch = !searchTerm || (card.dataset.titre || '').includes(searchTerm);
+        card.style.display = (matchFilter && matchSearch) ? 'flex' : 'none';
+    });
+}
+
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
-        const filter = btn.dataset.filter;
-        document.querySelectorAll('.annonce-card').forEach(card => {
-            if (filter === 'all') {
-                card.style.display = 'flex';
-            } else if (filter === 'don' || filter === 'vente') {
-                card.style.display = card.dataset.type === filter ? 'flex' : 'none';
-            } else {
-                card.style.display = card.dataset.materiau === filter ? 'flex' : 'none';
-            }
-        });
+        activeFilter = btn.dataset.filter;
+        applyFilters();
     });
+});
+
+document.getElementById('search-marche').addEventListener('input', function() {
+    searchTerm = this.value.trim().toLowerCase();
+    applyFilters();
 });
 </script>
 @endsection

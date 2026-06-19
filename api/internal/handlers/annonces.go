@@ -1,4 +1,4 @@
-package handlers
+﻿package handlers
 
 import (
 	"api/internal/models"
@@ -8,368 +8,313 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
-func GetAnnonces(w http.ResponseWriter, r *http.Request) {
-	log.Printf("[INFO] %s | GetAnnonces | Listing all annonces\n", time.Now().Format(time.RFC3339))
+// loadAnnonceWithObjets charge une annonce complète (objets + photos) en deux
+// requêtes au lieu de N+1 : une pour l'annonce, une JOIN pour objets+photos.
+func loadAnnonceWithObjets(id string) (*models.Annonce, error) {
+	var a models.Annonce
+	var prix sql.NullFloat64
+	var motifRefus, motifRetrait sql.NullString
+	var validePar sql.NullInt64
 
-	rows, err := database.DB.Query("SELECT id_annonce, id_particulier, titre, description, type_annonce, prix, mode_remise, statut, motif_refus, motif_retrait, date_creation, valide_par FROM annonces WHERE statut != 'supprimee' ORDER BY date_creation DESC")
+	err := database.DB.QueryRow(`
+		SELECT id_annonce, id_particulier, titre, description, type_annonce,
+		       prix, mode_remise, statut, motif_refus, motif_retrait, date_creation, valide_par
+		FROM annonces WHERE id_annonce = ?`, id).
+		Scan(&a.IDAnnonce, &a.IDParticulier, &a.Titre, &a.Description, &a.TypeAnnonce,
+			&prix, &a.ModeRemise, &a.Statut, &motifRefus, &motifRetrait, &a.DateCreation, &validePar)
 	if err != nil {
-		log.Printf("[ERROR] %s | GetAnnonces | Query err: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return nil, err
+	}
+
+	a.Prix = scanNullFloat64(prix)
+	a.MotifRefus = scanNullString(motifRefus)
+	a.MotifRetrait = scanNullString(motifRetrait)
+	a.ValidePar = scanNullInt(validePar)
+
+	// Une seule JOIN charge tous les objets ET toutes leurs photos.
+	rows, err := database.DB.Query(`
+		SELECT o.id_objet, o.categorie, o.materiau, o.etat, o.poids_kg,
+		       p.id_photo, p.url_photo, p.ordre
+		FROM objets_annonces o
+		LEFT JOIN photos_objets p ON p.id_objet = o.id_objet
+		WHERE o.id_annonce = ?
+		ORDER BY o.id_objet, p.ordre`, id)
+	if err != nil {
+		a.Objets = []models.ObjetAnnonce{}
+		return &a, nil
+	}
+	defer rows.Close()
+
+	objMap := map[int]*models.ObjetAnnonce{}
+	var objOrder []int
+	for rows.Next() {
+		var oid int
+		var cat, mat, etat string
+		var poids sql.NullFloat64
+		var pid sql.NullInt64
+		var photoURL sql.NullString
+		var photoOrdre sql.NullInt64
+
+		if err := rows.Scan(&oid, &cat, &mat, &etat, &poids, &pid, &photoURL, &photoOrdre); err != nil {
+			continue
+		}
+		if _, exists := objMap[oid]; !exists {
+			objMap[oid] = &models.ObjetAnnonce{
+				IDObjet:   oid,
+				IDAnnonce: a.IDAnnonce,
+				Categorie: cat,
+				Materiau:  mat,
+				Etat:      etat,
+				PoidsKg:   scanNullFloat64(poids),
+				Photos:    []models.PhotoObjet{},
+			}
+			objOrder = append(objOrder, oid)
+		}
+		if pid.Valid && photoURL.Valid {
+			objMap[oid].Photos = append(objMap[oid].Photos, models.PhotoObjet{
+				IDPhoto: int(pid.Int64),
+				IDObjet: oid,
+				URL:     photoURL.String,
+				Ordre:   int(photoOrdre.Int64),
+			})
+		}
+	}
+
+	a.Objets = make([]models.ObjetAnnonce, 0, len(objOrder))
+	for _, oid := range objOrder {
+		a.Objets = append(a.Objets, *objMap[oid])
+	}
+	return &a, nil
+}
+
+// ─── Constantes de messages d'erreur ─────────────────────────────────────────
+
+const (
+	errServeur       = "erreur serveur"
+	errDonneesInval  = "données invalides"
+	errAnnonceIntro  = "annonce non trouvée"
+	errAccesRefuse   = "accès refusé"
+	logFmtAnnonceUser = "user=%d annonce=%s"
+	logFmtUpdate     = "update: %v"
+)
+
+// ─── Handlers ────────────────────────────────────────────────────────────────
+
+func GetAnnonces(w http.ResponseWriter, r *http.Request) {
+	logInfo("GetAnnonces", "listing all")
+
+	rows, err := database.DB.Query(`
+		SELECT id_annonce, id_particulier, titre, description, type_annonce,
+		       prix, mode_remise, statut, motif_refus, motif_retrait, date_creation, valide_par
+		FROM annonces WHERE statut != 'supprimee' ORDER BY date_creation DESC`)
+	if err != nil {
+		logError("GetAnnonces", "query: %v", err)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var annonces []models.Annonce
+	annonces := []models.Annonce{}
 	for rows.Next() {
 		var a models.Annonce
 		var prix sql.NullFloat64
 		var motifRefus, motifRetrait sql.NullString
 		var validePar sql.NullInt64
 
-		if err := rows.Scan(&a.IDAnnonce, &a.IDParticulier, &a.Titre, &a.Description, &a.TypeAnnonce, &prix, &a.ModeRemise, &a.Statut, &motifRefus, &motifRetrait, &a.DateCreation, &validePar); err == nil {
-			if prix.Valid {
-				p := prix.Float64
-				a.Prix = &p
-			}
-			if motifRefus.Valid {
-				mr := motifRefus.String
-				a.MotifRefus = &mr
-			}
-			if motifRetrait.Valid {
-				mt := motifRetrait.String
-				a.MotifRetrait = &mt
-			}
-			if validePar.Valid {
-				v := int(validePar.Int64)
-				a.ValidePar = &v
-			}
-			annonces = append(annonces, a)
-		} else {
-			log.Printf("[ERROR] %s | GetAnnonces | Scan err: %v\n", time.Now().Format(time.RFC3339), err)
+		if err := rows.Scan(&a.IDAnnonce, &a.IDParticulier, &a.Titre, &a.Description, &a.TypeAnnonce,
+			&prix, &a.ModeRemise, &a.Statut, &motifRefus, &motifRetrait, &a.DateCreation, &validePar); err != nil {
+			logError("GetAnnonces", "scan: %v", err)
+			continue
 		}
+		a.Prix = scanNullFloat64(prix)
+		a.MotifRefus = scanNullString(motifRefus)
+		a.MotifRetrait = scanNullString(motifRetrait)
+		a.ValidePar = scanNullInt(validePar)
+		annonces = append(annonces, a)
 	}
-	if annonces == nil {
-		annonces = []models.Annonce{}
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(annonces)
+	jsonOK(w, annonces, http.StatusOK)
 }
 
 func GetMesAnnonces(w http.ResponseWriter, r *http.Request, userId int) {
-	log.Printf("[INFO] %s | GetMesAnnonces | User %d listing own annonces\n", time.Now().Format(time.RFC3339), userId)
+	logInfo("GetMesAnnonces", "user=%d", userId)
 
-	rows, err := database.DB.Query("SELECT id_annonce, titre, type_annonce, prix, statut, motif_refus, date_creation FROM annonces WHERE id_particulier = ? AND statut != 'supprimee' ORDER BY date_creation DESC", userId)
+	rows, err := database.DB.Query(`
+		SELECT id_annonce, titre, description, type_annonce, prix, mode_remise, statut, motif_refus, date_creation
+		FROM annonces WHERE id_particulier = ? AND statut != 'supprimee' ORDER BY date_creation DESC`, userId)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
 	type mesAnnonceItem struct {
-		IDAnnonce    int       `json:"id_annonce"`
-		Titre        string    `json:"titre"`
-		TypeAnnonce  string    `json:"type_annonce"`
-		Prix         *float64  `json:"prix"`
-		Statut       string    `json:"statut"`
-		MotifRefus   *string   `json:"motif_refus,omitempty"`
-		Photo        *string   `json:"photo,omitempty"`
-		DateCreation time.Time `json:"date_creation"`
+		IDAnnonce    int     `json:"id_annonce"`
+		Titre        string  `json:"titre"`
+		Description  string  `json:"description"`
+		TypeAnnonce  string  `json:"type_annonce"`
+		Prix         *float64 `json:"prix,omitempty"`
+		ModeRemise   string  `json:"mode_remise"`
+		Statut       string  `json:"statut"`
+		MotifRefus   *string `json:"motif_refus,omitempty"`
+		Photo        *string `json:"photo,omitempty"`
+		DateCreation string  `json:"date_creation"`
 	}
 
 	items := []mesAnnonceItem{}
+	var ids []interface{}
 	for rows.Next() {
 		var it mesAnnonceItem
 		var prix sql.NullFloat64
 		var motifRefus sql.NullString
-		if err := rows.Scan(&it.IDAnnonce, &it.Titre, &it.TypeAnnonce, &prix, &it.Statut, &motifRefus, &it.DateCreation); err != nil {
+		var dateCreation sql.NullTime
+		if err := rows.Scan(&it.IDAnnonce, &it.Titre, &it.Description, &it.TypeAnnonce,
+			&prix, &it.ModeRemise, &it.Statut, &motifRefus, &dateCreation); err != nil {
 			continue
 		}
-		if prix.Valid {
-			p := prix.Float64
-			it.Prix = &p
-		}
-		if motifRefus.Valid {
-			mr := motifRefus.String
-			it.MotifRefus = &mr
-		}
+		it.Prix = scanNullFloat64(prix)
+		it.MotifRefus = scanNullString(motifRefus)
+		it.DateCreation = scanNullTime(dateCreation)
 		items = append(items, it)
+		ids = append(ids, it.IDAnnonce)
 	}
 
-	for i := range items {
-		var url string
-		err := database.DB.QueryRow("SELECT po.url_photo FROM photos_objets po JOIN objets_annonces oa ON po.id_objet = oa.id_objet WHERE oa.id_annonce = ? ORDER BY oa.id_objet, po.ordre LIMIT 1", items[i].IDAnnonce).Scan(&url)
+	// Charge la première photo de chaque annonce en UNE seule requête (fix N+1).
+	if len(ids) > 0 {
+		phs := strings.Repeat("?,", len(ids))
+		phs = phs[:len(phs)-1]
+		photoMap := map[int]string{}
+		photoRows, err := database.DB.Query(fmt.Sprintf(`
+			SELECT oa.id_annonce, MIN(po.url_photo)
+			FROM photos_objets po
+			JOIN objets_annonces oa ON po.id_objet = oa.id_objet
+			WHERE oa.id_annonce IN (%s)
+			GROUP BY oa.id_annonce`, phs), ids...)
 		if err == nil {
-			items[i].Photo = &url
+			defer photoRows.Close()
+			for photoRows.Next() {
+				var aid int
+				var url string
+				if photoRows.Scan(&aid, &url) == nil {
+					photoMap[aid] = url
+				}
+			}
+		}
+		for i := range items {
+			if url, ok := photoMap[items[i].IDAnnonce]; ok {
+				u := url
+				items[i].Photo = &u
+			}
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(items)
+	jsonOK(w, items, http.StatusOK)
 }
 
 func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
-	log.Printf("[INFO] %s | GetAnnonce | User %d viewing annonce %s\n", time.Now().Format(time.RFC3339), userId, id)
+	logInfo("GetAnnonceAuth", logFmtAnnonceUser, userId, id)
 
-	var a models.Annonce
-	var prix sql.NullFloat64
-	var motifRefus, motifRetrait sql.NullString
-	var validePar sql.NullInt64
-
-	err := database.DB.QueryRow("SELECT id_annonce, id_particulier, titre, description, type_annonce, prix, mode_remise, statut, motif_refus, motif_retrait, date_creation, valide_par FROM annonces WHERE id_annonce = ?", id).
-		Scan(&a.IDAnnonce, &a.IDParticulier, &a.Titre, &a.Description, &a.TypeAnnonce, &prix, &a.ModeRemise, &a.Statut, &motifRefus, &motifRetrait, &a.DateCreation, &validePar)
+	a, err := loadAnnonceWithObjets(id)
 	if err != nil {
-		log.Printf("[ERROR] %s | GetAnnonce | Not found: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "annonce non trouvee"})
+		jsonErr(w, errAnnonceIntro, http.StatusNotFound)
 		return
 	}
-
 	if role != "admin" && a.IDParticulier != userId {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "acces refuse"})
+		jsonErr(w, errAccesRefuse, http.StatusForbidden)
 		return
 	}
-
-	if prix.Valid {
-		p := prix.Float64
-		a.Prix = &p
-	}
-	if motifRefus.Valid {
-		mr := motifRefus.String
-		a.MotifRefus = &mr
-	}
-	if motifRetrait.Valid {
-		mt := motifRetrait.String
-		a.MotifRetrait = &mt
-	}
-	if validePar.Valid {
-		v := int(validePar.Int64)
-		a.ValidePar = &v
-	}
-
-	objRows, err := database.DB.Query("SELECT id_objet, id_annonce, categorie, materiau, etat, poids_kg FROM objets_annonces WHERE id_annonce = ?", id)
-	if err == nil {
-		defer objRows.Close()
-		for objRows.Next() {
-			var o models.ObjetAnnonce
-			var poids sql.NullFloat64
-			if err := objRows.Scan(&o.IDObjet, &o.IDAnnonce, &o.Categorie, &o.Materiau, &o.Etat, &poids); err == nil {
-				if poids.Valid {
-					p := poids.Float64
-					o.PoidsKg = &p
-				}
-				
-				photoRows, err := database.DB.Query("SELECT id_photo, id_objet, url_photo, ordre FROM photos_objets WHERE id_objet = ? ORDER BY ordre", o.IDObjet)
-				if err == nil {
-					for photoRows.Next() {
-						var ph models.PhotoObjet
-						if err := photoRows.Scan(&ph.IDPhoto, &ph.IDObjet, &ph.URL, &ph.Ordre); err == nil {
-							o.Photos = append(o.Photos, ph)
-						}
-					}
-					photoRows.Close()
-				}
-				if o.Photos == nil {
-					o.Photos = []models.PhotoObjet{}
-				}
-				a.Objets = append(a.Objets, o)
-			}
-		}
-	}
-	if a.Objets == nil {
-		a.Objets = []models.ObjetAnnonce{}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(a)
+	jsonOK(w, a, http.StatusOK)
 }
 
 func GetAnnonce(w http.ResponseWriter, r *http.Request, id string) {
-	var a models.Annonce
-	var prix sql.NullFloat64
-	var motifRefus, motifRetrait sql.NullString
-	var validePar sql.NullInt64
-
-	err := database.DB.QueryRow("SELECT id_annonce, id_particulier, titre, description, type_annonce, prix, mode_remise, statut, motif_refus, motif_retrait, date_creation, valide_par FROM annonces WHERE id_annonce = ?", id).
-		Scan(&a.IDAnnonce, &a.IDParticulier, &a.Titre, &a.Description, &a.TypeAnnonce, &prix, &a.ModeRemise, &a.Statut, &motifRefus, &motifRetrait, &a.DateCreation, &validePar)
+	a, err := loadAnnonceWithObjets(id)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "annonce non trouvee"})
+		jsonErr(w, errAnnonceIntro, http.StatusNotFound)
 		return
 	}
-
-	if prix.Valid {
-		p := prix.Float64
-		a.Prix = &p
-	}
-	if motifRefus.Valid {
-		mr := motifRefus.String
-		a.MotifRefus = &mr
-	}
-	if motifRetrait.Valid {
-		mt := motifRetrait.String
-		a.MotifRetrait = &mt
-	}
-	if validePar.Valid {
-		v := int(validePar.Int64)
-		a.ValidePar = &v
-	}
-
-	objRows, err := database.DB.Query("SELECT id_objet, id_annonce, categorie, materiau, etat, poids_kg FROM objets_annonces WHERE id_annonce = ?", id)
-	if err == nil {
-		defer objRows.Close()
-		for objRows.Next() {
-			var o models.ObjetAnnonce
-			var poids sql.NullFloat64
-			if err := objRows.Scan(&o.IDObjet, &o.IDAnnonce, &o.Categorie, &o.Materiau, &o.Etat, &poids); err == nil {
-				if poids.Valid {
-					p := poids.Float64
-					o.PoidsKg = &p
-				}
-				photoRows, err := database.DB.Query("SELECT id_photo, id_objet, url_photo, ordre FROM photos_objets WHERE id_objet = ? ORDER BY ordre", o.IDObjet)
-				if err == nil {
-					for photoRows.Next() {
-						var ph models.PhotoObjet
-						if photoRows.Scan(&ph.IDPhoto, &ph.IDObjet, &ph.URL, &ph.Ordre) == nil {
-							o.Photos = append(o.Photos, ph)
-						}
-					}
-					photoRows.Close()
-				}
-				if o.Photos == nil {
-					o.Photos = []models.PhotoObjet{}
-				}
-				a.Objets = append(a.Objets, o)
-			}
-		}
-	}
-	if a.Objets == nil {
-		a.Objets = []models.ObjetAnnonce{}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(a)
+	jsonOK(w, a, http.StatusOK)
 }
 
 func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
-	log.Printf("[INFO] %s | CreateAnnonce | User %d creating annonce\n", time.Now().Format(time.RFC3339), userId)
+	logInfo("CreateAnnonce", "user=%d", userId)
 
 	var req models.CreateAnnonceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		log.Printf("[ERROR] %s | CreateAnnonce | Decode err: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "donnees invalides"})
+		logError("CreateAnnonce", "decode: %v", err)
+		jsonErr(w, errDonneesInval, http.StatusBadRequest)
 		return
 	}
 
 	if len(req.Titre) < 3 || len(req.Titre) > 200 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "le titre doit contenir entre 3 et 200 caracteres"})
+		jsonErr(w, "le titre doit contenir entre 3 et 200 caractères", http.StatusBadRequest)
 		return
 	}
-
 	if len(req.Description) < 10 || len(req.Description) > 5000 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "la description doit contenir entre 10 et 5000 caracteres"})
+		jsonErr(w, "la description doit contenir entre 10 et 5000 caractères", http.StatusBadRequest)
 		return
 	}
-
 	if req.TypeAnnonce != "don" && req.TypeAnnonce != "vente" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "type_annonce doit etre 'don' ou 'vente'"})
+		jsonErr(w, "type_annonce doit être 'don' ou 'vente'", http.StatusBadRequest)
 		return
 	}
-
 	if req.ModeRemise != "conteneur" && req.ModeRemise != "main_propre" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "mode_remise doit etre 'conteneur' ou 'main_propre'"})
+		jsonErr(w, "mode_remise doit être 'conteneur' ou 'main_propre'", http.StatusBadRequest)
 		return
 	}
-
 	if len(req.Objets) == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "au moins un objet est requis"})
+		jsonErr(w, "au moins un objet est requis", http.StatusBadRequest)
 		return
 	}
 
-	validMateriaux := map[string]bool{"bois": true, "metal": true, "textile": true, "plastique": true, "verre": true, "electronique": true, "autre": true}
+	validMateriaux := map[string]bool{
+		"bois": true, "metal": true, "textile": true,
+		"plastique": true, "verre": true, "electronique": true, "autre": true,
+	}
 	validEtats := map[string]bool{"neuf": true, "bon": true, "use": true, "a_reparer": true}
 	totalPhotos := 0
 
 	for i, obj := range req.Objets {
 		if !validMateriaux[obj.Materiau] {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"erreur": fmt.Sprintf("materiau invalide pour l'objet %d", i+1)})
+			jsonErr(w, fmt.Sprintf("matériau invalide pour l'objet %d", i+1), http.StatusBadRequest)
 			return
 		}
 		if !validEtats[obj.Etat] {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"erreur": fmt.Sprintf("etat invalide pour l'objet %d", i+1)})
+			jsonErr(w, fmt.Sprintf("état invalide pour l'objet %d", i+1), http.StatusBadRequest)
 			return
 		}
 		if len(obj.Photos) == 0 {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"erreur": fmt.Sprintf("au moins une photo requise pour l'objet %d", i+1)})
+			jsonErr(w, fmt.Sprintf("au moins une photo requise pour l'objet %d", i+1), http.StatusBadRequest)
 			return
 		}
 		totalPhotos += len(obj.Photos)
 	}
-
 	if totalPhotos > 10 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "maximum 10 photos par annonce"})
+		jsonErr(w, "maximum 10 photos par annonce", http.StatusBadRequest)
 		return
 	}
 
 	tx, err := database.DB.Begin()
 	if err != nil {
-		log.Printf("[ERROR] %s | CreateAnnonce | TX begin err: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		logError("CreateAnnonce", "tx begin: %v", err)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
-	res, err := tx.Exec(`INSERT INTO annonces (id_particulier, titre, description, type_annonce, prix, mode_remise, statut) VALUES (?, ?, ?, ?, ?, ?, 'en_attente')`,
+	res, err := tx.Exec(
+		`INSERT INTO annonces (id_particulier, titre, description, type_annonce, prix, mode_remise, statut)
+		 VALUES (?, ?, ?, ?, ?, ?, 'en_attente')`,
 		userId, req.Titre, req.Description, req.TypeAnnonce, req.Prix, req.ModeRemise)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("[ERROR] %s | CreateAnnonce | Insert annonce err: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la creation de l'annonce"})
+		logError("CreateAnnonce", "insert annonce: %v", err)
+		jsonErr(w, "erreur lors de la création de l'annonce", http.StatusInternalServerError)
 		return
 	}
-
 	annonceId, _ := res.LastInsertId()
 
 	uploadDir := getUploadDir()
@@ -377,340 +322,323 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 
 	photoOrdre := 0
 	for _, obj := range req.Objets {
-		objRes, err := tx.Exec(`INSERT INTO objets_annonces (id_annonce, categorie, materiau, etat, poids_kg) VALUES (?, ?, ?, ?, ?)`,
+		objRes, err := tx.Exec(
+			`INSERT INTO objets_annonces (id_annonce, categorie, materiau, etat, poids_kg) VALUES (?, ?, ?, ?, ?)`,
 			annonceId, obj.Categorie, obj.Materiau, obj.Etat, obj.PoidsKg)
 		if err != nil {
 			tx.Rollback()
-			log.Printf("[ERROR] %s | CreateAnnonce | Insert objet err: %v\n", time.Now().Format(time.RFC3339), err)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de l'ajout d'un objet"})
+			logError("CreateAnnonce", "insert objet: %v", err)
+			jsonErr(w, "erreur lors de l'ajout d'un objet", http.StatusInternalServerError)
 			return
 		}
 		objetId, _ := objRes.LastInsertId()
 
 		for _, photoB64 := range obj.Photos {
 			photoOrdre++
-
 			ext, data, err := decodeBase64Image(photoB64)
 			if err != nil {
 				tx.Rollback()
-				log.Printf("[ERROR] %s | CreateAnnonce | Photo decode err: %v\n", time.Now().Format(time.RFC3339), err)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(map[string]string{"erreur": fmt.Sprintf("photo invalide: %v", err)})
+				logError("CreateAnnonce", "photo decode: %v", err)
+				jsonErr(w, fmt.Sprintf("photo invalide: %v", err), http.StatusBadRequest)
 				return
 			}
-
 			if len(data) > 5*1024*1024 {
 				tx.Rollback()
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(map[string]string{"erreur": "une photo depasse 5 Mo"})
+				jsonErr(w, "une photo dépasse 5 Mo", http.StatusBadRequest)
 				return
 			}
-
 			filename := generateUUID() + "." + ext
-			filePath := filepath.Join(uploadDir, filename)
-
-			if err := os.WriteFile(filePath, data, 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(uploadDir, filename), data, 0644); err != nil {
 				tx.Rollback()
-				log.Printf("[ERROR] %s | CreateAnnonce | File write err: %v\n", time.Now().Format(time.RFC3339), err)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur sauvegarde photo"})
+				logError("CreateAnnonce", "file write: %v", err)
+				jsonErr(w, "erreur sauvegarde photo", http.StatusInternalServerError)
 				return
 			}
-
-			photoURL := "photos/" + filename
-			_, err = tx.Exec(`INSERT INTO photos_objets (id_objet, url_photo, ordre) VALUES (?, ?, ?)`, objetId, photoURL, photoOrdre)
-			if err != nil {
+			if _, err = tx.Exec(
+				`INSERT INTO photos_objets (id_objet, url_photo, ordre) VALUES (?, ?, ?)`,
+				objetId, "photos/"+filename, photoOrdre); err != nil {
 				tx.Rollback()
-				log.Printf("[ERROR] %s | CreateAnnonce | Insert photo err: %v\n", time.Now().Format(time.RFC3339), err)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur enregistrement photo"})
+				logError("CreateAnnonce", "insert photo: %v", err)
+				jsonErr(w, "erreur enregistrement photo", http.StatusInternalServerError)
 				return
 			}
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Printf("[ERROR] %s | CreateAnnonce | Commit err: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		logError("CreateAnnonce", "commit: %v", err)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("[INFO] %s | CreateAnnonce | User %d created annonce %d\n", time.Now().Format(time.RFC3339), userId, annonceId)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message":    "annonce creee avec succes",
+	logInfo("CreateAnnonce", "user=%d created annonce=%d", userId, annonceId)
+	jsonOK(w, map[string]interface{}{
+		"message":    "annonce créée avec succès",
 		"id_annonce": annonceId,
 		"statut":     "en_attente",
-	})
+	}, http.StatusCreated)
 }
 
 func CancelAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int) {
-	log.Printf("[INFO] %s | CancelAnnonce | User %d cancelling annonce %s\n", time.Now().Format(time.RFC3339), userId, id)
+	logInfo("CancelAnnonce", logFmtAnnonceUser, userId, id)
 
 	var req models.CancelAnnonceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "donnees invalides"})
+		jsonErr(w, errDonneesInval, http.StatusBadRequest)
 		return
 	}
 
-	var annonceUserId int
+	var ownerID int
 	var statut string
-	err := database.DB.QueryRow("SELECT id_particulier, statut FROM annonces WHERE id_annonce = ?", id).Scan(&annonceUserId, &statut)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "annonce non trouvee"})
+	if err := database.DB.QueryRow(
+		`SELECT id_particulier, statut FROM annonces WHERE id_annonce = ?`, id).
+		Scan(&ownerID, &statut); err != nil {
+		jsonErr(w, errAnnonceIntro, http.StatusNotFound)
 		return
 	}
-
-	if annonceUserId != userId {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "acces refuse"})
+	if ownerID != userId {
+		jsonErr(w, errAccesRefuse, http.StatusForbidden)
 		return
 	}
-
 	if statut != "en_attente" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "seules les annonces en attente peuvent etre annulees"})
+		jsonErr(w, "seules les annonces en attente peuvent être annulées", http.StatusBadRequest)
 		return
 	}
 
-	_, err = database.DB.Exec("UPDATE annonces SET statut = 'annulee', motif_retrait = ? WHERE id_annonce = ?", req.MotifRetrait, id)
-	if err != nil {
-		log.Printf("[ERROR] %s | CancelAnnonce | Update err: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+	if _, err := database.DB.Exec(
+		`UPDATE annonces SET statut = 'annulee', motif_retrait = ? WHERE id_annonce = ?`,
+		req.MotifRetrait, id); err != nil {
+		logError("CancelAnnonce", logFmtUpdate, err)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("[INFO] %s | CancelAnnonce | User %d cancelled annonce %s\n", time.Now().Format(time.RFC3339), userId, id)
+	logInfo("CancelAnnonce", "user=%d cancelled annonce=%s", userId, id)
+	jsonOK(w, map[string]string{"message": "annonce annulée", "statut": "annulee"}, http.StatusOK)
+}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "annonce annulee",
-		"statut":  "annulee",
-	})
+func UpdateAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int) {
+	logInfo("UpdateAnnonce", logFmtAnnonceUser, userId, id)
+
+	var req models.UpdateAnnonceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, errDonneesInval, http.StatusBadRequest)
+		return
+	}
+	if req.Titre == "" || req.Description == "" || req.ModeRemise == "" {
+		jsonErr(w, "titre, description et mode_remise sont requis", http.StatusBadRequest)
+		return
+	}
+
+	var ownerID int
+	var statut string
+	if err := database.DB.QueryRow(
+		`SELECT id_particulier, statut FROM annonces WHERE id_annonce = ?`, id).
+		Scan(&ownerID, &statut); err != nil {
+		jsonErr(w, errAnnonceIntro, http.StatusNotFound)
+		return
+	}
+	if ownerID != userId {
+		jsonErr(w, errAccesRefuse, http.StatusForbidden)
+		return
+	}
+	if statut != "en_attente" && statut != "validee" {
+		jsonErr(w, "seules les annonces en attente ou validées peuvent être modifiées", http.StatusBadRequest)
+		return
+	}
+
+	// Modifier une annonce validée la remet en modération.
+	newStatut := statut
+	if statut == "validee" {
+		newStatut = "en_attente"
+	}
+
+	if _, err := database.DB.Exec(
+		`UPDATE annonces SET titre = ?, description = ?, prix = ?, mode_remise = ?, statut = ? WHERE id_annonce = ?`,
+		req.Titre, req.Description, req.Prix, req.ModeRemise, newStatut, id); err != nil {
+		logError("UpdateAnnonce", logFmtUpdate, err)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
+		return
+	}
+
+	logInfo("UpdateAnnonce", "annonce=%s → statut=%s", id, newStatut)
+	jsonOK(w, map[string]interface{}{"message": "annonce mise à jour", "statut": newStatut}, http.StatusOK)
 }
 
 func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
-	log.Printf("[INFO] %s | DeleteAnnonce | User %d deleting annonce %s\n", time.Now().Format(time.RFC3339), userId, id)
+	logInfo("DeleteAnnonce", logFmtAnnonceUser, userId, id)
 
-	var annonceUserId int
+	var ownerID int
 	var statut string
-	err := database.DB.QueryRow("SELECT id_particulier, statut FROM annonces WHERE id_annonce = ?", id).Scan(&annonceUserId, &statut)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "annonce non trouvee"})
+	if err := database.DB.QueryRow(
+		`SELECT id_particulier, statut FROM annonces WHERE id_annonce = ?`, id).
+		Scan(&ownerID, &statut); err != nil {
+		jsonErr(w, errAnnonceIntro, http.StatusNotFound)
 		return
 	}
-
-	if role != "admin" && annonceUserId != userId {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "acces refuse"})
+	if role != "admin" && ownerID != userId {
+		jsonErr(w, errAccesRefuse, http.StatusForbidden)
 		return
 	}
-
 	if statut != "validee" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "seules les annonces validees peuvent etre supprimees"})
+		jsonErr(w, "seules les annonces validées peuvent être supprimées", http.StatusBadRequest)
 		return
 	}
 
+	// Supprime les fichiers photos du disque.
 	uploadDir := getUploadDir()
-	rows, err := database.DB.Query(`SELECT po.url_photo FROM photos_objets po JOIN objets_annonces oa ON po.id_objet = oa.id_objet WHERE oa.id_annonce = ?`, id)
+	photoRows, err := database.DB.Query(
+		`SELECT po.url_photo FROM photos_objets po JOIN objets_annonces oa ON po.id_objet = oa.id_objet WHERE oa.id_annonce = ?`, id)
 	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
+		defer photoRows.Close()
+		for photoRows.Next() {
 			var url string
-			if rows.Scan(&url) == nil {
-				filePath := filepath.Join(uploadDir, filepath.Base(url))
-				os.Remove(filePath)
+			if photoRows.Scan(&url) == nil {
+				os.Remove(filepath.Join(uploadDir, filepath.Base(url)))
 			}
 		}
 	}
 
-	_, err = database.DB.Exec("UPDATE annonces SET statut = 'supprimee' WHERE id_annonce = ?", id)
-	if err != nil {
-		log.Printf("[ERROR] %s | DeleteAnnonce | Update err: %v\n", time.Now().Format(time.RFC3339), err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+	if _, err := database.DB.Exec(`UPDATE annonces SET statut = 'supprimee' WHERE id_annonce = ?`, id); err != nil {
+		logError("DeleteAnnonce", logFmtUpdate, err)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("[INFO] %s | DeleteAnnonce | User %d deleted annonce %s\n", time.Now().Format(time.RFC3339), userId, id)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "annonce supprimee"})
+	logInfo("DeleteAnnonce", "user=%d deleted annonce=%s", userId, id)
+	jsonOK(w, map[string]string{"message": "annonce supprimée"}, http.StatusOK)
 }
 
 func ValiderAnnonce(w http.ResponseWriter, r *http.Request, id string, adminId int) {
 	tx, err := database.DB.Begin()
 	if err != nil {
-		http.Error(w, "DB error", http.StatusInternalServerError)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
 	var idParticulier int
 	var titre, modeRemise string
-	err = tx.QueryRow("SELECT id_particulier, titre, mode_remise FROM annonces WHERE id_annonce = ?", id).Scan(&idParticulier, &titre, &modeRemise)
-	if err != nil {
+	if err := tx.QueryRow(
+		`SELECT id_particulier, titre, mode_remise FROM annonces WHERE id_annonce = ?`, id).
+		Scan(&idParticulier, &titre, &modeRemise); err != nil {
 		tx.Rollback()
-		http.Error(w, "annonce introuvable", http.StatusNotFound)
+		jsonErr(w, "annonce introuvable", http.StatusNotFound)
 		return
 	}
 
-	_, err = tx.Exec("UPDATE annonces SET statut = 'validee', valide_par = ?, motif_refus = NULL WHERE id_annonce = ?", adminId, id)
-	if err != nil {
+	if _, err := tx.Exec(
+		`UPDATE annonces SET statut = 'validee', valide_par = ?, motif_refus = NULL WHERE id_annonce = ?`,
+		adminId, id); err != nil {
 		tx.Rollback()
-		http.Error(w, "erreur maj", http.StatusInternalServerError)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
-	sujetNotif := "Votre annonce a ete validee !"
-	contenuNotif := fmt.Sprintf("Excellente nouvelle, votre annonce \"%s\" est maintenant en ligne.", titre)
+	contenu := fmt.Sprintf("Excellente nouvelle, votre annonce \"%s\" est maintenant en ligne.", titre)
 	if modeRemise == "conteneur" {
-		contenuNotif += " Un code-barre vous sera transmis pour le depot."
+		contenu += " Un code-barre vous sera transmis pour le dépôt."
 	}
-	_, _ = tx.Exec("INSERT INTO notifications (id_destinataire, type_notif, sujet, contenu, contexte) VALUES (?, 'push', ?, ?, 'annonce')",
-		idParticulier, sujetNotif, contenuNotif)
+	_, _ = tx.Exec(
+		`INSERT INTO notifications (id_destinataire, type_notif, sujet, contenu, contexte) VALUES (?, 'push', ?, ?, 'annonce')`,
+		idParticulier, "Votre annonce a été validée !", contenu)
 
 	tx.Commit()
-
-	requiresBarcode := modeRemise == "conteneur"
-
-	log.Printf("[INFO] %s | ValiderAnnonce | Admin %d validated annonce %s\n", time.Now().Format(time.RFC3339), adminId, id)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message":          "annonce validee",
-		"requires_barcode": requiresBarcode,
-	})
+	logInfo("ValiderAnnonce", "admin=%d validated annonce=%s", adminId, id)
+	jsonOK(w, map[string]interface{}{
+		"message":          "annonce validée",
+		"requires_barcode": modeRemise == "conteneur",
+	}, http.StatusOK)
 }
 
 func RefuserAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	var req models.AnnonceValidationRequest
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	tx, _ := database.DB.Begin()
-	var idParticulier int
-	var titre string
-	err := tx.QueryRow("SELECT id_particulier, titre FROM annonces WHERE id_annonce = ?", id).Scan(&idParticulier, &titre)
+	tx, err := database.DB.Begin()
 	if err != nil {
-		tx.Rollback()
-		http.Error(w, "annonce introuvable", http.StatusNotFound)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
-	motif := "Non conforme aux regles de la plateforme."
+	var idParticulier int
+	var titre string
+	if err := tx.QueryRow(
+		`SELECT id_particulier, titre FROM annonces WHERE id_annonce = ?`, id).
+		Scan(&idParticulier, &titre); err != nil {
+		tx.Rollback()
+		jsonErr(w, "annonce introuvable", http.StatusNotFound)
+		return
+	}
+
+	motif := "Non conforme aux règles de la plateforme."
 	if req.MotifRefus != nil && *req.MotifRefus != "" {
 		motif = *req.MotifRefus
 	}
 
-	_, err = tx.Exec("UPDATE annonces SET statut = 'refusee', motif_refus = ? WHERE id_annonce = ?", motif, id)
-	if err != nil {
+	if _, err := tx.Exec(
+		`UPDATE annonces SET statut = 'refusee', motif_refus = ? WHERE id_annonce = ?`, motif, id); err != nil {
 		tx.Rollback()
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
 
-	sujetNotif := "Votre annonce n'a pas ete validee"
-	contenuNotif := fmt.Sprintf("Votre annonce \"%s\" a ete refusee pour le motif suivant : %s", titre, motif)
-	_, _ = tx.Exec("INSERT INTO notifications (id_destinataire, type_notif, sujet, contenu, contexte) VALUES (?, 'push', ?, ?, 'annonce')",
-		idParticulier, sujetNotif, contenuNotif)
+	_, _ = tx.Exec(
+		`INSERT INTO notifications (id_destinataire, type_notif, sujet, contenu, contexte) VALUES (?, 'push', ?, ?, 'annonce')`,
+		idParticulier,
+		"Votre annonce n'a pas été validée",
+		fmt.Sprintf("Votre annonce \"%s\" a été refusée : %s", titre, motif))
 
 	tx.Commit()
-
-	log.Printf("[INFO] %s | RefuserAnnonce | Annonce %s refused\n", time.Now().Format(time.RFC3339), id)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "annonce refusee"})
+	logInfo("RefuserAnnonce", "annonce=%s refused", id)
+	jsonOK(w, map[string]string{"message": "annonce refusée"}, http.StatusOK)
 }
 
 func AttenteAnnonce(w http.ResponseWriter, r *http.Request, id string) {
-	_, err := database.DB.Exec("UPDATE annonces SET statut = 'en_attente', valide_par = NULL, motif_refus = NULL WHERE id_annonce = ?", id)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
+	if _, err := database.DB.Exec(
+		`UPDATE annonces SET statut = 'en_attente', valide_par = NULL, motif_refus = NULL WHERE id_annonce = ?`, id); err != nil {
+		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "annonce remise en attente"})
+	jsonOK(w, map[string]string{"message": "annonce remise en attente"}, http.StatusOK)
 }
 
+// ─── Utilitaires fichiers ─────────────────────────────────────────────────────
+
 func getUploadDir() string {
-	dir := os.Getenv("UPLOAD_DIR")
-	if dir == "" {
-		dir = "../web/public/uploads/photos"
+	if dir := os.Getenv("UPLOAD_DIR"); dir != "" {
+		return dir
 	}
-	return dir
+	return "../web/public/uploads/photos"
 }
 
 func decodeBase64Image(b64 string) (string, []byte, error) {
-	
+	ext := "jpg"
+	raw := b64
+
 	if strings.HasPrefix(b64, "data:image/") {
 		parts := strings.SplitN(b64, ",", 2)
 		if len(parts) != 2 {
 			return "", nil, fmt.Errorf("format base64 invalide")
 		}
-		header := parts[0] 
-		b64 = parts[1]
-
-		ext := "jpg"
+		header, payload := parts[0], parts[1]
+		raw = payload
 		if strings.Contains(header, "image/png") {
 			ext = "png"
 		} else if strings.Contains(header, "image/webp") {
 			ext = "webp"
-		} else if strings.Contains(header, "image/jpeg") || strings.Contains(header, "image/jpg") {
-			ext = "jpg"
 		}
-
-		data, err := base64.StdEncoding.DecodeString(b64)
-		if err != nil {
-			
-			data, err = base64.RawStdEncoding.DecodeString(b64)
-			if err != nil {
-				return "", nil, fmt.Errorf("decodage base64 echoue: %v", err)
-			}
-		}
-		return ext, data, nil
 	}
 
-	data, err := base64.StdEncoding.DecodeString(b64)
+	data, err := base64.StdEncoding.DecodeString(raw)
 	if err != nil {
-		data, err = base64.RawStdEncoding.DecodeString(b64)
+		data, err = base64.RawStdEncoding.DecodeString(raw)
 		if err != nil {
-			return "", nil, fmt.Errorf("decodage base64 echoue: %v", err)
+			return "", nil, fmt.Errorf("décodage base64 échoué: %v", err)
 		}
 	}
 
-	ext := "jpg" 
-	if len(data) >= 4 {
+	// Détection magique si pas de header MIME.
+	if !strings.HasPrefix(b64, "data:image/") && len(data) >= 4 {
 		if data[0] == 0x89 && data[1] == 0x50 {
 			ext = "png"
 		} else if data[0] == 0x52 && data[1] == 0x49 {

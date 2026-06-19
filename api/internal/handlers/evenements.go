@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func GetEvenements(w http.ResponseWriter, r *http.Request) {
@@ -124,6 +125,45 @@ func UpdateEvenement(w http.ResponseWriter, r *http.Request, id string, adminId 
 	eventId, _ := strconv.ParseInt(id, 10, 64)
 	syncAnimateurs(eventId, req.Animateurs)
 	jsonOK(w, map[string]string{"message": "événement mis à jour"}, http.StatusOK)
+}
+
+func GetEvenementInscrits(w http.ResponseWriter, r *http.Request, id string) {
+	rows, err := database.DB.Query(`
+		SELECT u.id_utilisateur, u.prenom, u.nom, u.email, i.statut_paiement, i.date_inscription
+		FROM inscriptions_evenements i
+		JOIN utilisateurs u ON u.id_utilisateur = i.id_utilisateur
+		WHERE i.id_evenement = ?
+		ORDER BY i.date_inscription ASC
+	`, id)
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type Inscrit struct {
+		IDUtilisateur  int    `json:"id_utilisateur"`
+		Prenom         string `json:"prenom"`
+		NomInitiale    string `json:"nom_initiale"`
+		Email          string `json:"email"`
+		StatutPaiement string `json:"statut_paiement"`
+		DateInscription string `json:"date_inscription"`
+	}
+
+	inscrits := []Inscrit{}
+	for rows.Next() {
+		var ins Inscrit
+		var nom string
+		var dateIns time.Time
+		if err := rows.Scan(&ins.IDUtilisateur, &ins.Prenom, &nom, &ins.Email, &ins.StatutPaiement, &dateIns); err == nil {
+			if len(nom) > 0 {
+				ins.NomInitiale = string([]rune(nom)[:1]) + "."
+			}
+			ins.DateInscription = dateIns.Format("2006-01-02T15:04:05Z")
+			inscrits = append(inscrits, ins)
+		}
+	}
+	jsonOK(w, inscrits, http.StatusOK)
 }
 
 func DeleteEvenement(w http.ResponseWriter, r *http.Request, id string) {

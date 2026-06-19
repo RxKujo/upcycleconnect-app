@@ -330,6 +330,10 @@ func ReserverCatalogueItem(w http.ResponseWriter, r *http.Request, id string, us
         return
     }
 
+    // Ajout automatique au planning
+    catalogueId, _ := strconv.Atoi(id)
+    go AddPlanningFromFormation(userId, catalogueId)
+
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusCreated)
     json.NewEncoder(w).Encode(map[string]string{"message": "réservation enregistrée"})
@@ -374,6 +378,36 @@ func GetCatalogueReservations(w http.ResponseWriter, r *http.Request, id string,
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(reservations)
+}
+
+func GetMesReservations(w http.ResponseWriter, r *http.Request, userId int) {
+	rows, err := database.DB.Query(`SELECT c.id_catalogue_item, c.titre, c.categorie, c.format, c.lieu, c.date_debut, c.date_fin, c.prix, r.id_reservation, r.date_reservation, r.statut_paiement
+		FROM catalogue_reservations r
+		JOIN catalogue_items c ON r.id_catalogue_item = c.id_catalogue_item
+		WHERE r.id_utilisateur = ?
+		ORDER BY r.date_reservation DESC`, userId)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+	defer rows.Close()
+
+	var planning []models.PlanningItem
+	for rows.Next() {
+		var item models.PlanningItem
+		if err := rows.Scan(&item.IDCatalogueItem, &item.Titre, &item.Categorie, &item.Format, &item.Lieu, &item.DateDebut, &item.DateFin, &item.Prix, &item.IDReservation, &item.DateReservation, &item.StatutPaiement); err == nil {
+			planning = append(planning, item)
+		}
+	}
+	if planning == nil {
+		planning = []models.PlanningItem{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(planning)
 }
 
 func GetUtilisateurPlanning(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {

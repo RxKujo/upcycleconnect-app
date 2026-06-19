@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"api/internal/models"
+	"api/internal/services"
 	"api/pkg/database"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -59,7 +61,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	res, err := database.DB.Exec(query, req.Nom, req.Prenom, req.Email, string(hash), req.Telephone, req.Ville, req.AdresseComplete, req.CodePostal, req.Role, req.NomEntreprise, req.NumeroSiret)
 	if err != nil {
-		jsonErr(w, "impossible de créer l'utilisateur", http.StatusInternalServerError)
+		if strings.Contains(err.Error(), "Duplicate entry") || strings.Contains(err.Error(), "UNIQUE constraint") {
+			jsonErr(w, "un compte existe déjà avec cette adresse email", http.StatusConflict)
+		} else {
+			jsonErr(w, "impossible de créer l'utilisateur", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -119,4 +125,82 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonOK(w, models.LoginResponse{Token: tokenString}, http.StatusOK)
+}
+
+func ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Email == "" {
+		jsonErr(w, "email requis", http.StatusBadRequest)
+		return
+	}
+
+	var userId int
+	err := database.DB.QueryRow("SELECT id_utilisateur FROM utilisateurs WHERE email = ?", strings.ToLower(strings.TrimSpace(req.Email))).Scan(&userId)
+	if err != nil {
+		// Ne pas révéler si l'email existe
+		jsonOK(w, map[string]string{"message": "si un compte existe, un email de réinitialisation sera envoyé"}, http.StatusOK)
+		return
+	}
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+
+	// Invalider les anciens tokens (schéma Laravel : email, token, created_at)
+	database.DB.Exec("DELETE FROM password_reset_tokens WHERE email = ?", email)
+
+	token := fmt.Sprintf("%x%x", time.Now().UnixNano(), userId*99991)
+
+	_, err = database.DB.Exec(
+		"INSERT INTO password_reset_tokens (email, token, created_at) VALUES (?, ?, NOW())",
+		email, token,
+	)
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "http://localhost:8000"
+	}
+	resetURL := fmt.Sprintf("%s/reset-password?token=%s", appURL, token)
+	emailBody := fmt.Sprintf("Bonjour,\n\nVous avez demandé la réinitialisation de votre mot de passe UpcycleConnect.\n\nCliquez sur ce lien (valable 1 heure) :\n%s\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n\nL'équipe UpcycleConnect", resetURL)
+	services.SendSimpleEmail(req.Email, "Réinitialisation de votre mot de passe", emailBody)
+
+	jsonOK(w, map[string]string{"message": "si un compte existe, un email de réinitialisation sera envoyé"}, http.StatusOK)
+}
+
+func ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Token == "" || len(req.NewPassword) < 8 {
+		jsonErr(w, "token et mot de passe (min 8 caractères) requis", http.StatusBadRequest)
+		return
+	}
+
+	// Schéma Laravel : email, token, created_at — expire après 1h
+	var emailAddr string
+	var createdAt time.Time
+	err := database.DB.QueryRow(
+		"SELECT email, created_at FROM password_reset_tokens WHERE token = ?",
+		req.Token,
+	).Scan(&emailAddr, &createdAt)
+	if err != nil || time.Now().After(createdAt.Add(time.Hour)) {
+		jsonErr(w, "token invalide ou expiré", http.StatusBadRequest)
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	database.DB.Exec("UPDATE utilisateurs SET mot_de_passe_hash = ? WHERE email = ?", string(hash), emailAddr)
+	database.DB.Exec("DELETE FROM password_reset_tokens WHERE token = ?", req.Token)
+
+	jsonOK(w, map[string]string{"message": "mot de passe mis à jour"}, http.StatusOK)
 }

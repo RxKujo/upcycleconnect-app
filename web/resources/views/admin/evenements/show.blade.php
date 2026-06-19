@@ -119,4 +119,43 @@
     </form>
     @endif
 </div>
+
+<div class="card" style="cursor:default;transform:none;margin-top:32px;">
+    <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0 0 20px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">
+        Liste des inscrits
+    </h3>
+    <div id="inscrits-container">
+        <p style="font-family:'DM Mono',monospace;font-size:0.8rem;opacity:0.5;">Chargement…</p>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+(async function() {
+    const container = document.getElementById('inscrits-container');
+    const token = '{{ session("admin_token") }}';
+    try {
+        const resp = await fetch('{{ config("services.api.url") }}/api/v1/admin/evenements/{{ $evenement["id_evenement"] }}/inscrits', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!resp.ok) { container.innerHTML = '<p style="color:var(--cherry);">Accès non autorisé ou erreur serveur.</p>'; return; }
+        const inscrits = await resp.json();
+        if (!inscrits || inscrits.length === 0) {
+            container.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.8rem;opacity:0.5;">Aucun inscrit pour le moment.</p>';
+            return;
+        }
+        let html = '<table><thead><tr><th>Prénom</th><th>Nom</th><th>Email</th><th>Paiement</th><th>Inscription</th></tr></thead><tbody>';
+        inscrits.forEach(i => {
+            const date = new Date(i.date_inscription).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+            const badge = i.statut_paiement === 'paye' ? '<span class="badge badge-valid">Payé</span>' : '<span class="badge badge-waiting">' + i.statut_paiement + '</span>';
+            html += '<tr><td>' + i.prenom + '</td><td>' + i.nom_initiale + '</td><td>' + i.email + '</td><td>' + badge + '</td><td>' + date + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = '<p style="color:var(--cherry);">Erreur de chargement.</p>';
+    }
+})();
+</script>
+@endpush
 @endsection

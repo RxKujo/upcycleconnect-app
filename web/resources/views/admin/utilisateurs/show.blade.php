@@ -52,6 +52,15 @@
                     @endif
                 </p>
             </div>
+            <div class="info-item">
+                <span class="info-label">Score Upcycling</span>
+                <p class="info-value">
+                    <strong>{{ $utilisateur['upcycling_score'] ?? 0 }} pts</strong>
+                    @if(!empty($utilisateur['est_certifie']))
+                        <span class="badge badge-valid" style="margin-left:8px;">Certifié</span>
+                    @endif
+                </p>
+            </div>
         </div>
     </div>
 

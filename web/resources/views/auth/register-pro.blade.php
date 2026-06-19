@@ -447,7 +447,7 @@
 
             <div id="alertContainer"></div>
 
-            <form id="registerProForm" method="POST" action="http://localhost:8888/api/v1/auth/register" novalidate>
+            <form id="registerProForm" method="POST" action="{{ config('services.api.url') }}/api/v1/auth/register" novalidate>
                 <input type="hidden" name="role" value="professionnel">
 
                 <div class="section-divider">Informations personnelles</div>
@@ -914,6 +914,9 @@
                     setTimeout(() => {
                         window.location.href = '/professionnel/profile';
                     }, 2000);
+                } else if (response.status === 409) {
+                    showAlert('Un compte existe déjà avec cette adresse email.', 'error');
+                    grecaptcha.reset();
                 } else if (response.status === 400) {
                     const errorMessage = responseData.erreur || responseData.message || 'Erreur de validation';
                     showAlert(errorMessage, 'error');

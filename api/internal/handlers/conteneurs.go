@@ -19,7 +19,7 @@ func GetAllConteneurs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var conteneurs []models.Conteneur
+	conteneurs := []models.Conteneur{}
 	for rows.Next() {
 		var c models.Conteneur
 		if err := rows.Scan(&c.IDConteneur, &c.ConteneurRef, &c.Adresse, &c.Ville, &c.CodePostal, &c.Capacite, &c.Statut); err == nil {

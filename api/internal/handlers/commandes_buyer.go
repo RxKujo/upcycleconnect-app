@@ -160,6 +160,65 @@ type MaCommande struct {
 	VendeurNom     string  `json:"vendeur_nom_initiale"`
 }
 
+type MaVente struct {
+	IDCommande     int     `json:"id_commande"`
+	IDAnnonce      int     `json:"id_annonce"`
+	Titre          string  `json:"titre"`
+	TypeAnnonce    string  `json:"type_annonce"`
+	Prix           float64 `json:"prix"`
+	Commission     float64 `json:"montant_commission"`
+	CommissionPct  float64 `json:"commission_pct"`
+	ModeRemise     string  `json:"mode_remise"`
+	Statut         string  `json:"statut"`
+	DateCommande   string  `json:"date_commande"`
+	DateLimite     string  `json:"date_limite_recuperation,omitempty"`
+	AcheteurPrenom string  `json:"acheteur_prenom"`
+	AcheteurNom    string  `json:"acheteur_nom_initiale"`
+}
+
+func GetMesVentes(w http.ResponseWriter, r *http.Request, userId int) {
+	w.Header().Set("Content-Type", "application/json")
+
+	rows, err := database.DB.Query(`
+		SELECT c.id_commande, c.id_annonce, a.titre, a.type_annonce, COALESCE(a.prix, 0), c.montant_commission, c.commission_pct, a.mode_remise,
+		       c.statut, c.date_commande, c.date_limite_recuperation,
+		       u.prenom, u.nom
+		FROM commandes c
+		JOIN annonces a ON a.id_annonce = c.id_annonce
+		JOIN utilisateurs u ON u.id_utilisateur = c.id_acheteur
+		WHERE a.id_particulier = ?
+		ORDER BY c.date_commande DESC
+	`, userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return
+	}
+	defer rows.Close()
+
+	ventes := []MaVente{}
+	for rows.Next() {
+		var v MaVente
+		var dateCmd time.Time
+		var dateLim sql.NullTime
+		var nomAcheteur string
+		if err := rows.Scan(&v.IDCommande, &v.IDAnnonce, &v.Titre, &v.TypeAnnonce, &v.Prix, &v.Commission, &v.CommissionPct, &v.ModeRemise,
+			&v.Statut, &dateCmd, &dateLim, &v.AcheteurPrenom, &nomAcheteur); err == nil {
+			v.DateCommande = dateCmd.Format("2006-01-02T15:04:05Z")
+			if dateLim.Valid {
+				v.DateLimite = dateLim.Time.Format("2006-01-02T15:04:05Z")
+			}
+			if len(nomAcheteur) > 0 {
+				v.AcheteurNom = string([]rune(nomAcheteur)[:1]) + "."
+			}
+			ventes = append(ventes, v)
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(ventes)
+}
+
 func GetMesCommandes(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 

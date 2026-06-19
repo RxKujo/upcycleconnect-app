@@ -9,6 +9,9 @@ use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CommandeController;
+use App\Http\Controllers\Admin\ScoreController;
+use App\Http\Controllers\Admin\AbonnementController as AdminAbonnementController;
+use App\Http\Controllers\Admin\CatalogueController as AdminCatalogueController;
 use App\Http\Controllers\Salarie\DashboardController as SalarieDashboardController;
 use App\Http\Controllers\Salarie\EvenementController as SalarieEvenementController;
 use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
@@ -45,6 +48,8 @@ Route::get('/a-propos', fn() => view('public.a-propos'))->name('a-propos');
 Route::view('/cgu', 'public.cgu')->name('cgu');
 Route::view('/rgpd', 'public.rgpd')->name('rgpd');
 
+Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('auth.forgot-password');
+Route::get('/reset-password', fn() => view('auth.reset-password'))->name('auth.reset-password');
 Route::get('/register', fn() => view('auth.register'))->name('particulier.register');
 Route::get('/register-pro', fn() => view('auth.register-pro'))->name('professionnel.register');
 Route::get('/login', fn() => view('auth.login'))->name('particulier.login');
@@ -52,21 +57,31 @@ Route::get('/login', fn() => view('auth.login'))->name('particulier.login');
 Route::post('/auth/set-admin-session', [SessionController::class, 'setAdminSession'])->name('auth.set-admin-session');
 Route::post('/auth/set-salarie-session', [SessionController::class, 'setSalarieSession'])->name('auth.set-salarie-session');
 
+Route::get('/ressources', fn() => view('public.ressources.index'))->name('ressources.index');
+Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriels.index');
+Route::get('/depot', fn() => view('public.depot.index'))->name('depot.index');
+
 Route::prefix('particulier')->group(function () {
     Route::get('/annonces/create', fn() => view('particulier.annonces.create'))->name('particulier.annonces.create');
     Route::get('/profile', fn() => view('particulier.profile.show'))->name('particulier.profile.show');
+    Route::get('/planning', fn() => view('particulier.planning.index'))->name('particulier.planning.index');
 });
 
 Route::prefix('professionnel')->group(function () {
     Route::get('/profile', fn() => view('professionnel.profile.show'))->name('professionnel.profile.show');
+    Route::get('/abonnement', fn() => view('professionnel.abonnement.index'))->name('professionnel.abonnement.index');
 });
+
+Route::get('/abonnement/succes', fn() => view('professionnel.abonnement.succes'))->name('abonnement.succes');
+Route::get('/abonnement/annule', fn() => view('professionnel.abonnement.annule'))->name('abonnement.annule');
+Route::get('/paiement/succes', fn() => view('public.paiement.succes'))->name('paiement.succes');
 
 Route::prefix('admin')->group(function () {
     Route::get('/login', fn() => redirect('/login'))->name('admin.login');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
     Route::middleware('admin.auth')->group(function () {
-        Route::get('/', fn() => redirect()->route('admin.utilisateurs.index'));
+        Route::get('/', fn() => view('admin.dashboard'))->name('admin.dashboard');
 
         Route::get('/utilisateurs', [UtilisateurController::class, 'index'])->name('admin.utilisateurs.index');
         Route::get('/utilisateurs/{id}', [UtilisateurController::class, 'show'])->name('admin.utilisateurs.show');
@@ -111,6 +126,26 @@ Route::prefix('admin')->group(function () {
         Route::get('/conteneurs/{id}', [ConteneurController::class, 'show'])->name('admin.conteneurs.show');
         Route::post('/conteneurs/{id}/scan', [ConteneurController::class, 'scanBarcode'])->name('admin.conteneurs.scan');
         Route::put('/conteneurs/{id}/tickets/{ticketId}/resolve', [ConteneurController::class, 'resolveTicket'])->name('admin.conteneurs.tickets.resolve');
+        Route::get('/commandes/{idCommande}/barcode/pdf', [ConteneurController::class, 'generateBarcodePdf'])->name('admin.commandes.barcode.pdf');
+
+        Route::get('/catalogue', [AdminCatalogueController::class, 'index'])->name('admin.catalogue.index');
+        Route::get('/catalogue/create', [AdminCatalogueController::class, 'create'])->name('admin.catalogue.create');
+        Route::post('/catalogue', [AdminCatalogueController::class, 'store'])->name('admin.catalogue.store');
+        Route::get('/catalogue/{id}', [AdminCatalogueController::class, 'show'])->name('admin.catalogue.show');
+        Route::get('/catalogue/{id}/edit', [AdminCatalogueController::class, 'edit'])->name('admin.catalogue.edit');
+        Route::put('/catalogue/{id}', [AdminCatalogueController::class, 'update'])->name('admin.catalogue.update');
+        Route::delete('/catalogue/{id}', [AdminCatalogueController::class, 'destroy'])->name('admin.catalogue.destroy');
+        Route::put('/catalogue/{id}/valider', [AdminCatalogueController::class, 'valider'])->name('admin.catalogue.valider');
+        Route::get('/catalogue/{id}/reservations', [AdminCatalogueController::class, 'reservations'])->name('admin.catalogue.reservations');
+
+        Route::get('/abonnements', [AdminAbonnementController::class, 'index'])->name('admin.abonnements.index');
+
+        Route::get('/scores', [ScoreController::class, 'index'])->name('admin.scores.index');
+        Route::put('/scores/paliers/{id}', [ScoreController::class, 'updatePalier'])->name('admin.scores.palier.update');
+        Route::post('/scores/recompute', [ScoreController::class, 'recompute'])->name('admin.scores.recompute');
+
+        Route::get('/depot/demandes', fn() => view('admin.depot.index'))->name('admin.depot.index');
+        Route::get('/tutoriel/etapes', fn() => view('admin.tutoriel.index'))->name('admin.tutoriel.index');
     });
 });
 

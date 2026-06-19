@@ -24,7 +24,7 @@ class AdminAuthController extends Controller
             'password' => 'required',
         ]);
 
-        $response = Http::post('http://api:8888/api/v1/auth/login', [
+        $response = Http::post(config('services.api.url') . '/api/v1/auth/login', [
             'email' => $request->email,
             'mot_de_passe' => $request->password,
         ]);

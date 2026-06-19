@@ -99,7 +99,11 @@
             @if(($evenement['nb_places_dispo'] ?? 0) > 0)
                 <div x-show="!subscribed">
                     <button type="button" class="btn btn-primary btn-lg btn-block" x-on:click="subscribe()" x-bind:disabled="loading">
-                        <span x-show="!loading">M'inscrire</span>
+                        <span x-show="!loading">
+                            @if(($evenement['prix'] ?? 0) > 0) Payer & m'inscrire
+                            @else M'inscrire gratuitement
+                            @endif
+                        </span>
                         <span x-show="loading" style="display:none;">Traitement…</span>
                     </button>
                 </div>
@@ -120,17 +124,22 @@
     </div>
 </div>
 
+<script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
 
 <script>
-const API_BASE = 'http://localhost:8888';
+const API_BASE = '{{ config("services.api.url") }}';
+const PRIX_EVENEMENT = {{ ($evenement['prix'] ?? 0) }};
+let stripeInstance = null;
+let stripeElements = null;
 
-function getToken() {
-    return localStorage.getItem('auth_token');
-}
+function getToken() { return localStorage.getItem('auth_token'); }
 
-function showAlert(msg, type) {
-    alert(msg);
+async function getStripeKey() {
+    try {
+        const res = await fetch(API_BASE + '/api/v1/stripe/config');
+        return (await res.json()).publishable_key;
+    } catch(e) { return null; }
 }
 
 function eventPage(evenementId) {
@@ -155,9 +164,20 @@ function eventPage(evenementId) {
         async subscribe() {
             const token = getToken();
             if (!token) {
-                window.location.href = '/login?intent=evenement&event=' + evenementId;
+                window.location.href = '/login?return=' + encodeURIComponent(window.location.pathname);
                 return;
             }
+            // Événement payant → ouvrir la modal Stripe
+            if (PRIX_EVENEMENT > 0) {
+                this.loading = true;
+                try {
+                    await openStripeModalEvenement(evenementId, PRIX_EVENEMENT);
+                } finally {
+                    this.loading = false;
+                }
+                return;
+            }
+            // Événement gratuit → inscription directe
             this.loading = true;
             try {
                 const res = await fetch(`${API_BASE}/api/v1/evenements/${evenementId}/inscrire`, {
@@ -168,10 +188,10 @@ function eventPage(evenementId) {
                 if (res.ok) {
                     this.subscribed = true;
                 } else {
-                    showAlert(data.erreur || 'Erreur lors de l\'inscription');
+                    alert(data.erreur || 'Erreur lors de l\'inscription');
                 }
             } catch (e) {
-                showAlert('Impossible de contacter le serveur.');
+                alert('Impossible de contacter le serveur.');
             } finally {
                 this.loading = false;
             }
@@ -184,19 +204,99 @@ function eventPage(evenementId) {
                 const res = await fetch(`${API_BASE}/api/v1/evenements/${evenementId}/ticket`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!res.ok) { showAlert('Impossible de récupérer le billet.'); return; }
+                if (!res.ok) { alert('Impossible de récupérer le billet.'); return; }
                 const blob = await res.blob();
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = `billet-${evenementId}.pdf`;
-                a.click();
+                a.href = url; a.download = `billet-${evenementId}.pdf`; a.click();
                 URL.revokeObjectURL(url);
-            } catch (e) { showAlert('Erreur lors du téléchargement.'); }
+            } catch (e) { alert('Erreur lors du téléchargement.'); }
         }
     }
 }
+
+async function openStripeModalEvenement(evenementId, prix) {
+    const token = getToken();
+    // Créer le Payment Intent
+    const res = await fetch(API_BASE + '/api/v1/stripe/payment-intent/evenement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ id_evenement: evenementId })
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.erreur || 'Impossible de préparer le paiement.'); return; }
+
+    document.getElementById('modal-event-amount').textContent =
+        parseFloat(data.montant).toFixed(2).replace('.', ',') + ' €';
+
+    if (!stripeInstance) {
+        const pk = await getStripeKey();
+        if (!pk) { alert('Configuration Stripe indisponible.'); return; }
+        stripeInstance = Stripe(pk);
+    }
+    stripeElements = stripeInstance.elements({
+        clientSecret: data.client_secret,
+        appearance: {
+            theme: 'flat',
+            variables: { colorPrimary: '#A4243B', colorBackground: '#F5F0E1', fontFamily: 'Outfit, sans-serif', borderRadius: '0px' }
+        }
+    });
+    const paymentEl = stripeElements.create('payment');
+    document.getElementById('stripe-event-payment-element').innerHTML = '';
+    paymentEl.mount('#stripe-event-payment-element');
+    document.getElementById('stripe-event-modal').style.display = 'flex';
+}
+
+async function confirmEventPayment() {
+    const btn = document.getElementById('btn-payer-event');
+    btn.disabled = true; btn.textContent = 'Traitement…';
+    document.getElementById('stripe-event-error').textContent = '';
+
+    const { error } = await stripeInstance.confirmPayment({
+        elements: stripeElements,
+        confirmParams: { return_url: window.location.origin + '/paiement/succes?type=evenement' }
+    });
+    if (error) {
+        document.getElementById('stripe-event-error').textContent = error.message;
+        btn.disabled = false; btn.textContent = 'Payer maintenant';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('stripe-event-modal');
+    if (!modal) return;
+    document.getElementById('btn-annuler-event').addEventListener('click', function() {
+        modal.style.display = 'none';
+        document.getElementById('stripe-event-payment-element').innerHTML = '';
+        stripeElements = null;
+    });
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            document.getElementById('stripe-event-payment-element').innerHTML = '';
+            stripeElements = null;
+        }
+    });
+    document.getElementById('btn-payer-event').addEventListener('click', confirmEventPayment);
+});
 </script>
+
+{{-- Modal Stripe événement --}}
+<div id="stripe-event-modal" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.7);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--cream);border:3px solid var(--coffee);box-shadow:8px 8px 0 var(--coffee);padding:40px;max-width:500px;width:calc(100% - 32px);max-height:90vh;overflow-y:auto;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.08em;margin-bottom:8px;">Paiement sécurisé</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--teal);margin-bottom:28px;">
+            Montant : <strong style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--cherry);vertical-align:middle;margin-left:6px;" id="modal-event-amount"></strong>
+        </div>
+        <div id="stripe-event-payment-element" style="margin-bottom:24px;"></div>
+        <div id="stripe-event-error" style="color:var(--cherry);font-size:0.9rem;margin-bottom:16px;min-height:20px;font-family:'DM Mono',monospace;"></div>
+        <div style="display:flex;gap:12px;">
+            <button id="btn-payer-event" style="flex:1;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.1em;text-transform:uppercase;background:var(--cherry);color:var(--cream);border:3px solid var(--coffee);box-shadow:3px 3px 0 var(--coffee);cursor:pointer;">Payer maintenant</button>
+            <button id="btn-annuler-event" style="padding:16px 20px;font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;background:var(--cream);color:var(--coffee);border:3px solid var(--coffee);cursor:pointer;">Annuler</button>
+        </div>
+        <p style="font-family:'DM Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);opacity:0.7;margin-top:12px;">Paiement sécurisé par Stripe — données bancaires jamais stockées.</p>
+    </div>
+</div>
 @endsection
 
 @section('styles')

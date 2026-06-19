@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"api/internal/models"
+	"api/internal/services"
 	"api/pkg/database"
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 func GetCommandes(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +85,12 @@ func UpdateCommandeStatut(w http.ResponseWriter, r *http.Request, id string) {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la mise à jour"})
 		return
+	}
+
+	if req.Statut == "recuperee" {
+		if idInt, err2 := strconv.Atoi(id); err2 == nil {
+			services.AwardScoreForCommande(idInt)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

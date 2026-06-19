@@ -71,7 +71,7 @@
 
     <div id="replyLoginBox" style="display:none; border:var(--border); padding:32px; background:white; box-shadow:var(--shadow-sm); text-align:center;">
         <p style="font-size:1rem; margin-bottom:16px; opacity:0.7;">Vous souhaitez participer à cette discussion ?</p>
-        <a href="{{ route('particulier.login') }}?intent=forum_reponse&sujet={{ $sujet['id_sujet'] }}" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour répondre">
+        <a href="{{ route('particulier.login') }}?return={{ urlencode(request()->getPathInfo()) }}" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour répondre">
             Se connecter pour répondre
         </a>
     </div>
@@ -121,9 +121,8 @@
             var motif = prompt('Pourquoi signalez-vous ce message ?', '');
             if (motif === null) return;
             try {
-                var res = await fetch('http://localhost:8888/api/v1/forum/signaler', {
+                var res = await apiFetch('/api/v1/forum/signaler', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: JSON.stringify({ id_message: parseInt(msgId, 10), motif: motif })
                 });
                 var body = await res.json();
@@ -145,14 +144,13 @@ async function submitReply(e, sujetId) {
     var err = document.getElementById('replyError');
     err.style.display = 'none';
     var token = localStorage.getItem('auth_token');
-    if (!token) { window.location.href = '/login?intent=forum_reponse&sujet=' + sujetId; return false; }
+    if (!token) { window.location.href = '/login?return=' + encodeURIComponent(window.location.pathname); return false; }
     var payload = { contenu: form.contenu.value.trim() };
     var parent = form.id_parent_message.value;
     if (parent) payload.id_parent_message = parseInt(parent, 10);
     try {
-        var res = await fetch('http://localhost:8888/api/v1/forum/sujets/' + sujetId + '/messages', {
+        var res = await apiFetch('/api/v1/forum/sujets/' + sujetId + '/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify(payload)
         });
         var body = await res.json();
