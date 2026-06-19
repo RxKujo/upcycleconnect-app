@@ -41,3 +41,9 @@ go.work.sum
 web/bootstrap/cache/*.php
 web/storage/
 web/database/database.sqlite
+web/nul
+
+# Documents projet
+SUIVI.md
+Sujet du projet.pdf
+Descriptif_Fonctionnel_Mission*.docx
