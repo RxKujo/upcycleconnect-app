@@ -223,6 +223,13 @@
             <x-btn size="sm" onclick="downloadPDF()">Telecharger mes donnees</x-btn>
         </div>
 
+        <div class="card full-width" id="card-badges-pro" style="display:none;">
+            <h3 class="card-title">Mes Badges UpcycleConnect</h3>
+            <div id="badges-pro-container">
+                <div style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;">Chargement…</div>
+            </div>
+        </div>
+
         <div class="card full-width">
             <h3 class="card-title">Securite</h3>
             <x-btn variant="secondary" size="sm" class="btn-disabled" disabled>Modifier mon mot de passe</x-btn>
@@ -653,8 +660,47 @@ async function loadReservations() {
     }
 }
 
+const BADGE_NIVEAU_COLORS = {
+    general:       { bg: '#244F26', label: 'Général' },
+    intermediaire: { bg: '#1a6b8a', label: 'Intermédiaire' },
+    avance:        { bg: '#A4243B', label: 'Avancé' },
+};
+
+async function loadBadgesPro() {
+    const container = document.getElementById('badges-pro-container');
+    try {
+        const resp = await apiFetch('/api/v1/pro/badges');
+        if (!resp || resp.status === 403) return; // non-Pro : on cache le bloc
+        if (!resp.ok) return;
+        const badges = await resp.json();
+        if (!Array.isArray(badges) || badges.length === 0) {
+            container.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;padding:12px 0;">Aucun badge obtenu pour l\'instant.</p>';
+            document.getElementById('card-badges-pro').style.display = 'block';
+            return;
+        }
+        const html = '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:4px;">'
+            + badges.map(b => {
+                const niv = BADGE_NIVEAU_COLORS[b.niveau] || { bg: '#555', label: b.niveau };
+                const mat = b.type_materiau && b.type_materiau !== 'tous'
+                    ? ' <span style="font-size:0.65rem;opacity:0.75;">(' + escapeHtml(b.type_materiau) + ')</span>' : '';
+                const date = b.date_obtention
+                    ? '<div style="font-size:0.65rem;opacity:0.6;margin-top:4px;">' + new Date(b.date_obtention).toLocaleDateString('fr-FR') + '</div>'
+                    : '';
+                return '<div title="' + escapeHtml(b.description || '') + '" style="display:flex;flex-direction:column;align-items:center;padding:14px 16px;border:2px solid #120309;min-width:120px;max-width:148px;text-align:center;background:var(--cream);">'
+                    + '<div style="width:44px;height:44px;border-radius:50%;background:' + niv.bg + ';display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:8px;">★</div>'
+                    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:0.9rem;letter-spacing:0.04em;line-height:1.2;">' + escapeHtml(b.nom) + mat + '</div>'
+                    + '<div style="font-family:\'DM Mono\',monospace;font-size:0.62rem;text-transform:uppercase;color:' + niv.bg + ';margin-top:4px;">' + niv.label + '</div>'
+                    + date
+                    + '</div>';
+            }).join('')
+            + '</div>';
+        container.innerHTML = html;
+        document.getElementById('card-badges-pro').style.display = 'block';
+    } catch (e) { /* badges indisponibles */ }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    loadProfile(); loadAbonnement(); loadVentes(); loadProAnnonces(); loadReservations();
+    loadProfile(); loadAbonnement(); loadVentes(); loadProAnnonces(); loadReservations(); loadBadgesPro();
 
     document.getElementById('modal-pro-edit-annonce-close').addEventListener('click', () => {
         document.getElementById('modal-pro-edit-annonce').style.display = 'none';

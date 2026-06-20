@@ -367,7 +367,14 @@
         <div class="auth-card">
             <h1 class="auth-title">Se connecter</h1>
 
-            <div id="alertContainer"></div>
+            <div id="alertContainer">
+                @if(session('error'))
+                <div class="alert alert-error" style="margin-bottom:12px;">
+                    <span class="alert-icon">⚠</span>
+                    <div class="alert-content">{{ session('error') }}</div>
+                </div>
+                @endif
+            </div>
 
             <form id="loginForm" method="POST" action="{{ config('services.api.url') }}/api/v1/auth/login" novalidate>
                 <div class="form-group">
@@ -683,10 +690,30 @@
                     } else if (userRole === 'professionnel') {
                         showAlert('Connexion réussie! Redirection...', 'success');
                         localStorage.setItem('auth_token', token);
-                        setTimeout(() => {
-                            const returnUrl = new URLSearchParams(window.location.search).get('return');
-                            window.location.href = returnUrl || '/professionnel/profile';
-                        }, 1500);
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                        fetch('/auth/set-pro-session', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: token })
+                        })
+                        .then(r => r.json())
+                        .then(d => {
+                            if (d.success) {
+                                const returnUrl = new URLSearchParams(window.location.search).get('return');
+                                setTimeout(() => { window.location.href = returnUrl || d.redirect || '/professionnel/profile'; }, 800);
+                            } else {
+                                showAlert(d.message || 'Erreur lors de la création de la session', 'error');
+                                submitBtn.disabled = false;
+                                submitBtn.classList.remove('loading');
+                                loadingOverlay.classList.remove('active');
+                            }
+                        })
+                        .catch(() => {
+                            showAlert('Erreur réseau lors de la création de la session', 'error');
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('loading');
+                            loadingOverlay.classList.remove('active');
+                        });
                     } else {
                         showAlert('Connexion réussie! Redirection...', 'success');
                         localStorage.setItem('auth_token', token);

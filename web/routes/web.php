@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CommandeController;
 use App\Http\Controllers\Admin\ScoreController;
 use App\Http\Controllers\Admin\AbonnementController as AdminAbonnementController;
 use App\Http\Controllers\Admin\CatalogueController as AdminCatalogueController;
+use App\Http\Controllers\Admin\PubliciteController as AdminPubliciteController;
 use App\Http\Controllers\Salarie\DashboardController as SalarieDashboardController;
 use App\Http\Controllers\Salarie\EvenementController as SalarieEvenementController;
 use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
@@ -22,6 +23,10 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
 use App\Http\Controllers\ConseilController;
 use App\Http\Controllers\ForumController;
+use App\Http\Controllers\Pro\DashboardController as ProDashboardController;
+use App\Http\Controllers\Pro\AlertesController as ProAlertesController;
+use App\Http\Controllers\Pro\PublicitesController as ProPublicitesController;
+use App\Http\Controllers\Pro\ConteneursController as ProConteneursController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -56,6 +61,7 @@ Route::get('/login', fn() => view('auth.login'))->name('particulier.login');
 
 Route::post('/auth/set-admin-session', [SessionController::class, 'setAdminSession'])->name('auth.set-admin-session');
 Route::post('/auth/set-salarie-session', [SessionController::class, 'setSalarieSession'])->name('auth.set-salarie-session');
+Route::post('/auth/set-pro-session', [SessionController::class, 'setProSession'])->name('auth.set-pro-session');
 
 Route::get('/ressources', fn() => view('public.ressources.index'))->name('ressources.index');
 Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriels.index');
@@ -67,9 +73,44 @@ Route::prefix('particulier')->group(function () {
     Route::get('/planning', fn() => view('particulier.planning.index'))->name('particulier.planning.index');
 });
 
-Route::prefix('professionnel')->group(function () {
-    Route::get('/profile', fn() => view('professionnel.profile.show'))->name('professionnel.profile.show');
-    Route::get('/abonnement', fn() => view('professionnel.abonnement.index'))->name('professionnel.abonnement.index');
+Route::prefix('professionnel')->name('pro.')->middleware('pro.auth')->group(function () {
+    Route::get('/profile', fn() => view('professionnel.profile.show'))->name('profile.show');
+    Route::get('/abonnement', fn() => view('professionnel.abonnement.index'))->name('abonnement.index');
+
+    // Dashboard Essential Pro
+    Route::get('/dashboard', [ProDashboardController::class, 'essential'])->name('dashboard.essential');
+    // Dashboard Expert Pro (annuel)
+    Route::get('/dashboard/annuel', [ProDashboardController::class, 'expert'])->name('dashboard.expert');
+    // Export PDF annuel (Expert Pro)
+    Route::get('/dashboard/export-pdf', [ProDashboardController::class, 'exportPdf'])->name('dashboard.export-pdf');
+
+    // Alertes matériaux
+    Route::get('/alertes', [ProAlertesController::class, 'index'])->name('alertes.index');
+    Route::post('/alertes', [ProAlertesController::class, 'store'])->name('alertes.store');
+    Route::delete('/alertes/{id}', [ProAlertesController::class, 'destroy'])->name('alertes.destroy');
+
+    // Publicités
+    Route::prefix('publicites')->name('publicites.')->group(function () {
+        Route::get('/', [ProPublicitesController::class, 'index'])->name('index');
+        Route::get('/creer', [ProPublicitesController::class, 'create'])->name('create');
+        Route::post('/', [ProPublicitesController::class, 'store'])->name('store');
+        Route::delete('/{id}', [ProPublicitesController::class, 'destroy'])->name('destroy');
+    });
+
+    // Badges (recalcul manuel)
+    Route::post('/badges/recalculer', function () {
+        $token = session('pro_token');
+        $apiUrl = rtrim(config('services.api.url', env('API_URL', 'http://localhost:8080')), '/');
+        \Illuminate\Support\Facades\Http::withToken($token)
+            ->post($apiUrl . '/api/v1/pro/badges/recalculer');
+        return redirect()->route('pro.dashboard.expert')->with('success', 'Badges recalculés.');
+    })->name('badges.recalculer');
+
+    // Conteneurs — récupération en conteneur
+    Route::prefix('conteneurs')->name('conteneurs.')->group(function () {
+        Route::get('/', [ProConteneursController::class, 'index'])->name('index');
+        Route::post('/valider', [ProConteneursController::class, 'validerReception'])->name('valider');
+    });
 });
 
 Route::get('/abonnement/succes', fn() => view('professionnel.abonnement.succes'))->name('abonnement.succes');
@@ -146,6 +187,13 @@ Route::prefix('admin')->group(function () {
 
         Route::get('/depot/demandes', fn() => view('admin.depot.index'))->name('admin.depot.index');
         Route::get('/tutoriel/etapes', fn() => view('admin.tutoriel.index'))->name('admin.tutoriel.index');
+
+        // Publicités — modération
+        Route::prefix('publicites')->name('admin.publicites.')->group(function () {
+            Route::get('/', [AdminPubliciteController::class, 'index'])->name('index');
+            Route::put('/{id}/valider', [AdminPubliciteController::class, 'valider'])->name('valider');
+            Route::put('/{id}/refuser', [AdminPubliciteController::class, 'refuser'])->name('refuser');
+        });
     });
 });
 

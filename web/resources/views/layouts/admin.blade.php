@@ -135,6 +135,10 @@
                 <a href="{{ route('admin.tutoriel.index') }}" class="{{ request()->is('admin/tutoriel*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tutoriel
                 </a>
+                <a href="{{ route('admin.publicites.index') }}" class="{{ request()->is('admin/publicites*') ? 'active' : '' }}" style="justify-content:space-between;">
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Publicités</span>
+                    <span id="badge-publicites" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <form action="{{ route('admin.logout') }}" method="POST">
@@ -179,6 +183,10 @@
         if (d.evenements_en_attente > 0) {
             const b = document.getElementById('badge-evenements');
             if (b) { b.textContent = d.evenements_en_attente; b.style.display = 'inline'; }
+        }
+        if (d.publicites_en_attente > 0) {
+            const b = document.getElementById('badge-publicites');
+            if (b) { b.textContent = d.publicites_en_attente; b.style.display = 'inline'; }
         }
     } catch(e) {}
 })();

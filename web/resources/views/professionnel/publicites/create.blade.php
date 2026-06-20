@@ -1,0 +1,63 @@
+@extends('layouts.professionnel')
+
+@section('title', 'Nouvelle publicité')
+
+@section('content')
+<div class="main-content" style="max-width:680px;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+        <h1 class="font-bebas" style="font-size:2.4rem;">Nouvelle publicité</h1>
+        <a href="{{ route('pro.publicites.index') }}" class="btn-secondary btn-sm">← Retour</a>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ route('pro.publicites.store') }}">
+            @csrf
+
+            <div style="margin-bottom:20px;">
+                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Titre <span style="color:#A4243B;">*</span></label>
+                <input type="text" name="titre" value="{{ old('titre') }}" required maxlength="200"
+                    style="width:100%; padding:12px; border:3px solid #120309; font-family:'Outfit',sans-serif; font-size:1rem;">
+                @error('titre')<p style="color:#A4243B;font-size:0.8rem;margin-top:4px;">{{ $message }}</p>@enderror
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">URL du visuel (image)</label>
+                <input type="url" name="visuel_url" value="{{ old('visuel_url') }}" maxlength="500"
+                    placeholder="https://..."
+                    style="width:100%; padding:12px; border:3px solid #120309; font-family:'Outfit',sans-serif; font-size:1rem;">
+                @error('visuel_url')<p style="color:#A4243B;font-size:0.8rem;margin-top:4px;">{{ $message }}</p>@enderror
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">URL de destination (clic)</label>
+                <input type="url" name="url_cible" value="{{ old('url_cible') }}" maxlength="500"
+                    placeholder="https://..."
+                    style="width:100%; padding:12px; border:3px solid #120309; font-family:'Outfit',sans-serif; font-size:1rem;">
+                @error('url_cible')<p style="color:#A4243B;font-size:0.8rem;margin-top:4px;">{{ $message }}</p>@enderror
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+                <div>
+                    <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Date de début</label>
+                    <input type="date" name="date_debut" value="{{ old('date_debut') }}"
+                        style="width:100%; padding:12px; border:3px solid #120309; font-family:'DM Mono',monospace;">
+                </div>
+                <div>
+                    <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Date de fin</label>
+                    <input type="date" name="date_fin" value="{{ old('date_fin') }}"
+                        style="width:100%; padding:12px; border:3px solid #120309; font-family:'DM Mono',monospace;">
+                </div>
+            </div>
+
+            <div style="background:#f9f5e7; border:2px solid #D8C99B; padding:14px; margin-bottom:24px; font-family:'DM Mono',monospace; font-size:0.8rem; color:#666;">
+                💰 Tarif : <strong style="color:#120309;">100 €/mois</strong> — facturation mensuelle via Stripe.<br>
+                ⏳ Votre publicité sera <strong>soumise à validation</strong> avant mise en ligne.
+            </div>
+
+            <button type="submit" class="btn-primary">Soumettre la publicité</button>
+        </form>
+    </div>
+
+</div>
+@endsection

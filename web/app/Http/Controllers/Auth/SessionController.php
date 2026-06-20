@@ -80,6 +80,42 @@ class SessionController extends Controller
         }
     }
 
+    public function setProSession(Request $request)
+    {
+        try {
+            $token = $request->input('token') ?: $request->bearerToken();
+
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'Token manquant'], 400);
+            }
+
+            $decoded = $this->verifyAndDecodeJWT($token);
+
+            if (!$decoded) {
+                return response()->json(['success' => false, 'message' => 'Token invalide ou expiré'], 401);
+            }
+
+            if (($decoded['role'] ?? '') !== 'professionnel') {
+                return response()->json(['success' => false, 'message' => 'Accès réservé aux professionnels'], 403);
+            }
+
+            session([
+                'pro_token' => $token,
+                'pro_role'  => 'professionnel',
+                'pro_id'    => $decoded['id'] ?? null,
+            ]);
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Session établie',
+                'redirect' => route('pro.profile.show'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Erreur lors du traitement'], 500);
+        }
+    }
+
     /**
      * Vérifie la signature HMAC-SHA256 du JWT et retourne le payload décodé,
      * ou null si le token est invalide, forgé ou expiré.
