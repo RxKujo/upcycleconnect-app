@@ -42,6 +42,12 @@ const (
 	prefixAdminPaliers    = "/api/v1/admin/paliers"
 	prefixAdminTutoriel   = "/api/v1/admin/tutoriel/etapes"
 
+	// Routes pro (Essential Pro & Expert Pro)
+	prefixPro          = "/api/v1/pro"
+	prefixAdminPub     = "/api/v1/admin/publicites"
+	segAlertes         = "/alertes"
+	segPublicites      = "/publicites"
+
 	// Segments de suffixes réutilisés — évitent les littéraux répétés.
 	segStats     = "/stats"
 	segCatalogue = "/catalogue"
@@ -80,6 +86,10 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if role == "professionnel" && routePro(w, req, path, method, userId) {
+		return
+	}
+
 	if (role == "salarie" || role == "admin") && routeSalarie(w, req, path, method, userId, role) {
 		return
 	}
@@ -114,6 +124,9 @@ func routePublic(w http.ResponseWriter, req *http.Request, path, method string) 
 		return true
 	}
 	if routePublicEvenements(w, req, path, method) {
+		return true
+	}
+	if routePublicPublicites(w, req, path, method) {
 		return true
 	}
 	switch {
@@ -183,6 +196,19 @@ func routePublicResources(w http.ResponseWriter, req *http.Request, path, method
 	case match(path, prefixPublic+"/evenements") && method == "GET":
 		handlers.GetPublicEvenements(w, req)
 
+	default:
+		return false
+	}
+	return true
+}
+
+func routePublicPublicites(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixPublic+segPublicites)
+	switch {
+	case match(path, prefixPublic+segPublicites) && method == "GET":
+		handlers.GetPublicitesActives(w, req)
+	case len(p) == 2 && p[1] == "clic" && method == "POST":
+		handlers.EnregistrerClicPub(w, req, p[0])
 	default:
 		return false
 	}
@@ -357,6 +383,55 @@ func routeAuthDepot(w http.ResponseWriter, req *http.Request, path, method strin
 	return true
 }
 
+// ─── Routes professionnel (Essential Pro & Expert Pro) ───────────────────────
+
+func routePro(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	pAlertes := splitPath(path, prefixPro+segAlertes)
+	pPubs    := splitPath(path, prefixPro+segPublicites)
+
+	switch {
+	// Dashboard
+	case match(path, prefixPro+"/dashboard") && method == "GET":
+		handlers.GetDashboardEssential(w, req, userId)
+	case match(path, prefixPro+"/dashboard/annuel") && method == "GET":
+		handlers.GetDashboardExpert(w, req, userId)
+	case match(path, prefixPro+"/dashboard/export-pdf") && method == "GET":
+		handlers.ExportDashboardPDF(w, req, userId)
+
+	// Alertes matériaux
+	case match(path, prefixPro+segAlertes) && method == "GET":
+		handlers.GetAlertesPro(w, req, userId)
+	case match(path, prefixPro+segAlertes) && method == "POST":
+		handlers.CreateAlertePro(w, req, userId)
+	case len(pAlertes) == 1 && method == "DELETE":
+		handlers.DeleteAlertePro(w, req, pAlertes[0], userId)
+
+	// Badges
+	case match(path, prefixPro+"/badges") && method == "GET":
+		handlers.GetBadgesPro(w, req, userId)
+	case match(path, prefixPro+"/badges/recalculer") && method == "POST":
+		handlers.RecalculerBadgesPro(w, req, userId)
+
+	// Publicités
+	case match(path, prefixPro+segPublicites) && method == "GET":
+		handlers.GetMesPublicites(w, req, userId)
+	case match(path, prefixPro+segPublicites) && method == "POST":
+		handlers.CreatePublicitePro(w, req, userId)
+	case len(pPubs) == 1 && method == "DELETE":
+		handlers.DeletePublicitePro(w, req, pPubs[0], userId)
+
+	// Conteneurs
+	case match(path, prefixPro+"/conteneurs/commandes") && method == "GET":
+		handlers.GetCommandesEnConteneur(w, req, userId)
+	case match(path, prefixPro+"/conteneurs/valider-reception") && method == "POST":
+		handlers.ValiderReceptionConteneur(w, req, userId)
+
+	default:
+		return false
+	}
+	return true
+}
+
 // ─── Routes salarié ───────────────────────────────────────────────────────────
 
 func routeSalarie(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
@@ -486,7 +561,25 @@ func routeAdmin(w http.ResponseWriter, req *http.Request, path, method string, u
 		routeAdminAnnonces(w, req, path, method, userId) ||
 		routeAdminOrders(w, req, path, method) ||
 		routeAdminInfra(w, req, path, method) ||
-		routeAdminScoring(w, req, path, method)
+		routeAdminScoring(w, req, path, method) ||
+		routeAdminPro(w, req, path, method, userId)
+}
+
+func routeAdminPro(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	p := splitPath(path, prefixAdminPub)
+	switch {
+	case match(path, prefixAdminPub) && method == "GET":
+		handlers.AdminGetPublicites(w, req)
+	case len(p) == 2 && p[1] == "valider" && method == "PUT":
+		handlers.AdminValiderPublicite(w, req, p[0], userId)
+	case len(p) == 2 && p[1] == "refuser" && method == "PUT":
+		handlers.AdminRefuserPublicite(w, req, p[0], userId)
+	case match(path, prefixAdminConteneurs+"/notifier-arrivee") && method == "POST":
+		handlers.NotifierArriveeConteneur(w, req)
+	default:
+		return false
+	}
+	return true
 }
 
 func routeAdminUsers(w http.ResponseWriter, req *http.Request, path, method string) bool {

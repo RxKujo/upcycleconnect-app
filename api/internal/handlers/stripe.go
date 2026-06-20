@@ -563,6 +563,8 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		handleSubscriptionUpdated(event)
 	case "customer.subscription.deleted":
 		handleSubscriptionDeleted(event)
+	case "invoice.payment_failed":
+		handleInvoicePaymentFailed(event)
 	case "invoice.payment_succeeded":
 		handleInvoicePaymentSucceeded(event)
 	}
@@ -809,11 +811,32 @@ func handleSubscriptionDeleted(event stripe.Event) {
 		return
 	}
 
+	// Abonnement de plan Pro
 	database.DB.Exec(
 		`UPDATE souscriptions SET est_active = FALSE, date_fin = NOW() WHERE stripe_subscription_id = ?`,
 		sub.ID,
 	)
+
+	// Publicité — marquer comme expirée si c'est une sub de pub
+	if sub.Metadata["type"] == "publicite" {
+		services.ExpirerPubliciteStripe(sub.ID) //nolint:errcheck
+	}
+
 	log.Printf("Souscription annulée: %s", sub.ID)
+}
+
+func handleInvoicePaymentFailed(event stripe.Event) {
+	subID := services.ExtractInvoiceSubscriptionID(event.Data.Raw)
+	if subID == "" {
+		log.Printf("invoice.payment_failed: subscription_id introuvable dans le payload")
+		return
+	}
+
+	if n, err := services.SuspendrePubliciteStripe(subID); err != nil {
+		log.Printf("Erreur suspension pub stripe_sub=%s: %v", subID, err)
+	} else if n > 0 {
+		log.Printf("[STRIPE] Pub suspendue pour paiement échoué: sub=%s", subID)
+	}
 }
 
 func handleInvoicePaymentSucceeded(event stripe.Event) {
@@ -828,17 +851,18 @@ func handleInvoicePaymentSucceeded(event stripe.Event) {
 		return
 	}
 
-	if invoice.Parent != nil &&
-		invoice.Parent.SubscriptionDetails != nil &&
-		invoice.Parent.SubscriptionDetails.Subscription != nil &&
-		invoice.Parent.SubscriptionDetails.Subscription.ID != "" {
-		subID := invoice.Parent.SubscriptionDetails.Subscription.ID
-		database.DB.Exec(
-			`UPDATE souscriptions SET est_active = TRUE WHERE stripe_subscription_id = ?`,
-			subID,
-		)
-		log.Printf("Renouvellement souscription: %s", subID)
+	subID := services.ExtractInvoiceSubscriptionID(event.Data.Raw)
+	if subID == "" {
+		return
 	}
+
+	// Renouvellement abonnement de plan Pro
+	database.DB.Exec(`UPDATE souscriptions SET est_active = TRUE WHERE stripe_subscription_id = ?`, subID)
+
+	// Réactivation d'une pub suspendue suite à un paiement échoué puis réussi (retry Stripe)
+	services.RéactiverPubliciteStripe(subID) //nolint:errcheck
+
+	log.Printf("Paiement reçu pour souscription: %s", subID)
 }
 
 // AdminSyncStripePlans crée les Products et Prices Stripe pour tous les abonnements

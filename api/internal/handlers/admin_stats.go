@@ -12,8 +12,9 @@ type AdminStats struct {
 	TotalAnnonces       int     `json:"total_annonces"`
 	AnnoncesEnAttente   int     `json:"annonces_en_attente"`
 	TotalEvenements     int     `json:"total_evenements"`
-	EvenementsEnAttente int     `json:"evenements_en_attente"`
-	TotalCommandes      int     `json:"total_commandes"`
+	EvenementsEnAttente  int     `json:"evenements_en_attente"`
+	PublicitesEnAttente  int     `json:"publicites_en_attente"`
+	TotalCommandes       int     `json:"total_commandes"`
 	CATotal             float64 `json:"ca_total"`
 	TotalInscriptions   int     `json:"total_inscriptions"`
 	TotalFormations     int     `json:"total_formations"`
@@ -29,6 +30,7 @@ func GetAdminStats(w http.ResponseWriter, r *http.Request) {
 	database.DB.QueryRow("SELECT COUNT(*) FROM annonces WHERE statut = 'en_attente'").Scan(&s.AnnoncesEnAttente)
 	database.DB.QueryRow("SELECT COUNT(*) FROM evenements").Scan(&s.TotalEvenements)
 	database.DB.QueryRow("SELECT COUNT(*) FROM evenements WHERE statut = 'en_attente'").Scan(&s.EvenementsEnAttente)
+	database.DB.QueryRow("SELECT COUNT(*) FROM publicites WHERE statut = 'en_attente'").Scan(&s.PublicitesEnAttente)
 	database.DB.QueryRow("SELECT COUNT(*) FROM commandes").Scan(&s.TotalCommandes)
 	database.DB.QueryRow("SELECT COALESCE(SUM(a.prix), 0) FROM commandes c JOIN annonces a ON a.id_annonce = c.id_annonce WHERE c.statut != 'annulee'").Scan(&s.CATotal)
 	database.DB.QueryRow("SELECT COUNT(*) FROM inscriptions_evenements").Scan(&s.TotalInscriptions)

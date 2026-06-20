@@ -48,31 +48,43 @@ func processRappels() {
 
 		log.Printf("[WORKER] Envoi des rappels pour l'événement #%d: %s", id, titre)
 
-		userRows, err := database.DB.Query(`
-			SELECT u.email, u.prenom 
-			FROM inscriptions_evenements i
-			JOIN utilisateurs u ON i.id_utilisateur = u.id_utilisateur
-			WHERE i.id_evenement = ?`, id)
-		if err != nil {
-			log.Printf("[WORKER] Erreur query inscrits pour #%d: %v", id, err)
+		if err := envoyerRappelsEvenement(id, titre, dateDebut); err != nil {
+			log.Printf("[WORKER] Erreur rappels pour #%d: %v", id, err)
 			continue
 		}
-
-		for userRows.Next() {
-			var email, prenom string
-			if err := userRows.Scan(&email, &prenom); err == nil {
-				subject := fmt.Sprintf("Rappel : Votre événement \"%s\" approche !", titre)
-				body := fmt.Sprintf("Bonjour %s,\n\nCeci est un rappel pour votre participation à l'événement \"%s\" qui aura lieu le %s.\n\nÀ très bientôt !\nL'équipe UpcycleConnect", 
-					prenom, titre, dateDebut.Format("02/01/2006 à 15:04"))
-				
-				services.SendSimpleEmail(email, subject, body)
-			}
-		}
-		userRows.Close()
 
 		_, err = database.DB.Exec("UPDATE evenements SET rappel_envoye = TRUE WHERE id_evenement = ?", id)
 		if err != nil {
 			log.Printf("[WORKER] Erreur update rappel_envoye pour #%d: %v", id, err)
 		}
 	}
+}
+
+func envoyerRappelsEvenement(evenementID int, titre string, dateDebut time.Time) error {
+	rows, err := database.DB.Query(`
+		SELECT u.email, u.prenom, COALESCE(u.onesignal_player_id,''), u.role
+		FROM inscriptions_evenements i
+		JOIN utilisateurs u ON i.id_utilisateur = u.id_utilisateur
+		WHERE i.id_evenement = ?`, evenementID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	dateStr := dateDebut.Format("02/01/2006 à 15:04")
+	for rows.Next() {
+		var email, prenom, playerID, role string
+		if err := rows.Scan(&email, &prenom, &playerID, &role); err != nil {
+			continue
+		}
+		subject := fmt.Sprintf("Rappel : Votre événement \"%s\" approche !", titre)
+		body := fmt.Sprintf("Bonjour %s,\n\nCeci est un rappel pour votre participation à l'événement \"%s\" qui aura lieu le %s.\n\nÀ très bientôt !\nL'équipe UpcycleConnect",
+			prenom, titre, dateStr)
+		services.SendSimpleEmail(email, subject, body) //nolint:errcheck
+
+		if role == "professionnel" && playerID != "" {
+			services.NotifierRappelEvenement(playerID, titre, dateStr) //nolint:errcheck
+		}
+	}
+	return rows.Err()
 }

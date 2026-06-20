@@ -139,6 +139,22 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 
 	database.DB.Exec("UPDATE commandes SET statut = ? WHERE id_commande = ?", newStatut, idCommande)
 
+	// Notifier l'acheteur professionnel que ses objets sont en conteneur.
+	if newStatut == "en_conteneur" {
+		go func(cmdID int) {
+			var playerID, conteneurRef string
+			database.DB.QueryRow(`
+				SELECT COALESCE(u.onesignal_player_id,''), COALESCE(cn.conteneur_ref,'')
+				FROM commandes c
+				JOIN utilisateurs u ON c.id_acheteur = u.id_utilisateur
+				LEFT JOIN conteneurs cn ON c.id_conteneur = cn.id_conteneur
+				WHERE c.id_commande = ?`, cmdID).Scan(&playerID, &conteneurRef)
+			if playerID != "" {
+				services.NotifierObjetsEnConteneur(playerID, cmdID, conteneurRef)
+			}
+		}(idCommande)
+	}
+
 	// Commande finalisée : on crédite l'Upcycling Score du vendeur et de l'acheteur.
 	if newStatut == "recuperee" {
 		services.AwardScoreForCommande(idCommande)

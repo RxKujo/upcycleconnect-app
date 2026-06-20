@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -544,6 +545,35 @@ func ValiderAnnonce(w http.ResponseWriter, r *http.Request, id string, adminId i
 
 	tx.Commit()
 	logInfo("ValiderAnnonce", "admin=%d validated annonce=%s", adminId, id)
+
+	// Déclencher les alertes matériaux en arrière-plan
+	go func(annonceIDStr string) {
+		annonceID, err := strconv.Atoi(annonceIDStr)
+		if err != nil {
+			return
+		}
+		var ville string
+		database.DB.QueryRow(`
+			SELECT COALESCE(u.ville, '')
+			FROM annonces a
+			JOIN utilisateurs u ON u.id_utilisateur = a.id_particulier
+			WHERE a.id_annonce = ?`, annonceID).Scan(&ville)
+
+		matRows, err := database.DB.Query(
+			`SELECT DISTINCT materiau FROM objets_annonces WHERE id_annonce = ? AND materiau IS NOT NULL AND materiau != ''`,
+			annonceID)
+		if err != nil {
+			return
+		}
+		defer matRows.Close()
+		for matRows.Next() {
+			var mat string
+			if matRows.Scan(&mat) == nil && mat != "" {
+				SendAlertesMateriau(annonceID, mat, ville)
+			}
+		}
+	}(id)
+
 	jsonOK(w, map[string]interface{}{
 		"message":          "annonce validée",
 		"requires_barcode": modeRemise == "conteneur",
