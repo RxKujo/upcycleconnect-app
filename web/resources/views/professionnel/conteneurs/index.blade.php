@@ -7,7 +7,10 @@
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
         <h1 class="font-bebas" style="font-size:2.4rem;">Commandes en conteneur</h1>
-        <a href="{{ route('pro.dashboard.essential') }}" class="btn-secondary btn-sm">← Dashboard</a>
+        <div style="display:flex; gap:10px;">
+            <a href="{{ route('pro.conteneurs.historique') }}" class="btn-secondary btn-sm">Historique</a>
+            <a href="{{ route('pro.dashboard.essential') }}" class="btn-secondary btn-sm">← Dashboard</a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -56,14 +59,21 @@ Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Pass�
                     </div>
                 </div>
                 <div style="text-align:right;">
-                    @if($cmd['date_limite'])
+                    @if(!empty($cmd['date_limite_recuperation']))
                         @php
-                            $limite = \Carbon\Carbon::parse($cmd['date_limite']);
-                            $urgence = $limite->diffInDays(now()) <= 2;
+                            $limite = \Carbon\Carbon::parse($cmd['date_limite_recuperation']);
+                            // diffInDays signé (Carbon 3) : > 0 = jours restants, < 0 = déjà dépassé
+                            $joursRestants = now()->diffInDays($limite, false);
+                            $depasse = $joursRestants < 0;
+                            $urgence = !$depasse && $joursRestants <= 2;
+                            $alerte  = $depasse || $urgence;
                         @endphp
-                        <div class="font-mono" style="font-size:0.72rem; color:{{ $urgence ? '#A4243B' : '#666' }}; font-weight:{{ $urgence ? 'bold' : 'normal' }};">
-                            Récupérer avant le {{ $limite->format('d/m/Y') }}
-                            @if($urgence) — URGENT @endif
+                        <div class="font-mono" style="font-size:0.72rem; color:{{ $alerte ? '#A4243B' : '#666' }}; font-weight:{{ $alerte ? 'bold' : 'normal' }};">
+                            @if($depasse)
+                                Délai dépassé le {{ $limite->format('d/m/Y') }}
+                            @else
+                                Récupérer avant le {{ $limite->format('d/m/Y') }}@if($urgence) — URGENT @endif
+                            @endif
                         </div>
                     @endif
                     @if($cmd['code_barre'])

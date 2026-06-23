@@ -3,22 +3,80 @@ package workers
 import (
 	"api/internal/services"
 	"api/pkg/database"
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
 )
 
 func StartRappelWorker() {
-	ticker := time.NewTicker(1 * time.Hour)
+	// Passage immédiat au démarrage, puis toutes les heures.
 	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				processRappels()
-			}
+		processRappels()
+		processConteneursExpires()
+		ticker := time.NewTicker(1 * time.Hour)
+		for range ticker.C {
+			processRappels()
+			processConteneursExpires()
 		}
 	}()
 	log.Println("[WORKER] RappelWorker démarré (fréquence: 1h)")
+}
+
+// processConteneursExpires bascule en 'expiree' les commandes en_conteneur dont
+// le délai de récupération (7 j) est dépassé, et ouvre un ticket support pour
+// que l'objet non récupéré soit traité.
+func processConteneursExpires() {
+	rows, err := database.DB.Query(`
+		SELECT c.id_commande, c.id_acheteur, c.id_conteneur, a.titre
+		FROM commandes c
+		JOIN annonces a ON a.id_annonce = c.id_annonce
+		WHERE c.statut = 'en_conteneur'
+		  AND c.date_limite_recuperation IS NOT NULL
+		  AND c.date_limite_recuperation < NOW()`)
+	if err != nil {
+		log.Printf("[WORKER] Erreur query conteneurs expirés: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	type expiree struct {
+		commandeID, acheteurID, conteneurID int
+		titre                               string
+	}
+	var lot []expiree
+	for rows.Next() {
+		var e expiree
+		var conteneurID sql.NullInt64
+		if err := rows.Scan(&e.commandeID, &e.acheteurID, &conteneurID, &e.titre); err != nil {
+			continue
+		}
+		if conteneurID.Valid {
+			e.conteneurID = int(conteneurID.Int64)
+		}
+		lot = append(lot, e)
+	}
+
+	for _, e := range lot {
+		if _, err := database.DB.Exec(
+			`UPDATE commandes SET statut = 'expiree' WHERE id_commande = ?`, e.commandeID); err != nil {
+			log.Printf("[WORKER] Erreur bascule expiree commande #%d: %v", e.commandeID, err)
+			continue
+		}
+
+		sujet := fmt.Sprintf("Objet non récupéré — commande #%d", e.commandeID)
+		desc := fmt.Sprintf("Délai de récupération (7 jours) dépassé pour « %s ». Objet à traiter par le support.", e.titre)
+		var conteneurArg interface{}
+		if e.conteneurID > 0 {
+			conteneurArg = e.conteneurID
+		}
+		if _, err := database.DB.Exec(`
+			INSERT INTO tickets_incidents (id_signaleur, id_conteneur, sujet, description, statut)
+			VALUES (?, ?, ?, ?, 'ouvert')`, e.acheteurID, conteneurArg, sujet, desc); err != nil {
+			log.Printf("[WORKER] Erreur création ticket pour commande #%d: %v", e.commandeID, err)
+		}
+		log.Printf("[WORKER] Commande #%d expirée (objet: %s)", e.commandeID, e.titre)
+	}
 }
 
 func processRappels() {

@@ -128,19 +128,13 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	database.DB.Exec("UPDATE codes_barres SET date_utilisation = ? WHERE id_code_barre = ?", time.Now(), idCodeBarre)
-
 	var newStatut string
-	if typeCode == "depot_particulier" {
+	switch typeCode {
+	case "depot_particulier":
+		// Dépôt par le particulier : l'objet entre en conteneur, on notifie le pro.
 		newStatut = "en_conteneur"
-	} else if typeCode == "recuperation_pro" {
-		newStatut = "recuperee"
-	}
-
-	database.DB.Exec("UPDATE commandes SET statut = ? WHERE id_commande = ?", newStatut, idCommande)
-
-	// Notifier l'acheteur professionnel que ses objets sont en conteneur.
-	if newStatut == "en_conteneur" {
+		database.DB.Exec("UPDATE codes_barres SET date_utilisation = ? WHERE id_code_barre = ?", time.Now(), idCodeBarre) //nolint:errcheck
+		database.DB.Exec("UPDATE commandes SET statut = 'en_conteneur' WHERE id_commande = ?", idCommande)                 //nolint:errcheck
 		go func(cmdID int) {
 			var playerID, conteneurRef string
 			database.DB.QueryRow(`
@@ -148,16 +142,31 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 				FROM commandes c
 				JOIN utilisateurs u ON c.id_acheteur = u.id_utilisateur
 				LEFT JOIN conteneurs cn ON c.id_conteneur = cn.id_conteneur
-				WHERE c.id_commande = ?`, cmdID).Scan(&playerID, &conteneurRef)
+				WHERE c.id_commande = ?`, cmdID).Scan(&playerID, &conteneurRef) //nolint:errcheck
 			if playerID != "" {
 				services.NotifierObjetsEnConteneur(playerID, cmdID, conteneurRef)
 			}
 		}(idCommande)
-	}
 
-	// Commande finalisée : on crédite l'Upcycling Score du vendeur et de l'acheteur.
-	if newStatut == "recuperee" {
-		services.AwardScoreForCommande(idCommande)
+	case "recuperation_pro":
+		// La récupération est normalement en self-scan côté pro. Ici l'admin peut
+		// la forcer (litige) ; on délègue au MÊME point unique (finaliserRecuperation)
+		// pour un comportement strictement identique (statut + score + badges).
+		newStatut = "recuperee"
+		var acheteurID int
+		database.DB.QueryRow("SELECT id_acheteur FROM commandes WHERE id_commande = ?", idCommande).Scan(&acheteurID) //nolint:errcheck
+		if err := finaliserRecuperation(idCommande, acheteurID, req.CodeValeur); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la finalisation"})
+			return
+		}
+
+	default:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "type de code inconnu"})
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

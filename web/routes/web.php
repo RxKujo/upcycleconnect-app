@@ -115,6 +115,7 @@ Route::prefix('professionnel')->name('pro.')->middleware('pro.auth')->group(func
     // Conteneurs — récupération en conteneur
     Route::prefix('conteneurs')->name('conteneurs.')->group(function () {
         Route::get('/', [ProConteneursController::class, 'index'])->name('index');
+        Route::get('/historique', [ProConteneursController::class, 'historique'])->name('historique');
         Route::post('/valider', [ProConteneursController::class, 'validerReception'])->name('valider');
     });
 });

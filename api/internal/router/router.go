@@ -437,6 +437,8 @@ func routePro(w http.ResponseWriter, req *http.Request, path, method string, use
 	// Conteneurs
 	case match(path, prefixPro+"/conteneurs/commandes") && method == "GET":
 		handlers.GetCommandesEnConteneur(w, req, userId)
+	case match(path, prefixPro+"/conteneurs/historique") && method == "GET":
+		handlers.GetHistoriqueRecuperations(w, req, userId)
 	case match(path, prefixPro+"/conteneurs/valider-reception") && method == "POST":
 		handlers.ValiderReceptionConteneur(w, req, userId)
 

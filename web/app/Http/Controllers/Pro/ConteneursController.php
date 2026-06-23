@@ -33,6 +33,20 @@ class ConteneursController extends Controller
         ]);
     }
 
+    public function historique()
+    {
+        $response = Http::withToken($this->token())
+            ->get($this->apiUrl() . '/api/v1/pro/conteneurs/historique');
+
+        if ($response->unauthorized()) {
+            return redirect()->route('pro.login');
+        }
+
+        return view('professionnel.conteneurs.historique', [
+            'recuperations' => $response->json() ?? [],
+        ]);
+    }
+
     public function validerReception(Request $request)
     {
         $request->validate([
