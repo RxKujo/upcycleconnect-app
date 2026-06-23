@@ -54,7 +54,7 @@ async function syncStripe() {
     btn.disabled = true;
     btn.textContent = '…';
     try {
-        const r = await fetch('{{ config("services.api.url") }}/api/v1/admin/stripe/sync-plans', {
+        const r = await fetch('{{ config("services.api.public_url") }}/api/v1/admin/stripe/sync-plans', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token }
         });
@@ -69,7 +69,7 @@ async function syncStripe() {
     const token = '{{ session("admin_token") }}';
     try {
         // List all users and filter those with active subs via utilisateurs list
-        const r = await fetch('{{ config("services.api.url") }}/api/v1/admin/utilisateurs', {
+        const r = await fetch('{{ config("services.api.public_url") }}/api/v1/admin/utilisateurs', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!r.ok) { container.innerHTML = '<p style="color:var(--cherry);">Accès refusé.</p>'; return; }
@@ -81,7 +81,7 @@ async function syncStripe() {
         }
         // Fetch souscription for each pro in parallel
         const results = await Promise.all(pros.map(u =>
-            fetch('{{ config("services.api.url") }}/api/v1/admin/utilisateurs/' + u.id_utilisateur + '/abonnement', {
+            fetch('{{ config("services.api.public_url") }}/api/v1/admin/utilisateurs/' + u.id_utilisateur + '/abonnement', {
                 headers: { 'Authorization': 'Bearer ' + token }
             }).then(r => r.ok ? r.json() : null).then(sub => sub ? { user: u, sub } : null)
         ));

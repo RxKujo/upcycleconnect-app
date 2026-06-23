@@ -13,10 +13,15 @@ use App\Http\Controllers\Admin\ScoreController;
 use App\Http\Controllers\Admin\AbonnementController as AdminAbonnementController;
 use App\Http\Controllers\Admin\CatalogueController as AdminCatalogueController;
 use App\Http\Controllers\Admin\PubliciteController as AdminPubliciteController;
+use App\Http\Controllers\Admin\LangueController as AdminLangueController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\FinanceController as AdminFinanceController;
 use App\Http\Controllers\Salarie\DashboardController as SalarieDashboardController;
 use App\Http\Controllers\Salarie\EvenementController as SalarieEvenementController;
 use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
 use App\Http\Controllers\Salarie\ModerationController as SalarieModerationController;
+use App\Http\Controllers\Salarie\PlanningController as SalariePlanningController;
+use App\Http\Controllers\Salarie\BoiteIdeeController as SalarieBoiteIdeeController;
 use App\Http\Controllers\EvenementCatalogueController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\HomeController;
@@ -62,6 +67,7 @@ Route::get('/login', fn() => view('auth.login'))->name('particulier.login');
 Route::post('/auth/set-admin-session', [SessionController::class, 'setAdminSession'])->name('auth.set-admin-session');
 Route::post('/auth/set-salarie-session', [SessionController::class, 'setSalarieSession'])->name('auth.set-salarie-session');
 Route::post('/auth/set-pro-session', [SessionController::class, 'setProSession'])->name('auth.set-pro-session');
+Route::post('/auth/clear-role-sessions', [SessionController::class, 'clearRoleSessions'])->name('auth.clear-role-sessions');
 
 Route::get('/ressources', fn() => view('public.ressources.index'))->name('ressources.index');
 Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriels.index');
@@ -188,11 +194,38 @@ Route::prefix('admin')->group(function () {
         Route::get('/depot/demandes', fn() => view('admin.depot.index'))->name('admin.depot.index');
         Route::get('/tutoriel/etapes', fn() => view('admin.tutoriel.index'))->name('admin.tutoriel.index');
 
-        // Publicités — modération
+        // Publicités — modération + stats + rotation
         Route::prefix('publicites')->name('admin.publicites.')->group(function () {
             Route::get('/', [AdminPubliciteController::class, 'index'])->name('index');
+            Route::get('/stats', [AdminPubliciteController::class, 'stats'])->name('stats');
+            Route::get('/rotation', [AdminPubliciteController::class, 'rotation'])->name('rotation');
             Route::put('/{id}/valider', [AdminPubliciteController::class, 'valider'])->name('valider');
             Route::put('/{id}/refuser', [AdminPubliciteController::class, 'refuser'])->name('refuser');
+        });
+
+        // Langues & traductions multilingue
+        Route::prefix('langues')->name('admin.langues.')->group(function () {
+            Route::get('/', [AdminLangueController::class, 'index'])->name('index');
+            Route::post('/', [AdminLangueController::class, 'storeLangue'])->name('store');
+            Route::put('/{id}', [AdminLangueController::class, 'updateLangue'])->name('update');
+            Route::delete('/{id}', [AdminLangueController::class, 'destroyLangue'])->name('destroy');
+            Route::post('/translations', [AdminLangueController::class, 'upsertTranslation'])->name('translations.upsert');
+            Route::delete('/translations/{id}', [AdminLangueController::class, 'destroyTranslation'])->name('translations.destroy');
+        });
+
+        // Supervision notifications
+        Route::prefix('notifications')->name('admin.notifications.')->group(function () {
+            Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
+            Route::post('/groupe', [AdminNotificationController::class, 'sendGroupe'])->name('groupe');
+            Route::get('/prefs/{userId}', [AdminNotificationController::class, 'getUserPrefs'])->name('prefs.show');
+            Route::put('/prefs/{userId}', [AdminNotificationController::class, 'updateUserPrefs'])->name('prefs.update');
+        });
+
+        // Pilotage financier
+        Route::prefix('finances')->name('admin.finances.')->group(function () {
+            Route::get('/', [AdminFinanceController::class, 'index'])->name('index');
+            Route::get('/export-csv', [AdminFinanceController::class, 'exportCsv'])->name('export-csv');
+            Route::get('/export-pdf', [AdminFinanceController::class, 'exportPdf'])->name('export-pdf');
         });
     });
 });
@@ -216,6 +249,17 @@ Route::prefix('salarie')->group(function () {
         Route::get('/articles/{id}/edit', [SalarieArticleController::class, 'edit'])->name('salarie.articles.edit');
         Route::put('/articles/{id}', [SalarieArticleController::class, 'update'])->name('salarie.articles.update');
         Route::delete('/articles/{id}', [SalarieArticleController::class, 'destroy'])->name('salarie.articles.destroy');
+
+        // Planning salarié
+        Route::get('/planning', [SalariePlanningController::class, 'index'])->name('salarie.planning.index');
+        Route::post('/planning', [SalariePlanningController::class, 'store'])->name('salarie.planning.store');
+        Route::delete('/planning/{id}', [SalariePlanningController::class, 'destroy'])->name('salarie.planning.destroy');
+
+        // Boîte à idées
+        Route::get('/idees', [SalarieBoiteIdeeController::class, 'index'])->name('salarie.idees.index');
+        Route::post('/idees', [SalarieBoiteIdeeController::class, 'store'])->name('salarie.idees.store');
+        Route::put('/idees/{id}', [SalarieBoiteIdeeController::class, 'update'])->name('salarie.idees.update');
+        Route::delete('/idees/{id}', [SalarieBoiteIdeeController::class, 'destroy'])->name('salarie.idees.destroy');
 
         Route::get('/forum/signalements', [SalarieModerationController::class, 'signalements'])->name('salarie.forum.signalements');
         Route::put('/forum/messages/{id}/masquer', [SalarieModerationController::class, 'masquerMessage'])->name('salarie.forum.masquer');

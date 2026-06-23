@@ -79,7 +79,7 @@
 (async function() {
     const token = '{{ session("admin_token") }}';
     try {
-        const r = await fetch('{{ config("services.api.url") }}/api/v1/admin/stats', {
+        const r = await fetch('{{ config("services.api.public_url") }}/api/v1/admin/stats', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!r.ok) return;

@@ -90,6 +90,7 @@
     </style>
 </head>
 <body>
+    @include('partials._toast')
     <div class="admin-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -139,6 +140,16 @@
                     <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Publicités</span>
                     <span id="badge-publicites" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
                 </a>
+                <p class="sidebar-section-label" style="font-size:0.6rem;padding:14px 24px 6px;color:rgba(245,240,225,0.35);">Administration</p>
+                <a href="{{ route('admin.langues.index') }}" class="{{ request()->is('admin/langues*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Langues & Trad.
+                </a>
+                <a href="{{ route('admin.notifications.index') }}" class="{{ request()->is('admin/notifications*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Notifications
+                </a>
+                <a href="{{ route('admin.finances.index') }}" class="{{ request()->is('admin/finances*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Pilotage financier
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <form action="{{ route('admin.logout') }}" method="POST">
@@ -171,7 +182,7 @@
 <script>
 (async function() {
     try {
-        const r = await fetch('{{ config("services.api.url") }}/api/v1/admin/stats', {
+        const r = await fetch('{{ config("services.api.public_url") }}/api/v1/admin/stats', {
             headers: { 'Authorization': 'Bearer {{ session("admin_token") }}' }
         });
         if (!r.ok) return;

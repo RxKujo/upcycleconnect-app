@@ -90,6 +90,20 @@ func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
 		rayon = 1
 	}
 
+	// Empêcher le doublon : même matériau déjà actif pour ce pro
+	var existing int
+	if err := database.DB.QueryRow(`
+		SELECT COUNT(*) FROM alertes_materiaux
+		WHERE id_professionnel = ? AND materiau = ? AND est_active = TRUE`,
+		userID, req.Materiau).Scan(&existing); err != nil {
+		jsonErr(w, msgErrServeurAlerte, http.StatusInternalServerError)
+		return
+	}
+	if existing > 0 {
+		jsonErr(w, "vous avez déjà une alerte active pour ce matériau", http.StatusConflict)
+		return
+	}
+
 	// Vérifier la limite du nombre d'alertes (nil = illimité pour Expert Pro)
 	if plan.NbAlertesMax != nil {
 		var count int
@@ -142,14 +156,16 @@ func DeleteAlertePro(w http.ResponseWriter, r *http.Request, alerteID string, us
 // SendAlertesMateriau déclenche l'envoi des alertes correspondant à une annonce.
 // Appelé depuis le worker ou le handler de validation d'annonce.
 func SendAlertesMateriau(annonceID int, materiau string, villeAnnonce string) {
-	// Charger les pros ayant une alerte active pour ce matériau
+	// Charger les pros ayant une alerte active pour ce matériau — 1 ligne par pro (rayon max)
 	rows, err := database.DB.Query(`
 		SELECT am.id_professionnel, u.email, u.onesignal_player_id,
 		       COALESCE(u.latitude_entreprise, 0), COALESCE(u.longitude_entreprise, 0),
-		       am.rayon_km
+		       MAX(am.rayon_km) AS rayon_km
 		FROM alertes_materiaux am
 		JOIN utilisateurs u ON u.id_utilisateur = am.id_professionnel
-		WHERE am.materiau = ? AND am.est_active = TRUE`, materiau)
+		WHERE am.materiau = ? AND am.est_active = TRUE
+		GROUP BY am.id_professionnel, u.email, u.onesignal_player_id,
+		         u.latitude_entreprise, u.longitude_entreprise`, materiau)
 	if err != nil {
 		logError("SendAlertesMateriau", "query: %v", err)
 		return

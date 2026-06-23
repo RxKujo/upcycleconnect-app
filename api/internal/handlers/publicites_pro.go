@@ -265,6 +265,99 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, pubs, http.StatusOK)
 }
 
+// ─── Statistiques publicités — delta ticket 4 ────────────────────────────────
+
+// AdminGetPublicitesStats retourne les stats détaillées par campagne (vues, clics, CTR).
+func AdminGetPublicitesStats(w http.ResponseWriter, r *http.Request) {
+	type pubStats struct {
+		IDPublicite int     `json:"id_publicite"`
+		Titre       string  `json:"titre"`
+		Statut      string  `json:"statut"`
+		Entreprise  string  `json:"nom_entreprise"`
+		NbVues      int     `json:"nb_vues"`
+		NbClics     int     `json:"nb_clics"`
+		CTR         float64 `json:"ctr_pct"` // clics/vues * 100
+		CoutMensuel float64 `json:"cout_mensuel"`
+	}
+
+	rows, err := database.DB.Query(`
+		SELECT p.id_publicite, p.titre, p.statut,
+		       COALESCE(u.nom_entreprise,''), p.nb_vues, p.nb_clics,
+		       COALESCE(p.cout_mensuel, 100.00)
+		FROM publicites p
+		JOIN utilisateurs u ON u.id_utilisateur = p.id_professionnel
+		ORDER BY p.nb_vues DESC`)
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var stats []pubStats
+	for rows.Next() {
+		var s pubStats
+		if err := rows.Scan(&s.IDPublicite, &s.Titre, &s.Statut,
+			&s.Entreprise, &s.NbVues, &s.NbClics, &s.CoutMensuel); err == nil {
+			if s.NbVues > 0 {
+				s.CTR = float64(s.NbClics) / float64(s.NbVues) * 100.0
+			}
+			stats = append(stats, s)
+		}
+	}
+	if stats == nil {
+		stats = []pubStats{}
+	}
+	jsonOK(w, stats, http.StatusOK)
+}
+
+// AdminGetRotationWRR expose l'état courant de la table publicites_rotation
+// pour que l'admin puisse auditer la logique de répartition sans requête SQL directe.
+func AdminGetRotationWRR(w http.ResponseWriter, r *http.Request) {
+	type rotationEntry struct {
+		IDPublicite   int    `json:"id_publicite"`
+		Titre         string `json:"titre"`
+		Entreprise    string `json:"nom_entreprise"`
+		Statut        string `json:"statut"`
+		Poids         int    `json:"poids_affichage"`
+		ScoreRotation int64  `json:"score_rotation"`
+		NbAffichages  int64  `json:"nb_affichages"`
+		DerniereVue   string `json:"derniere_vue,omitempty"`
+	}
+
+	rows, err := database.DB.Query(`
+		SELECT p.id_publicite, p.titre, COALESCE(u.nom_entreprise,''), p.statut,
+		       p.poids_affichage,
+		       COALESCE(pr.score_rotation, 0),
+		       COALESCE(pr.nb_affichages, 0),
+		       COALESCE(DATE_FORMAT(pr.derniere_vue,'%Y-%m-%dT%H:%i:%s'), '')
+		FROM publicites p
+		JOIN utilisateurs u ON u.id_utilisateur = p.id_professionnel
+		LEFT JOIN publicites_rotation pr ON pr.id_publicite = p.id_publicite
+		WHERE p.statut = 'active'
+		ORDER BY pr.score_rotation DESC, p.id_publicite ASC`)
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var entries []rotationEntry
+	for rows.Next() {
+		var e rotationEntry
+		if err := rows.Scan(&e.IDPublicite, &e.Titre, &e.Entreprise, &e.Statut,
+			&e.Poids, &e.ScoreRotation, &e.NbAffichages, &e.DerniereVue); err == nil {
+			entries = append(entries, e)
+		}
+	}
+	if entries == nil {
+		entries = []rotationEntry{}
+	}
+	jsonOK(w, map[string]interface{}{
+		"description": "Score WRR : plus le score est élevé, plus la pub sera sélectionnée au prochain appel WRR. Un score de 0 signifie qu'elle vient d'être affichée.",
+		"pubs_actives": entries,
+	}, http.StatusOK)
+}
+
 func parseIntOrZero(s string) int {
 	n := 0
 	for _, c := range s {

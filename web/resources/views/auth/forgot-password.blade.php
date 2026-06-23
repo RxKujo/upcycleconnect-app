@@ -37,7 +37,7 @@ async function sendReset(e) {
     btn.textContent = 'Envoi…';
     msg.style.display = 'none';
     try {
-        const resp = await fetch('{{ config("services.api.url") }}/api/v1/auth/forgot-password', {
+        const resp = await fetch('{{ config("services.api.public_url") }}/api/v1/auth/forgot-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })

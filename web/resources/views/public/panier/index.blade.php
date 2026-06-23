@@ -150,7 +150,7 @@
 @section('scripts')
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-const API_BASE = '{{ config("services.api.url") }}';
+const API_BASE = '{{ config("services.api.public_url") }}';
 let stripeInstance = null;
 let stripeElements = null;
 let panierDetails = null;

@@ -94,7 +94,7 @@
 
 @section('scripts')
 <script>
-const API = '{{ config("services.api.url") }}';
+const API = '{{ config("services.api.public_url") }}';
 const token = localStorage.getItem('uc_token');
 
 function switchTab(tab) {

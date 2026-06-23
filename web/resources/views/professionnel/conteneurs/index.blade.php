@@ -35,7 +35,7 @@
             <button type="submit" class="btn-primary">Valider la réception</button>
         </form>
         <p class="font-mono" style="font-size:0.72rem; color:#888; margin-top:10px;">
-            ⚠️ Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Passé ce délai, contactez le support.
+Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Passé ce délai, contactez le support.
         </p>
     </div>
 
@@ -63,7 +63,7 @@
                         @endphp
                         <div class="font-mono" style="font-size:0.72rem; color:{{ $urgence ? '#A4243B' : '#666' }}; font-weight:{{ $urgence ? 'bold' : 'normal' }};">
                             Récupérer avant le {{ $limite->format('d/m/Y') }}
-                            @if($urgence) ⚠️ @endif
+                            @if($urgence) — URGENT @endif
                         </div>
                     @endif
                     @if($cmd['code_barre'])

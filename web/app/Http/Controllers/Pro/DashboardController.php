@@ -44,7 +44,7 @@ class DashboardController extends Controller
 
         if ($response->forbidden()) {
             return redirect()->route('pro.dashboard.essential')
-                ->with('error', 'Cette fonctionnalité nécessite un abonnement Expert Pro.');
+                ->with('toast_error', 'Cette fonctionnalité nécessite un abonnement Expert Pro.');
         }
 
         if ($response->unauthorized()) {
@@ -68,7 +68,7 @@ class DashboardController extends Controller
 
         if ($response->forbidden()) {
             return redirect()->route('pro.dashboard.expert')
-                ->with('error', 'Export PDF disponible uniquement pour les abonnés Expert Pro.');
+                ->with('toast_error', 'Export PDF disponible uniquement pour les abonnés Expert Pro.');
         }
 
         return response($response->body(), 200, [

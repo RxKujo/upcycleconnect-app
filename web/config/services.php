@@ -24,9 +24,10 @@ return [
     ],
 
     'api' => [
-        // Si API_URL est défini (cas Docker via env vars), on l'utilise.
-        // Sinon, fichier /.dockerenv présent => Docker, fallback http://api:8888 ; sinon local => http://localhost:8888.
+        // URL serveur-à-serveur (PHP → Go API via réseau Docker ou local).
         'url' => env('API_URL') ?: (file_exists('/.dockerenv') ? 'http://api:8888' : 'http://localhost:8888'),
+        // URL publique utilisée par le navigateur (fetch JS) — toujours l'hôte accessible depuis la machine cliente.
+        'public_url' => env('API_PUBLIC_URL', 'http://localhost:8888'),
     ],
 
 ];

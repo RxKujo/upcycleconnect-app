@@ -64,7 +64,7 @@
 
 @section('scripts')
 <script>
-const API = '{{ config("services.api.url") }}';
+const API = '{{ config("services.api.public_url") }}';
 const TOKEN = '{{ session("admin_token") }}';
 const statuts = { en_attente: 'En attente', validee: 'Validée', refusee: 'Refusée', code_envoye: 'Code envoyé' };
 const badgeClass = { en_attente: 'badge-waiting', validee: 'badge-valid', refusee: 'badge-refused', code_envoye: 'badge-info' };

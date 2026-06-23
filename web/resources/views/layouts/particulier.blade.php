@@ -110,6 +110,7 @@
     </style>
 </head>
 <body>
+    @include('partials._toast')
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span></a>
         <div class="navbar-links">
@@ -133,7 +134,7 @@
     </div>
 
     <script>
-        const API_BASE = '{{ config("services.api.url") }}';
+        const API_BASE = '{{ config("services.api.public_url") }}';
 
         function getToken() {
             return localStorage.getItem('auth_token');

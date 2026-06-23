@@ -108,7 +108,7 @@ class SessionController extends Controller
             return response()->json([
                 'success'  => true,
                 'message'  => 'Session établie',
-                'redirect' => route('pro.profile.show'),
+                'redirect' => route('pro.dashboard.essential'),
             ], 200);
 
         } catch (\Exception $e) {
@@ -162,5 +162,13 @@ class SessionController extends Controller
         }
 
         return base64_decode(strtr($input, '-_', '+/'), true);
+    }
+
+    public function clearRoleSessions()
+    {
+        session()->forget(['pro_token', 'pro_role', 'pro_id',
+                           'admin_token', 'admin_role', 'admin_id',
+                           'salarie_token', 'salarie_role', 'salarie_id']);
+        return response()->json(['success' => true]);
     }
 }

@@ -36,7 +36,6 @@
                 </select>
             </div>
 
-            {{-- Rayon : visible seulement pour Expert Pro (rayon_alerte_max_km NULL) --}}
             @if(isset($plan) && $plan['rayon_alerte_max_km'] === null)
             <div style="flex:1; min-width:140px;">
                 <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Rayon (km)</label>
@@ -72,10 +71,10 @@
                     <span style="margin-left:8px; background:#ccc; color:#333; padding:2px 8px; font-size:0.7rem; font-family:'DM Mono',monospace;">INACTIVE</span>
                 @endif
             </div>
-            <form method="POST" action="{{ route('pro.alertes.destroy', $alerte['id_alerte']) }}" onsubmit="return confirm('Supprimer cette alerte ?')">
+            <form method="POST" action="{{ route('pro.alertes.destroy', $alerte['id_alerte']) }}" class="delete-form">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn-secondary btn-sm" style="color:#A4243B;">Supprimer</button>
+                <button type="button" class="btn-secondary btn-sm btn-delete" style="color:#A4243B;">Supprimer</button>
             </form>
         </div>
         @empty
@@ -84,16 +83,64 @@
     </div>
 
     {{-- Info plan --}}
-    <div class="card" style="background:#f9f5e7; border:2px solid #D8C99B;">
-        <p class="font-mono" style="font-size:0.8rem; color:#666;">
-            @if(isset($plan) && $plan['nb_alertes_max'] === null)
-                ✅ <strong>Expert Pro</strong> — Alertes illimitées, rayon modulable, canal email + push OneSignal.
-            @else
-                ℹ️ <strong>Essential Pro</strong> — Maximum 3 alertes, rayon fixe 10 km, canal email uniquement.
-                <br>Passez à <a href="{{ route('professionnel.abonnement.index') }}" style="color:#A4243B;">Expert Pro</a> pour lever ces limites.
-            @endif
-        </p>
+    <div style="border:3px solid var(--coffee); box-shadow:4px 4px 0 var(--coffee); padding:20px 24px; margin-bottom:32px; background:var(--wheat);">
+        @if(isset($plan) && $plan['nb_alertes_max'] === null)
+            <span class="font-mono" style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; background:var(--forest); color:var(--cream); padding:2px 10px; border:2px solid var(--coffee); display:inline-block; margin-bottom:10px;">Expert Pro</span>
+            <p style="font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--coffee);">
+                Alertes illimitées — rayon modulable — canal email + push notifications.
+            </p>
+        @else
+            <span class="font-mono" style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; background:var(--teal); color:var(--cream); padding:2px 10px; border:2px solid var(--coffee); display:inline-block; margin-bottom:10px;">Essential Pro</span>
+            <p style="font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--coffee); margin-bottom:8px;">
+                Maximum 3 alertes — rayon fixe 10 km — canal email uniquement.
+            </p>
+            <p style="font-family:'DM Mono',monospace; font-size:0.78rem;">
+                Passez à <a href="{{ route('pro.abonnement.index') }}" style="color:var(--cherry); font-weight:bold;">Expert Pro</a> pour lever ces limites.
+            </p>
+        @endif
     </div>
 
 </div>
+
+{{-- Modale de confirmation --}}
+<div id="confirm-modal" style="display:none; position:fixed; inset:0; background:rgba(18,3,9,0.55); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:var(--cream); border:3px solid var(--coffee); box-shadow:8px 8px 0 var(--coffee); padding:40px 48px; max-width:420px; width:90%; text-align:center;">
+        <p class="font-bebas" style="font-size:1.8rem; letter-spacing:0.08em; margin-bottom:12px;">Supprimer l'alerte ?</p>
+        <p style="font-family:'DM Mono',monospace; font-size:0.85rem; color:#666; margin-bottom:32px;">Cette action est irréversible.</p>
+        <div style="display:flex; gap:16px; justify-content:center;">
+            <button id="confirm-cancel" class="btn-secondary btn-sm">Annuler</button>
+            <button id="confirm-ok" class="btn-primary btn-sm" style="background:var(--cherry);">Supprimer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var modal = document.getElementById('confirm-modal');
+    var pendingForm = null;
+
+    document.querySelectorAll('.btn-delete').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            pendingForm = btn.closest('.delete-form');
+            modal.style.display = 'flex';
+        });
+    });
+
+    document.getElementById('confirm-cancel').addEventListener('click', function () {
+        modal.style.display = 'none';
+        pendingForm = null;
+    });
+
+    document.getElementById('confirm-ok').addEventListener('click', function () {
+        if (pendingForm) pendingForm.submit();
+    });
+
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            pendingForm = null;
+        }
+    });
+})();
+</script>
 @endsection

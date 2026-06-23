@@ -92,7 +92,7 @@
 <div id="plans-grid" class="plans-grid" style="display:none"></div>
 
 <script>
-const API_BASE = '{{ config("services.api.url") }}';
+const API_BASE = '{{ config("services.api.public_url") }}';
 let billing = 'mensuel';
 let plans = [];
 let abonnementActif = null;

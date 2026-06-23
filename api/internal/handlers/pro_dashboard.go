@@ -8,9 +8,73 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/jung-kurt/gofpdf"
 )
+
+// capitalize met la première lettre en majuscule (les matériaux sont des mots simples).
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
+}
+
+// fixMojibake répare les chaînes en double-encodage UTF-8 (du texte UTF-8 importé
+// via une connexion Latin-1 puis ré-encodé en UTF-8 — ex. "é" stocké "Ã©").
+// Sans danger : ne modifie la chaîne que si chaque rune tient sur un octet ET que
+// le résultat est de l'UTF-8 valide différent de l'original ; sinon retourne tel quel.
+func fixMojibake(s string) string {
+	b := make([]byte, 0, len(s))
+	for _, r := range s {
+		if r > 0xFF {
+			return s // contient des runes hors Latin-1 : ce n'est pas du mojibake
+		}
+		b = append(b, byte(r))
+	}
+	if decoded := string(b); utf8.Valid(b) && decoded != s {
+		return decoded
+	}
+	return s
+}
+
+// ─── Palette rapport (sobre / corporate) ─────────────────────────────────────
+var (
+	colInk    = [3]int{34, 34, 34}    // texte principal
+	colMuted  = [3]int{135, 135, 135} // texte secondaire
+	colLine   = [3]int{224, 224, 224} // filets
+	colAccent = [3]int{36, 79, 38}    // vert forêt (#244F26)
+)
+
+func setText(pdf *gofpdf.Fpdf, c [3]int) { pdf.SetTextColor(c[0], c[1], c[2]) }
+func setLine(pdf *gofpdf.Fpdf, c [3]int) { pdf.SetDrawColor(c[0], c[1], c[2]) }
+
+// sectionTitle écrit un titre de section discret suivi d'un filet fin.
+func sectionTitle(pdf *gofpdf.Fpdf, x, y, w float64, title string) {
+	setText(pdf, colInk)
+	pdf.SetFont("dv", "B", 12)
+	pdf.SetXY(x, y)
+	pdf.CellFormat(w, 7, title, "", 0, "L", false, 0, "")
+	setLine(pdf, colLine)
+	pdf.SetLineWidth(0.3)
+	pdf.Line(x, y+9, x+w, y+9)
+}
+
+// drawMetric écrit une métrique : grand chiffre coloré + libellé discret en dessous.
+func drawMetric(pdf *gofpdf.Fpdf, x, y, w float64, value, label string) {
+	setText(pdf, colAccent)
+	pdf.SetFont("dv", "B", 22)
+	pdf.SetXY(x, y)
+	pdf.CellFormat(w, 11, value, "", 0, "L", false, 0, "")
+	setText(pdf, colMuted)
+	pdf.SetFont("dv", "", 8.5)
+	pdf.SetXY(x, y+12)
+	pdf.CellFormat(w, 6, label, "", 0, "L", false, 0, "")
+}
 
 const (
 	msgErrProfilPro  = "impossible de charger le profil pro"
@@ -167,50 +231,116 @@ func buildDashboardPDF(annee int, nomEntreprise string,
 	stats []services.StatMateriau,
 	badges []services.BadgeUtilisateur) *gofpdf.Fpdf {
 
+	const (
+		pageW    = 210.0
+		pageH    = 297.0
+		margin   = 15.0
+		contentW = pageW - 2*margin // 180
+	)
+
 	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.SetMargins(margin, margin, margin)
+	pdf.SetAutoPageBreak(true, 8)
+	pdf.AddUTF8Font("dv", "", "fonts/DejaVuSans.ttf")
+	pdf.AddUTF8Font("dv", "B", "fonts/DejaVuSans-Bold.ttf")
 	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 18)
-	pdf.Cell(0, 12, fmt.Sprintf("Rapport annuel %d — %s", annee, nomEntreprise))
-	pdf.Ln(16)
 
-	// Impact écologique
-	pdf.SetFont("Arial", "B", 13)
-	pdf.Cell(0, 8, "Impact écologique")
-	pdf.Ln(10)
-	pdf.SetFont("Arial", "", 11)
-	pdf.Cell(0, 7, fmt.Sprintf("Objets récupérés  : %d", impact.NbObjetsRecuperes))
-	pdf.Ln(7)
-	pdf.Cell(0, 7, fmt.Sprintf("Poids déchets évités : %.2f kg", impact.PoidsDechetKg))
-	pdf.Ln(7)
-	pdf.Cell(0, 7, fmt.Sprintf("CO₂ évité         : %.2f kg", impact.CO2EviteKg))
-	pdf.Ln(12)
+	// ── En-tête ──────────────────────────────────────────────────────────────
+	setText(pdf, colMuted)
+	pdf.SetFont("dv", "B", 9)
+	pdf.SetXY(margin, 18)
+	pdf.CellFormat(contentW, 5, "UPCYCLECONNECT  ·  RAPPORT ANNUEL D'IMPACT", "", 0, "L", false, 0, "")
 
-	// Stats matériaux
-	pdf.SetFont("Arial", "B", 13)
-	pdf.Cell(0, 8, "Annonces disponibles par matériau (rayon 10 km)")
-	pdf.Ln(10)
-	pdf.SetFont("Arial", "", 11)
-	for _, s := range stats {
-		pdf.Cell(0, 7, fmt.Sprintf("  %-20s %d annonce(s)", s.Materiau, s.NbAnnonces))
-		pdf.Ln(7)
+	setText(pdf, colInk)
+	pdf.SetFont("dv", "B", 24)
+	pdf.SetXY(margin, 24)
+	pdf.CellFormat(contentW, 12, fixMojibake(nomEntreprise), "", 0, "L", false, 0, "")
+
+	setText(pdf, colMuted)
+	pdf.SetFont("dv", "", 11)
+	pdf.SetXY(margin, 37)
+	pdf.CellFormat(contentW, 6, fmt.Sprintf("Année %d  ·  Espace Expert Pro", annee), "", 0, "L", false, 0, "")
+
+	setLine(pdf, colAccent)
+	pdf.SetLineWidth(0.8)
+	pdf.Line(margin, 47, margin+contentW, 47)
+
+	y := 58.0
+
+	// ── Impact écologique ────────────────────────────────────────────────────
+	sectionTitle(pdf, margin, y, contentW, "Impact écologique")
+	y += 16
+
+	colW := contentW / 3
+	drawMetric(pdf, margin, y, colW,
+		fmt.Sprintf("%d", impact.NbObjetsRecuperes), "Objets récupérés")
+	drawMetric(pdf, margin+colW, y, colW,
+		fmt.Sprintf("%.0f kg", impact.PoidsDechetKg), "Déchets évités")
+	drawMetric(pdf, margin+2*colW, y, colW,
+		fmt.Sprintf("%.1f kg", impact.CO2EviteKg), "CO₂ évité")
+	y += 30
+
+	// ── Annonces disponibles par matériau ────────────────────────────────────
+	sectionTitle(pdf, margin, y, contentW, "Annonces disponibles par matériau")
+	setText(pdf, colMuted)
+	pdf.SetFont("dv", "", 9)
+	pdf.SetXY(margin, y+10)
+	pdf.CellFormat(contentW, 6, "Dans un rayon de 10 km autour de votre établissement", "", 0, "L", false, 0, "")
+	y += 20
+
+	rowH := 9.0
+	if len(stats) == 0 {
+		setText(pdf, colMuted)
+		pdf.SetFont("dv", "", 11)
+		pdf.SetXY(margin, y)
+		pdf.CellFormat(contentW, rowH, "Aucune annonce disponible pour le moment.", "", 0, "L", false, 0, "")
+		y += rowH
 	}
-	pdf.Ln(6)
+	for _, s := range stats {
+		setText(pdf, colInk)
+		pdf.SetFont("dv", "", 11)
+		pdf.SetXY(margin, y)
+		pdf.CellFormat(contentW/2, rowH, capitalize(fixMojibake(s.Materiau)), "", 0, "L", false, 0, "")
+		pdf.SetFont("dv", "B", 11)
+		pdf.SetXY(margin, y)
+		pdf.CellFormat(contentW, rowH, fmt.Sprintf("%d annonce(s)", s.NbAnnonces), "", 0, "R", false, 0, "")
+		setLine(pdf, colLine)
+		pdf.SetLineWidth(0.2)
+		pdf.Line(margin, y+rowH, margin+contentW, y+rowH)
+		y += rowH + 2
+	}
+	y += 12
 
-	// Badges
+	// ── Badges obtenus ───────────────────────────────────────────────────────
 	if len(badges) > 0 {
-		pdf.SetFont("Arial", "B", 13)
-		pdf.Cell(0, 8, "Badges obtenus")
-		pdf.Ln(10)
-		pdf.SetFont("Arial", "", 11)
+		sectionTitle(pdf, margin, y, contentW, "Badges obtenus")
+		y += 16
 		for _, b := range badges {
-			pdf.Cell(0, 7, fmt.Sprintf("  🏅 %s (obtenu le %s)", b.Nom, b.DateObtention[:10]))
-			pdf.Ln(7)
+			setText(pdf, colAccent)
+			pdf.SetFont("dv", "B", 11)
+			pdf.SetXY(margin, y)
+			pdf.CellFormat(6, rowH, "•", "", 0, "L", false, 0, "")
+			setText(pdf, colInk)
+			pdf.SetXY(margin+6, y)
+			pdf.CellFormat(contentW-6, rowH, fixMojibake(b.Nom), "", 0, "L", false, 0, "")
+			setText(pdf, colMuted)
+			pdf.SetFont("dv", "", 9)
+			pdf.SetXY(margin, y)
+			pdf.CellFormat(contentW, rowH, "obtenu le "+b.DateObtention[:10], "", 0, "R", false, 0, "")
+			y += rowH + 1
 		}
 	}
 
-	pdf.Ln(12)
-	pdf.SetFont("Arial", "I", 9)
-	pdf.Cell(0, 6, fmt.Sprintf("Généré par UpcycleConnect le %s", time.Now().Format("02/01/2006")))
+	// ── Pied de page ─────────────────────────────────────────────────────────
+	setLine(pdf, colLine)
+	pdf.SetLineWidth(0.3)
+	pdf.Line(margin, pageH-18, margin+contentW, pageH-18)
+	setText(pdf, colMuted)
+	pdf.SetFont("dv", "", 8)
+	pdf.SetXY(margin, pageH-16)
+	pdf.CellFormat(contentW, 6,
+		"Généré par UpcycleConnect le "+time.Now().Format("02/01/2006"),
+		"", 0, "C", false, 0, "")
 	return pdf
 }
 

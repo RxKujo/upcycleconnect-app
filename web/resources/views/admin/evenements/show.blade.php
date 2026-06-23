@@ -135,7 +135,7 @@
     const container = document.getElementById('inscrits-container');
     const token = '{{ session("admin_token") }}';
     try {
-        const resp = await fetch('{{ config("services.api.url") }}/api/v1/admin/evenements/{{ $evenement["id_evenement"] }}/inscrits', {
+        const resp = await fetch('{{ config("services.api.public_url") }}/api/v1/admin/evenements/{{ $evenement["id_evenement"] }}/inscrits', {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!resp.ok) { container.innerHTML = '<p style="color:var(--cherry);">Accès non autorisé ou erreur serveur.</p>'; return; }

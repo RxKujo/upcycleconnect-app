@@ -128,7 +128,7 @@
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js" defer></script>
 
 <script>
-const API_BASE = '{{ config("services.api.url") }}';
+const API_BASE = '{{ config("services.api.public_url") }}';
 const PRIX_EVENEMENT = {{ ($evenement['prix'] ?? 0) }};
 let stripeInstance = null;
 let stripeElements = null;

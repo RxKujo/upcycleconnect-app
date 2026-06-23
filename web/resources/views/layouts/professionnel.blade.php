@@ -98,6 +98,7 @@
     </style>
 </head>
 <body>
+    @include('partials._toast')
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span> <span class="navbar-badge">Pro</span></a>
         <div class="navbar-links">
@@ -109,6 +110,7 @@
                 Panier
                 <span id="nav-cart-count" style="display:none; position:absolute; top:-6px; right:-10px; background:var(--cherry); color:var(--cream); min-width:18px; height:18px; padding:0 5px; border-radius:9px; font-family:'DM Mono',monospace; font-size:0.65rem; align-items:center; justify-content:center; border:1px solid var(--cream);">0</span>
             </a>
+            <a href="/professionnel/dashboard" class="{{ request()->is('professionnel/dashboard*') ? 'active' : '' }}">Dashboard</a>
             <a href="/professionnel/profile" class="{{ request()->is('professionnel/profile*') ? 'active' : '' }}">Mon profil</a>
             <button class="btn-logout" onclick="logout()">Deconnexion</button>
         </div>
@@ -120,7 +122,7 @@
     </div>
 
     <script>
-        const API_BASE = '{{ config("services.api.url") }}';
+        const API_BASE = '{{ config("services.api.public_url") }}';
 
         function getToken() {
             return localStorage.getItem('auth_token');

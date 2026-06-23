@@ -198,6 +198,7 @@
     </style>
 </head>
 <body>
+    @include('partials._toast')
     @include('partials.navbar')
 
     <main>
@@ -207,7 +208,7 @@
     @include('partials.footer')
 
     <script>
-        const API_BASE = '{{ config("services.api.url") }}';
+        const API_BASE = '{{ config("services.api.public_url") }}';
         window.APP_API_BASE = API_BASE;
         window.APP = {
             user: localStorage.getItem('auth_token') ? true : null,
@@ -253,12 +254,12 @@
     if (!token) return;
     const force = sessionStorage.getItem('force_tutoriel');
     try {
-        const r = await fetch('{{ config("services.api.url") }}/api/v1/tutoriel/statut', { headers: { 'Authorization': 'Bearer ' + token } });
+        const r = await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/statut', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!r.ok) return;
         const statut = await r.json();
         if (!force && (statut.tuto_vu || statut.termine || statut.passe)) return;
         sessionStorage.removeItem('force_tutoriel');
-        const re = await fetch('{{ config("services.api.url") }}/api/v1/tutoriel/etapes', { headers: { 'Authorization': 'Bearer ' + token } });
+        const re = await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/etapes', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!re.ok) return;
         const etapes = await re.json();
         if (!etapes || !etapes.length) return;
@@ -300,12 +301,12 @@ function tutoNav(dir) {
 }
 
 async function terminerTutoriel() {
-    await fetch('{{ config("services.api.url") }}/api/v1/tutoriel/termine', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
+    await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/termine', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
     document.getElementById('tuto-overlay').style.display = 'none';
 }
 
 async function passerTutoriel() {
-    await fetch('{{ config("services.api.url") }}/api/v1/tutoriel/passer', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
+    await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/passer', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
     document.getElementById('tuto-overlay').style.display = 'none';
 }
 

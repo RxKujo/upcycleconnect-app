@@ -36,7 +36,7 @@
 </div>
 
 <script>
-const API_BASE = '{{ config("services.api.url") }}';
+const API_BASE = '{{ config("services.api.public_url") }}';
 function getToken() { return localStorage.getItem('auth_token'); }
 
 async function loadPlanActif() {

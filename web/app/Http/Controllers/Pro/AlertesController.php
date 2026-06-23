@@ -51,8 +51,15 @@ class AlertesController extends Controller
                 'rayon_km' => (int) ($request->rayon_km ?? 10),
             ]);
 
-        if ($response->forbidden()) {
-            return back()->with('error', $response->json()['erreur'] ?? 'Limite d\'alertes atteinte.');
+        $erreur = match(true) {
+            $response->forbidden()      => $response->json()['erreur'] ?? 'Limite d\'alertes atteinte.',
+            $response->status() === 409 => $response->json()['erreur'] ?? 'Vous avez déjà une alerte pour ce matériau.',
+            !$response->successful()    => $response->json()['erreur'] ?? 'Impossible de créer l\'alerte.',
+            default                     => null,
+        };
+
+        if ($erreur) {
+            return back()->with('error', $erreur);
         }
 
         return redirect()->route('pro.alertes.index')

@@ -28,12 +28,12 @@ ALTER TABLE publicites
 CREATE TABLE IF NOT EXISTS publicites_rotation (
     id_publicite     INT NOT NULL PRIMARY KEY,
     nb_affichages    BIGINT NOT NULL DEFAULT 0
-      COMMENT 'Compteur total d'affichages depuis la création',
+      COMMENT 'Compteur total affichages depuis la creation',
     score_rotation   BIGINT NOT NULL DEFAULT 0
-      COMMENT 'Score courant : incrémenté de poids_affichage à chaque tour non-sélectionné, remis à 0 à la sélection (algorithme Weighted Round-Robin à déficit)',
+      COMMENT 'Score courant WRR : incremente de poids_affichage chaque tour non-selectionne, remis a 0 a la selection',
     derniere_vue     DATETIME NULL,
     FOREIGN KEY (id_publicite) REFERENCES publicites(id_publicite) ON DELETE CASCADE
-) COMMENT 'État de rotation pour l'algorithme round-robin pondéré des publicités';
+) COMMENT 'Etat de rotation pour algorithme round-robin pondere des publicites';
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 3. SEED : référentiel des badges (seuils en table, non codés en dur)

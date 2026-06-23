@@ -447,7 +447,7 @@
 
             <div id="alertContainer"></div>
 
-            <form id="registerProForm" method="POST" action="{{ config('services.api.url') }}/api/v1/auth/register" novalidate>
+            <form id="registerProForm" method="POST" action="{{ config('services.api.public_url') }}/api/v1/auth/register" novalidate>
                 <input type="hidden" name="role" value="professionnel">
 
                 <div class="section-divider">Informations personnelles</div>

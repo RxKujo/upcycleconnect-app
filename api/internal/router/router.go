@@ -41,12 +41,20 @@ const (
 	prefixAdminDepot      = "/api/v1/admin/depot/demandes"
 	prefixAdminPaliers    = "/api/v1/admin/paliers"
 	prefixAdminTutoriel   = "/api/v1/admin/tutoriel/etapes"
+	prefixAdminLangues    = "/api/v1/admin/langues"
+	prefixAdminTrad       = "/api/v1/admin/translations"
+	prefixAdminNotifLog   = "/api/v1/admin/notifications"
+	prefixAdminFinances   = "/api/v1/admin/finances"
 
 	// Routes pro (Essential Pro & Expert Pro)
 	prefixPro          = "/api/v1/pro"
 	prefixAdminPub     = "/api/v1/admin/publicites"
 	segAlertes         = "/alertes"
 	segPublicites      = "/publicites"
+
+	// Routes salarié — nouvelles
+	prefixSalarieIdees   = "/api/v1/salarie/idees"
+	prefixSalariePlanning = "/api/v1/salarie/planning"
 
 	// Segments de suffixes réutilisés — évitent les littéraux répétés.
 	segStats     = "/stats"
@@ -127,6 +135,12 @@ func routePublic(w http.ResponseWriter, req *http.Request, path, method string) 
 		return true
 	}
 	if routePublicPublicites(w, req, path, method) {
+		return true
+	}
+	// i18n — chargement des traductions par code ISO (sans auth, pour le frontend)
+	pI18 := splitPath(path, prefixPublic+"/i18n")
+	if len(pI18) == 1 && method == "GET" {
+		handlers.GetTranslationsByISO(w, req, pI18[0])
 		return true
 	}
 	switch {
@@ -438,7 +452,9 @@ func routeSalarie(w http.ResponseWriter, req *http.Request, path, method string,
 	return routeSalarieGeneral(w, req, path, method, userId) ||
 		routeSalarieEvenements(w, req, path, method, userId, role) ||
 		routeSalarieArticles(w, req, path, method, userId, role) ||
-		routeSalarieModeration(w, req, path, method, userId)
+		routeSalarieModeration(w, req, path, method, userId) ||
+		routeSalarieIdees(w, req, path, method, userId, role) ||
+		routeSalariePlanningDedicated(w, req, path, method, userId)
 }
 
 func routeSalarieGeneral(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
@@ -522,6 +538,49 @@ func routeSalarieModeration(w http.ResponseWriter, req *http.Request, path, meth
 	return true
 }
 
+// ─── Routes salarié — boîte à idées ──────────────────────────────────────────
+
+func routeSalarieIdees(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
+	p := splitPath(path, prefixSalarieIdees)
+	switch {
+	case match(path, prefixSalarieIdees) && method == "GET":
+		handlers.GetIdeesSalaries(w, req, userId)
+	case match(path, prefixSalarieIdees) && method == "POST":
+		handlers.CreateIdee(w, req, userId)
+	case len(p) == 1 && method == "GET":
+		handlers.GetIdee(w, req, p[0], userId)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateIdee(w, req, p[0], userId, role)
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteIdee(w, req, p[0], userId, role)
+	case len(p) == 2 && p[1] == "voter" && method == "POST":
+		handlers.VoterIdee(w, req, p[0], userId)
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes salarié — planning dédié ─────────────────────────────────────────
+// Le planning salarié réutilise les mêmes handlers que le planning particulier
+// (même table planning_utilisateurs), exposés sous /api/v1/salarie/planning
+// pour que le middleware salarie.auth s'applique sans ambiguïté.
+
+func routeSalariePlanningDedicated(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	p := splitPath(path, prefixSalariePlanning)
+	switch {
+	case match(path, prefixSalariePlanning) && method == "GET":
+		handlers.GetMonPlanning(w, req, userId)
+	case match(path, prefixSalariePlanning) && method == "POST":
+		handlers.AddPlanningManuel(w, req, userId)
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeletePlanningItem(w, req, p[0], userId)
+	default:
+		return false
+	}
+	return true
+}
+
 // ─── Routes catalogue (auth) ─────────────────────────────────────────────────
 
 func routeCatalogue(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
@@ -562,7 +621,10 @@ func routeAdmin(w http.ResponseWriter, req *http.Request, path, method string, u
 		routeAdminOrders(w, req, path, method) ||
 		routeAdminInfra(w, req, path, method) ||
 		routeAdminScoring(w, req, path, method) ||
-		routeAdminPro(w, req, path, method, userId)
+		routeAdminPro(w, req, path, method, userId) ||
+		routeAdminLangues(w, req, path, method) ||
+		routeAdminNotifications(w, req, path, method, userId) ||
+		routeAdminFinances(w, req, path, method)
 }
 
 func routeAdminPro(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
@@ -570,6 +632,10 @@ func routeAdminPro(w http.ResponseWriter, req *http.Request, path, method string
 	switch {
 	case match(path, prefixAdminPub) && method == "GET":
 		handlers.AdminGetPublicites(w, req)
+	case match(path, prefixAdminPub+"/stats") && method == "GET":
+		handlers.AdminGetPublicitesStats(w, req)
+	case match(path, prefixAdminPub+"/rotation") && method == "GET":
+		handlers.AdminGetRotationWRR(w, req)
 	case len(p) == 2 && p[1] == "valider" && method == "PUT":
 		handlers.AdminValiderPublicite(w, req, p[0], userId)
 	case len(p) == 2 && p[1] == "refuser" && method == "PUT":
@@ -740,6 +806,79 @@ func routeAdminScoring(w http.ResponseWriter, req *http.Request, path, method st
 	case len(pTut) == 1 && method == "PUT":
 		handlers.AdminUpdateTutorielEtape(w, req, pTut[0])
 
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes admin — multilingue ───────────────────────────────────────────────
+
+func routeAdminLangues(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	pL   := splitPath(path, prefixAdminLangues)
+	pT   := splitPath(path, prefixAdminTrad)
+	pI18 := splitPath(path, prefixPublic+"/i18n")
+	switch {
+	// Langues
+	case match(path, prefixAdminLangues) && method == "GET":
+		handlers.GetLangues(w, req)
+	case match(path, prefixAdminLangues) && method == "POST":
+		handlers.CreateLangue(w, req)
+	case len(pL) == 1 && method == "PUT":
+		handlers.UpdateLangue(w, req, pL[0])
+	case len(pL) == 1 && method == "DELETE":
+		handlers.DeleteLangue(w, req, pL[0])
+	// Traductions
+	case match(path, prefixAdminTrad) && method == "GET":
+		handlers.GetTranslations(w, req)
+	case match(path, prefixAdminTrad) && method == "POST":
+		handlers.UpsertTranslation(w, req)
+	case len(pT) == 1 && method == "DELETE":
+		handlers.DeleteTranslation(w, req, pT[0])
+	// Endpoint public i18n — chargement des libellés par langue (sans auth)
+	case len(pI18) == 1 && method == "GET":
+		handlers.GetTranslationsByISO(w, req, pI18[0])
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes admin — supervision notifications ─────────────────────────────────
+
+func routeAdminNotifications(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	pUser := splitPath(path, prefixAdminNotifLog+"/user")
+	switch {
+	case match(path, prefixAdminNotifLog+"/log") && method == "GET":
+		handlers.GetNotificationsLog(w, req)
+	case match(path, prefixAdminNotifLog+"/sites") && method == "GET":
+		handlers.GetSitesUC(w, req)
+	case match(path, prefixAdminNotifLog+"/groupe") && method == "POST":
+		handlers.SendNotifGroupe(w, req, userId)
+	case len(pUser) == 1 && method == "GET":
+		handlers.GetUserPrefsNotif(w, req, pUser[0])
+	case len(pUser) == 1 && method == "PUT":
+		handlers.UpdateUserPrefsNotif(w, req, pUser[0])
+	default:
+		return false
+	}
+	return true
+}
+
+// ─── Routes admin — pilotage financier ───────────────────────────────────────
+
+func routeAdminFinances(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	switch {
+	case match(path, prefixAdminFinances+"/dashboard") && method == "GET":
+		handlers.GetFinanceDashboard(w, req)
+	case match(path, prefixAdminFinances+"/revenus") && method == "GET":
+		handlers.GetRevenusSynthese(w, req)
+	case match(path, prefixAdminFinances+"/factures") && method == "GET":
+		handlers.GetFactures(w, req)
+	case match(path, prefixAdminFinances+"/export-csv") && method == "GET":
+		handlers.ExportFacturesCSV(w, req)
+	case match(path, prefixAdminFinances+"/export-pdf") && method == "GET":
+		handlers.ExportFacturesPDF(w, req)
 	default:
 		return false
 	}

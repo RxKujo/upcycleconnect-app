@@ -82,7 +82,7 @@
 
 @section('scripts')
 <script>
-const API_BASE = '{{ config("services.api.url") }}';
+const API_BASE = '{{ config("services.api.public_url") }}';
 
 const authModal = document.getElementById('authModal');
 function openAuthModal() { authModal.style.display = 'flex'; }

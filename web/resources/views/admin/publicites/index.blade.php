@@ -4,6 +4,10 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Publicités</h1>
+    <div style="display:flex;gap:12px;">
+        <a href="{{ route('admin.publicites.stats') }}" class="btn-secondary">Statistiques CTR</a>
+        <a href="{{ route('admin.publicites.rotation') }}" class="btn-secondary">Rotation WRR</a>
+    </div>
 </div>
 
 @php

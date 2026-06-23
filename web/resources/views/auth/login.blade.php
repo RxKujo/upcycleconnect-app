@@ -376,7 +376,7 @@
                 @endif
             </div>
 
-            <form id="loginForm" method="POST" action="{{ config('services.api.url') }}/api/v1/auth/login" novalidate>
+            <form id="loginForm" method="POST" action="{{ config('services.api.public_url') }}/api/v1/auth/login" novalidate>
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
                     <input
@@ -717,10 +717,15 @@
                     } else {
                         showAlert('Connexion réussie! Redirection...', 'success');
                         localStorage.setItem('auth_token', token);
-                        setTimeout(() => {
+                        // Nettoie les sessions de rôle précédentes (pro/admin/salarié)
+                        // pour éviter qu'un token persistant d'un autre compte donne accès à un espace protégé.
+                        fetch('/auth/clear-role-sessions', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' }
+                        }).finally(() => {
                             const returnUrl = new URLSearchParams(window.location.search).get('return');
                             window.location.href = returnUrl || '/particulier/profile';
-                        }, 1500);
+                        });
                     }
                 } else if (response.status === 401) {
                     // Authentication failed

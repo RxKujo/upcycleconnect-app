@@ -117,7 +117,7 @@
 @section('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const API = '{{ config("services.api.url") }}';
+const API = '{{ config("services.api.public_url") }}';
 const token = localStorage.getItem('uc_token');
 let map, selectedConteneur = null;
 

@@ -185,16 +185,40 @@ func AttenteEvenement(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func ValiderEvenement(w http.ResponseWriter, r *http.Request, id string, adminId int) {
-	_, err := database.DB.Exec("UPDATE evenements SET statut = 'valide', valide_par = ? WHERE id_evenement = ?", adminId, id)
+	res, err := database.DB.Exec("UPDATE evenements SET statut = 'valide', valide_par = ? WHERE id_evenement = ?", adminId, id)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la validation"})
 		return
 	}
+	if n, _ := res.RowsAffected(); n > 0 {
+		// Ajouter automatiquement l'événement au planning de chaque animateur salarié
+		// associé (table animateurs_evenements). Exécuté en goroutine pour ne pas
+		// bloquer la réponse HTTP.
+		evID, _ := strconv.Atoi(id)
+		go addEventToAnimateursPlanning(evID)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "événement validé"})
+}
+
+// addEventToAnimateursPlanning crée les créneaux de planning pour tous les animateurs
+// d'un événement après sa validation par un responsable.
+func addEventToAnimateursPlanning(evenementID int) {
+	rows, err := database.DB.Query(
+		"SELECT id_salarie FROM animateurs_evenements WHERE id_evenement = ?", evenementID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var salariesID int
+		if rows.Scan(&salariesID) == nil {
+			AddPlanningFromEvenement(salariesID, evenementID)
+		}
+	}
 }
 
 func RefuserEvenement(w http.ResponseWriter, r *http.Request, id string) {

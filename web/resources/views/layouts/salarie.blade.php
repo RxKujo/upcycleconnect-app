@@ -81,6 +81,7 @@
     @yield('styles')
 </head>
 <body>
+    @include('partials._toast')
     <div class="salarie-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -94,6 +95,13 @@
                 <p class="sidebar-section-label">Catalogue</p>
                 <a href="/salarie/evenements" class="{{ request()->is('salarie/evenements*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Mes événements
+                </a>
+                <a href="/salarie/planning" class="{{ request()->is('salarie/planning*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Planning
+                </a>
+                <p class="sidebar-section-label">Communauté</p>
+                <a href="/salarie/idees" class="{{ request()->is('salarie/idees*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Boîte à idées
                 </a>
                 <p class="sidebar-section-label">Contenu</p>
                 <a href="/salarie/articles" class="{{ request()->is('salarie/articles*') ? 'active' : '' }}">
@@ -137,7 +145,7 @@
 <script>
 (async function() {
     try {
-        const r = await fetch('{{ config("services.api.url") }}/api/v1/salarie/stats', {
+        const r = await fetch('{{ config("services.api.public_url") }}/api/v1/salarie/stats', {
             headers: { 'Authorization': 'Bearer {{ session("salarie_token") }}' }
         });
         if (!r.ok) return;

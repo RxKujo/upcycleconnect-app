@@ -14,7 +14,7 @@
 
 @section('scripts')
 <script>
-const API = '{{ config("services.api.url") }}';
+const API = '{{ config("services.api.public_url") }}';
 const TOKEN = '{{ session("admin_token") }}';
 let etapes = [];
 
