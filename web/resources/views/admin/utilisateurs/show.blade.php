@@ -7,7 +7,7 @@
     <div class="action-cell">
         <a href="{{ route('admin.utilisateurs.index') }}" class="btn-secondary btn-sm">← Retour</a>
         <form action="{{ route('admin.utilisateurs.delete', $utilisateur['id_utilisateur']) }}" method="POST"
-              onsubmit="return confirm('Supprimer définitivement ce compte ?')">
+              data-confirm="Supprimer définitivement ce compte ?">
             @csrf @method('DELETE')
             <button type="submit" class="btn-danger btn-sm">Supprimer le compte</button>
         </form>
@@ -130,7 +130,7 @@
                 @endif
             </div>
             <form action="{{ route('admin.utilisateurs.abonnement.revoke', $utilisateur['id_utilisateur']) }}" method="POST"
-                  onsubmit="return confirm('Révoquer cet abonnement ?')">
+                  data-confirm="Révoquer cet abonnement ?">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn-danger btn-sm">Révoquer</button>
             </form>

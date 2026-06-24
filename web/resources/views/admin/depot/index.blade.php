@@ -142,7 +142,7 @@ function openDetail(id) {
 function closeDetail() { document.getElementById('modal-detail').style.display = 'none'; }
 
 async function valider(id) {
-    if (!confirm('Valider cette demande et envoyer le code-barre ?')) return;
+    if (!await confirmAction('Valider cette demande et envoyer le code-barre ?')) return;
     const r = await fetch(API + '/api/v1/admin/depot/demandes/' + id + '/valider', {
         method: 'PUT',
         headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }

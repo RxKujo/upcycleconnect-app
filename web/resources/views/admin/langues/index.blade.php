@@ -52,7 +52,7 @@
                                 Modifier
                             </button>
                             <form action="{{ route('admin.langues.destroy', $langue['id_langue'] ?? 0) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer cette langue ? Toutes ses traductions seront perdues.')">
+                                  data-confirm="Supprimer cette langue ? Toutes ses traductions seront perdues.">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-danger btn-sm">Supprimer</button>
                             </form>
@@ -103,7 +103,7 @@
                         <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $trad['valeur'] ?? '—' }}</td>
                         <td>
                             <form action="{{ route('admin.langues.translations.destroy', $trad['id_translation'] ?? 0) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer cette traduction ?')">
+                                  data-confirm="Supprimer cette traduction ?">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-danger btn-sm">Supprimer</button>
                             </form>

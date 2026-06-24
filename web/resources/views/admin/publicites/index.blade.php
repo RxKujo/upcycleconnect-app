@@ -85,7 +85,7 @@
                                 <button type="submit" class="btn-success btn-sm">Valider</button>
                             </form>
                             <form method="POST" action="{{ route('admin.publicites.refuser', $pub['id_publicite']) }}"
-                                  onsubmit="return confirm('Refuser cette publicité ?')">
+                                  data-confirm="Refuser cette publicité ?">
                                 @csrf @method('PUT')
                                 <button type="submit" class="btn-danger btn-sm">Refuser</button>
                             </form>

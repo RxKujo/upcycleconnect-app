@@ -5,7 +5,7 @@
 <div class="page-header">
     <h1 class="page-title">Upcycling Score</h1>
     <div class="action-cell">
-        <form action="{{ route('admin.scores.recompute') }}" method="POST" onsubmit="return confirm('Recalculer tous les scores ? L\'opération peut prendre quelques secondes.')">
+        <form action="{{ route('admin.scores.recompute') }}" method="POST" data-confirm="Recalculer tous les scores ? L\'opération peut prendre quelques secondes.">
             @csrf
             <button type="submit" class="btn-secondary">⟳ Recalculer tous les scores</button>
         </form>

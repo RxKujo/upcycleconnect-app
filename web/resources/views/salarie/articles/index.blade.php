@@ -48,7 +48,7 @@
                 <td class="action-cell">
                     <a href="{{ route('salarie.articles.edit', $a['id_article']) }}" class="btn-secondary btn-sm">Modifier</a>
                     @if($a['id_auteur'] == session('salarie_id') || session('salarie_role') === 'admin')
-                    <form action="{{ route('salarie.articles.destroy', $a['id_article']) }}" method="POST" style="display:inline;" onsubmit="return confirm('Supprimer définitivement cet article ?');">
+                    <form action="{{ route('salarie.articles.destroy', $a['id_article']) }}" method="POST" style="display:inline;" data-confirm="Supprimer définitivement cet article ?">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-danger btn-sm">Suppr.</button>
                     </form>

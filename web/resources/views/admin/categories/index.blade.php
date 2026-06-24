@@ -66,10 +66,10 @@
                 <td>
                     <div class="action-cell">
                         <button type="button" class="btn-secondary btn-sm" onclick='openCatEdit(@json($cat))'>Modifier</button>
-                        <form action="{{ route('admin.categories.destroy', $cat['id_categorie']) }}" method="POST" style="margin:0;">
+                        <form action="{{ route('admin.categories.destroy', $cat['id_categorie']) }}" method="POST" style="margin:0;" data-confirm="Supprimer cette catégorie ?">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Supprimer cette catégorie ?')">Supprimer</button>
+                            <button type="submit" class="btn-danger btn-sm">Supprimer</button>
                         </form>
                     </div>
                 </td>

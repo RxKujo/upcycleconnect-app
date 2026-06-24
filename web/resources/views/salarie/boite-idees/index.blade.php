@@ -91,7 +91,7 @@
                         Modifier
                     </button>
                     <form action="{{ route('salarie.idees.destroy', $idee['id_idee'] ?? 0) }}" method="POST"
-                          onsubmit="return confirm('Supprimer cette idée ?')">
+                          data-confirm="Supprimer cette idée ?">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-danger btn-sm">Supprimer</button>
                     </form>

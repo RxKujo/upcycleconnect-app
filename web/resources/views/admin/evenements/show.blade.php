@@ -6,7 +6,7 @@
     <h1 class="page-title">Événement #{{ $evenement['id_evenement'] }}</h1>
     <div class="action-cell">
         <a href="{{ route('admin.evenements.edit', $evenement['id_evenement']) }}" class="btn-secondary btn-sm">Modifier</a>
-        <form action="{{ route('admin.evenements.destroy', $evenement['id_evenement']) }}" method="POST" onsubmit="return confirm('Supprimer cet événement ?')">
+        <form action="{{ route('admin.evenements.destroy', $evenement['id_evenement']) }}" method="POST" data-confirm="Supprimer cet événement ?">
             @csrf @method('DELETE')
             <button type="submit" class="btn-danger btn-sm">Supprimer</button>
         </form>

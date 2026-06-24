@@ -135,7 +135,7 @@
                 <img src="/uploads/{{ $photo['url_photo'] }}" alt="Conteneur {{ $conteneur['conteneur_ref'] }}"
                      style="width:160px; height:120px; object-fit:cover; border:3px solid var(--coffee);">
                 <form action="{{ route('admin.conteneurs.photos.delete', [$conteneur['id_conteneur'], $photo['id_photo']]) }}"
-                      method="POST" onsubmit="return confirm('Supprimer cette photo ?');" style="margin-top:6px;">
+                      method="POST" data-confirm="Supprimer cette photo ?" style="margin-top:6px;">
                     @csrf
                     @method('DELETE')
                     <input type="hidden" name="url_photo" value="{{ $photo['url_photo'] }}">

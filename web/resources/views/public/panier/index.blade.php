@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
     render();
 
     document.getElementById('btnClear').addEventListener('click', function() {
-        if (confirm('Vider le panier ?')) { window.UCPanier.clear(); render(); }
+        confirmAction('Vider le panier ?').then(function (ok) { if (ok) { window.UCPanier.clear(); render(); } });
     });
 
     document.getElementById('btnCheckout').addEventListener('click', openStripeModal);

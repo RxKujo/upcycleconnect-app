@@ -38,7 +38,7 @@
                 <td><strong>{{ $m['mot'] }}</strong></td>
                 <td class="font-mono" style="font-size:0.85rem;">{{ \Carbon\Carbon::parse($m['date_ajout'])->format('d/m/Y') }}</td>
                 <td class="action-cell">
-                    <form action="{{ route('salarie.forum.mots-bannis.delete', $m['id_mot']) }}" method="POST" style="display:inline;" onsubmit="return confirm('Retirer ce mot de la liste ?');">
+                    <form action="{{ route('salarie.forum.mots-bannis.delete', $m['id_mot']) }}" method="POST" style="display:inline;" data-confirm="Retirer ce mot de la liste ?">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-danger btn-sm">Supprimer</button>
                     </form>

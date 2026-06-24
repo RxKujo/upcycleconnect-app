@@ -215,7 +215,7 @@ function openDetailModal(event) {
 }
 
 async function deleteItem(id) {
-    if (!confirm('Supprimer ce créneau ?')) return;
+    if (!await confirmAction('Supprimer ce créneau ?')) return;
     const r = await fetch(API + '/api/v1/utilisateurs/me/planning/' + id, {
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }

@@ -617,7 +617,7 @@ function openProEditModal(btn) {
 }
 
 async function deleteMyAccount() {
-    if (!confirm('Supprimer definitivement votre compte ? Vos donnees personnelles seront effacees. Cette action est irreversible.')) return;
+    if (!await confirmAction('Supprimer définitivement votre compte ? Vos données personnelles seront effacées. Cette action est irréversible.')) return;
     const resp = await apiFetch('/api/v1/utilisateurs/me', { method: 'DELETE' });
     if (resp && resp.ok) {
         localStorage.removeItem('auth_token');

@@ -114,3 +114,63 @@
 })();
 </script>
 @endif
+
+{{-- ─── Confirmation modale globale (remplace window.confirm) ───────────────── --}}
+{{-- Usage : <form ... data-confirm="Votre message ?"> ; ou JS : confirmAction(msg, callback) --}}
+<div id="confirm-overlay" style="display:none; position:fixed; inset:0; background:rgba(18,3,9,0.6); z-index:100000; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#F5F0E1; border:3px solid #120309; box-shadow:6px 6px 0 #120309; max-width:420px; width:100%; padding:28px;">
+        <p id="confirm-message" style="font-family:'Outfit',sans-serif; font-size:1.05rem; color:#120309; margin:0 0 24px; line-height:1.4;">Confirmer cette action ?</p>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button type="button" id="confirm-cancel" style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; background:#F5F0E1; color:#120309; border:3px solid #120309; padding:9px 22px; font-size:1.05rem; box-shadow:3px 3px 0 rgba(18,3,9,0.25);">Annuler</button>
+            <button type="button" id="confirm-ok" style="font-family:'Bebas Neue',sans-serif; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; background:#A4243B; color:#F5F0E1; border:3px solid #120309; padding:9px 22px; font-size:1.05rem; box-shadow:3px 3px 0 rgba(18,3,9,0.25);">Confirmer</button>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var overlay = document.getElementById('confirm-overlay');
+    if (!overlay) return;
+    var msgEl = document.getElementById('confirm-message');
+    var okBtn = document.getElementById('confirm-ok');
+    var cancelBtn = document.getElementById('confirm-cancel');
+    var onOk = null, onCancel = null;
+
+    function open(message, okCb, cancelCb) {
+        msgEl.textContent = message || 'Confirmer cette action ?';
+        onOk = okCb; onCancel = cancelCb;
+        overlay.style.display = 'flex';
+    }
+    function resolve(confirmed) {
+        var ok = onOk, cancel = onCancel;
+        overlay.style.display = 'none';
+        onOk = null; onCancel = null;
+        if (confirmed) { if (ok) ok(); }
+        else if (cancel) { cancel(); }
+    }
+
+    okBtn.addEventListener('click', function () { resolve(true); });
+    cancelBtn.addEventListener('click', function () { resolve(false); });
+    overlay.addEventListener('mousedown', function (e) { if (e.target === overlay) resolve(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.style.display === 'flex') resolve(false); });
+
+    // Intercepte les formulaires marqués data-confirm
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (form.hasAttribute && form.hasAttribute('data-confirm') && !form.dataset.confirmed) {
+            e.preventDefault();
+            open(form.getAttribute('data-confirm'), function () {
+                form.dataset.confirmed = '1';
+                if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
+            });
+        }
+    }, true);
+
+    // Usage programmatique (renvoie une Promise<boolean>) :
+    //   if (!await confirmAction('message')) return;
+    window.confirmAction = function (message) {
+        return new Promise(function (res) {
+            open(message, function () { res(true); }, function () { res(false); });
+        });
+    };
+})();
+</script>

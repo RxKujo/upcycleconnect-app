@@ -137,7 +137,7 @@
                         <td>{{ isset($item['date_fin']) ? date('d/m/Y H:i', strtotime($item['date_fin'])) : '—' }}</td>
                         <td>
                             <form action="{{ route('salarie.planning.destroy', $item['id_planning'] ?? 0) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer ce créneau ?')">
+                                  data-confirm="Supprimer ce créneau ?">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-danger btn-sm">Supprimer</button>
                             </form>

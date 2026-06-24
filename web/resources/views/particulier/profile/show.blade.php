@@ -339,7 +339,7 @@ async function loadAnnonces() {
 
         container.querySelectorAll('.btn-cancel-annonce').forEach(btn => {
             btn.addEventListener('click', async () => {
-                if (!confirm('Annuler cette annonce ? Cette action est definitive.')) return;
+                if (!await confirmAction('Annuler cette annonce ? Cette action est définitive.')) return;
                 btn.disabled = true;
                 const resp = await apiFetch('/api/v1/annonces/' + btn.dataset.id + '/annuler', {
                     method: 'POST',
@@ -375,7 +375,7 @@ function openEditModal(btn) {
 }
 
 async function deleteMyAccount() {
-    if (!confirm('Supprimer definitivement votre compte ? Vos donnees personnelles seront effacees. Cette action est irreversible.')) return;
+    if (!await confirmAction('Supprimer définitivement votre compte ? Vos données personnelles seront effacées. Cette action est irréversible.')) return;
     const resp = await apiFetch('/api/v1/utilisateurs/me', { method: 'DELETE' });
     if (resp && resp.ok) {
         localStorage.removeItem('auth_token');

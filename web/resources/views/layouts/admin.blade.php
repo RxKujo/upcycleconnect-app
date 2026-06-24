@@ -47,7 +47,7 @@
         .btn-danger { background-color: var(--cherry); color: var(--cream); border: 3px solid var(--coffee); padding: 8px 20px; font-size: 1rem; }
         .btn-success { background-color: var(--forest); color: var(--cream); border: 3px solid var(--coffee); padding: 8px 20px; font-size: 1rem; }
         .btn-sm { padding: 6px 16px; font-size: 1rem; }
-        .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover, .btn-success:hover { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
+        .btn-primary:active, .btn-secondary:active, .btn-danger:active, .btn-success:active { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
 
         /* Tables */
         .table-container { width: 100%; overflow-x: auto; border: var(--border); box-shadow: var(--shadow); background: var(--cream); margin-bottom: 32px; }
