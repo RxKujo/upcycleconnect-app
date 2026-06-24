@@ -38,6 +38,25 @@ class PlanningController extends Controller
         return redirect()->route('salarie.planning.index')->with('success', 'Créneau ajouté.');
     }
 
+    public function update(Request $request, $id)
+    {
+        $data = $request->validate([
+            'titre_creneau' => 'required|string|max:200',
+            'description'   => 'nullable|string',
+            'date_debut'    => 'required|date',
+            'date_fin'      => 'required|date|after_or_equal:date_debut',
+            'type_creneau'  => 'required|in:evenement,formation,reunion,travail,perso',
+        ]);
+
+        $r = Http::withToken($this->token())->asJson()
+            ->put($this->api() . '/api/v1/salarie/planning/' . $id, $data);
+
+        if (!$r->successful()) {
+            return back()->with('error', $r->json('erreur') ?? 'Erreur mise à jour du créneau');
+        }
+        return redirect()->route('salarie.planning.index')->with('success', 'Créneau mis à jour.');
+    }
+
     public function destroy($id)
     {
         $r = Http::withToken($this->token())

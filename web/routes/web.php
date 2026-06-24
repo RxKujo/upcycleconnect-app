@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\MateriauController;
+use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Admin\NotificationController as AdminNotificationContro
 use App\Http\Controllers\Admin\FinanceController as AdminFinanceController;
 use App\Http\Controllers\Salarie\DashboardController as SalarieDashboardController;
 use App\Http\Controllers\Salarie\EvenementController as SalarieEvenementController;
+use App\Http\Controllers\Salarie\TemplateController as SalarieTemplateController;
 use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
 use App\Http\Controllers\Salarie\ModerationController as SalarieModerationController;
 use App\Http\Controllers\Salarie\PlanningController as SalariePlanningController;
@@ -27,7 +29,7 @@ use App\Http\Controllers\EvenementCatalogueController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
-use App\Http\Controllers\ConseilController;
+use App\Http\Controllers\RessourceController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\Pro\DashboardController as ProDashboardController;
 use App\Http\Controllers\Pro\AlertesController as ProAlertesController;
@@ -42,8 +44,9 @@ Route::get('/annonces/{id}', [MarcheController::class, 'show'])->name('annonces.
 Route::get('/evenements', [EvenementCatalogueController::class, 'index'])->name('evenements.index');
 Route::get('/evenements/{id}', [EvenementCatalogueController::class, 'show'])->name('evenements.show');
 
-Route::get('/conseils', [ConseilController::class, 'index'])->name('conseils.index');
-Route::get('/conseils/{id}', [ConseilController::class, 'show'])->name('conseils.show');
+// Page « Conseils » fusionnée dans « Ressources » — redirections de compat.
+Route::redirect('/conseils', '/ressources');
+Route::redirect('/conseils/{id}', '/ressources');
 
 Route::get('/formations', [FormationController::class, 'index'])->name('formations.index');
 Route::get('/formations/{id}', [FormationController::class, 'show'])->name('formations.show');
@@ -70,7 +73,8 @@ Route::post('/auth/set-salarie-session', [SessionController::class, 'setSalarieS
 Route::post('/auth/set-pro-session', [SessionController::class, 'setProSession'])->name('auth.set-pro-session');
 Route::post('/auth/clear-role-sessions', [SessionController::class, 'clearRoleSessions'])->name('auth.clear-role-sessions');
 
-Route::get('/ressources', fn() => view('public.ressources.index'))->name('ressources.index');
+Route::get('/ressources', [RessourceController::class, 'index'])->name('ressources.index');
+Route::get('/ressources/{id}', [RessourceController::class, 'show'])->name('ressources.show');
 Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriels.index');
 Route::get('/depot', fn() => view('public.depot.index'))->name('depot.index');
 
@@ -149,6 +153,12 @@ Route::prefix('admin')->group(function () {
         Route::post('/materiaux', [MateriauController::class, 'store'])->name('admin.materiaux.store');
         Route::put('/materiaux/{id}', [MateriauController::class, 'update'])->name('admin.materiaux.update');
         Route::put('/materiaux/{id}/toggle', [MateriauController::class, 'toggle'])->name('admin.materiaux.toggle');
+
+        Route::get('/templates', [TemplateController::class, 'index'])->name('admin.templates.index');
+        Route::post('/templates', [TemplateController::class, 'store'])->name('admin.templates.store');
+        Route::put('/templates/{id}', [TemplateController::class, 'update'])->name('admin.templates.update');
+        Route::put('/templates/{id}/toggle', [TemplateController::class, 'toggle'])->name('admin.templates.toggle');
+        Route::delete('/templates/{id}', [TemplateController::class, 'destroy'])->name('admin.templates.destroy');
 
         Route::get('/categories', [CategorieController::class, 'index'])->name('admin.categories.index');
         Route::get('/categories/create', [CategorieController::class, 'create'])->name('admin.categories.create');
@@ -256,6 +266,11 @@ Route::prefix('salarie')->group(function () {
         Route::get('/evenements/{id}/edit', [SalarieEvenementController::class, 'edit'])->name('salarie.evenements.edit');
         Route::put('/evenements/{id}', [SalarieEvenementController::class, 'update'])->name('salarie.evenements.update');
 
+        Route::get('/templates', [SalarieTemplateController::class, 'index'])->name('salarie.templates.index');
+        Route::post('/templates', [SalarieTemplateController::class, 'store'])->name('salarie.templates.store');
+        Route::put('/templates/{id}', [SalarieTemplateController::class, 'update'])->name('salarie.templates.update');
+        Route::delete('/templates/{id}', [SalarieTemplateController::class, 'destroy'])->name('salarie.templates.destroy');
+
         Route::get('/articles', [SalarieArticleController::class, 'index'])->name('salarie.articles.index');
         Route::get('/articles/create', [SalarieArticleController::class, 'create'])->name('salarie.articles.create');
         Route::post('/articles', [SalarieArticleController::class, 'store'])->name('salarie.articles.store');
@@ -266,11 +281,16 @@ Route::prefix('salarie')->group(function () {
         // Planning salarié
         Route::get('/planning', [SalariePlanningController::class, 'index'])->name('salarie.planning.index');
         Route::post('/planning', [SalariePlanningController::class, 'store'])->name('salarie.planning.store');
+        Route::put('/planning/{id}', [SalariePlanningController::class, 'update'])->name('salarie.planning.update');
         Route::delete('/planning/{id}', [SalariePlanningController::class, 'destroy'])->name('salarie.planning.destroy');
 
         // Boîte à idées
         Route::get('/idees', [SalarieBoiteIdeeController::class, 'index'])->name('salarie.idees.index');
         Route::post('/idees', [SalarieBoiteIdeeController::class, 'store'])->name('salarie.idees.store');
+        Route::post('/idees/{id}/voter', [SalarieBoiteIdeeController::class, 'voter'])->name('salarie.idees.voter');
+        Route::put('/idees/{id}/statut', [SalarieBoiteIdeeController::class, 'statut'])->name('salarie.idees.statut');
+        Route::post('/idees/{id}/archiver', [SalarieBoiteIdeeController::class, 'archiver'])->name('salarie.idees.archiver');
+        Route::post('/idees/{id}/desarchiver', [SalarieBoiteIdeeController::class, 'desarchiver'])->name('salarie.idees.desarchiver');
         Route::put('/idees/{id}', [SalarieBoiteIdeeController::class, 'update'])->name('salarie.idees.update');
         Route::delete('/idees/{id}', [SalarieBoiteIdeeController::class, 'destroy'])->name('salarie.idees.destroy');
 

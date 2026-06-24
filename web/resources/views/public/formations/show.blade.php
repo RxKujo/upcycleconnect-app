@@ -6,7 +6,7 @@
 @php
     $categorieLabels = [
         'formation' => 'Formation', 'atelier' => 'Atelier',
-        'evenement' => 'Événement', 'conseil' => 'Conseil',
+        'conference' => 'Conférence',
     ];
     $formatLabels = ['presentiel' => 'Présentiel', 'distanciel' => 'Distanciel'];
     $debut = \Carbon\Carbon::parse($item['date_debut']);
@@ -82,8 +82,6 @@
 
 @section('scripts')
 <script>
-const API_BASE = '{{ config("services.api.public_url") }}';
-
 const authModal = document.getElementById('authModal');
 function openAuthModal() { authModal.style.display = 'flex'; }
 function closeAuthModal() { authModal.style.display = 'none'; }

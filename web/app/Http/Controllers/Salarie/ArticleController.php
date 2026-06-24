@@ -55,11 +55,30 @@ class ArticleController extends Controller
 
     private function validatePayload(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'titre' => 'required|string|max:300',
             'contenu' => 'required|string',
-            'categorie' => 'nullable|string|max:100',
+            'categorie' => 'nullable|in:' . implode(',', array_keys(config('articles.categories'))),
             'statut' => 'required|in:brouillon,publie,archive',
         ]);
+
+        // Le contenu est du HTML issu de l'éditeur enrichi : on neutralise
+        // les éléments/attributs dangereux avant stockage (defense-in-depth).
+        $data['contenu'] = $this->sanitizeHtml($data['contenu']);
+
+        return $data;
+    }
+
+    private function sanitizeHtml(string $html): string
+    {
+        // Supprime les balises dangereuses (avec ou sans contenu).
+        $html = preg_replace('#<(script|style|iframe|object|embed|form)\b[^>]*>.*?</\1>#is', '', $html) ?? $html;
+        $html = preg_replace('#<(script|style|iframe|object|embed|form)\b[^>]*/?>#is', '', $html) ?? $html;
+        // Supprime les gestionnaires d'événements inline (onclick, onerror…).
+        $html = preg_replace('#\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $html) ?? $html;
+        // Neutralise les URL javascript:.
+        $html = preg_replace('#(href|src)\s*=\s*(["\'])\s*javascript:[^"\']*\2#i', '$1=$2#$2', $html) ?? $html;
+
+        return $html;
     }
 }

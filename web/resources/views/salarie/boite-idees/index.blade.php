@@ -1,8 +1,77 @@
-@extends('layouts.salarie')
+@extends($layout)
 
 @section('title', 'Boîte à idées')
 
 @section('content')
+<style>
+/* ─── Liste classée (rangées à hauteur fixe) ─────────────────────── */
+.idee-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
+.idee-row { display: flex; align-items: center; gap: 20px; background: var(--cream); border: var(--border); box-shadow: var(--shadow-sm); padding: 16px 22px; transition: transform 0.12s, box-shadow 0.12s; }
+.idee-row:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow); }
+.idee-row-vote { flex-shrink: 0; }
+.idee-row-main { flex: 1 1 auto; min-width: 0; }
+.idee-row-side { flex-shrink: 0; display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 260px; }
+.idee-side-top { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+.idee-statut { font-family: 'DM Mono', monospace; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 12px; border: 2px solid var(--coffee); box-shadow: 2px 2px 0 rgba(18,3,9,0.25); white-space: nowrap; }
+
+/* Widget de vote up / down (style Reddit) */
+.idee-votebox { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 58px; border: 3px solid var(--coffee); box-shadow: 2px 2px 0 var(--coffee); background: var(--cream); padding: 6px 0; }
+.vote-arrow { background: none; border: none; cursor: pointer; font-size: 1.05rem; line-height: 1; padding: 4px 0; width: 100%; color: var(--coffee); opacity: 0.5; transition: all 0.1s ease; }
+.vote-arrow:hover:not(:disabled) { opacity: 1; }
+.vote-arrow.up.active { color: var(--forest); opacity: 1; }
+.vote-arrow.down.active { color: var(--cherry); opacity: 1; }
+.vote-arrow:disabled { cursor: default; opacity: 0.3; }
+.vote-score { font-family: 'DM Mono', monospace; font-size: 1.15rem; font-weight: 700; line-height: 1; color: var(--coffee); }
+.vote-score.pos { color: var(--forest); }
+.vote-score.neg { color: var(--cherry); }
+
+.idee-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.45rem; margin: 0 0 3px; line-height: 1.1; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idee-contenu { font-size: 0.92rem; line-height: 1.4; color: rgba(18,3,9,0.72); margin: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idee-meta { display: flex; align-items: center; gap: 14px; font-family: 'DM Mono', monospace; font-size: 0.7rem; text-transform: uppercase; opacity: 0.5; flex-wrap: wrap; }
+.idee-meta-tags { display: inline-flex; gap: 5px; flex-wrap: wrap; }
+.idee-tag { background: var(--wheat); border: 2px solid var(--coffee); font-family: 'DM Mono', monospace; font-size: 0.62rem; text-transform: uppercase; padding: 1px 7px; letter-spacing: 0.04em; opacity: 0.95; }
+
+.idee-owner-tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; background: var(--teal); color: var(--cream); padding: 2px 7px; letter-spacing: 0.04em; }
+.idee-statut-select { width: 100%; border: 2px solid var(--coffee); background: white; font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; padding: 8px 10px; outline: none; cursor: pointer; box-shadow: 2px 2px 0 rgba(18,3,9,0.1); box-sizing: border-box; }
+.idee-statut-select:focus { border-color: var(--forest); }
+.idee-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.idee-act { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; padding: 9px 10px; cursor: pointer; background: white; color: var(--coffee); border: 2px solid var(--coffee); box-shadow: 2px 2px 0 rgba(18,3,9,0.15); transition: all 0.12s ease; white-space: nowrap; }
+.idee-act:hover { background: var(--wheat); transform: translate(-1px,-1px); box-shadow: 3px 3px 0 rgba(18,3,9,0.2); }
+.idee-act.danger { color: var(--cherry); border-color: var(--cherry); grid-column: 1 / -1; }
+.idee-act.danger:hover { background: var(--cherry); color: var(--cream); }
+
+/* Responsive : la colonne droite passe dessous sur petit écran */
+@media (max-width: 760px) {
+    .idee-row { flex-wrap: wrap; }
+    .idee-row-main { flex-basis: 70%; }
+    .idee-row-side { width: 100%; }
+    .idee-side-top { justify-content: flex-start; }
+}
+
+/* Onglets */
+.idee-tabs { display: flex; gap: 4px; margin-bottom: 28px; border-bottom: 4px solid var(--coffee); flex-wrap: wrap; }
+.idee-tab { font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 12px 26px; cursor: pointer; background: transparent; border: 3px solid transparent; border-bottom: none; color: var(--coffee); opacity: 0.5; margin-bottom: -4px; transition: opacity 0.12s; }
+.idee-tab:hover { opacity: 0.85; }
+.idee-tab.active { opacity: 1; background: var(--cream); border-color: var(--coffee); box-shadow: 3px -2px 0 rgba(18,3,9,0.15); }
+.idee-tab .tab-count { font-family: 'DM Mono', monospace; font-size: 0.75rem; opacity: 0.6; margin-left: 6px; }
+
+.idee-empty { background: var(--cream); border: var(--border); box-shadow: var(--shadow-sm); text-align: center; padding: 60px 40px; }
+.idee-empty .big { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; opacity: 0.3; margin: 0; }
+.idee-empty .sub { font-family: 'DM Mono', monospace; font-size: 0.85rem; text-transform: uppercase; opacity: 0.4; margin: 12px 0 0; }
+
+/* Fallback stats (assure un rendu correct aussi sous le layout admin) */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 48px; }
+.stat-card { border: var(--border); background: white; padding: 24px; box-shadow: var(--shadow-sm); }
+.stat-label { font-family: 'DM Mono', monospace; font-size: 0.78rem; text-transform: uppercase; opacity: 0.55; margin-bottom: 8px; }
+.stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--forest); line-height: 1; }
+</style>
+
+@php
+    $mesIdees = count(array_filter($idees, fn($i) => ($i['id_auteur'] ?? 0) == session('salarie_id')))
+              + count(array_filter($archivees, fn($i) => ($i['id_auteur'] ?? 0) == session('salarie_id')));
+@endphp
+
 <div class="page-header">
     <div>
         <h1 class="page-title">Boîte à idées</h1>
@@ -22,85 +91,52 @@
     </div>
     <div class="stat-card">
         <div class="stat-label">Mes idées</div>
-        <div class="stat-value" id="count-mes-idees">—</div>
+        <div class="stat-value">{{ $mesIdees }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Idées votées</div>
-        <div class="stat-value" id="count-votes">{{ count(array_filter($idees, fn($i) => !empty($i['a_vote']))) }}</div>
+        <div class="stat-value" id="count-votes">{{ count(array_filter($idees, fn($i) => (int)($i['mon_vote'] ?? 0) !== 0)) }}</div>
     </div>
 </div>
 
-@if(empty($idees))
-    <div class="card" style="text-align:center;padding:60px 40px;">
-        <p style="font-family:'Bebas Neue',sans-serif;font-size:2rem;opacity:0.3;margin:0;">Aucune idée pour le moment</p>
-        <p style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;opacity:0.4;margin:12px 0 0;">
-            Soyez le premier à proposer quelque chose !
-        </p>
-    </div>
-@else
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;margin-bottom:32px;">
-        @foreach($idees as $idee)
-        <div class="card" style="padding:28px;margin-bottom:0;transition:transform 0.2s,box-shadow 0.2s;"
-             onmouseenter="this.style.transform='translate(-3px,-3px)';this.style.boxShadow='var(--shadow)'"
-             onmouseleave="this.style.transform='';this.style.boxShadow='var(--shadow-sm)'">
+{{-- Onglets --}}
+<div class="idee-tabs">
+    <button type="button" class="idee-tab active" data-tab="populaire">Populaire</button>
+    <button type="button" class="idee-tab" data-tab="recent">Récent</button>
+    <button type="button" class="idee-tab" data-tab="archives">Archives<span class="tab-count">({{ count($archivees) }})</span></button>
+</div>
 
-            {{-- Header --}}
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-                <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0;line-height:1.2;flex:1;">
-                    {{ $idee['titre'] ?? '—' }}
-                </h3>
-                <span class="badge {{ !empty($idee['a_vote']) ? 'badge-valid' : 'badge-waiting' }}" style="margin-left:10px;flex-shrink:0;">
-                    {{ ($idee['nb_votes'] ?? 0) }} vote{{ ($idee['nb_votes'] ?? 0) != 1 ? 's' : '' }}
-                </span>
-            </div>
-
-            <p style="font-size:1rem;line-height:1.6;color:rgba(18,3,9,0.75);margin:0 0 16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
-                {{ $idee['contenu'] ?? '' }}
-            </p>
-
-            @if(!empty($idee['tags']))
-                <div style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px;">
-                    @foreach(explode(',', $idee['tags']) as $tag)
-                        @if(trim($tag))
-                        <span style="background:var(--wheat);border:2px solid var(--coffee);font-family:'DM Mono',monospace;font-size:0.7rem;text-transform:uppercase;padding:2px 8px;letter-spacing:0.05em;">
-                            {{ trim($tag) }}
-                        </span>
-                        @endif
-                    @endforeach
-                </div>
-            @endif
-
-            <div style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;opacity:0.4;margin-bottom:16px;">
-                Par {{ $idee['auteur_prenom'] ?? '' }} {{ $idee['auteur_nom_initiale'] ?? '' }}
-                · {{ isset($idee['date_publication']) ? date('d/m/Y', strtotime($idee['date_publication'])) : '' }}
-            </div>
-
-            <div style="display:flex;gap:10px;align-items:center;">
-                {{-- Vote toggle --}}
-                <form action="/salarie/idees/{{ $idee['id_idee'] ?? 0 }}/voter" method="POST" style="margin:0;">
-                    @csrf
-                    <button type="submit" class="{{ !empty($idee['a_vote']) ? 'btn-success' : 'btn-secondary' }} btn-sm"
-                            style="min-width:90px;">
-                        {{ !empty($idee['a_vote']) ? '✓ Voté' : '▲ Voter' }}
-                    </button>
-                </form>
-
-                @if(($idee['id_auteur'] ?? 0) == session('salarie_id'))
-                    <button class="btn-secondary btn-sm"
-                            onclick="openEditModal({{ $idee['id_idee'] ?? 0 }}, '{{ addslashes($idee['titre'] ?? '') }}', '{{ addslashes($idee['contenu'] ?? '') }}', '{{ addslashes($idee['tags'] ?? '') }}')">
-                        Modifier
-                    </button>
-                    <form action="{{ route('salarie.idees.destroy', $idee['id_idee'] ?? 0) }}" method="POST"
-                          data-confirm="Supprimer cette idée ?">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn-danger btn-sm">Supprimer</button>
-                    </form>
-                @endif
-            </div>
+{{-- Flux principal (Populaire / Récent) --}}
+<div id="flux-section">
+    @if(empty($idees))
+        <div class="idee-empty">
+            <p class="big">Aucune idée pour le moment</p>
+            <p class="sub">Soyez le premier à proposer quelque chose !</p>
         </div>
-        @endforeach
-    </div>
-@endif
+    @else
+        <div class="idee-list" id="flux-grid">
+            @foreach($idees as $idee)
+                @include('salarie.boite-idees._carte', ['idee' => $idee, 'isAdmin' => $isAdmin, 'isArchive' => false])
+            @endforeach
+        </div>
+    @endif
+</div>
+
+{{-- Archives --}}
+<div id="archives-section" style="display:none;">
+    @if(empty($archivees))
+        <div class="idee-empty">
+            <p class="big">Aucune idée archivée</p>
+            <p class="sub">Les idées que vous archivez apparaîtront ici.</p>
+        </div>
+    @else
+        <div class="idee-list" id="archives-grid">
+            @foreach($archivees as $idee)
+                @include('salarie.boite-idees._carte', ['idee' => $idee, 'isAdmin' => $isAdmin, 'isArchive' => true])
+            @endforeach
+        </div>
+    @endif
+</div>
 
 {{-- Modal ajout --}}
 <div id="modal-add" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.6);z-index:1000;align-items:center;justify-content:center;">
@@ -153,10 +189,9 @@
         </form>
     </div>
 </div>
-@endsection
-
-@section('scripts')
 <script>
+const CSRF_TOKEN = '{{ csrf_token() }}';
+
 function openEditModal(id, titre, contenu, tags) {
     document.getElementById('form-edit').action = '/salarie/idees/' + id;
     document.getElementById('edit-titre').value = titre;
@@ -164,27 +199,112 @@ function openEditModal(id, titre, contenu, tags) {
     document.getElementById('edit-tags').value = tags;
     document.getElementById('modal-edit').style.display = 'flex';
 }
-// Vote AJAX pour éviter rechargement complet
-document.querySelectorAll('form[action*="/voter"]').forEach(form => {
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = form.querySelector('button');
-        const res = await fetch(form.action, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}', 'Accept': 'application/json' },
+
+// ─── Onglets + tri (état partagé avec le vote) ───────────────────────────────
+const tabs = document.querySelectorAll('.idee-tab');
+const fluxSection = document.getElementById('flux-section');
+const archivesSection = document.getElementById('archives-section');
+const fluxGrid = document.getElementById('flux-grid');
+let currentSort = 'populaire';
+
+function compareCards(a, b, mode) {
+    if (mode === 'recent') {
+        return (parseInt(b.dataset.date) || 0) - (parseInt(a.dataset.date) || 0);
+    }
+    const dv = (parseInt(b.dataset.votes) || 0) - (parseInt(a.dataset.votes) || 0);
+    return dv !== 0 ? dv : (parseInt(b.dataset.date) || 0) - (parseInt(a.dataset.date) || 0);
+}
+
+function sortFlux(mode) {
+    if (!fluxGrid) return;
+    Array.from(fluxGrid.children)
+        .sort((a, b) => compareCards(a, b, mode))
+        .forEach(c => fluxGrid.appendChild(c));
+}
+
+// Réordonne avec une animation FLIP : les rangées glissent vers leur place.
+function sortFluxAnimated() {
+    if (!fluxGrid) return;
+    const cards = Array.from(fluxGrid.children);
+    const before = new Map();
+    cards.forEach(c => before.set(c, c.getBoundingClientRect().top));
+
+    sortFlux(currentSort);
+
+    cards.forEach(c => {
+        const dy = before.get(c) - c.getBoundingClientRect().top;
+        if (!dy) return;
+        c.style.transition = 'none';
+        c.style.transform = 'translateY(' + dy + 'px)';
+        requestAnimationFrame(() => {
+            c.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+            c.style.transform = '';
         });
-        if (res.ok) {
-            const voted = btn.textContent.trim().startsWith('▲');
-            btn.textContent = voted ? '✓ Voté' : '▲ Voter';
-            btn.className = voted ? 'btn-success btn-sm' : 'btn-secondary btn-sm';
-            btn.style.minWidth = '90px';
-            const badge = form.closest('.card')?.querySelector('.badge');
-            if (badge) {
-                const n = parseInt(badge.textContent) || 0;
-                const newN = voted ? n + 1 : Math.max(0, n - 1);
-                badge.textContent = newN + ' vote' + (newN !== 1 ? 's' : '');
+    });
+}
+
+function showTab(tab) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    if (tab === 'archives') {
+        fluxSection.style.display = 'none';
+        archivesSection.style.display = '';
+    } else {
+        archivesSection.style.display = 'none';
+        fluxSection.style.display = '';
+        currentSort = tab;
+        sortFlux(tab);
+    }
+}
+
+tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+
+// ─── Vote up / down (style Reddit, sans rechargement) ────────────────────────
+const countVotesEl = document.getElementById('count-votes');
+const VOTE_BASE = '{{ url('/salarie/idees') }}';
+
+document.querySelectorAll('.idee-votebox').forEach(box => {
+    const id = box.dataset.id;
+    const up = box.querySelector('.vote-arrow.up');
+    const down = box.querySelector('.vote-arrow.down');
+    const scoreEl = box.querySelector('.vote-score');
+
+    box.querySelectorAll('.vote-arrow').forEach(btn => {
+        if (btn.disabled) return; // archives : lecture seule
+        btn.addEventListener('click', async () => {
+            up.disabled = down.disabled = true;
+            try {
+                const res = await fetch(VOTE_BASE + '/' + id + '/voter', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ valeur: parseInt(btn.dataset.val) }),
+                });
+                if (!res.ok) return;
+                const data = await res.json().catch(() => ({}));
+
+                const prevVoted = up.classList.contains('active') || down.classList.contains('active');
+                const mv = data.mon_vote || 0;
+                up.classList.toggle('active', mv === 1);
+                down.classList.toggle('active', mv === -1);
+
+                const score = (typeof data.score === 'number') ? data.score : (parseInt(scoreEl.textContent) || 0);
+                scoreEl.textContent = score;
+                scoreEl.className = 'vote-score ' + (score > 0 ? 'pos' : (score < 0 ? 'neg' : ''));
+
+                const row = box.closest('.idee-row');
+                if (row) row.dataset.votes = score;
+
+                // Compteur global « Idées votées »
+                if (countVotesEl) {
+                    const c = parseInt(countVotesEl.textContent) || 0;
+                    countVotesEl.textContent = Math.max(0, c + ((mv !== 0 ? 1 : 0) - (prevVoted ? 1 : 0)));
+                }
+
+                // Reclasse en direct (uniquement en tri « Populaire »).
+                if (currentSort === 'populaire') sortFluxAnimated();
+            } finally {
+                up.disabled = down.disabled = false;
             }
-        }
+        });
     });
 });
 </script>

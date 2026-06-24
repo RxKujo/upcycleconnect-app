@@ -187,11 +187,11 @@
                     <p>Des ateliers en ligne et en présentiel pour apprendre à transformer : menuiserie de récup', couture zéro déchet, soudure, rempaillage… Animés par des pros de la plateforme.</p>
                     <span class="lp-tag">Voir le catalogue &rarr;</span>
                 </a>
-                <a class="lp-pilier reveal" href="{{ route('conseils.index') }}">
+                <a class="lp-pilier reveal" href="{{ route('ressources.index') }}">
                     <h3>
                         <span class="lp-pic">
                             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5Zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Z"/><path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2Z"/><path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Z"/></svg>
-                        </span>Conseils &amp; articles
+                        </span>Ressources &amp; articles
                     </h3>
                     <p>Guides pratiques, tutos pas-à-pas et idées de projets pour passer à l'action : identifier un bois, chiner malin, réparer plutôt que jeter. Du concret, sans blabla.</p>
                     <span class="lp-tag">Lire les guides &rarr;</span>

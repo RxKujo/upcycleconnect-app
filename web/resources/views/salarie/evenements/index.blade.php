@@ -5,7 +5,10 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Mes événements</h1>
-    <a href="{{ route('salarie.evenements.create') }}" class="btn-primary">+ Nouvel événement</a>
+    <div style="display:flex; gap:12px;">
+        <a href="{{ route('salarie.templates.index') }}" class="btn-secondary">Gérer les modèles</a>
+        <a href="{{ route('salarie.evenements.create') }}" class="btn-primary">+ Nouvel événement</a>
+    </div>
 </div>
 
 @if(empty($evenements))

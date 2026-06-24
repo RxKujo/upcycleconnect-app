@@ -35,6 +35,7 @@ const (
 	prefixAdminUsers      = "/api/v1/admin/utilisateurs"
 	prefixAdminCategories = "/api/v1/admin/categories"
 	prefixAdminMateriaux  = "/api/v1/admin/materiaux"
+	prefixAdminTemplates  = "/api/v1/admin/templates"
 	prefixAdminEv         = "/api/v1/admin/evenements"
 	prefixAdminAnnonces   = "/api/v1/admin/annonces"
 	prefixAdminCommandes  = "/api/v1/admin/commandes"
@@ -468,8 +469,18 @@ func routeSalarieGeneral(w http.ResponseWriter, req *http.Request, path, method 
 		handlers.GetSalarieStats(w, req, userId)
 	case match(path, prefixSalarie+"/templates") && method == "GET":
 		handlers.GetSalarieTemplates(w, req)
+	case match(path, prefixSalarie+"/templates") && method == "POST":
+		handlers.CreateTemplateSalarie(w, req, userId)
 	default:
-		return false
+		tp := splitPath(path, prefixSalarie+"/templates")
+		switch {
+		case len(tp) == 1 && method == "PUT":
+			handlers.UpdateTemplate(w, req, tp[0])
+		case len(tp) == 1 && method == "DELETE":
+			handlers.DeleteTemplate(w, req, tp[0])
+		default:
+			return false
+		}
 	}
 	return true
 }
@@ -549,7 +560,7 @@ func routeSalarieIdees(w http.ResponseWriter, req *http.Request, path, method st
 	p := splitPath(path, prefixSalarieIdees)
 	switch {
 	case match(path, prefixSalarieIdees) && method == "GET":
-		handlers.GetIdeesSalaries(w, req, userId)
+		handlers.GetIdeesSalaries(w, req, userId, role)
 	case match(path, prefixSalarieIdees) && method == "POST":
 		handlers.CreateIdee(w, req, userId)
 	case len(p) == 1 && method == "GET":
@@ -560,6 +571,12 @@ func routeSalarieIdees(w http.ResponseWriter, req *http.Request, path, method st
 		handlers.DeleteIdee(w, req, p[0], userId, role)
 	case len(p) == 2 && p[1] == "voter" && method == "POST":
 		handlers.VoterIdee(w, req, p[0], userId)
+	case len(p) == 2 && p[1] == "statut" && method == "PUT":
+		handlers.ChangeStatutIdee(w, req, p[0], userId, role)
+	case len(p) == 2 && p[1] == "archiver" && method == "POST":
+		handlers.ArchiverIdee(w, req, p[0], userId, role)
+	case len(p) == 2 && p[1] == "desarchiver" && method == "POST":
+		handlers.DesarchiverIdee(w, req, p[0], userId, role)
 	default:
 		return false
 	}
@@ -578,6 +595,8 @@ func routeSalariePlanningDedicated(w http.ResponseWriter, req *http.Request, pat
 		handlers.GetMonPlanning(w, req, userId)
 	case match(path, prefixSalariePlanning) && method == "POST":
 		handlers.AddPlanningManuel(w, req, userId)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdatePlanningItem(w, req, p[0], userId)
 	case len(p) == 1 && method == "DELETE":
 		handlers.DeletePlanningItem(w, req, p[0], userId)
 	default:
@@ -622,6 +641,7 @@ func routeAdmin(w http.ResponseWriter, req *http.Request, path, method string, u
 	return routeAdminUsers(w, req, path, method) ||
 		routeAdminCategories(w, req, path, method) ||
 		routeAdminMateriaux(w, req, path, method) ||
+		routeAdminTemplates(w, req, path, method) ||
 		routeAdminEvenements(w, req, path, method, userId) ||
 		routeAdminAnnonces(w, req, path, method, userId) ||
 		routeAdminOrders(w, req, path, method) ||
@@ -715,6 +735,25 @@ func routeAdminMateriaux(w http.ResponseWriter, req *http.Request, path, method 
 		handlers.ToggleMateriau(w, req, p[0])
 	case len(p) == 1 && method == "PUT":
 		handlers.UpdateMateriau(w, req, p[0])
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminTemplates(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixAdminTemplates)
+	switch {
+	case match(path, prefixAdminTemplates) && method == "GET":
+		handlers.GetTemplatesAdmin(w, req)
+	case match(path, prefixAdminTemplates) && method == "POST":
+		handlers.CreateTemplate(w, req)
+	case len(p) == 2 && p[1] == "toggle" && method == "PUT":
+		handlers.ToggleTemplate(w, req, p[0])
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateTemplate(w, req, p[0])
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteTemplate(w, req, p[0])
 	default:
 		return false
 	}

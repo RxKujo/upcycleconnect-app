@@ -26,7 +26,6 @@
 
 @section('scripts')
 <script>
-const API_BASE = '{{ config("services.api.public_url") }}';
 const STATUT_LABELS = {
     'commandee':    { txt: 'Commandée', bg: '#fff4d6' },
     'deposee':      { txt: 'Déposée',   bg: '#e3eefd' },

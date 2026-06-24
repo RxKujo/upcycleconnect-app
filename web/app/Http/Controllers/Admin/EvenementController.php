@@ -11,9 +11,9 @@ class EvenementController extends Controller
     private string $apiUrl;
 
     private array $types = [
-        'formation' => 'Formation',
-        'atelier'   => 'Atelier',
-        'conseil'   => 'Conseil',
+        'formation'  => 'Formation',
+        'atelier'    => 'Atelier',
+        'conference' => 'Conférence',
     ];
 
     private array $formats = [

@@ -642,10 +642,18 @@
                         })
                         .then(sessionData => {
                             if (sessionData.success) {
-                                // Session created successfully, redirect to admin panel
-                                setTimeout(() => {
-                                    window.location.href = sessionData.redirect || '/admin/utilisateurs';
-                                }, 1000);
+                                // L'admin gère aussi l'espace salarié (boîte à idées, modération…) :
+                                // on établit également la session salarié (le middleware salarie.auth
+                                // accepte le rôle admin), puis on redirige vers le panel admin.
+                                fetch('/auth/set-salarie-session', {
+                                    method: 'POST',
+                                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ token: token })
+                                }).finally(() => {
+                                    setTimeout(() => {
+                                        window.location.href = sessionData.redirect || '/admin/utilisateurs';
+                                    }, 1000);
+                                });
                             } else {
                                 showAlert(sessionData.message || 'Erreur: impossible de créer la session admin', 'error');
                                 submitBtn.disabled = false;

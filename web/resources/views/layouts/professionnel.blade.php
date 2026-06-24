@@ -34,6 +34,8 @@
         .navbar-links a:hover, .navbar-links a.active { border-color: var(--cherry); color: var(--wheat); }
         .navbar-links .btn-logout { background: var(--cherry); color: var(--cream); border: 2px solid var(--cream); padding: 8px 16px; cursor: pointer; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.85rem; }
         .navbar-links .btn-logout:active { transform: translate(2px, 2px); }
+        .navbar-links .btn-public { background: var(--wheat); color: var(--coffee); border: 2px solid var(--coffee); }
+        .navbar-links .btn-public:hover { border-color: var(--coffee); color: var(--coffee); background: var(--cream); }
 
         /* Main */
         .main-content { max-width: 1200px; margin: 0 auto; padding: 48px 24px; }
@@ -102,16 +104,12 @@
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span> <span class="navbar-badge">Pro</span></a>
         <div class="navbar-links">
-            <a href="/annonces" class="{{ request()->is('annonces*') ? 'active' : '' }}">Marche</a>
-            <a href="/evenements" class="{{ request()->is('evenements*') ? 'active' : '' }}">Evenements</a>
-            <a href="/forum" class="{{ request()->is('forum*') ? 'active' : '' }}">Forum</a>
-            <a href="/mes-commandes" class="{{ request()->is('mes-commandes*') ? 'active' : '' }}">Mes commandes</a>
-            <a href="/panier" class="{{ request()->is('panier*') ? 'active' : '' }}" style="position:relative;">
-                Panier
-                <span id="nav-cart-count" style="display:none; position:absolute; top:-6px; right:-10px; background:var(--cherry); color:var(--cream); min-width:18px; height:18px; padding:0 5px; border-radius:9px; font-family:'DM Mono',monospace; font-size:0.65rem; align-items:center; justify-content:center; border:1px solid var(--cream);">0</span>
-            </a>
             <a href="/professionnel/dashboard" class="{{ request()->is('professionnel/dashboard*') ? 'active' : '' }}">Dashboard</a>
+            <a href="/professionnel/alertes" class="{{ request()->is('professionnel/alertes*') ? 'active' : '' }}">Alertes</a>
+            <a href="/professionnel/publicites" class="{{ request()->is('professionnel/publicites*') ? 'active' : '' }}">Publicités</a>
+            <a href="/professionnel/conteneurs" class="{{ request()->is('professionnel/conteneurs*') ? 'active' : '' }}">Conteneurs</a>
             <a href="/professionnel/profile" class="{{ request()->is('professionnel/profile*') ? 'active' : '' }}">Mon profil</a>
+            <a href="/" class="btn-public" title="Aller sur le site public">↗ Site public</a>
             <button class="btn-logout" onclick="logout()">Deconnexion</button>
         </div>
     </nav>
@@ -162,7 +160,6 @@
             return response;
         }
     </script>
-    <script src="/js/panier.js"></script>
     @yield('scripts')
 </body>
 </html>

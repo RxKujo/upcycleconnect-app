@@ -85,6 +85,17 @@ func AddPlanningManuel(w http.ResponseWriter, r *http.Request, userId int) {
 		typeCreneau = "perso"
 	}
 
+	// Garde-fou anti-chevauchement : refuse un créneau qui se superpose à un existant.
+	// Deux intervalles [d1,f1) et [d2,f2) se chevauchent si d1 < f2 ET d2 < f1.
+	var conflits int
+	if err := database.DB.QueryRow(`
+		SELECT COUNT(*) FROM planning_utilisateurs
+		WHERE id_utilisateur = ? AND date_debut < ? AND date_fin > ?`,
+		userId, body.DateFin, body.DateDebut).Scan(&conflits); err == nil && conflits > 0 {
+		jsonError(w, "ce créneau chevauche un créneau existant", http.StatusConflict)
+		return
+	}
+
 	res, err := database.DB.Exec(`
 		INSERT INTO planning_utilisateurs (id_utilisateur, titre_creneau, description, date_debut, date_fin, type_creneau, est_manuel)
 		VALUES (?, ?, ?, ?, ?, ?, 1)`,
@@ -119,6 +130,73 @@ func DeletePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, us
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "créneau supprimé"})
+}
+
+func UpdatePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, userId int) {
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		jsonError(w, "id invalide", http.StatusBadRequest)
+		return
+	}
+	var body struct {
+		Titre       string `json:"titre_creneau"`
+		Description string `json:"description"`
+		DateDebut   string `json:"date_debut"`
+		DateFin     string `json:"date_fin"`
+		TypeCreneau string `json:"type_creneau"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "données invalides", http.StatusBadRequest)
+		return
+	}
+	if body.Titre == "" || body.DateDebut == "" || body.DateFin == "" {
+		jsonError(w, "titre, date_debut et date_fin requis", http.StatusBadRequest)
+		return
+	}
+	typeCreneau := body.TypeCreneau
+	validTypes := map[string]bool{"evenement": true, "formation": true, "reunion": true, "travail": true, "perso": true}
+	if !validTypes[typeCreneau] {
+		typeCreneau = "perso"
+	}
+
+	// Vérifie l'existence et que le créneau est bien modifiable (manuel).
+	var estManuel bool
+	err = database.DB.QueryRow(
+		"SELECT est_manuel FROM planning_utilisateurs WHERE id_planning = ? AND id_utilisateur = ?",
+		id, userId).Scan(&estManuel)
+	if err == sql.ErrNoRows {
+		jsonError(w, "créneau introuvable", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		jsonError(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	if !estManuel {
+		jsonError(w, "ce créneau automatique n'est pas modifiable", http.StatusForbidden)
+		return
+	}
+
+	// Garde-fou anti-chevauchement (en excluant le créneau lui-même).
+	var conflits int
+	if err := database.DB.QueryRow(`
+		SELECT COUNT(*) FROM planning_utilisateurs
+		WHERE id_utilisateur = ? AND id_planning <> ? AND date_debut < ? AND date_fin > ?`,
+		userId, id, body.DateFin, body.DateDebut).Scan(&conflits); err == nil && conflits > 0 {
+		jsonError(w, "ce créneau chevauche un créneau existant", http.StatusConflict)
+		return
+	}
+
+	if _, err := database.DB.Exec(`
+		UPDATE planning_utilisateurs
+		SET titre_creneau = ?, description = ?, date_debut = ?, date_fin = ?, type_creneau = ?
+		WHERE id_planning = ? AND id_utilisateur = ? AND est_manuel = 1`,
+		body.Titre, body.Description, body.DateDebut, body.DateFin, typeCreneau, id, userId); err != nil {
+		jsonError(w, "erreur mise à jour", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "créneau mis à jour"})
 }
 
 // AddPlanningFromEvenement ajoute automatiquement un créneau après inscription à un événement

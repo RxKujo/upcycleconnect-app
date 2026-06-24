@@ -20,7 +20,7 @@
         <option value="">Tous les types</option>
         <option value="formation">Formation</option>
         <option value="atelier">Atelier</option>
-        <option value="conseil">Conseil</option>
+        <option value="conference">Conférence</option>
     </select>
 </div>
 

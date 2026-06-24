@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"api/internal/middleware"
 	"api/internal/models"
 	"api/internal/services"
 	"api/pkg/database"
@@ -56,9 +57,20 @@ func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 		u.NiveauScore = services.NiveauPourScore(paliers, u.UpcyclingScore).Nom
 	}
 
+	// Réponse = utilisateur + plan d'abonnement (pour les professionnels).
+	out := struct {
+		models.Utilisateur
+		Plan *middleware.PlanInfo `json:"plan,omitempty"`
+	}{Utilisateur: u}
+	if u.Role == "professionnel" {
+		if p, perr := middleware.GetUserPlanInfo(id); perr == nil && p.EstProFessionnel {
+			out.Plan = p
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(u)
+	json.NewEncoder(w).Encode(out)
 }
 
 // GetMyScore retourne le détail de l'Upcycling Score de l'utilisateur courant

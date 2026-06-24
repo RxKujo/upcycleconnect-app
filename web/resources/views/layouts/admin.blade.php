@@ -26,7 +26,7 @@
         .admin-wrapper { display: flex; min-height: 100vh; }
         
         /* Sidebar styling */
-        .sidebar { width: 280px; height: 100vh; overflow-y: auto; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border);}
+        .sidebar { width: 280px; height: 100vh; overflow-y: auto; overflow-x: hidden; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border);}
         .sidebar::-webkit-scrollbar { width: 8px; }
         .sidebar::-webkit-scrollbar-thumb { background: var(--cherry); }
         .sidebar::-webkit-scrollbar-track { background: rgba(245,240,225,0.08); }
@@ -35,6 +35,8 @@
         .sidebar a { display: flex; align-items: center; padding: 14px 24px 14px 20px; color: var(--cream); text-decoration: none; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.05em; border-left: 6px solid transparent; transition: all 0.2s ease; }
         .sidebar a:hover, .sidebar a.active { border-left-color: var(--cherry); background-color: rgba(164, 36, 59, 0.15); color: var(--wheat); padding-left: 26px; }
         .sidebar-footer { padding: 24px; border-top: 3px solid rgba(245,240,225,0.1); }
+        .sidebar-section-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: rgba(245,240,225,0.4); padding: 22px 24px 8px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0; }
+        .sidebar-badge { background: var(--cherry); color: var(--cream); font-size: 0.7rem; padding: 2px 7px; border-radius: 10px; font-family: 'DM Mono', monospace; font-weight: 700; }
         
         /* Main Layout */
         .main-content { margin-left: 280px; padding: 48px; width: calc(100% - 280px); box-sizing: border-box; }
@@ -96,15 +98,31 @@
     <div class="admin-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1 class="font-bebas" style="font-size: 1.9rem; margin: 0; color: var(--wheat); letter-spacing: 0.05em; line-height: 1; white-space: nowrap;">Upcycle<span style="color: var(--cream);">Connect</span></h1>
+                <h1 class="font-bebas" style="font-size: 2rem; margin: 0; color: var(--wheat); letter-spacing: 0.06em; line-height: 0.95;">Upcycle<span style="color: var(--cream); display: block;">Connect</span></h1>
                 <span class="font-mono" style="font-size: 0.75rem; color: var(--cherry); font-weight: bold; margin-top: 8px; display: block;">Panel Administrateur</span>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ route('admin.dashboard') }}" class="{{ request()->is('admin') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tableau de bord
                 </a>
-                <a href="{{ route('admin.utilisateurs.index') }}" class="{{ request()->is('admin/utilisateurs*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Utilisateurs
+
+                <p class="sidebar-section-label">À valider</p>
+                <a href="{{ route('admin.annonces.index') }}" class="{{ request()->is('admin/annonces*') ? 'active' : '' }}" style="justify-content:space-between;">
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Annonces</span>
+                    <span id="badge-annonces" class="sidebar-badge" style="display:none;"></span>
+                </a>
+                <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}" style="justify-content:space-between;">
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements</span>
+                    <span id="badge-evenements" class="sidebar-badge" style="display:none;"></span>
+                </a>
+                <a href="{{ route('admin.publicites.index') }}" class="{{ request()->is('admin/publicites*') ? 'active' : '' }}" style="justify-content:space-between;">
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Publicités</span>
+                    <span id="badge-publicites" class="sidebar-badge" style="display:none;"></span>
+                </a>
+
+                <p class="sidebar-section-label">Catalogue & contenu</p>
+                <a href="{{ route('admin.catalogue.index') }}" class="{{ request()->is('admin/catalogue*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catalogue
                 </a>
                 <a href="{{ route('admin.categories.index') }}" class="{{ request()->is('admin/categories*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories
@@ -112,48 +130,47 @@
                 <a href="{{ route('admin.materiaux.index') }}" class="{{ request()->is('admin/materiaux*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Matériaux
                 </a>
-                <a href="{{ route('admin.annonces.index') }}" class="{{ request()->is('admin/annonces*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Annonces</span>
-                    <span id="badge-annonces" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
+                <a href="{{ route('admin.templates.index') }}" class="{{ request()->is('admin/templates*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Modèles d'événements
                 </a>
-                <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements</span>
-                    <span id="badge-evenements" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
+                <a href="{{ route('admin.tutoriel.index') }}" class="{{ request()->is('admin/tutoriel*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tutoriel
                 </a>
+                <a href="{{ route('salarie.idees.index') }}" class="{{ request()->is('salarie/idees*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Boîte à idées
+                </a>
+
+                <p class="sidebar-section-label">Logistique</p>
                 <a href="{{ route('admin.commandes.index') }}" class="{{ request()->is('admin/commandes*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Commandes
                 </a>
                 <a href="{{ route('admin.conteneurs.index') }}" class="{{ request()->is('admin/conteneurs*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Conteneurs
                 </a>
+                <a href="{{ route('admin.depot.index') }}" class="{{ request()->is('admin/depot*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Dépôts conteneur
+                </a>
+
+                <p class="sidebar-section-label">Communauté</p>
+                <a href="{{ route('admin.utilisateurs.index') }}" class="{{ request()->is('admin/utilisateurs*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Utilisateurs
+                </a>
                 <a href="{{ route('admin.abonnements.index') }}" class="{{ request()->is('admin/abonnements*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Abonnements
-                </a>
-                <a href="{{ route('admin.catalogue.index') }}" class="{{ request()->is('admin/catalogue*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catalogue
                 </a>
                 <a href="{{ route('admin.scores.index') }}" class="{{ request()->is('admin/scores*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Upcycling Score
                 </a>
-                <a href="{{ route('admin.depot.index') }}" class="{{ request()->is('admin/depot*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Dépôts conteneur
-                </a>
-                <a href="{{ route('admin.tutoriel.index') }}" class="{{ request()->is('admin/tutoriel*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tutoriel
-                </a>
-                <a href="{{ route('admin.publicites.index') }}" class="{{ request()->is('admin/publicites*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Publicités</span>
-                    <span id="badge-publicites" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
-                </a>
-                <p class="sidebar-section-label" style="font-size:0.6rem;padding:14px 24px 6px;color:rgba(245,240,225,0.35);">Administration</p>
-                <a href="{{ route('admin.langues.index') }}" class="{{ request()->is('admin/langues*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Langues & Trad.
+
+                <p class="sidebar-section-label">Système & finances</p>
+                <a href="{{ route('admin.finances.index') }}" class="{{ request()->is('admin/finances*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Pilotage financier
                 </a>
                 <a href="{{ route('admin.notifications.index') }}" class="{{ request()->is('admin/notifications*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Notifications
                 </a>
-                <a href="{{ route('admin.finances.index') }}" class="{{ request()->is('admin/finances*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Pilotage financier
+                <a href="{{ route('admin.langues.index') }}" class="{{ request()->is('admin/langues*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Langues & Trad.
                 </a>
             </nav>
             <div class="sidebar-footer">

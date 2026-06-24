@@ -10,7 +10,6 @@
             <li><a href="{{ route('annonces.index') }}" class="{{ request()->routeIs('annonces.*') ? 'active' : '' }}">Marché</a></li>
             <li><a href="{{ route('evenements.index') }}" class="{{ request()->routeIs('evenements.*') ? 'active' : '' }}">Événements</a></li>
             <li><a href="{{ route('formations.index') }}" class="{{ request()->routeIs('formations.*') ? 'active' : '' }}">Formations</a></li>
-            <li><a href="{{ route('conseils.index') }}" class="{{ request()->routeIs('conseils.*') ? 'active' : '' }}">Conseils</a></li>
             <li><a href="{{ route('forum.index') }}" class="{{ request()->routeIs('forum.*') ? 'active' : '' }}">Forum</a></li>
             <li><a href="{{ route('ressources.index') }}" class="{{ request()->routeIs('ressources.*') ? 'active' : '' }}">Ressources</a></li>
         </ul>
@@ -62,8 +61,8 @@
         <a href="{{ route('annonces.index') }}">Marché</a>
         <a href="{{ route('evenements.index') }}">Événements</a>
         <a href="{{ route('formations.index') }}">Formations</a>
-        <a href="{{ route('conseils.index') }}">Conseils</a>
         <a href="{{ route('forum.index') }}">Forum</a>
+        <a href="{{ route('ressources.index') }}">Ressources</a>
         <a href="{{ route('services-pro') }}">Services Pro</a>
         <a href="{{ route('a-propos') }}">À propos</a>
         <div class="nav-mobile-auth" id="nav-mobile-auth">

@@ -11,7 +11,7 @@
             <ul style="display:flex; flex-direction:column; gap:10px;">
                 <li><a href="{{ route('annonces.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Marché</a></li>
                 <li><a href="{{ route('evenements.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Événements</a></li>
-                <li><a href="{{ route('conseils.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Conseils</a></li>
+                <li><a href="{{ route('ressources.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Ressources</a></li>
                 <li><a href="{{ route('forum.index') }}" style="font-size:0.9rem; color:rgba(245,240,225,0.6); transition:color 0.15s;">Forum</a></li>
             </ul>
         </nav>

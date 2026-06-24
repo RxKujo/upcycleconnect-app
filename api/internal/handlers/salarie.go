@@ -122,6 +122,35 @@ func GetSalarieEvenement(w http.ResponseWriter, r *http.Request, id string, user
 	json.NewEncoder(w).Encode(e)
 }
 
+// dureeMaxEvenement borne la durée d'un événement (début → fin).
+const dureeMaxEvenement = 14 * 24 * time.Hour
+
+// validerDureeEvenement vérifie la cohérence et la durée max des dates.
+// Retourne un message d'erreur non vide si invalide.
+func validerDureeEvenement(debutStr, finStr string) string {
+	layouts := []string{"2006-01-02 15:04:05", "2006-01-02T15:04:05"}
+	var debut, fin time.Time
+	var okD, okF bool
+	for _, l := range layouts {
+		if t, err := time.Parse(l, debutStr); err == nil {
+			debut, okD = t, true
+		}
+		if t, err := time.Parse(l, finStr); err == nil {
+			fin, okF = t, true
+		}
+	}
+	if !okD || !okF {
+		return "" // format inattendu : laissé aux autres validations
+	}
+	if !fin.After(debut) {
+		return "la date de fin doit être postérieure à la date de début"
+	}
+	if fin.Sub(debut) > dureeMaxEvenement {
+		return "la durée d'un événement ne peut pas dépasser 14 jours"
+	}
+	return ""
+}
+
 func CreateSalarieEvenement(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 	var req CreateEvenementRequest
@@ -133,6 +162,11 @@ func CreateSalarieEvenement(w http.ResponseWriter, r *http.Request, userId int) 
 	if req.NbPlacesTotal < 1 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "nombre de places invalide"})
+		return
+	}
+	if msg := validerDureeEvenement(req.DateDebut, req.DateFin); msg != "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": msg})
 		return
 	}
 
@@ -179,6 +213,11 @@ func UpdateSalarieEvenement(w http.ResponseWriter, r *http.Request, id string, u
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if msg := validerDureeEvenement(req.DateDebut, req.DateFin); msg != "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": msg})
+		return
+	}
 	var lieu interface{}
 	if strings.TrimSpace(req.Lieu) != "" {
 		lieu = req.Lieu
@@ -199,7 +238,7 @@ func UpdateSalarieEvenement(w http.ResponseWriter, r *http.Request, id string, u
 
 func GetSalarieTemplates(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	rows, err := database.DB.Query("SELECT id_template, nom_template, COALESCE(description, ''), COALESCE(modele, '{}') FROM templates_evenements")
+	rows, err := database.DB.Query("SELECT id_template, nom_template, COALESCE(description, ''), COALESCE(modele, '{}') FROM templates_evenements WHERE actif = 1 ORDER BY nom_template")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -226,13 +265,15 @@ func GetSalarieTemplates(w http.ResponseWriter, r *http.Request) {
 // ===== ARTICLES =====
 
 type Article struct {
-	IDArticle        int     `json:"id_article"`
-	Titre            string  `json:"titre"`
-	Contenu          string  `json:"contenu"`
-	Categorie        *string `json:"categorie"`
-	Statut           string  `json:"statut"`
-	DatePublication  *string `json:"date_publication,omitempty"`
-	IDAuteur         int     `json:"id_auteur"`
+	IDArticle       int     `json:"id_article"`
+	Titre           string  `json:"titre"`
+	Contenu         string  `json:"contenu"`
+	Categorie       *string `json:"categorie"`
+	Statut          string  `json:"statut"`
+	DatePublication *string `json:"date_publication,omitempty"`
+	IDAuteur        int     `json:"id_auteur"`
+	AuteurPrenom    string  `json:"auteur_prenom"`
+	AuteurNomInit   string  `json:"auteur_nom_initiale"`
 }
 
 type ArticleRequest struct {
@@ -245,8 +286,10 @@ type ArticleRequest struct {
 func GetArticles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	rows, err := database.DB.Query(`
-		SELECT id_article, titre, contenu, categorie, statut, date_publication, id_auteur
-		FROM articles_news ORDER BY id_article DESC
+		SELECT a.id_article, a.titre, a.contenu, a.categorie, a.statut, a.date_publication, a.id_auteur, u.prenom, u.nom
+		FROM articles_news a
+		JOIN utilisateurs u ON u.id_utilisateur = a.id_auteur
+		ORDER BY a.id_article DESC
 	`)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -258,7 +301,8 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		var a Article
 		var cat sql.NullString
 		var pub sql.NullTime
-		if err := rows.Scan(&a.IDArticle, &a.Titre, &a.Contenu, &cat, &a.Statut, &pub, &a.IDAuteur); err == nil {
+		var nom string
+		if err := rows.Scan(&a.IDArticle, &a.Titre, &a.Contenu, &cat, &a.Statut, &pub, &a.IDAuteur, &a.AuteurPrenom, &nom); err == nil {
 			if cat.Valid {
 				v := cat.String
 				a.Categorie = &v
@@ -266,6 +310,9 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 			if pub.Valid {
 				v := pub.Time.Format("2006-01-02T15:04:05Z")
 				a.DatePublication = &v
+			}
+			if len(nom) > 0 {
+				a.AuteurNomInit = string([]rune(nom)[:1]) + "."
 			}
 			out = append(out, a)
 		}

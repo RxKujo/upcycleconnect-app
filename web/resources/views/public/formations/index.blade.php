@@ -13,8 +13,7 @@
         <button class="filter-btn active" data-filter="all">Tout</button>
         <button class="filter-btn" data-filter="atelier">Ateliers</button>
         <button class="filter-btn" data-filter="formation">Formations</button>
-        <button class="filter-btn" data-filter="evenement">Événements</button>
-        <button class="filter-btn" data-filter="conseil">Conseils</button>
+        <button class="filter-btn" data-filter="conference">Conférences</button>
         <button class="filter-btn" data-filter="presentiel">Présentiel</button>
         <button class="filter-btn" data-filter="distanciel">Distanciel</button>
     </div>
@@ -22,7 +21,7 @@
     @php
         $categorieLabels = [
             'formation' => 'Formation', 'atelier' => 'Atelier',
-            'evenement' => 'Événement', 'conseil' => 'Conseil',
+            'conference' => 'Conférence',
         ];
         $formatLabels = ['presentiel' => 'Présentiel', 'distanciel' => 'Distanciel'];
     @endphp

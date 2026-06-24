@@ -3,8 +3,6 @@
 @section('title', 'Dépôt en conteneur')
 
 @section('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<style>
 .depot-wrap { max-width: 1200px; margin: 0 auto; padding: 60px 24px; }
 .depot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
 @media(max-width: 768px) { .depot-grid { grid-template-columns: 1fr; } }
@@ -30,7 +28,6 @@
 .badge-bad { background: var(--cherry); color: white; }
 .badge-code { background: var(--teal); color: white; }
 .code-barre-box { background: var(--wheat); border: 3px solid var(--coffee); padding: 12px 20px; font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: bold; letter-spacing: 0.1em; margin-top: 8px; }
-</style>
 @endsection
 
 @section('content')
@@ -115,6 +112,7 @@
 @endsection
 
 @section('scripts')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API = '{{ config("services.api.public_url") }}';

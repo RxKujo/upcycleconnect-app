@@ -3,194 +3,165 @@
 @section('title', 'Ressources Pédagogiques')
 
 @section('styles')
-<style>
 .ressources-wrap { max-width: 1200px; margin: 0 auto; padding: 60px 24px; }
 .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--coffee); margin-bottom: 8px; }
-.page-sub { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: #666; text-transform: uppercase; margin-bottom: 48px; }
-.tabs { display: flex; border-bottom: 4px solid var(--coffee); margin-bottom: 40px; }
-.tab-btn { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.1em; padding: 12px 28px; cursor: pointer; border: none; background: none; color: var(--coffee); opacity: 0.5; position: relative; }
-.tab-btn.active { opacity: 1; }
-.tab-btn.active::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 4px; background: var(--forest); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.page-sub { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: #666; text-transform: uppercase; margin-bottom: 40px; max-width: 640px; line-height: 1.6; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 36px; }
+.filter-chip { font-family: 'DM Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 18px; border: 2px solid var(--coffee); background: var(--cream); color: var(--coffee); cursor: pointer; }
+.filter-chip.active { background: var(--coffee); color: var(--cream); }
+
 .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
-.article-card { background: white; border: 3px solid var(--coffee); box-shadow: var(--shadow-sm); overflow: hidden; }
-.article-img { height: 180px; background: var(--wheat); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
-.article-body { padding: 20px; }
-.article-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; margin: 0 0 8px; }
-.article-meta { font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; color: #888; margin-bottom: 12px; }
-.article-excerpt { font-size: 0.95rem; color: #555; line-height: 1.5; }
+.article-card { background: white; border: 3px solid var(--coffee); box-shadow: var(--shadow-sm); overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.article-card:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--coffee); }
+.article-top { height: 8px; }
+.article-body { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+.cat-badge { align-self: flex-start; font-family: 'DM Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 10px; border: 2px solid var(--coffee); margin-bottom: 12px; }
+.article-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; line-height: 1.1; margin: 0 0 8px; color: var(--coffee); }
+.article-meta { font-family: 'DM Mono', monospace; font-size: 0.72rem; text-transform: uppercase; color: #999; margin-bottom: 14px; }
+.article-excerpt { font-size: 0.95rem; color: #555; line-height: 1.55; flex: 1; }
+.article-more { font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cherry); margin-top: 16px; font-weight: bold; }
 
-/* Forum section */
-.forum-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.sujet-row { border: 3px solid var(--coffee); background: white; padding: 20px 24px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
-.sujet-row:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow-sm); }
-.sujet-titre { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; }
-.sujet-meta { font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; color: #888; margin-top: 4px; }
-.sujet-link { text-decoration: none; color: inherit; flex: 1; }
-.signaler-btn { font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; background: none; border: 2px solid var(--cherry); color: var(--cherry); padding: 6px 12px; cursor: pointer; }
-.signaler-btn:hover { background: var(--cherry); color: white; }
-.btn { display: inline-flex; align-items: center; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border: 3px solid var(--coffee); padding: 10px 24px; font-size: 1.1rem; box-shadow: var(--shadow-sm); transition: all 0.2s; text-decoration: none; }
-.btn-primary { background: var(--forest); color: var(--cream); }
-.btn:hover { transform: translate(2px,2px); box-shadow: var(--shadow-hover); }
+.empty-state { text-align: center; padding: 72px 24px; border: 3px solid var(--coffee); background: white; box-shadow: var(--shadow-sm); }
 
-/* Modal signalement */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(18,3,9,0.6); z-index: 9999; align-items: center; justify-content: center; }
-.modal-overlay.active { display: flex; }
-.modal-box { background: var(--cream); border: 3px solid var(--coffee); box-shadow: var(--shadow); padding: 40px; width: 100%; max-width: 480px; }
-.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; margin: 0 0 20px; }
-.form-group { margin-bottom: 16px; }
-.form-label { display: block; font-family: 'DM Mono', monospace; font-size: 0.82rem; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
-.form-textarea { width: 100%; border: 3px solid var(--coffee); padding: 10px 14px; font-family: 'Outfit', sans-serif; font-size: 1rem; min-height: 100px; resize: vertical; outline: none; box-sizing: border-box; }
-</style>
+/* Modal lecture article */
+.art-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(18,3,9,0.6); z-index: 9999; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 48px 20px; }
+.art-modal-overlay.active { display: flex; }
+.art-modal { background: var(--cream); border: 3px solid var(--coffee); box-shadow: var(--shadow); width: 100%; max-width: 720px; padding: 40px; position: relative; }
+.art-modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--coffee); line-height: 1; }
+.art-modal h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1.05; margin: 0 0 10px; }
+.art-modal-meta { font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; color: #888; margin-bottom: 24px; }
+.art-modal-content { font-size: 1.02rem; line-height: 1.7; color: #333; white-space: pre-wrap; }
 @endsection
 
 @section('content')
 <div class="ressources-wrap">
-    <h1 class="page-title">Ressources Pédagogiques</h1>
-    <p class="page-sub">Articles, conseils et forum de la communauté UpcycleConnect</p>
+    <h1 class="page-title">Ressources pédagogiques</h1>
+    <p class="page-sub">Actualités, conseils et astuces rédigés par l'équipe UpcycleConnect pour vous accompagner dans le réemploi et la réparation.</p>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('articles')">Articles & Conseils</button>
-        <button class="tab-btn" onclick="switchTab('forum')">Forum</button>
+    <div class="filters" id="filters"></div>
+
+    <div id="articles-grid" class="articles-grid">
+        <div style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;color:#999;">Chargement…</div>
     </div>
 
-    <!-- Tab Articles -->
-    <div id="tab-articles" class="tab-content active">
-        <div id="articles-grid" class="articles-grid">
-            <div style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;color:#999;">Chargement...</div>
-        </div>
-    </div>
-
-    <!-- Tab Forum -->
-    <div id="tab-forum" class="tab-content">
-        <div class="forum-header">
-            <span style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;" id="forum-count"></span>
-            <a href="/forum" class="btn btn-primary">Voir le forum complet</a>
-        </div>
-        <div id="forum-list">
-            <div style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;color:#999;">Chargement...</div>
-        </div>
+    <div id="empty-state" class="empty-state" style="display:none;">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;margin-bottom:8px;">Aucune ressource pour le moment</h3>
+        <p style="opacity:0.6;">L'équipe UpcycleConnect publiera bientôt des actualités et des conseils ici.</p>
     </div>
 </div>
 
-<!-- Modal Signalement -->
-<div class="modal-overlay" id="modal-signaler">
-    <div class="modal-box">
-        <h2 class="modal-title">Signaler un sujet</h2>
-        <input type="hidden" id="signal-sujet-id">
-        <div class="form-group">
-            <label class="form-label">Raison du signalement *</label>
-            <textarea id="signal-raison" class="form-textarea" placeholder="Décrivez pourquoi ce contenu est inapproprié..."></textarea>
-        </div>
-        <div style="display:flex;gap:12px;margin-top:20px;">
-            <button class="btn btn-primary" onclick="submitSignalement()" style="font-size:1rem;padding:10px 20px;">Envoyer</button>
-            <button class="btn" onclick="closeSignaler()" style="font-size:1rem;padding:10px 20px;background:var(--cream);">Annuler</button>
-        </div>
-        <div id="signal-success" style="display:none;font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;color:var(--forest);margin-top:12px;"></div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
 <script>
-const API = '{{ config("services.api.public_url") }}';
-const token = localStorage.getItem('uc_token');
+const CAT_LABELS = {
+    actualites: { label: 'Actualités',         color: 'var(--teal)',   text: '#fff' },
+    conseils:   { label: 'Conseils & astuces', color: 'var(--forest)', text: '#fff' },
+    tutoriel:   { label: 'Tutoriel',           color: '#6c5ce7',       text: '#fff' },
+    materiaux:  { label: 'Matériaux',          color: 'var(--cherry)', text: '#fff' },
+    evenement:  { label: 'Événement',          color: 'var(--coffee)', text: '#fff' },
+};
+// Liste FIXE des rubriques (alignée sur config/articles.php) — affichée même vide.
+const FIXED_CATS = @json(config('articles.categories'));
+function catInfo(cat) {
+    return CAT_LABELS[cat] || { label: cat ? cat.charAt(0).toUpperCase() + cat.slice(1) : 'Ressource', color: 'var(--wheat)', text: 'var(--coffee)' };
+}
+function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function stripHtml(s) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = String(s || '');
+    return tmp.textContent || tmp.innerText || '';
+}
+function formatDate(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
 
-function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', (i === 0 && tab === 'articles') || (i === 1 && tab === 'forum'));
+let ALL_ARTICLES = [];
+let currentFilter = 'all';
+
+function countFor(cat) {
+    if (cat === 'all') return ALL_ARTICLES.length;
+    if (cat === '__none__') return ALL_ARTICLES.filter(a => !a.categorie).length;
+    return ALL_ARTICLES.filter(a => a.categorie === cat).length;
+}
+
+function renderFilters() {
+    const wrap = document.getElementById('filters');
+    // « Tout » + toutes les rubriques fixes (même à 0) + « Non classé » si présent.
+    const entries = [['all', 'Tout']].concat(Object.entries(FIXED_CATS));
+    if (countFor('__none__') > 0) entries.push(['__none__', 'Non classé']);
+
+    wrap.innerHTML = entries.map(([key, label]) => {
+        const n = countFor(key);
+        const active = key === currentFilter ? ' active' : '';
+        const dimmed = n === 0 ? ' style="opacity:0.45;"' : '';
+        return `<button class="filter-chip${active}" data-cat="${escapeHtml(key)}"${dimmed}>${escapeHtml(label)} <span style="opacity:0.6;">(${n})</span></button>`;
+    }).join('');
+
+    wrap.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentFilter = btn.dataset.cat;
+            wrap.querySelectorAll('.filter-chip').forEach(b => b.classList.toggle('active', b === btn));
+            renderArticles();
+        });
     });
-    document.getElementById('tab-articles').classList.toggle('active', tab === 'articles');
-    document.getElementById('tab-forum').classList.toggle('active', tab === 'forum');
-    if (tab === 'forum' && !document.getElementById('forum-list').dataset.loaded) {
-        loadForum();
+}
+
+function renderArticles() {
+    const grid = document.getElementById('articles-grid');
+    const empty = document.getElementById('empty-state');
+    let list;
+    if (currentFilter === 'all') list = ALL_ARTICLES;
+    else if (currentFilter === '__none__') list = ALL_ARTICLES.filter(a => !a.categorie);
+    else list = ALL_ARTICLES.filter(a => a.categorie === currentFilter);
+
+    if (!list.length) {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        return;
     }
-}
+    grid.style.display = 'grid';
+    empty.style.display = 'none';
 
-async function loadArticles() {
-    const r = await fetch(API + '/api/v1/public/articles');
-    if (!r.ok) return [];
-    return await r.json();
-}
-
-async function loadForum() {
-    const r = await fetch(API + '/api/v1/public/forum');
-    if (!r.ok) return;
-    const data = await r.json();
-    const sujets = data.sujets || data;
-    document.getElementById('forum-count').textContent = (sujets.length || 0) + ' sujets';
-    document.getElementById('forum-list').dataset.loaded = '1';
-    document.getElementById('forum-list').innerHTML = sujets.slice(0, 10).map(s => `
-        <div class="sujet-row">
-            <a href="/forum/${s.id_sujet}" class="sujet-link">
-                <div class="sujet-titre">${s.titre}</div>
-                <div class="sujet-meta">${s.nb_messages || 0} réponses • ${new Date(s.date_creation).toLocaleDateString('fr-FR')}</div>
-            </a>
-            <button class="signaler-btn" onclick="openSignaler(${s.id_sujet}, event)">Signaler</button>
-        </div>
-    `).join('');
+    grid.innerHTML = list.map((a) => {
+        const ci = catInfo(a.categorie);
+        const auteur = [a.auteur_prenom, a.auteur_nom_initiale].filter(Boolean).join(' ');
+        const meta = [formatDate(a.date_publication), auteur ? 'par ' + escapeHtml(auteur) : ''].filter(Boolean).join(' · ');
+        const plain = stripHtml(a.contenu || '').replace(/\s+/g, ' ').trim();
+        const excerpt = escapeHtml(plain.substring(0, 140)) + (plain.length > 140 ? '…' : '');
+        return `<a href="/ressources/${a.id_article}" class="article-card">
+            <div class="article-top" style="background:${ci.color};"></div>
+            <div class="article-body">
+                <span class="cat-badge" style="background:${ci.color};color:${ci.text};">${escapeHtml(ci.label)}</span>
+                <h3 class="article-title">${escapeHtml(a.titre)}</h3>
+                <p class="article-meta">${meta}</p>
+                <p class="article-excerpt">${excerpt}</p>
+                <span class="article-more">Lire l'article →</span>
+            </div>
+        </a>`;
+    }).join('');
 }
 
 async function init() {
-    const articles = await loadArticles();
     const grid = document.getElementById('articles-grid');
-    if (!articles.length) {
-        grid.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.85rem;text-transform:uppercase;color:#999;">Aucun article disponible.</p>';
-        return;
+    try {
+        const r = await fetch(API_BASE + '/api/v1/public/articles');
+        if (!r.ok) throw new Error('http ' + r.status);
+        ALL_ARTICLES = await r.json() || [];
+    } catch (e) {
+        ALL_ARTICLES = [];
     }
-    grid.innerHTML = articles.slice(0, 6).map(a => `
-        <div class="article-card">
-            <div class="article-img">📰</div>
-            <div class="article-body">
-                <h3 class="article-title">${a.titre || a.title}</h3>
-                <p class="article-meta">${new Date(a.date_creation || a.created_at || Date.now()).toLocaleDateString('fr-FR')}</p>
-                <p class="article-excerpt">${(a.contenu || a.content || '').substring(0, 120)}...</p>
-            </div>
-        </div>
-    `).join('');
+    renderFilters();
+    renderArticles();
 }
 
-function openSignaler(sujetId, e) {
-    e.preventDefault();
-    if (!token) { window.location.href = '/login?return=/ressources'; return; }
-    document.getElementById('signal-sujet-id').value = sujetId;
-    document.getElementById('signal-raison').value = '';
-    document.getElementById('signal-success').style.display = 'none';
-    document.getElementById('modal-signaler').classList.add('active');
-}
-
-function closeSignaler() {
-    document.getElementById('modal-signaler').classList.remove('active');
-}
-
-async function submitSignalement() {
-    const sujetId = document.getElementById('signal-sujet-id').value;
-    const raison = document.getElementById('signal-raison').value.trim();
-    if (!raison) { alert('Veuillez indiquer une raison.'); return; }
-
-    const r = await fetch(API + '/api/v1/forum/signaler', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_sujet: parseInt(sujetId), raison })
-    });
-
-    const el = document.getElementById('signal-success');
-    if (r.ok) {
-        el.textContent = 'Signalement envoyé. Merci !';
-        el.style.display = 'block';
-        setTimeout(closeSignaler, 2000);
-    } else {
-        el.textContent = 'Erreur lors de l\'envoi.';
-        el.style.color = 'var(--cherry)';
-        el.style.display = 'block';
-    }
-}
-
-document.getElementById('modal-signaler').addEventListener('click', function(e) {
-    if (e.target === this) closeSignaler();
-});
-
-init();
+if (document.readyState !== 'loading') init();
+else document.addEventListener('DOMContentLoaded', init);
 </script>
 @endsection

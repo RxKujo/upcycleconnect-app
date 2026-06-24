@@ -85,7 +85,7 @@
     <div class="salarie-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1 class="font-bebas" style="font-size: 2.2rem; margin: 0; color: var(--wheat); letter-spacing: 0.12em; line-height: 1;">Upcycle<span style="color: var(--cream);">Connect</span></h1>
+                <h1 class="font-bebas" style="font-size: 2rem; margin: 0; color: var(--wheat); letter-spacing: 0.06em; line-height: 0.95;">Upcycle<span style="color: var(--cream); display: block;">Connect</span></h1>
                 <span class="font-mono" style="font-size: 0.75rem; color: var(--forest); background:var(--wheat); padding:2px 8px; font-weight: bold; margin-top: 8px; display: inline-block;">Espace Salarié</span>
             </div>
             <nav class="sidebar-nav">
@@ -95,6 +95,9 @@
                 <p class="sidebar-section-label">Catalogue</p>
                 <a href="/salarie/evenements" class="{{ request()->is('salarie/evenements*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Mes événements
+                </a>
+                <a href="/salarie/templates" class="{{ request()->is('salarie/templates*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Modèles
                 </a>
                 <a href="/salarie/planning" class="{{ request()->is('salarie/planning*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Planning

@@ -3,7 +3,6 @@
 @section('title', 'Tutoriels')
 
 @section('styles')
-<style>
 .tutoriels-wrap { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
 .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--coffee); margin-bottom: 8px; }
 .page-sub { font-family: 'DM Mono', monospace; font-size: 0.85rem; color: #666; text-transform: uppercase; margin-bottom: 48px; }
@@ -13,7 +12,6 @@
 .etape-contenu { font-size: 1rem; color: #444; line-height: 1.6; }
 .relaunch-btn { display: inline-flex; align-items: center; gap: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.1em; text-transform: uppercase; background: var(--forest); color: var(--cream); border: 3px solid var(--coffee); padding: 14px 32px; cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.2s; margin-top: 40px; }
 .relaunch-btn:hover { transform: translate(2px,2px); box-shadow: var(--shadow-hover); }
-</style>
 @endsection
 
 @section('content')

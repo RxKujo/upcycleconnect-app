@@ -16,13 +16,13 @@ import (
 
 // PlanInfo contient les flags du plan actif de l'utilisateur.
 type PlanInfo struct {
-	IDAbonnement      int
-	Nom               string
-	NbAlertesMax      *int   // NULL = illimité (Expert Pro)
-	RayonAlertMaxKm   *int   // NULL = modulable (Expert Pro)
-	DashboardAnnuel   bool
-	BadgesActives     bool
-	EstProFessionnel  bool   // vrai si role=professionnel avec un plan actif
+	IDAbonnement     int    `json:"id_abonnement"`
+	Nom              string `json:"nom"`
+	NbAlertesMax     *int   `json:"nb_alertes_max"`     // NULL = illimité (Expert Pro)
+	RayonAlertMaxKm  *int   `json:"rayon_alerte_max_km"` // NULL = modulable (Expert Pro)
+	DashboardAnnuel  bool   `json:"dashboard_annuel"`
+	BadgesActives    bool   `json:"badges_actives"`
+	EstProFessionnel bool   `json:"est_professionnel"` // vrai si role=professionnel avec un plan actif
 }
 
 // GetUserPlanInfo retourne le plan actif du professionnel.

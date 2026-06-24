@@ -61,7 +61,13 @@ class EvenementController extends Controller
             'format' => 'required|in:presentiel,distanciel',
             'lieu' => 'nullable|string|max:300',
             'date_debut' => 'required|date',
-            'date_fin' => 'required|date|after:date_debut',
+            'date_fin' => ['required', 'date', 'after:date_debut', function ($attr, $value, $fail) use ($request) {
+                $debut = strtotime($request->input('date_debut'));
+                $fin   = strtotime($value);
+                if ($debut && $fin && ($fin - $debut) > 14 * 24 * 3600) {
+                    $fail('La durée de l\'événement ne peut pas dépasser 14 jours.');
+                }
+            }],
             'nb_places_total' => 'required|integer|min:1',
             'prix' => 'required|numeric|min:0',
             'id_template' => 'nullable|integer',

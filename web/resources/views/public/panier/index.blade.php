@@ -94,10 +94,21 @@
     <p class="section-label">Achats</p>
     <h1 class="page-title">Mon panier</h1>
 
-    <div id="panierEmpty" style="display:none; text-align:center; padding:80px 20px; border:var(--border); background:white;">
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:2rem; margin-bottom:12px;">Panier vide</h3>
-        <p style="opacity:0.6; margin-bottom:24px;">Découvrez les annonces du marché et ajoutez des objets à votre panier.</p>
-        <a href="{{ route('annonces.index') }}" class="btn btn-primary">Voir le marché</a>
+    <div id="panierEmpty" style="text-align:center; padding:72px 24px; border:var(--border); background:white; box-shadow:var(--shadow-sm);">
+        <div style="width:84px; height:84px; margin:0 auto 24px; border:3px solid var(--coffee); display:flex; align-items:center; justify-content:center; background:var(--wheat);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="var(--coffee)" stroke-width="1.6" viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1.4"/><circle cx="18" cy="21" r="1.4"/>
+                <path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
+            </svg>
+        </div>
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:0.04em; margin-bottom:10px;">Votre panier est vide</h3>
+        <p style="opacity:0.6; max-width:420px; margin:0 auto 28px; line-height:1.5;">
+            Parcourez le marché et ajoutez des objets à récupérer ou à acheter. Ils apparaîtront ici.
+        </p>
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            <a href="{{ route('annonces.index') }}" class="btn btn-primary">Explorer le marché</a>
+            <a href="/" class="btn btn-secondary">Retour à l'accueil</a>
+        </div>
     </div>
 
     <div id="panierContent" style="display:none;">
@@ -150,7 +161,6 @@
 @section('scripts')
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-const API_BASE = '{{ config("services.api.public_url") }}';
 let stripeInstance = null;
 let stripeElements = null;
 let panierDetails = null;
