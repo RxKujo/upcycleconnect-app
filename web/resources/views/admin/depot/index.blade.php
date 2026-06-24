@@ -5,8 +5,8 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Demandes de dépôt</h1>
-    <div style="display:flex;gap:12px;">
-        <select id="filtre-statut" onchange="filtrer()" style="border:3px solid var(--coffee);padding:10px 16px;font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;background:white;outline:none;">
+    <div class="action-cell">
+        <select id="filtre-statut" onchange="filtrer()" class="form-select" style="width:auto;font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;">
             <option value="">Tous les statuts</option>
             <option value="en_attente">En attente</option>
             <option value="code_envoye">Code envoyé</option>

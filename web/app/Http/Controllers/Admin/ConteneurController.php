@@ -28,14 +28,30 @@ class ConteneurController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'conteneur_ref' => 'required',
-            'adresse' => 'required',
-            'ville' => 'required',
-            'capacite' => 'required|numeric'
+            'conteneur_ref'  => 'required',
+            'adresse'        => 'required',
+            'ville'          => 'required',
+            'code_postal'    => 'nullable|string|max:10',
+            'latitude'       => 'nullable|numeric',
+            'longitude'      => 'nullable|numeric',
+            'image_base64'   => 'nullable|array',
+            'image_base64.*' => 'string',
+            'capacite'       => 'required|numeric',
         ]);
 
-        $data = $request->all();
-        $data['capacite'] = (int) $data['capacite'];
+        // Photos en base64 (comme les annonces) : décodées et écrites dans public/uploads/conteneurs.
+        $images = $this->saveBase64Images($request->input('image_base64', []));
+
+        $data = [
+            'conteneur_ref' => $request->conteneur_ref,
+            'adresse'       => $request->adresse,
+            'ville'         => $request->ville,
+            'code_postal'   => $request->code_postal,
+            'latitude'      => $request->filled('latitude') ? (float) $request->latitude : null,
+            'longitude'     => $request->filled('longitude') ? (float) $request->longitude : null,
+            'images'        => $images,
+            'capacite'      => (int) $request->capacite,
+        ];
 
         $response = Http::withToken(session('admin_token'))->asJson()->post($this->apiUrl, $data);
 
@@ -44,6 +60,92 @@ class ConteneurController extends Controller
         }
 
         return redirect()->route('admin.conteneurs.index')->with('success', 'Conteneur créé avec succès.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'conteneur_ref'  => 'required',
+            'adresse'        => 'required',
+            'ville'          => 'required',
+            'code_postal'    => 'nullable|string|max:10',
+            'latitude'       => 'nullable|numeric',
+            'longitude'      => 'nullable|numeric',
+            'image_base64'   => 'nullable|array',
+            'image_base64.*' => 'string',
+            'capacite'       => 'required|numeric',
+            'statut'         => 'required|in:actif,plein,maintenance,hors_service',
+        ]);
+
+        // Nouvelles photos à ajouter (les existantes se suppriment via deletePhoto).
+        $images = $this->saveBase64Images($request->input('image_base64', []));
+
+        $data = [
+            'conteneur_ref' => $request->conteneur_ref,
+            'adresse'       => $request->adresse,
+            'ville'         => $request->ville,
+            'code_postal'   => $request->code_postal,
+            'latitude'      => $request->filled('latitude') ? (float) $request->latitude : null,
+            'longitude'     => $request->filled('longitude') ? (float) $request->longitude : null,
+            'images'        => $images,
+            'capacite'      => (int) $request->capacite,
+            'statut'        => $request->statut,
+        ];
+
+        $response = Http::withToken(session('admin_token'))->asJson()->put("{$this->apiUrl}/{$id}", $data);
+
+        if ($response->failed()) {
+            return back()->with('error', 'Erreur lors de la mise à jour du conteneur.');
+        }
+
+        return redirect()->route('admin.conteneurs.show', $id)->with('success', 'Conteneur mis à jour.');
+    }
+
+    /**
+     * Décode un tableau d'images base64 (data URLs) et les écrit dans
+     * public/uploads/conteneurs. Retourne la liste des chemins relatifs valides.
+     */
+    private function saveBase64Images(array $b64List): array
+    {
+        $paths = [];
+        foreach ($b64List as $b64) {
+            if (!is_string($b64) || !preg_match('/^data:image\/(\w+);base64,/', $b64, $m)) {
+                continue;
+            }
+            $ext  = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+            $data = base64_decode(substr($b64, strpos($b64, ',') + 1), true);
+            if (!in_array($ext, ['jpg', 'png', 'webp'], true) || $data === false || strlen($data) > 5 * 1024 * 1024) {
+                continue;
+            }
+            $dir = public_path('uploads/conteneurs');
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            $filename = uniqid('cont-') . '.' . $ext;
+            file_put_contents($dir . '/' . $filename, $data);
+            $paths[] = 'conteneurs/' . $filename;
+        }
+        return $paths;
+    }
+
+    public function deletePhoto(Request $request, $id, $photoId)
+    {
+        $response = Http::withToken(session('admin_token'))
+            ->delete("{$this->apiUrl}/photos/{$photoId}");
+
+        // Suppression du fichier physique si on connaît son chemin.
+        $url = $request->input('url_photo');
+        if ($url && str_starts_with($url, 'conteneurs/')) {
+            $file = public_path('uploads/' . $url);
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
+
+        if ($response->failed()) {
+            return back()->with('error', 'Erreur lors de la suppression de la photo.');
+        }
+        return back()->with('success', 'Photo supprimée.');
     }
 
     public function show($id)
@@ -57,12 +159,13 @@ class ConteneurController extends Controller
         }
 
         $response = Http::withToken(session('admin_token'))->get("{$this->apiUrl}/{$id}");
-        $details = $response->successful() ? $response->json() : ['commandes' => [], 'tickets' => []];
+        $details = $response->successful() ? $response->json() : ['commandes' => [], 'tickets' => [], 'photos' => []];
 
         return view('admin.conteneurs.show', [
             'conteneur' => $conteneur,
             'commandes' => $details['commandes'] ?: [],
             'tickets' => $details['tickets'] ?: [],
+            'photos' => $details['photos'] ?? [],
         ]);
     }
 

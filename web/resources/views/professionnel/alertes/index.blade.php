@@ -30,8 +30,8 @@
                 <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Matériau</label>
                 <select name="materiau" required style="width:100%; padding:10px; border:3px solid #120309; font-family:'DM Mono',monospace; font-size:0.85rem; background:white;">
                     <option value="">-- Choisir --</option>
-                    @foreach(['bois','metal','textile','plastique','verre','electronique','autre'] as $m)
-                        <option value="{{ $m }}" {{ old('materiau') == $m ? 'selected' : '' }}>{{ ucfirst($m) }}</option>
+                    @foreach($materiaux as $m)
+                        <option value="{{ $m['code'] }}" {{ old('materiau') == $m['code'] ? 'selected' : '' }}>{{ $m['libelle'] }}</option>
                     @endforeach
                 </select>
             </div>

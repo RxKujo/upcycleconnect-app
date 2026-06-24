@@ -3,6 +3,12 @@
 @section('title', 'Statistiques publicités')
 
 @section('content')
+<style>
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .stat-card { background: var(--cream); border: var(--border); box-shadow: var(--shadow-sm); padding: 28px 24px; }
+    .stat-label { font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.78rem; font-weight: bold; letter-spacing: 0.05em; color: var(--cherry); margin-bottom: 12px; }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2.6rem; line-height: 1; color: var(--coffee); }
+</style>
 <div class="page-header">
     <h1 class="page-title">Statistiques publicités</h1>
     <div style="display:flex;gap:12px;">

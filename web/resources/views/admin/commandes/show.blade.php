@@ -65,16 +65,16 @@
 </div>
 
 <div class="card" style="border-top: 5px solid var(--cherry);">
-    <h3 class="font-bebas" style="font-size: 2rem; margin-top: 0; margin-bottom: 24px;">Forçage Administratif du Statut</h3>
-    <p style="margin-bottom: 24px; font-family: 'Outfit';">Cette section vous permet de forcer manuellement le statut de la commande en cas de litige ou de problème technique avec le conteneur / processus de remise.</p>
-    
-    <form action="{{ route('admin.commandes.updateStatut', $commande['id_commande']) }}" method="POST" style="display: flex; gap: 16px; align-items: flex-end;">
+    <h3 class="font-bebas" style="font-size: 2rem; margin: 0 0 16px;">Forçage administratif du statut</h3>
+    <p style="margin: 0 0 24px; line-height: 1.6; color: rgba(18,3,9,0.7);">Cette section vous permet de forcer manuellement le statut de la commande en cas de litige ou de problème technique avec le conteneur / processus de remise.</p>
+
+    <form action="{{ route('admin.commandes.updateStatut', $commande['id_commande']) }}" method="POST" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
         @csrf
         @method('PUT')
-        
-        <div style="flex: 1;">
-            <label class="form-label" style="margin-bottom: 8px;">Nouveau Statut</label>
-            <select name="statut" class="form-select">
+
+        <div style="flex: 1; min-width: 240px;">
+            <label class="form-label" for="statut-select">Nouveau statut</label>
+            <select id="statut-select" name="statut" class="form-select">
                 <option value="commandee" {{ $commande['statut'] == 'commandee' ? 'selected' : '' }}>Commandée</option>
                 <option value="deposee" {{ $commande['statut'] == 'deposee' ? 'selected' : '' }}>Déposée (Attente transporteur)</option>
                 <option value="en_conteneur" {{ $commande['statut'] == 'en_conteneur' ? 'selected' : '' }}>En Conteneur d'arrivée</option>

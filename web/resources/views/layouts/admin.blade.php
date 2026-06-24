@@ -26,7 +26,10 @@
         .admin-wrapper { display: flex; min-height: 100vh; }
         
         /* Sidebar styling */
-        .sidebar { width: 280px; min-height: 100vh; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border);}
+        .sidebar { width: 280px; height: 100vh; overflow-y: auto; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border);}
+        .sidebar::-webkit-scrollbar { width: 8px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--cherry); }
+        .sidebar::-webkit-scrollbar-track { background: rgba(245,240,225,0.08); }
         .sidebar-header { padding: 32px 24px 24px; border-bottom: 3px solid var(--cherry); background-color: rgba(0,0,0,0.2); }
         .sidebar-nav { flex-grow: 1; padding-top: 24px; }
         .sidebar a { display: flex; align-items: center; padding: 14px 24px 14px 20px; color: var(--cream); text-decoration: none; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.05em; border-left: 6px solid transparent; transition: all 0.2s ease; }
@@ -62,14 +65,13 @@
         .badge-valid { background-color: var(--forest); color: var(--cream); }
         .badge-refused { background-color: var(--cherry); color: var(--cream); }
 
-        /* Cards & Forms */
-        .card { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 40px; margin-bottom: 32px; transition: transform 0.2s, box-shadow 0.2s; }
-        .card:hover { transform: translate(3px, 3px); box-shadow: var(--shadow-hover); }
+        /* Cards & Forms — pas d'effet d'enfoncement (non cliquable) */
+        .card { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 40px; margin-bottom: 32px; }
 
         .form-group { margin-bottom: 28px; }
         .form-label { font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; font-weight: bold; letter-spacing: 0.05em; color: var(--coffee); margin-bottom: 10px; display: block; }
-        .form-input, .form-textarea, .form-select { width: 100%; border: 3px solid var(--coffee); background: white; font-family: 'Outfit', sans-serif; font-size: 1.1rem; padding: 14px 18px; outline: none; transition: all 0.2s ease; box-shadow: 3px 3px 0px rgba(18,3,9,0.1); box-sizing: border-box; border-radius: 0; }
-        .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--cherry); box-shadow: 5px 5px 0px rgba(164,36,59,0.2); transform: translate(-2px, -2px); }
+        .form-input, .form-textarea, .form-select { width: 100%; border: 3px solid var(--coffee); background: white; font-family: 'Outfit', sans-serif; font-size: 1.1rem; padding: 14px 18px; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; box-shadow: 3px 3px 0px rgba(18,3,9,0.1); box-sizing: border-box; border-radius: 0; }
+        .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--cherry); box-shadow: 4px 4px 0px rgba(164,36,59,0.25); }
         .form-textarea { resize: vertical; min-height: 150px; }
 
         /* Alerts */
@@ -94,7 +96,7 @@
     <div class="admin-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1 class="font-bebas" style="font-size: 2.2rem; margin: 0; color: var(--wheat); letter-spacing: 0.12em; line-height: 1;">Upcycle<span style="color: var(--cream);">Connect</span></h1>
+                <h1 class="font-bebas" style="font-size: 1.9rem; margin: 0; color: var(--wheat); letter-spacing: 0.05em; line-height: 1; white-space: nowrap;">Upcycle<span style="color: var(--cream);">Connect</span></h1>
                 <span class="font-mono" style="font-size: 0.75rem; color: var(--cherry); font-weight: bold; margin-top: 8px; display: block;">Panel Administrateur</span>
             </div>
             <nav class="sidebar-nav">
@@ -106,6 +108,9 @@
                 </a>
                 <a href="{{ route('admin.categories.index') }}" class="{{ request()->is('admin/categories*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories
+                </a>
+                <a href="{{ route('admin.materiaux.index') }}" class="{{ request()->is('admin/materiaux*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Matériaux
                 </a>
                 <a href="{{ route('admin.annonces.index') }}" class="{{ request()->is('admin/annonces*') ? 'active' : '' }}" style="justify-content:space-between;">
                     <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Annonces</span>

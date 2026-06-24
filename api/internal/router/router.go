@@ -34,6 +34,7 @@ const (
 	prefixAdmin           = "/api/v1/admin"
 	prefixAdminUsers      = "/api/v1/admin/utilisateurs"
 	prefixAdminCategories = "/api/v1/admin/categories"
+	prefixAdminMateriaux  = "/api/v1/admin/materiaux"
 	prefixAdminEv         = "/api/v1/admin/evenements"
 	prefixAdminAnnonces   = "/api/v1/admin/annonces"
 	prefixAdminCommandes  = "/api/v1/admin/commandes"
@@ -205,6 +206,8 @@ func routePublicResources(w http.ResponseWriter, req *http.Request, path, method
 		handlers.GetCatalogueItem(w, req, pCat[0], "")
 	case match(path, prefixPublic+"/conteneurs") && method == "GET":
 		handlers.GetPublicConteneursAvecGeo(w, req)
+	case match(path, prefixPublic+"/materiaux") && method == "GET":
+		handlers.GetMateriauxActifs(w, req)
 	case match(path, prefixPublic+"/categories") && method == "GET":
 		handlers.GetCategories(w, req)
 	case match(path, prefixPublic+"/evenements") && method == "GET":
@@ -618,6 +621,7 @@ func routeCatalogue(w http.ResponseWriter, req *http.Request, path, method strin
 func routeAdmin(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
 	return routeAdminUsers(w, req, path, method) ||
 		routeAdminCategories(w, req, path, method) ||
+		routeAdminMateriaux(w, req, path, method) ||
 		routeAdminEvenements(w, req, path, method, userId) ||
 		routeAdminAnnonces(w, req, path, method, userId) ||
 		routeAdminOrders(w, req, path, method) ||
@@ -700,6 +704,23 @@ func routeAdminCategories(w http.ResponseWriter, req *http.Request, path, method
 	return true
 }
 
+func routeAdminMateriaux(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixAdminMateriaux)
+	switch {
+	case match(path, prefixAdminMateriaux) && method == "GET":
+		handlers.GetMateriauxAdmin(w, req)
+	case match(path, prefixAdminMateriaux) && method == "POST":
+		handlers.CreateMateriau(w, req)
+	case len(p) == 2 && p[1] == "toggle" && method == "PUT":
+		handlers.ToggleMateriau(w, req, p[0])
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateMateriau(w, req, p[0])
+	default:
+		return false
+	}
+	return true
+}
+
 func routeAdminEvenements(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
 	p := splitPath(path, prefixAdminEv)
 	switch {
@@ -774,8 +795,12 @@ func routeAdminInfra(w http.ResponseWriter, req *http.Request, path, method stri
 		handlers.ScanBarcodeAndUpdateCommande(w, req)
 	case match(path, prefixAdminConteneurs+"/codes-barres") && method == "POST":
 		handlers.CreateCodeBarre(w, req)
+	case len(pCont) == 2 && pCont[0] == "photos" && method == "DELETE":
+		handlers.DeleteConteneurPhoto(w, req, pCont[1])
 	case len(pCont) == 1 && method == "GET":
 		handlers.GetConteneurDetails(w, req, pCont[0])
+	case len(pCont) == 1 && method == "PUT":
+		handlers.UpdateConteneur(w, req, pCont[0])
 	case len(pTick) == 2 && pTick[1] == "resolve" && method == "PUT":
 		handlers.ResolveTicket(w, req, pTick[0])
 

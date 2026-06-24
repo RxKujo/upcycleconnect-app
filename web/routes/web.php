@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
+use App\Http\Controllers\Admin\MateriauController;
 use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\AnnonceController;
 use App\Http\Controllers\Admin\ConteneurController;
@@ -74,7 +75,11 @@ Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriel
 Route::get('/depot', fn() => view('public.depot.index'))->name('depot.index');
 
 Route::prefix('particulier')->group(function () {
-    Route::get('/annonces/create', fn() => view('particulier.annonces.create'))->name('particulier.annonces.create');
+    Route::get('/annonces/create', function () {
+        $resp = \Illuminate\Support\Facades\Http::get(config('services.api.url') . '/api/v1/public/materiaux');
+        $materiaux = $resp->successful() ? $resp->json() : [];
+        return view('particulier.annonces.create', ['materiaux' => is_array($materiaux) ? $materiaux : []]);
+    })->name('particulier.annonces.create');
     Route::get('/profile', fn() => view('particulier.profile.show'))->name('particulier.profile.show');
     Route::get('/planning', fn() => view('particulier.planning.index'))->name('particulier.planning.index');
 });
@@ -140,6 +145,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/utilisateurs/{id}/abonnement', [UtilisateurController::class, 'assignAbonnement'])->name('admin.utilisateurs.abonnement.assign');
         Route::delete('/utilisateurs/{id}/abonnement', [UtilisateurController::class, 'revokeAbonnement'])->name('admin.utilisateurs.abonnement.revoke');
 
+        Route::get('/materiaux', [MateriauController::class, 'index'])->name('admin.materiaux.index');
+        Route::post('/materiaux', [MateriauController::class, 'store'])->name('admin.materiaux.store');
+        Route::put('/materiaux/{id}', [MateriauController::class, 'update'])->name('admin.materiaux.update');
+        Route::put('/materiaux/{id}/toggle', [MateriauController::class, 'toggle'])->name('admin.materiaux.toggle');
+
         Route::get('/categories', [CategorieController::class, 'index'])->name('admin.categories.index');
         Route::get('/categories/create', [CategorieController::class, 'create'])->name('admin.categories.create');
         Route::post('/categories', [CategorieController::class, 'store'])->name('admin.categories.store');
@@ -172,6 +182,8 @@ Route::prefix('admin')->group(function () {
         Route::get('/conteneurs', [ConteneurController::class, 'index'])->name('admin.conteneurs.index');
         Route::post('/conteneurs', [ConteneurController::class, 'store'])->name('admin.conteneurs.store');
         Route::get('/conteneurs/{id}', [ConteneurController::class, 'show'])->name('admin.conteneurs.show');
+        Route::put('/conteneurs/{id}', [ConteneurController::class, 'update'])->name('admin.conteneurs.update');
+        Route::delete('/conteneurs/{id}/photos/{photoId}', [ConteneurController::class, 'deletePhoto'])->name('admin.conteneurs.photos.delete');
         Route::post('/conteneurs/{id}/scan', [ConteneurController::class, 'scanBarcode'])->name('admin.conteneurs.scan');
         Route::put('/conteneurs/{id}/tickets/{ticketId}/resolve', [ConteneurController::class, 'resolveTicket'])->name('admin.conteneurs.tickets.resolve');
         Route::get('/commandes/{idCommande}/barcode/pdf', [ConteneurController::class, 'generateBarcodePdf'])->name('admin.commandes.barcode.pdf');

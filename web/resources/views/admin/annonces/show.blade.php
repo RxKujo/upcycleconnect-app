@@ -7,7 +7,7 @@
     <a href="{{ route('admin.annonces.index') }}" class="btn-secondary btn-sm">← Retour</a>
 </div>
 
-<div class="card" style="cursor: default; transform: none; margin-bottom: 24px;">
+<div class="card">
     <div class="info-grid">
         <div class="info-item">
             <span class="info-label">Titre</span>
@@ -69,11 +69,11 @@
 </div>
 
 @if(!empty($annonce['objets']))
-<h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; margin-bottom: 16px;">
+<h2 class="font-bebas" style="font-size: 2rem; margin: 0 0 20px;">
     Objets ({{ count($annonce['objets']) }})
 </h2>
 @foreach($annonce['objets'] as $i => $objet)
-<div class="card" style="cursor: default; transform: none; margin-bottom: 20px;">
+<div class="card">
     <h3 style="font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; margin: 0 0 20px; color: var(--cherry);">
         Objet #{{ $i + 1 }}
     </h3>

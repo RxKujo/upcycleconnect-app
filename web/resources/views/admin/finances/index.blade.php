@@ -19,26 +19,26 @@
 
 {{-- KPIs --}}
 @if(!empty($dashboard))
-<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
-    <div class="stat-card">
-        <div class="stat-label">Revenus ce mois (HT)</div>
-        <div class="stat-value">{{ number_format($dashboard['total_ht_mois'] ?? 0, 2, ',', ' ') }} €</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px;margin-bottom:40px;">
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Revenus ce mois (HT)</p>
+        <p class="font-bebas" style="font-size:2.6rem;color:var(--forest);line-height:1;margin:0;">{{ number_format($dashboard['total_ht_mois'] ?? 0, 2, ',', ' ') }} €</p>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Revenus ce mois (TTC)</div>
-        <div class="stat-value">{{ number_format($dashboard['total_ttc_mois'] ?? 0, 2, ',', ' ') }} €</div>
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Revenus ce mois (TTC)</p>
+        <p class="font-bebas" style="font-size:2.6rem;color:var(--coffee);line-height:1;margin:0;">{{ number_format($dashboard['total_ttc_mois'] ?? 0, 2, ',', ' ') }} €</p>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Revenus année (HT)</div>
-        <div class="stat-value">{{ number_format($dashboard['total_ht_annee'] ?? 0, 2, ',', ' ') }} €</div>
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Revenus année (HT)</p>
+        <p class="font-bebas" style="font-size:2.6rem;color:var(--teal);line-height:1;margin:0;">{{ number_format($dashboard['total_ht_annee'] ?? 0, 2, ',', ' ') }} €</p>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Transactions</div>
-        <div class="stat-value">{{ $dashboard['nb_transactions'] ?? 0 }}</div>
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Transactions</p>
+        <p class="font-bebas" style="font-size:2.6rem;color:var(--coffee);line-height:1;margin:0;">{{ $dashboard['nb_transactions'] ?? 0 }}</p>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Abonnements actifs</div>
-        <div class="stat-value">{{ $dashboard['nb_abonnements_actifs'] ?? 0 }}</div>
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Abonnements actifs</p>
+        <p class="font-bebas" style="font-size:2.6rem;color:var(--cherry);line-height:1;margin:0;">{{ $dashboard['nb_abonnements_actifs'] ?? 0 }}</p>
     </div>
 </div>
 @endif

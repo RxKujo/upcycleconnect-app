@@ -30,7 +30,7 @@
                 <tbody>
                     @foreach($langues as $langue)
                     <tr>
-                        <td><span class="badge badge-info">{{ $langue['code_iso'] ?? '—' }}</span></td>
+                        <td><span class="badge" style="background:var(--teal);color:var(--cream);">{{ $langue['code_iso'] ?? '—' }}</span></td>
                         <td>{{ $langue['libelle'] ?? '—' }}</td>
                         <td>
                             @if(!empty($langue['rtl']))
@@ -66,8 +66,8 @@
 </div>
 
 {{-- Section traductions --}}
-<div class="page-header" style="margin-top:0;">
-    <h2 class="page-title" style="font-size:2rem;">Traductions UI</h2>
+<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 24px;padding-bottom:20px;border-bottom:3px solid var(--coffee);">
+    <h2 class="font-bebas" style="font-size:2rem;color:var(--coffee);margin:0;letter-spacing:0.05em;line-height:1;">Traductions UI</h2>
     <button class="btn-primary" onclick="document.getElementById('modal-trad').style.display='flex'">
         + Ajouter / modifier une traduction
     </button>
@@ -99,7 +99,7 @@
                     @foreach($translations as $trad)
                     <tr data-cle="{{ strtolower($trad['cle'] ?? '') }}">
                         <td><code style="font-family:'DM Mono',monospace;font-size:0.85rem;background:rgba(18,3,9,0.06);padding:2px 6px;">{{ $trad['cle'] ?? '—' }}</code></td>
-                        <td><span class="badge badge-info">{{ $trad['code_iso'] ?? $trad['id_langue'] ?? '—' }}</span></td>
+                        <td><span class="badge" style="background:var(--teal);color:var(--cream);">{{ $trad['code_iso'] ?? $trad['id_langue'] ?? '—' }}</span></td>
                         <td style="max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $trad['valeur'] ?? '—' }}</td>
                         <td>
                             <form action="{{ route('admin.langues.translations.destroy', $trad['id_translation'] ?? 0) }}" method="POST"

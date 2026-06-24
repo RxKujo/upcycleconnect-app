@@ -12,8 +12,8 @@
     </div>
 </div>
 
-<div class="card" style="cursor:default;transform:none;">
-    <p style="font-family:'DM Mono',monospace;font-size:0.8rem;opacity:0.6;margin:0 0 20px;">
+<div class="card">
+    <p style="font-family:'DM Mono',monospace;font-size:0.85rem;opacity:0.6;margin:0 0 28px;line-height:1.6;">
         Les paliers définissent les seuils de points, les couleurs et les certifications. Modifier un palier déclenche automatiquement un recalcul en arrière-plan.
     </p>
 
@@ -22,7 +22,7 @@
     @else
     <div style="display:grid;gap:20px;">
         @foreach($paliers as $palier)
-        <div style="border:2px solid {{ $palier['couleur'] ?? '#ccc' }};border-radius:12px;padding:20px;background:var(--parchment);">
+        <div style="border:3px solid {{ $palier['couleur'] ?? 'var(--coffee)' }};padding:24px;background:#fff;box-shadow:var(--shadow-sm);">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
                 <div style="width:18px;height:18px;border-radius:50%;background:{{ $palier['couleur'] ?? '#ccc' }};flex-shrink:0;"></div>
                 <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0;color:{{ $palier['couleur'] ?? 'var(--coffee)' }};">
@@ -39,17 +39,17 @@
 
             <form action="{{ route('admin.scores.palier.update', $palier['id_palier']) }}" method="POST">
                 @csrf @method('PUT')
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
-                    <div>
-                        <label style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;opacity:0.7;">Nom</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Nom</label>
                         <input type="text" name="nom" value="{{ $palier['nom'] }}" class="form-input" required>
                     </div>
-                    <div>
-                        <label style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;opacity:0.7;">Seuil min (pts)</label>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Seuil min (pts)</label>
                         <input type="number" name="seuil_min" value="{{ $palier['seuil_min'] }}" class="form-input" min="0" required>
                     </div>
-                    <div>
-                        <label style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;opacity:0.7;">Couleur (hex)</label>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Couleur (hex)</label>
                         <div style="display:flex;gap:8px;align-items:center;">
                             <input type="color" name="couleur" value="{{ $palier['couleur'] }}" style="width:44px;height:44px;border-radius:8px;border:2px solid var(--coffee);padding:2px;cursor:pointer;background:none;">
                             <input type="text" value="{{ $palier['couleur'] }}" class="form-input" style="flex:1;" oninput="this.previousElementSibling.value=this.value" readonly>

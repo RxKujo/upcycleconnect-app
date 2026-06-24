@@ -4,21 +4,25 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Utilisateurs</h1>
+    <span class="font-mono" style="font-size:0.8rem;opacity:0.6;">{{ count($utilisateurs) }} membre(s)</span>
 </div>
 
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-    <select id="filter-role" class="form-select" style="width: auto; min-width: 160px;" onchange="filterTable()">
-        <option value="">Tous les rôles</option>
-        <option value="particulier">Particulier</option>
-        <option value="professionnel">Professionnel</option>
-        <option value="salarie">Salarié</option>
-        <option value="admin">Admin</option>
-    </select>
-    <select id="filter-statut" class="form-select" style="width: auto; min-width: 160px;" onchange="filterTable()">
-        <option value="">Tous les statuts</option>
-        <option value="actif">Actif</option>
-        <option value="banni">Banni</option>
-    </select>
+<div class="card" style="padding:24px 28px;">
+    <span class="form-label">Filtrer</span>
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+        <select id="filter-role" class="form-select" style="width:auto; min-width:180px;" onchange="filterTable()">
+            <option value="">Tous les rôles</option>
+            <option value="particulier">Particulier</option>
+            <option value="professionnel">Professionnel</option>
+            <option value="salarie">Salarié</option>
+            <option value="admin">Admin</option>
+        </select>
+        <select id="filter-statut" class="form-select" style="width:auto; min-width:180px;" onchange="filterTable()">
+            <option value="">Tous les statuts</option>
+            <option value="actif">Actif</option>
+            <option value="banni">Banni</option>
+        </select>
+    </div>
 </div>
 
 <div class="table-container">
@@ -57,7 +61,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="7" style="text-align: center; padding: 24px;">Aucun utilisateur trouvé.</td>
+            <td colspan="7" style="text-align:center; padding:40px; font-family:'DM Mono',monospace; text-transform:uppercase; opacity:0.6;">Aucun utilisateur trouvé.</td>
         </tr>
         @endforelse
     </tbody>

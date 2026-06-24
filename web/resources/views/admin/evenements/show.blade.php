@@ -21,21 +21,21 @@
 @endphp
 
 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px;">
-    <div class="card" style="text-align: center; cursor: default; transform: none; padding: 24px;">
+    <div class="card" style="text-align: center; padding: 28px 24px;">
         <div style="font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--coffee); line-height: 1;">{{ $nbInscrits }}</div>
-        <div style="font-family: 'DM Mono', monospace; font-size: 0.8rem; text-transform: uppercase; color: var(--cherry); margin-top: 4px;">Inscrits</div>
+        <div style="font-family: 'DM Mono', monospace; font-size: 0.8rem; text-transform: uppercase; color: var(--cherry); margin-top: 8px;">Inscrits</div>
     </div>
-    <div class="card" style="text-align: center; cursor: default; transform: none; padding: 24px;">
+    <div class="card" style="text-align: center; padding: 28px 24px;">
         <div style="font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--coffee); line-height: 1;">{{ $evenement['nb_places_dispo'] }}</div>
-        <div style="font-family: 'DM Mono', monospace; font-size: 0.8rem; text-transform: uppercase; color: var(--cherry); margin-top: 4px;">Places restantes</div>
+        <div style="font-family: 'DM Mono', monospace; font-size: 0.8rem; text-transform: uppercase; color: var(--cherry); margin-top: 8px;">Places restantes</div>
     </div>
-    <div class="card" style="text-align: center; cursor: default; transform: none; padding: 24px;">
+    <div class="card" style="text-align: center; padding: 28px 24px;">
         <div style="font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: {{ $tauxRemplissage >= 80 ? 'var(--forest)' : 'var(--coffee)' }}; line-height: 1;">{{ $tauxRemplissage }}%</div>
-        <div style="font-family: 'DM Mono', monospace; font-size: 0.8rem; text-transform: uppercase; color: var(--cherry); margin-top: 4px;">Taux de remplissage</div>
+        <div style="font-family: 'DM Mono', monospace; font-size: 0.8rem; text-transform: uppercase; color: var(--cherry); margin-top: 8px;">Taux de remplissage</div>
     </div>
 </div>
 
-<div class="card" style="cursor: default; transform: none;">
+<div class="card">
     <div class="info-grid">
         <div class="info-item">
             <span class="info-label">Titre</span>
@@ -120,7 +120,7 @@
     @endif
 </div>
 
-<div class="card" style="cursor:default;transform:none;margin-top:32px;">
+<div class="card" style="margin-top:32px;">
     <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0 0 20px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">
         Liste des inscrits
     </h3>

@@ -14,15 +14,16 @@
                style="width:100%;max-width:480px;padding:10px 16px;border:var(--border);font-family:'DM Mono',monospace;font-size:0.9rem;background:white;outline:none;">
     </div>
 
+    @php
+        $materiauLabels = collect($materiaux)->pluck('libelle', 'code')->all();
+    @endphp
     <div class="filters-row" id="filters">
         <button class="filter-btn active" data-filter="all">Tout</button>
         <button class="filter-btn" data-filter="don">Dons</button>
         <button class="filter-btn" data-filter="vente">Ventes</button>
-        <button class="filter-btn" data-filter="bois">Bois</button>
-        <button class="filter-btn" data-filter="metal">Métal</button>
-        <button class="filter-btn" data-filter="textile">Textile</button>
-        <button class="filter-btn" data-filter="electronique">Électronique</button>
-        <button class="filter-btn" data-filter="verre">Verre</button>
+        @foreach($materiaux as $m)
+        <button class="filter-btn" data-filter="{{ $m['code'] }}">{{ $m['libelle'] }}</button>
+        @endforeach
     </div>
 
     @if(count($annonces) > 0)
@@ -44,13 +45,6 @@
                 <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
                     <span class="badge {{ $annonce['type_annonce'] === 'don' ? 'badge-valid' : 'badge-cherry' }}" style="font-size:0.65rem; padding:3px 10px;">{{ $annonce['type_annonce'] === 'don' ? 'Don' : 'Vente' }}</span>
                     @if(!empty($annonce['objets']))
-                    @php
-                        $materiauLabels = [
-                            'bois' => 'Bois', 'metal' => 'Métal', 'textile' => 'Textile',
-                            'plastique' => 'Plastique', 'verre' => 'Verre',
-                            'electronique' => 'Électronique', 'autre' => 'Autre',
-                        ];
-                    @endphp
                     <span class="badge badge-waiting" style="font-size:0.65rem; padding:3px 10px;">{{ $materiauLabels[$annonce['objets'][0]['materiau']] ?? ucfirst($annonce['objets'][0]['materiau']) }}</span>
                     @endif
                 </div>

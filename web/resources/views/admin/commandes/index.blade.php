@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="page-header">
-    <h2 class="page-title">Commandes (Orders)</h2>
+    <h1 class="page-title">Commandes</h1>
 </div>
 
 <div class="table-container">
@@ -26,7 +26,7 @@
                 <td>#{{ $cmd['id_commande'] }}</td>
                 <td>{{ $cmd['acheteur_prenom'] }} {{ $cmd['acheteur_nom'] }}</td>
                 <td>{{ $cmd['titre_annonce'] }}</td>
-                <td>{{ number_format($cmd['montant_commission'], 2) }} € <span style="font-size: 0.8em; color: #888;">({{ $cmd['commission_pct'] }}%)</span></td>
+                <td style="white-space: nowrap;">{{ number_format($cmd['montant_commission'], 2) }} € <span style="font-size: 0.8em; color: rgba(18,3,9,0.5);">({{ $cmd['commission_pct'] }}%)</span></td>
                 <td>
                     @if($cmd['statut'] === 'commandee')
                         <span class="badge badge-waiting">Commandée (À remettre)</span>
@@ -40,12 +40,12 @@
                 </td>
                 <td style="white-space: nowrap;">{{ date('d/m/Y H:i', strtotime($cmd['date_commande'])) }}</td>
                 <td class="action-cell">
-                    <a href="{{ route('admin.commandes.show', $cmd['id_commande']) }}" class="btn-secondary btn-sm" style="font-family: 'DM Mono', monospace; letter-spacing: 0;">Gérer</a>
+                    <a href="{{ route('admin.commandes.show', $cmd['id_commande']) }}" class="btn-secondary btn-sm">Gérer</a>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="text-align: center; padding: 40px; font-style: italic; color: #666;">Aucune commande pour le moment.</td>
+                <td colspan="7" style="text-align: center; padding: 32px; color: rgba(18,3,9,0.5); font-family: 'DM Mono', monospace; text-transform: uppercase;">Aucune commande pour le moment.</td>
             </tr>
             @endforelse
         </tbody>

@@ -13,6 +13,23 @@ class MarcheController extends Controller
         return config('services.api.url');
     }
 
+    /**
+     * Liste des matériaux actifs (mise en cache), pour les filtres et libellés.
+     */
+    protected function materiaux(): array
+    {
+        $base = $this->apiUrl();
+        return Cache::remember('marche.materiaux', 300, function () use ($base) {
+            try {
+                $response = Http::timeout(5)->get($base . '/api/v1/public/materiaux');
+                $data = $response->successful() ? $response->json() : [];
+                return is_array($data) ? $data : [];
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
+    }
+
     public function index()
     {
         $base = $this->apiUrl();
@@ -26,7 +43,10 @@ class MarcheController extends Controller
             }
         });
 
-        return view('public.marche.index', compact('annonces'));
+        return view('public.marche.index', [
+            'annonces'  => $annonces,
+            'materiaux' => $this->materiaux(),
+        ]);
     }
 
     public function show($id)
@@ -43,6 +63,9 @@ class MarcheController extends Controller
             abort(404, 'Annonce non trouvée');
         }
 
-        return view('public.marche.show', compact('annonce'));
+        return view('public.marche.show', [
+            'annonce'   => $annonce,
+            'materiaux' => $this->materiaux(),
+        ]);
     }
 }

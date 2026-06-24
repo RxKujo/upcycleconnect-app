@@ -7,7 +7,7 @@
     <a href="{{ route('admin.catalogue.index') }}" class="btn-secondary btn-sm">← Retour</a>
 </div>
 
-<div class="card" style="cursor: default; transform: none;">
+<div class="card">
     <div class="info-grid">
         <div class="info-item">
             <span class="info-label">Titre</span>

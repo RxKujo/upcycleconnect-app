@@ -7,8 +7,8 @@
     <a href="{{ route('admin.evenements.create') }}" class="btn-primary">+ Créer</a>
 </div>
 
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-    <select id="filter-statut" class="form-select" style="width: auto; min-width: 160px;" onchange="filterTable()">
+<div style="display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap;">
+    <select id="filter-statut" class="form-select" style="width: auto; min-width: 180px;" onchange="filterTable()">
         <option value="">Tous les statuts</option>
         <option value="en_attente">En attente</option>
         <option value="valide">Validé</option>
@@ -16,7 +16,7 @@
         <option value="annule">Annulé</option>
         <option value="termine">Terminé</option>
     </select>
-    <select id="filter-type" class="form-select" style="width: auto; min-width: 160px;" onchange="filterTable()">
+    <select id="filter-type" class="form-select" style="width: auto; min-width: 180px;" onchange="filterTable()">
         <option value="">Tous les types</option>
         <option value="formation">Formation</option>
         <option value="atelier">Atelier</option>
@@ -71,7 +71,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="9" style="text-align: center; padding: 24px;">Aucun événement.</td>
+            <td colspan="9" style="text-align: center; padding: 32px; font-family: 'DM Mono', monospace; font-size: 0.85rem; opacity: 0.5;">Aucun événement.</td>
         </tr>
         @endforelse
     </tbody>

@@ -272,15 +272,11 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	validMateriaux := map[string]bool{
-		"bois": true, "metal": true, "textile": true,
-		"plastique": true, "verre": true, "electronique": true, "autre": true,
-	}
 	validEtats := map[string]bool{"neuf": true, "bon": true, "use": true, "a_reparer": true}
 	totalPhotos := 0
 
 	for i, obj := range req.Objets {
-		if !validMateriaux[obj.Materiau] {
+		if !materiauActif(obj.Materiau) {
 			jsonErr(w, fmt.Sprintf("matériau invalide pour l'objet %d", i+1), http.StatusBadRequest)
 			return
 		}

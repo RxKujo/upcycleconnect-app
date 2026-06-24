@@ -301,6 +301,12 @@ function validateStep2() {
     return valid;
 }
 
+const MATERIAUX = @json($materiaux ?? []);
+function matOptions() {
+    return '<option value="">-- Choisir --</option>' +
+        MATERIAUX.map(m => `<option value="${m.code}">${m.libelle}</option>`).join('');
+}
+
 function addObjet() {
     objetCount++;
     const id = objetCount;
@@ -318,14 +324,7 @@ function addObjet() {
             <div class="form-group">
                 <label class="form-label">Materiau *</label>
                 <select class="form-select" id="mat-${id}">
-                    <option value="">-- Choisir --</option>
-                    <option value="bois">Bois</option>
-                    <option value="metal">Metal</option>
-                    <option value="textile">Textile</option>
-                    <option value="plastique">Plastique</option>
-                    <option value="verre">Verre</option>
-                    <option value="electronique">Electronique</option>
-                    <option value="autre">Autre</option>
+                    ${matOptions()}
                 </select>
             </div>
             <div class="form-group">

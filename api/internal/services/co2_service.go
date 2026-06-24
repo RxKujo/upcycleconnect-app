@@ -51,8 +51,9 @@ func GetImpactEcologique(proID int, depuis time.Time) (ImpactEcologique, error) 
 // StatsMateriaux représente le nombre d'annonces disponibles par matériau
 // dans un rayon donné autour du professionnel.
 type StatMateriau struct {
-	Materiau    string `json:"materiau"`
-	NbAnnonces  int    `json:"nb_annonces"`
+	Materiau   string `json:"materiau"`
+	Libelle    string `json:"libelle"`
+	NbAnnonces int    `json:"nb_annonces"`
 }
 
 // GetStatsMateriaux retourne le nombre d'annonces validées par type de matériau
@@ -60,10 +61,12 @@ type StatMateriau struct {
 // La distance est calculée via la formule de Haversine en SQL.
 func GetStatsMateriaux(lat, lon float64, rayonKm int) ([]StatMateriau, error) {
 	const q = `
-		SELECT oa.materiau, COUNT(DISTINCT a.id_annonce) AS nb_annonces
+		SELECT oa.materiau, COALESCE(m.libelle, oa.materiau) AS libelle,
+		       COUNT(DISTINCT a.id_annonce) AS nb_annonces
 		FROM annonces a
 		JOIN objets_annonces oa ON oa.id_annonce = a.id_annonce
 		JOIN utilisateurs u     ON u.id_utilisateur = a.id_particulier
+		LEFT JOIN materiaux m   ON m.code = oa.materiau
 		WHERE a.statut = 'validee'
 		  AND u.latitude_entreprise  IS NOT NULL
 		  AND u.longitude_entreprise IS NOT NULL
@@ -74,7 +77,7 @@ func GetStatsMateriaux(lat, lon float64, rayonKm int) ([]StatMateriau, error) {
 		      SIN(RADIANS(?)) * SIN(RADIANS(u.latitude_entreprise))
 		    )
 		  ) <= ?
-		GROUP BY oa.materiau
+		GROUP BY oa.materiau, m.libelle
 		ORDER BY nb_annonces DESC`
 
 	rows, err := database.DB.Query(q, lat, lon, lat, rayonKm)
@@ -86,7 +89,7 @@ func GetStatsMateriaux(lat, lon float64, rayonKm int) ([]StatMateriau, error) {
 	var stats []StatMateriau
 	for rows.Next() {
 		var s StatMateriau
-		if err := rows.Scan(&s.Materiau, &s.NbAnnonces); err != nil {
+		if err := rows.Scan(&s.Materiau, &s.Libelle, &s.NbAnnonces); err != nil {
 			return nil, err
 		}
 		stats = append(stats, s)

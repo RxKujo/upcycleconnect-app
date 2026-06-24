@@ -6,11 +6,30 @@ import (
 	"api/pkg/database"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 )
 
+// loadPhotosConteneur retourne les photos d'un conteneur (ordonnées).
+func loadPhotosConteneur(idConteneur int) []models.PhotoConteneur {
+	photos := []models.PhotoConteneur{}
+	rows, err := database.DB.Query(
+		"SELECT id_photo, url_photo FROM photos_conteneurs WHERE id_conteneur = ? ORDER BY ordre, id_photo", idConteneur)
+	if err != nil {
+		return photos
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p models.PhotoConteneur
+		if rows.Scan(&p.IDPhoto, &p.URL) == nil {
+			photos = append(photos, p)
+		}
+	}
+	return photos
+}
+
 func GetAllConteneurs(w http.ResponseWriter, r *http.Request) {
-	rows, err := database.DB.Query("SELECT id_conteneur, conteneur_ref, adresse, ville, code_postal, capacite, statut FROM conteneurs")
+	rows, err := database.DB.Query("SELECT id_conteneur, conteneur_ref, adresse, ville, code_postal, latitude, longitude, capacite, statut FROM conteneurs")
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -22,9 +41,12 @@ func GetAllConteneurs(w http.ResponseWriter, r *http.Request) {
 	conteneurs := []models.Conteneur{}
 	for rows.Next() {
 		var c models.Conteneur
-		if err := rows.Scan(&c.IDConteneur, &c.ConteneurRef, &c.Adresse, &c.Ville, &c.CodePostal, &c.Capacite, &c.Statut); err == nil {
+		if err := rows.Scan(&c.IDConteneur, &c.ConteneurRef, &c.Adresse, &c.Ville, &c.CodePostal, &c.Latitude, &c.Longitude, &c.Capacite, &c.Statut); err == nil {
 			conteneurs = append(conteneurs, c)
 		}
+	}
+	for i := range conteneurs {
+		conteneurs[i].Photos = loadPhotosConteneur(conteneurs[i].IDConteneur)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -41,8 +63,10 @@ func CreateConteneur(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `INSERT INTO conteneurs (conteneur_ref, adresse, ville, code_postal, capacite, statut) VALUES (?, ?, ?, ?, ?, 'actif')`
-	result, err := database.DB.Exec(query, req.ConteneurRef, req.Adresse, req.Ville, req.CodePostal, req.Capacite)
+	query := `INSERT INTO conteneurs (conteneur_ref, adresse, ville, code_postal, latitude, longitude, capacite, statut)
+	          VALUES (?, ?, ?, ?, ?, ?, ?, 'actif')`
+	result, err := database.DB.Exec(query, req.ConteneurRef, req.Adresse, req.Ville, req.CodePostal,
+		req.Latitude, req.Longitude, req.Capacite)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -51,9 +75,90 @@ func CreateConteneur(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := result.LastInsertId()
+	insertPhotosConteneur(int(id), req.Images)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{"message": "conteneur créé", "id_conteneur": id})
+}
+
+// insertPhotosConteneur ajoute des photos (chemins relatifs) à un conteneur,
+// en continuant l'ordre après les photos existantes.
+func insertPhotosConteneur(idConteneur int, urls []string) {
+	if len(urls) == 0 {
+		return
+	}
+	var maxOrdre int
+	database.DB.QueryRow("SELECT COALESCE(MAX(ordre), -1) FROM photos_conteneurs WHERE id_conteneur = ?", idConteneur).Scan(&maxOrdre) //nolint:errcheck
+	for _, u := range urls {
+		if u == "" {
+			continue
+		}
+		maxOrdre++
+		database.DB.Exec("INSERT INTO photos_conteneurs (id_conteneur, url_photo, ordre) VALUES (?, ?, ?)", idConteneur, u, maxOrdre) //nolint:errcheck
+	}
+}
+
+// UpdateConteneur met à jour les champs d'un conteneur et AJOUTE les nouvelles
+// photos fournies (les photos existantes se gèrent via DeleteConteneurPhoto).
+func UpdateConteneur(w http.ResponseWriter, r *http.Request, id string) {
+	var req struct {
+		ConteneurRef string   `json:"conteneur_ref"`
+		Adresse      string   `json:"adresse"`
+		Ville        string   `json:"ville"`
+		CodePostal   *string  `json:"code_postal"`
+		Latitude     *float64 `json:"latitude"`
+		Longitude    *float64 `json:"longitude"`
+		Images       []string `json:"images"`
+		Capacite     int      `json:"capacite"`
+		Statut       string   `json:"statut"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
+		return
+	}
+
+	statuts := map[string]bool{"actif": true, "plein": true, "maintenance": true, "hors_service": true}
+	if !statuts[req.Statut] {
+		req.Statut = "actif"
+	}
+
+	_, err := database.DB.Exec(`
+		UPDATE conteneurs
+		SET conteneur_ref = ?, adresse = ?, ville = ?, code_postal = ?,
+		    latitude = ?, longitude = ?, capacite = ?, statut = ?
+		WHERE id_conteneur = ?`,
+		req.ConteneurRef, req.Adresse, req.Ville, req.CodePostal,
+		req.Latitude, req.Longitude, req.Capacite, req.Statut, id)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de mettre à jour le conteneur"})
+		return
+	}
+
+	if idInt, convErr := strconv.Atoi(id); convErr == nil {
+		insertPhotosConteneur(idInt, req.Images)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "conteneur mis à jour"})
+}
+
+// DeleteConteneurPhoto supprime une photo de la galerie d'un conteneur.
+func DeleteConteneurPhoto(w http.ResponseWriter, r *http.Request, photoID string) {
+	_, err := database.DB.Exec("DELETE FROM photos_conteneurs WHERE id_photo = ?", photoID)
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "impossible de supprimer la photo"})
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "photo supprimée"})
 }
 
 func GetConteneurDetails(w http.ResponseWriter, r *http.Request, id string) {
@@ -80,11 +185,17 @@ func GetConteneurDetails(w http.ResponseWriter, r *http.Request, id string) {
 		rowsTck.Close()
 	}
 
+	photos := []models.PhotoConteneur{}
+	if idInt, err := strconv.Atoi(id); err == nil {
+		photos = loadPhotosConteneur(idInt)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"commandes": commandes,
 		"tickets":   tickets,
+		"photos":    photos,
 	})
 }
 

@@ -70,7 +70,7 @@
                 <tbody>
                     @foreach($stats_materiaux as $stat)
                     <tr style="border-bottom:1px solid #ccc;">
-                        <td style="padding:10px; font-family:'Outfit',sans-serif; text-transform:capitalize;">{{ $stat['materiau'] }}</td>
+                        <td style="padding:10px; font-family:'Outfit',sans-serif;">{{ $stat['libelle'] ?? ucfirst($stat['materiau']) }}</td>
                         <td style="padding:10px; text-align:right;" class="font-bebas" style="font-size:1.2rem;">{{ $stat['nb_annonces'] }}</td>
                     </tr>
                     @endforeach

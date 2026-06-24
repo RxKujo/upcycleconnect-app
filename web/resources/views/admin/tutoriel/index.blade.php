@@ -9,6 +9,10 @@
 
 <div id="alert" style="display:none;" class="alert alert-success"></div>
 
+<p style="font-family:'DM Mono',monospace;font-size:0.85rem;opacity:0.6;line-height:1.6;margin:0 0 32px;">
+    Configurez les étapes affichées dans le tutoriel d'accueil. Chaque étape peut être réordonnée, modifiée ou désactivée.
+</p>
+
 <div id="etapes-list"></div>
 @endsection
 

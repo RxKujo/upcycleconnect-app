@@ -7,71 +7,77 @@
     <span class="font-mono" style="font-size:0.75rem;opacity:0.5;">{{ now()->format('d/m/Y H:i') }}</span>
 </div>
 
-<div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px;margin-bottom:40px;">
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Membres</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-users">—</p>
+<section style="margin-bottom:48px;">
+    <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;">Vue d'ensemble</h2>
+    <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px;">
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Membres</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-users">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Professionnels</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--teal);line-height:1;" id="stat-pros">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Abonnements actifs</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--forest);line-height:1;" id="stat-abonnements">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">CA Total</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--cherry);line-height:1;" id="stat-ca">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Commandes</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-commandes">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Annonces</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-annonces">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;" id="card-annonces-attente">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Annonces en attente</p>
+            <p class="font-bebas" style="font-size:3rem;line-height:1;" id="stat-annonces-attente">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;" id="card-events-attente">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Événements en attente</p>
+            <p class="font-bebas" style="font-size:3rem;line-height:1;" id="stat-events-attente">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;" id="card-signalements">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Signalements</p>
+            <p class="font-bebas" style="font-size:3rem;line-height:1;" id="stat-signalements">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Inscriptions événements</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-inscriptions">—</p>
+        </div>
+        <div class="card" style="text-align:center;padding:28px 20px;">
+            <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Formations disponibles</p>
+            <p class="font-bebas" style="font-size:3rem;color:var(--teal);line-height:1;" id="stat-formations">—</p>
+        </div>
     </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Professionnels</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--teal);line-height:1;" id="stat-pros">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Abonnements actifs</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--forest);line-height:1;" id="stat-abonnements">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">CA Total</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--cherry);line-height:1;" id="stat-ca">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Commandes</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-commandes">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Annonces</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-annonces">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;border-color:{{ '' }};" id="card-annonces-attente">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Annonces en attente</p>
-        <p class="font-bebas" style="font-size:3rem;line-height:1;" id="stat-annonces-attente">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;" id="card-events-attente">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Événements en attente</p>
-        <p class="font-bebas" style="font-size:3rem;line-height:1;" id="stat-events-attente">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;" id="card-signalements">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Signalements</p>
-        <p class="font-bebas" style="font-size:3rem;line-height:1;" id="stat-signalements">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Inscriptions événements</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;" id="stat-inscriptions">—</p>
-    </div>
-    <div class="card" style="cursor:default;transform:none;text-align:center;padding:28px 20px;">
-        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Formations disponibles</p>
-        <p class="font-bebas" style="font-size:3rem;color:var(--teal);line-height:1;" id="stat-formations">—</p>
-    </div>
-</div>
+</section>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
-    <a href="{{ route('admin.annonces.index') }}" class="card" style="text-decoration:none;display:block;">
-        <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;">→ Modérer les annonces</h3>
-        <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Valider ou refuser les annonces en attente.</p>
-    </a>
-    <a href="{{ route('admin.evenements.index') }}" class="card" style="text-decoration:none;display:block;">
-        <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;">→ Modérer les événements</h3>
-        <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Valider ou refuser les événements soumis.</p>
-    </a>
-    <a href="{{ route('admin.utilisateurs.index') }}" class="card" style="text-decoration:none;display:block;">
-        <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;">→ Gérer les membres</h3>
-        <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Bans, rôles, abonnements manuels.</p>
-    </a>
-    <a href="{{ route('admin.commandes.index') }}" class="card" style="text-decoration:none;display:block;">
-        <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;">→ Voir les commandes</h3>
-        <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Suivi des achats et statuts de livraison.</p>
-    </a>
-</div>
+<section>
+    <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;">Accès rapides</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
+        <a href="{{ route('admin.annonces.index') }}" class="card" style="text-decoration:none;display:block;">
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;">→ Modérer les annonces</h3>
+            <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Valider ou refuser les annonces en attente.</p>
+        </a>
+        <a href="{{ route('admin.evenements.index') }}" class="card" style="text-decoration:none;display:block;">
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;">→ Modérer les événements</h3>
+            <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Valider ou refuser les événements soumis.</p>
+        </a>
+        <a href="{{ route('admin.utilisateurs.index') }}" class="card" style="text-decoration:none;display:block;">
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;">→ Gérer les membres</h3>
+            <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Bans, rôles, abonnements manuels.</p>
+        </a>
+        <a href="{{ route('admin.commandes.index') }}" class="card" style="text-decoration:none;display:block;">
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;">→ Voir les commandes</h3>
+            <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Suivi des achats et statuts de livraison.</p>
+        </a>
+    </div>
+</section>
 @endsection
 
 @push('scripts')

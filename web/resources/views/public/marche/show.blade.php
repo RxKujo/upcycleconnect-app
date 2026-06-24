@@ -7,11 +7,7 @@
 @section('og_type', 'product')
 
 @php
-    $materiauLabels = [
-        'bois' => 'Bois', 'metal' => 'Métal', 'textile' => 'Textile',
-        'plastique' => 'Plastique', 'verre' => 'Verre',
-        'electronique' => 'Électronique', 'autre' => 'Autre',
-    ];
+    $materiauLabels = collect($materiaux ?? [])->pluck('libelle', 'code')->all();
     $etatLabels = [
         'neuf' => 'Neuf', 'bon' => 'Bon état',
         'use' => 'Usé', 'a_reparer' => 'À réparer',
@@ -51,7 +47,7 @@
             <div style="display:flex; gap:8px; margin-bottom:16px;">
                 <span class="badge {{ ($annonce['type_annonce'] ?? '') === 'don' ? 'badge-valid' : 'badge-cherry' }}">{{ ($annonce['type_annonce'] ?? '') === 'don' ? 'Don' : 'Vente' }}</span>
                 @if(!empty($annonce['objets']))
-                <span class="badge badge-waiting">{{ $materiauLabels[$annonce['objets'][0]['materiau'] ?? ''] ?? '' }}</span>
+                <span class="badge badge-waiting">{{ $materiauLabels[$annonce['objets'][0]['materiau'] ?? ''] ?? ucfirst($annonce['objets'][0]['materiau'] ?? '') }}</span>
                 <span class="badge" style="background:transparent;">{{ $etatLabels[$annonce['objets'][0]['etat'] ?? ''] ?? '' }}</span>
                 @endif
             </div>
@@ -107,7 +103,7 @@
                 <p class="font-mono" style="font-size:0.75rem; color:var(--teal); margin-bottom:12px;">Caractéristiques</p>
                 @foreach($annonce['objets'] as $objet)
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.9rem;">
-                    <div><span style="opacity:0.6;">Matériau :</span> <strong>{{ $materiauLabels[$objet['materiau']] ?? '' }}</strong></div>
+                    <div><span style="opacity:0.6;">Matériau :</span> <strong>{{ $materiauLabels[$objet['materiau']] ?? ucfirst($objet['materiau']) }}</strong></div>
                     <div><span style="opacity:0.6;">État :</span> <strong>{{ $etatLabels[$objet['etat']] ?? '' }}</strong></div>
                     @if(!empty($objet['categorie']))
                     <div><span style="opacity:0.6;">Catégorie :</span> <strong>{{ $objet['categorie'] }}</strong></div>

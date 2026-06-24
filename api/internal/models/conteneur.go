@@ -2,24 +2,33 @@ package models
 
 import "time"
 
+type PhotoConteneur struct {
+	IDPhoto int    `json:"id_photo" db:"id_photo"`
+	URL     string `json:"url_photo" db:"url_photo"`
+}
+
 type Conteneur struct {
-	IDConteneur  int      `json:"id_conteneur" db:"id_conteneur"`
-	ConteneurRef string   `json:"conteneur_ref" db:"conteneur_ref"`
-	Adresse      string   `json:"adresse" db:"adresse"`
-	Ville        string   `json:"ville" db:"ville"`
-	CodePostal   *string  `json:"code_postal" db:"code_postal"`
-	Latitude     *float64 `json:"latitude" db:"latitude"`
-	Longitude    *float64 `json:"longitude" db:"longitude"`
-	Capacite     int      `json:"capacite" db:"capacite"`
-	Statut       string   `json:"statut" db:"statut"`
+	IDConteneur  int              `json:"id_conteneur" db:"id_conteneur"`
+	ConteneurRef string           `json:"conteneur_ref" db:"conteneur_ref"`
+	Adresse      string           `json:"adresse" db:"adresse"`
+	Ville        string           `json:"ville" db:"ville"`
+	CodePostal   *string          `json:"code_postal" db:"code_postal"`
+	Latitude     *float64         `json:"latitude" db:"latitude"`
+	Longitude    *float64         `json:"longitude" db:"longitude"`
+	Capacite     int              `json:"capacite" db:"capacite"`
+	Statut       string           `json:"statut" db:"statut"`
+	Photos       []PhotoConteneur `json:"photos"`
 }
 
 type CreateConteneurRequest struct {
-	ConteneurRef string  `json:"conteneur_ref" binding:"required"`
-	Adresse      string  `json:"adresse" binding:"required"`
-	Ville        string  `json:"ville" binding:"required"`
-	CodePostal   *string `json:"code_postal"`
-	Capacite     int     `json:"capacite" binding:"required"`
+	ConteneurRef string   `json:"conteneur_ref" binding:"required"`
+	Adresse      string   `json:"adresse" binding:"required"`
+	Ville        string   `json:"ville" binding:"required"`
+	CodePostal   *string  `json:"code_postal"`
+	Latitude     *float64 `json:"latitude"`
+	Longitude    *float64 `json:"longitude"`
+	Images       []string `json:"images"` // chemins relatifs déjà écrits par Laravel (conteneurs/xxx.ext)
+	Capacite     int      `json:"capacite" binding:"required"`
 }
 
 type CommandeConteneur struct {

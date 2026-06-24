@@ -15,98 +15,94 @@
 @endphp
 
 @if(session('success'))
-    <div class="alert alert-success" style="background:#d1e7dd;border:2px solid #0a3622;padding:12px 20px;margin-bottom:20px;font-family:'DM Mono',monospace;font-size:0.85rem;">
-        {{ session('success') }}
+    <div class="alert alert-success">
+        <span style="font-size:1.4rem;">✓</span> {{ session('success') }}
     </div>
 @endif
 
 @if($enAttente > 0)
-    <div class="alert alert-error" style="background:#fff3cd;border-color:var(--coffee);color:var(--coffee);padding:12px 20px;margin-bottom:20px;font-family:'DM Mono',monospace;font-size:0.85rem;">
+    <div class="alert" style="background:var(--wheat);border-color:var(--coffee);color:var(--coffee);">
         <span style="font-size:1.4rem;">⚠</span>
         {{ $enAttente }} publicité{{ $enAttente > 1 ? 's' : '' }} en attente de validation
     </div>
 @endif
 
 {{-- Filtres --}}
-<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center;">
+<div style="display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap;align-items:center;">
     @foreach([''=>'Tous','en_attente'=>'En attente','active'=>'Active','validee'=>'Validée','refusee'=>'Refusée','expiree'=>'Expirée'] as $val => $label)
         <a href="{{ route('admin.publicites.index', $val ? ['statut'=>$val] : []) }}"
-           style="padding:6px 16px;border:2px solid #120309;font-family:'DM Mono',monospace;font-size:0.75rem;text-decoration:none;
-                  {{ $statut_filtre === $val ? 'background:#120309;color:#F5F0E1;' : 'background:transparent;color:#120309;' }}">
+           class="font-mono"
+           style="padding:8px 18px;border:2px solid var(--coffee);font-size:0.8rem;text-decoration:none;box-shadow:2px 2px 0px rgba(18,3,9,0.15);
+                  {{ $statut_filtre === $val ? 'background:var(--coffee);color:var(--cream);' : 'background:var(--cream);color:var(--coffee);' }}">
             {{ $label }}
         </a>
     @endforeach
 </div>
 
-<table style="width:100%;border-collapse:collapse;">
-    <thead>
-        <tr style="border-bottom:3px solid #120309;">
-            <th class="font-mono" style="text-align:left;padding:10px;font-size:0.72rem;">Titre</th>
-            <th class="font-mono" style="text-align:left;padding:10px;font-size:0.72rem;">Entreprise</th>
-            <th class="font-mono" style="text-align:left;padding:10px;font-size:0.72rem;">Statut</th>
-            <th class="font-mono" style="text-align:right;padding:10px;font-size:0.72rem;">Vues</th>
-            <th class="font-mono" style="text-align:right;padding:10px;font-size:0.72rem;">Clics</th>
-            <th class="font-mono" style="text-align:left;padding:10px;font-size:0.72rem;">Période</th>
-            <th class="font-mono" style="text-align:center;padding:10px;font-size:0.72rem;">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @forelse($publicites as $pub)
-        @php
-            $statutColors = [
-                'en_attente' => '#fff3cd',
-                'validee'    => '#d1e7dd',
-                'active'     => '#d1e7dd',
-                'refusee'    => '#f8d7da',
-                'expiree'    => '#e9ecef',
-            ];
-            $bg = $statutColors[$pub['statut']] ?? '#eee';
-        @endphp
-        <tr style="border-bottom:1px solid #ddd;">
-            <td style="padding:12px;font-weight:500;">{{ $pub['titre'] }}</td>
-            <td style="padding:12px;font-size:0.9rem;">{{ $pub['nom_entreprise'] ?? '—' }}</td>
-            <td style="padding:12px;">
-                <span style="background:{{ $bg }};padding:2px 10px;font-family:'DM Mono',monospace;font-size:0.7rem;border:1px solid #ccc;">
-                    {{ $pub['statut'] }}
-                </span>
-            </td>
-            <td style="padding:12px;text-align:right;" class="font-mono">{{ $pub['nb_vues'] ?? 0 }}</td>
-            <td style="padding:12px;text-align:right;" class="font-mono">{{ $pub['nb_clics'] ?? 0 }}</td>
-            <td style="padding:12px;font-size:0.8rem;color:#666;">
-                @if($pub['date_debut']){{ \Carbon\Carbon::parse($pub['date_debut'])->format('d/m/Y') }}@endif
-                @if($pub['date_debut'] && $pub['date_fin']) → @endif
-                @if($pub['date_fin']){{ \Carbon\Carbon::parse($pub['date_fin'])->format('d/m/Y') }}@endif
-                @if(!$pub['date_debut'] && !$pub['date_fin'])—@endif
-            </td>
-            <td style="padding:12px;text-align:center;">
-                @if($pub['statut'] === 'en_attente')
-                    <div style="display:flex;gap:8px;justify-content:center;">
-                        <form method="POST" action="{{ route('admin.publicites.valider', $pub['id_publicite']) }}">
-                            @csrf @method('PUT')
-                            <button type="submit" style="background:#244F26;color:white;border:2px solid #120309;padding:4px 12px;font-family:'DM Mono',monospace;font-size:0.7rem;cursor:pointer;">
-                                Valider
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ route('admin.publicites.refuser', $pub['id_publicite']) }}"
-                              onsubmit="return confirm('Refuser cette publicité ?')">
-                            @csrf @method('PUT')
-                            <button type="submit" style="background:#A4243B;color:white;border:2px solid #120309;padding:4px 12px;font-family:'DM Mono',monospace;font-size:0.7rem;cursor:pointer;">
-                                Refuser
-                            </button>
-                        </form>
-                    </div>
-                @else
-                    <span style="color:#999;font-family:'DM Mono',monospace;font-size:0.7rem;">—</span>
-                @endif
-            </td>
-        </tr>
-        @empty
+<div class="table-container">
+    <table>
+        <thead>
             <tr>
-                <td colspan="7" style="padding:32px;text-align:center;color:#999;font-family:'DM Mono',monospace;font-size:0.8rem;">
-                    Aucune publicité trouvée.
+                <th>Titre</th>
+                <th>Entreprise</th>
+                <th>Statut</th>
+                <th style="text-align:right;">Vues</th>
+                <th style="text-align:right;">Clics</th>
+                <th>Période</th>
+                <th style="text-align:center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($publicites as $pub)
+            @php
+                $st = $pub['statut'] ?? '';
+                $badgeClass = match($st) {
+                    'validee', 'active' => 'badge-valid',
+                    'refusee'           => 'badge-refused',
+                    'en_attente'        => 'badge-waiting',
+                    default             => '',
+                };
+            @endphp
+            <tr>
+                <td style="font-weight:600;">{{ $pub['titre'] }}</td>
+                <td>{{ $pub['nom_entreprise'] ?? '—' }}</td>
+                <td>
+                    <span class="badge {{ $badgeClass }}">{{ $st }}</span>
+                </td>
+                <td style="text-align:right;" class="font-mono">{{ number_format($pub['nb_vues'] ?? 0) }}</td>
+                <td style="text-align:right;" class="font-mono">{{ number_format($pub['nb_clics'] ?? 0) }}</td>
+                <td class="font-mono" style="font-size:0.85rem;">
+                    @if($pub['date_debut']){{ \Carbon\Carbon::parse($pub['date_debut'])->format('d/m/Y') }}@endif
+                    @if($pub['date_debut'] && $pub['date_fin']) → @endif
+                    @if($pub['date_fin']){{ \Carbon\Carbon::parse($pub['date_fin'])->format('d/m/Y') }}@endif
+                    @if(!$pub['date_debut'] && !$pub['date_fin'])—@endif
+                </td>
+                <td>
+                    @if($pub['statut'] === 'en_attente')
+                        <div class="action-cell" style="justify-content:center;">
+                            <form method="POST" action="{{ route('admin.publicites.valider', $pub['id_publicite']) }}">
+                                @csrf @method('PUT')
+                                <button type="submit" class="btn-success btn-sm">Valider</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.publicites.refuser', $pub['id_publicite']) }}"
+                                  onsubmit="return confirm('Refuser cette publicité ?')">
+                                @csrf @method('PUT')
+                                <button type="submit" class="btn-danger btn-sm">Refuser</button>
+                            </form>
+                        </div>
+                    @else
+                        <div style="text-align:center;color:#999;font-family:'DM Mono',monospace;font-size:0.8rem;">—</div>
+                    @endif
                 </td>
             </tr>
-        @endforelse
-    </tbody>
-</table>
+            @empty
+                <tr>
+                    <td colspan="7" style="padding:48px;text-align:center;color:#999;font-family:'DM Mono',monospace;font-size:0.9rem;">
+                        Aucune publicité trouvée.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 @endsection

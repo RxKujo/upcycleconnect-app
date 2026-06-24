@@ -5,19 +5,19 @@
 <div class="page-header">
     <h1 class="page-title">Utilisateur #{{ $utilisateur['id_utilisateur'] }}</h1>
     <div class="action-cell">
+        <a href="{{ route('admin.utilisateurs.index') }}" class="btn-secondary btn-sm">← Retour</a>
         <form action="{{ route('admin.utilisateurs.delete', $utilisateur['id_utilisateur']) }}" method="POST"
               onsubmit="return confirm('Supprimer définitivement ce compte ?')">
             @csrf @method('DELETE')
             <button type="submit" class="btn-danger btn-sm">Supprimer le compte</button>
         </form>
-        <a href="{{ route('admin.utilisateurs.index') }}" class="btn-secondary btn-sm">← Retour</a>
     </div>
 </div>
 
-<div class="info-grid" style="margin-bottom: 32px;">
+<div class="info-grid">
 
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0 0 20px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Informations</h3>
+    <div class="card">
+        <h3 class="font-bebas" style="font-size:1.4rem;margin:0 0 24px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Informations</h3>
         <div class="info-grid">
             <div class="info-item">
                 <span class="info-label">Nom complet</span>
@@ -64,9 +64,9 @@
         </div>
     </div>
 
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0 0 20px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Rôle</h3>
-        <p class="info-value" style="margin-bottom:16px;">Rôle actuel : <span class="badge badge-waiting">{{ $utilisateur['role'] }}</span></p>
+    <div class="card">
+        <h3 class="font-bebas" style="font-size:1.4rem;margin:0 0 24px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Rôle</h3>
+        <p class="info-value" style="margin-bottom:20px;">Rôle actuel : <span class="badge badge-waiting">{{ $utilisateur['role'] }}</span></p>
         <form action="{{ route('admin.utilisateurs.role', $utilisateur['id_utilisateur']) }}" method="POST">
             @csrf @method('PUT')
             <div style="display:flex;gap:12px;align-items:center;">
@@ -80,10 +80,10 @@
         </form>
     </div>
 
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0 0 20px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Bannissement</h3>
+    <div class="card">
+        <h3 class="font-bebas" style="font-size:1.4rem;margin:0 0 24px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Bannissement</h3>
         @if($utilisateur['est_banni'])
-            <p style="margin-bottom:16px;">Ce compte est banni.</p>
+            <p class="info-value" style="margin-bottom:20px;">Ce compte est actuellement banni.</p>
             <form action="{{ route('admin.utilisateurs.unban', $utilisateur['id_utilisateur']) }}" method="POST">
                 @csrf
                 <button type="submit" class="btn-success">Débannir</button>
@@ -93,7 +93,7 @@
                 @csrf
                 <div class="form-group">
                     <label class="form-label">Type de ban</label>
-                    <div style="display:flex;gap:12px;margin-bottom:12px;">
+                    <div style="display:flex;gap:20px;margin-bottom:16px;">
                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
                             <input type="radio" name="ban_type" value="temporaire" checked onchange="toggleBanDate(false)"> Temporaire
                         </label>
@@ -112,10 +112,10 @@
         @endif
     </div>
 
-    <div class="card" style="cursor: default; transform: none;">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0 0 20px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Abonnement</h3>
+    <div class="card">
+        <h3 class="font-bebas" style="font-size:1.4rem;margin:0 0 24px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Abonnement</h3>
         @if($souscription)
-            <div style="margin-bottom:16px;">
+            <div style="margin-bottom:20px;">
                 <p class="info-value" style="margin-bottom:4px;"><strong>{{ $souscription['nom'] }}</strong></p>
                 <p style="font-size:0.9rem;color:rgba(18,3,9,0.6);">
                     Depuis le {{ \Carbon\Carbon::parse($souscription['date_debut'])->format('d/m/Y') }}
@@ -135,11 +135,11 @@
                 <button type="submit" class="btn-danger btn-sm">Révoquer</button>
             </form>
         @else
-            <p style="margin-bottom:16px;color:rgba(18,3,9,0.6);">Aucun abonnement actif.</p>
+            <p class="info-value" style="margin-bottom:20px;color:rgba(18,3,9,0.6);">Aucun abonnement actif.</p>
         @endif
 
         @if(count($abonnements) > 0)
-        <form action="{{ route('admin.utilisateurs.abonnement.assign', $utilisateur['id_utilisateur']) }}" method="POST" style="margin-top:16px;padding-top:16px;border-top:2px solid rgba(18,3,9,0.1);">
+        <form action="{{ route('admin.utilisateurs.abonnement.assign', $utilisateur['id_utilisateur']) }}" method="POST" style="margin-top:20px;padding-top:20px;border-top:2px solid rgba(18,3,9,0.1);">
             @csrf
             <label class="form-label">Assigner un abonnement</label>
             <select name="id_abonnement" class="form-select" style="margin-bottom:12px;">
@@ -147,11 +147,9 @@
                     <option value="{{ $ab['id_abonnement'] }}">{{ $ab['nom'] }} — {{ number_format($ab['prix_mensuel'], 2, ',', ' ') }} €/mois ({{ $ab['type_cible'] }})</option>
                 @endforeach
             </select>
-            <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
-                <div style="flex:1;">
-                    <label class="form-label" style="font-size:0.8rem;">Date de fin (optionnel)</label>
-                    <input type="date" name="date_fin" class="form-input">
-                </div>
+            <div style="margin-bottom:16px;">
+                <label class="form-label" style="font-size:0.8rem;">Date de fin (optionnel)</label>
+                <input type="date" name="date_fin" class="form-input">
             </div>
             <button type="submit" class="btn-primary btn-sm">Assigner</button>
         </form>

@@ -46,7 +46,7 @@
         <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:24px;">Matériaux disponibles — rayon 10 km</h2>
         @forelse($stats_materiaux as $stat)
             <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #ccc;">
-                <span style="text-transform:capitalize;">{{ $stat['materiau'] }}</span>
+                <span>{{ $stat['libelle'] ?? ucfirst($stat['materiau']) }}</span>
                 <span class="font-bebas" style="font-size:1.4rem;">{{ $stat['nb_annonces'] }} annonce(s)</span>
             </div>
         @empty

@@ -32,9 +32,17 @@ class AlertesController extends Controller
             ->get($this->apiUrl() . '/api/v1/utilisateurs/me');
         $plan = $planResp->json()['plan'] ?? null;
 
+        $matResp = Http::withToken($this->token())
+            ->get($this->apiUrl() . '/api/v1/public/materiaux');
+        $materiaux = $matResp->successful() ? $matResp->json() : [];
+        if (!is_array($materiaux)) {
+            $materiaux = [];
+        }
+
         return view('professionnel.alertes.index', [
-            'alertes' => $response->json() ?? [],
-            'plan'    => $plan,
+            'alertes'   => $response->json() ?? [],
+            'plan'      => $plan,
+            'materiaux' => $materiaux,
         ]);
     }
 

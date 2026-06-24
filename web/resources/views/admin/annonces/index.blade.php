@@ -17,7 +17,7 @@
 </div>
 @endif
 
-<div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;">
+<div style="display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; align-items: center;">
     <input type="text" id="search-input" class="form-input" style="flex: 1; min-width: 200px; max-width: 400px;"
            placeholder="Rechercher par titre..." oninput="filterTable()">
     <select id="filter-statut" class="form-select" style="width: auto; min-width: 180px;" onchange="filterTable()">
@@ -90,7 +90,7 @@
         </tr>
         @empty
         <tr id="empty-row">
-            <td colspan="8" style="text-align: center; padding: 24px;">Aucune annonce.</td>
+            <td colspan="8" style="text-align: center; padding: 32px; color: rgba(18,3,9,0.5); font-family: 'DM Mono', monospace; text-transform: uppercase;">Aucune annonce.</td>
         </tr>
         @endforelse
     </tbody>

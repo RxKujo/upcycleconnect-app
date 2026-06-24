@@ -8,11 +8,11 @@
 </div>
 
 @if($errors->any())
-<div style="background-color: #ffe6e6; border: 1px solid #A4243B; border-radius: 4px; padding: 16px; margin-bottom: 24px;">
-    <p style="color: #A4243B; font-weight: 600; margin: 0 0 8px 0;">Erreurs du formulaire :</p>
-    <ul style="margin: 0; padding-left: 20px;">
+<div class="alert alert-error" style="display: block; text-transform: none;">
+    <p style="font-weight: 700; margin: 0 0 8px;">Erreurs du formulaire :</p>
+    <ul style="margin: 0; padding-left: 20px; font-family: 'Outfit', sans-serif;">
         @foreach($errors->all() as $error)
-            <li style="color: #A4243B; font-size: 0.9rem;">{{ $error }}</li>
+            <li style="font-size: 0.95rem;">{{ $error }}</li>
         @endforeach
     </ul>
 </div>
@@ -29,7 +29,7 @@
             <div class="form-group">
                 <label class="form-label" for="titre">Titre</label>
                 <input id="titre" name="titre" class="form-input" value="{{ old('titre', $evenement['titre'] ?? '') }}" required>
-                @error('titre')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
+                @error('titre')<span style="display: block; margin-top: 8px; color: var(--cherry); font-family: 'DM Mono', monospace; font-size: 0.8rem;">{{ $message }}</span>@enderror
             </div>
 
             <div class="form-group">
@@ -67,7 +67,7 @@
                         value="{{ old('date_debut_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_debut'])->format('i') : '') }}" required>
                 </div>
                 <input id="date_debut" name="date_debut" type="hidden">
-                @error('date_debut')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
+                @error('date_debut')<span style="display: block; margin-top: 8px; color: var(--cherry); font-family: 'DM Mono', monospace; font-size: 0.8rem;">{{ $message }}</span>@enderror
             </div>
 
             <div class="form-group">
@@ -82,7 +82,7 @@
                         value="{{ old('date_fin_minute', isset($evenement) ? \Carbon\Carbon::parse($evenement['date_fin'])->format('i') : '') }}" required>
                 </div>
                 <input id="date_fin" name="date_fin" type="hidden">
-                @error('date_fin')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
+                @error('date_fin')<span style="display: block; margin-top: 8px; color: var(--cherry); font-family: 'DM Mono', monospace; font-size: 0.8rem;">{{ $message }}</span>@enderror
             </div>
 
             <div class="form-group">
@@ -101,9 +101,9 @@
                 @php
                     $selectedIds = collect($evenement['animateurs'] ?? [])->pluck('id_utilisateur')->toArray();
                 @endphp
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                     @foreach($users as $user)
-                    <label style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: 2px solid var(--coffee); background: white; cursor: pointer; font-size: 0.95rem;">
                         <input type="checkbox" name="animateurs[]" value="{{ $user['id_utilisateur'] }}"
                             {{ in_array($user['id_utilisateur'], old('animateurs', $selectedIds)) ? 'checked' : '' }}>
                         {{ $user['prenom'] }} {{ $user['nom'] }}
@@ -116,11 +116,13 @@
             <div class="form-group full-width">
                 <label class="form-label" for="description">Description</label>
                 <textarea id="description" name="description" class="form-textarea" required>{{ old('description', $evenement['description'] ?? '') }}</textarea>
-                @error('description')<span style="color: #A4243B; font-size: 0.85rem;">{{ $message }}</span>@enderror
+                @error('description')<span style="display: block; margin-top: 8px; color: var(--cherry); font-family: 'DM Mono', monospace; font-size: 0.8rem;">{{ $message }}</span>@enderror
             </div>
         </div>
 
-        <button type="submit" class="btn-primary">{{ isset($evenement) ? 'Enregistrer' : 'Créer' }}</button>
+        <div style="margin-top: 32px; padding-top: 28px; border-top: 2px solid rgba(18,3,9,0.1);">
+            <button type="submit" class="btn-primary">{{ isset($evenement) ? 'Enregistrer' : 'Créer' }}</button>
+        </div>
     </form>
 </div>
 

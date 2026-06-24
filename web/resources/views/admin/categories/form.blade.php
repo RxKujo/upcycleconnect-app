@@ -7,7 +7,7 @@
     <a href="{{ route('admin.categories.index') }}" class="btn-secondary btn-sm">← Retour</a>
 </div>
 
-<div class="card" style="max-width: 600px; cursor: default; transform: none;">
+<div class="card" style="max-width: 600px;">
     <form method="POST"
           action="{{ $categorie ? route('admin.categories.update', $categorie['id_categorie']) : route('admin.categories.store') }}">
         @csrf

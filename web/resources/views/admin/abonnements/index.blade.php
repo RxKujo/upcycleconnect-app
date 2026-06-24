@@ -13,7 +13,7 @@
 
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;margin-bottom:40px;">
     @forelse($abonnements as $plan)
-    <div class="card" style="cursor:default;transform:none;">
+    <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
             <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;margin:0;color:var(--coffee);">{{ $plan['nom'] }}</h3>
             <span class="badge badge-waiting">{{ $plan['type_cible'] }}</span>
@@ -30,13 +30,13 @@
         </div>
     </div>
     @empty
-    <div class="card" style="cursor:default;transform:none;grid-column:1/-1;">
+    <div class="card" style="grid-column:1/-1;">
         <p style="font-family:'DM Mono',monospace;font-size:0.85rem;opacity:0.5;text-align:center;padding:24px 0;">Aucun plan configuré.</p>
     </div>
     @endforelse
 </div>
 
-<div class="card" style="cursor:default;transform:none;">
+<div class="card">
     <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;margin:0 0 16px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">
         Souscriptions actives
     </h3>

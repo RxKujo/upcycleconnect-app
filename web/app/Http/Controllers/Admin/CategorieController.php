@@ -25,7 +25,7 @@ class CategorieController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['nom' => 'required', 'description' => 'required']);
+        $request->validate(['nom' => 'required|string|max:150', 'description' => 'nullable|string|max:500']);
 
         $response = Http::withToken(session('admin_token'))
             ->asJson()->post(config('services.api.url') . '/api/v1/admin/categories', [
@@ -57,7 +57,7 @@ class CategorieController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate(['nom' => 'required', 'description' => 'required']);
+        $request->validate(['nom' => 'required|string|max:150', 'description' => 'nullable|string|max:500']);
 
         $response = Http::withToken(session('admin_token'))
             ->asJson()->put(config('services.api.url') . "/api/v1/admin/categories/{$id}", [

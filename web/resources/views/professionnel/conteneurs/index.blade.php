@@ -57,6 +57,11 @@ Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Pass�
                     <div class="font-mono" style="font-size:0.72rem; color:#666;">
                         {{ $cmd['adresse_conteneur'] }}
                     </div>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($cmd['adresse_conteneur']) }}"
+                       target="_blank" rel="noopener"
+                       class="font-mono" style="display:inline-block; margin-top:8px; font-size:0.7rem; color:#18607D; text-decoration:underline;">
+                        → Itinéraire Google Maps
+                    </a>
                 </div>
                 <div style="text-align:right;">
                     @if(!empty($cmd['date_limite_recuperation']))

@@ -11,22 +11,22 @@
 </div>
 
 {{-- Stats rapides --}}
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-label">Envois totaux</div>
-        <div class="stat-value">{{ count($log) }}</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px;margin-bottom:40px;">
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Envois totaux</p>
+        <p class="font-bebas" style="font-size:3rem;color:var(--coffee);line-height:1;margin:0;">{{ count($log) }}</p>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Push envoyés</div>
-        <div class="stat-value">{{ count(array_filter($log, fn($l) => str_contains($l['type_envoi'] ?? '', 'push'))) }}</div>
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Push envoyés</p>
+        <p class="font-bebas" style="font-size:3rem;color:var(--teal);line-height:1;margin:0;">{{ count(array_filter($log, fn($l) => str_contains($l['type_envoi'] ?? '', 'push'))) }}</p>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Emails envoyés</div>
-        <div class="stat-value">{{ count(array_filter($log, fn($l) => str_contains($l['type_envoi'] ?? '', 'email'))) }}</div>
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Emails envoyés</p>
+        <p class="font-bebas" style="font-size:3rem;color:var(--forest);line-height:1;margin:0;">{{ count(array_filter($log, fn($l) => str_contains($l['type_envoi'] ?? '', 'email'))) }}</p>
     </div>
-    <div class="stat-card">
-        <div class="stat-label">Erreurs</div>
-        <div class="stat-value" style="color:var(--cherry)">{{ count(array_filter($log, fn($l) => ($l['statut'] ?? '') === 'erreur')) }}</div>
+    <div class="card" style="text-align:center;padding:28px 20px;margin-bottom:0;">
+        <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Erreurs</p>
+        <p class="font-bebas" style="font-size:3rem;color:var(--cherry);line-height:1;margin:0;">{{ count(array_filter($log, fn($l) => ($l['statut'] ?? '') === 'erreur')) }}</p>
     </div>
 </div>
 
@@ -81,9 +81,11 @@
                         </td>
                         <td>
                             @php $type = $entry['type_envoi'] ?? ''; @endphp
-                            <span class="badge {{ str_contains($type, 'push') ? 'badge-info' : 'badge-waiting' }}">
-                                {{ $type ?: '—' }}
-                            </span>
+                            @if(str_contains($type, 'push'))
+                                <span class="badge" style="background:var(--teal);color:var(--cream);">{{ $type ?: '—' }}</span>
+                            @else
+                                <span class="badge badge-waiting">{{ $type ?: '—' }}</span>
+                            @endif
                         </td>
                         <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                             {{ $entry['titre'] ?? '—' }}

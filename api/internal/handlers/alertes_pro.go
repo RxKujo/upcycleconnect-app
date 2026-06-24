@@ -71,11 +71,7 @@ func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
 		return
 	}
 
-	materiaux := map[string]bool{
-		"bois": true, "metal": true, "textile": true,
-		"plastique": true, "verre": true, "electronique": true, "autre": true,
-	}
-	if !materiaux[req.Materiau] {
+	if !materiauActif(req.Materiau) {
 		jsonErr(w, "matériau invalide", http.StatusBadRequest)
 		return
 	}
