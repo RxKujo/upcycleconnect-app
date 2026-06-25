@@ -30,4 +30,10 @@ return [
         'public_url' => env('API_PUBLIC_URL', 'http://localhost:8888'),
     ],
 
+    // Secret partagé avec l'API Go pour vérifier la signature des JWT.
+    // Passé par config (et non env() direct) pour rester lisible après config:cache.
+    'jwt' => [
+        'secret' => env('JWT_SECRET'),
+    ],
+
 ];

@@ -82,6 +82,7 @@ services:
       APP_DEBUG: "false"
       APP_KEY: ${APP_KEY}
       APP_URL: "https://${DOMAIN}"
+      JWT_SECRET: ${JWT_SECRET}
       DB_HOST: db
       DB_PORT: "3306"
       DB_CONNECTION: mysql

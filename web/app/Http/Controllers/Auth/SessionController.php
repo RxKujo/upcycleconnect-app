@@ -129,7 +129,7 @@ class SessionController extends Controller
 
         [$header, $payload, $signature] = $parts;
 
-        $secret = env('JWT_SECRET');
+        $secret = config('services.jwt.secret');
         if (!$secret) {
             return null;
         }
