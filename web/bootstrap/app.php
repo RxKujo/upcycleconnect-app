@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Derrière le reverse-proxy nginx : honorer X-Forwarded-Proto/For/Host.
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'admin.auth'   => \App\Http\Middleware\AdminAuth::class,
             'salarie.auth' => \App\Http\Middleware\SalarieAuth::class,
