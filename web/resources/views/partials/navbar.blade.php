@@ -150,6 +150,7 @@
         border: 2px solid transparent;
         transition: all 0.15s;
         position: relative;
+        white-space: nowrap;
     }
     .nav-links-public a:hover {
         color: var(--cherry);
