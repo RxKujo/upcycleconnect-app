@@ -84,6 +84,7 @@ services:
       APP_URL: "https://${DOMAIN}"
       DB_HOST: db
       DB_PORT: "3306"
+      DB_CONNECTION: mysql
       DB_DATABASE: upcycleconnect
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}

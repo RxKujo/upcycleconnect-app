@@ -57,7 +57,8 @@ COPY --from=node-builder /app/public/build ./public/build
 
 COPY . .
 
-RUN chown -R www-data:www-data storage bootstrap/cache \
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 COPY docker/entrypoint.sh /entrypoint.sh
