@@ -2,6 +2,21 @@
 @section('title', 'Utilisateur #' . $utilisateur['id_utilisateur'])
 
 @section('content')
+<style>
+    /* Mise en page de la fiche utilisateur : cartes qui épousent leur contenu
+       (pas d'étirement vertical), colonnes responsives, champs pleine largeur. */
+    .user-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        align-items: start;
+    }
+    .user-detail-grid .card { height: auto; }
+    .user-detail-grid .form-select,
+    .user-detail-grid .form-input { width: 100%; }
+    .role-form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .role-form-row .form-select { flex: 1 1 160px; min-width: 160px; }
+</style>
 <div class="page-header">
     <h1 class="page-title">Utilisateur #{{ $utilisateur['id_utilisateur'] }}</h1>
     <div class="action-cell">
@@ -14,7 +29,7 @@
     </div>
 </div>
 
-<div class="info-grid">
+<div class="user-detail-grid">
 
     <div class="card">
         <h3 class="font-bebas" style="font-size:1.4rem;margin:0 0 24px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">Informations</h3>
@@ -69,8 +84,8 @@
         <p class="info-value" style="margin-bottom:20px;">Rôle actuel : <span class="badge badge-waiting">{{ $utilisateur['role'] }}</span></p>
         <form action="{{ route('admin.utilisateurs.role', $utilisateur['id_utilisateur']) }}" method="POST">
             @csrf @method('PUT')
-            <div style="display:flex;gap:12px;align-items:center;">
-                <select name="role" class="form-select" style="flex:1;">
+            <div class="role-form-row">
+                <select name="role" class="form-select">
                     @foreach(['particulier','professionnel','salarie','admin'] as $r)
                         <option value="{{ $r }}" {{ $utilisateur['role'] === $r ? 'selected' : '' }}>{{ ucfirst($r) }}</option>
                     @endforeach
