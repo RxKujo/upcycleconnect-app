@@ -20,15 +20,24 @@ import (
 func loadAnnonceWithObjets(id string) (*models.Annonce, error) {
 	var a models.Annonce
 	var prix sql.NullFloat64
-	var motifRefus, motifRetrait sql.NullString
-	var validePar sql.NullInt64
+	var motifRefus, motifRetrait, adresseRemise sql.NullString
+	var validePar, idConteneur sql.NullInt64
+	// Champs du conteneur lié (LEFT JOIN, donc nullable).
+	var cRef, cAdr, cVille, cCP sql.NullString
+	var cLat, cLng sql.NullFloat64
 
 	err := database.DB.QueryRow(`
-		SELECT id_annonce, id_particulier, titre, description, type_annonce,
-		       prix, mode_remise, statut, motif_refus, motif_retrait, date_creation, valide_par
-		FROM annonces WHERE id_annonce = ?`, id).
+		SELECT a.id_annonce, a.id_particulier, a.titre, a.description, a.type_annonce,
+		       a.prix, a.mode_remise, a.id_conteneur, a.adresse_remise, a.statut,
+		       a.motif_refus, a.motif_retrait, a.date_creation, a.valide_par,
+		       c.conteneur_ref, c.adresse, c.ville, c.code_postal, c.latitude, c.longitude
+		FROM annonces a
+		LEFT JOIN conteneurs c ON c.id_conteneur = a.id_conteneur
+		WHERE a.id_annonce = ?`, id).
 		Scan(&a.IDAnnonce, &a.IDParticulier, &a.Titre, &a.Description, &a.TypeAnnonce,
-			&prix, &a.ModeRemise, &a.Statut, &motifRefus, &motifRetrait, &a.DateCreation, &validePar)
+			&prix, &a.ModeRemise, &idConteneur, &adresseRemise, &a.Statut,
+			&motifRefus, &motifRetrait, &a.DateCreation, &validePar,
+			&cRef, &cAdr, &cVille, &cCP, &cLat, &cLng)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +46,22 @@ func loadAnnonceWithObjets(id string) (*models.Annonce, error) {
 	a.MotifRefus = scanNullString(motifRefus)
 	a.MotifRetrait = scanNullString(motifRetrait)
 	a.ValidePar = scanNullInt(validePar)
+	a.AdresseRemise = scanNullString(adresseRemise)
+	if idConteneur.Valid {
+		idc := int(idConteneur.Int64)
+		a.IDConteneur = &idc
+		if cAdr.Valid {
+			a.Conteneur = &models.ConteneurInfo{
+				IDConteneur: idc,
+				Ref:         cRef.String,
+				Adresse:     cAdr.String,
+				Ville:       cVille.String,
+				CodePostal:  scanNullString(cCP),
+				Latitude:    scanNullFloat64(cLat),
+				Longitude:   scanNullFloat64(cLng),
+			}
+		}
+	}
 
 	// Une seule JOIN charge tous les objets ET toutes leurs photos.
 	rows, err := database.DB.Query(`
@@ -241,6 +266,14 @@ func GetAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, a, http.StatusOK)
 }
 
+// conteneurActif vérifie qu'un conteneur existe et est en statut 'actif'.
+func conteneurActif(id int) bool {
+	var x int
+	err := database.DB.QueryRow(
+		"SELECT 1 FROM conteneurs WHERE id_conteneur = ? AND statut = 'actif' LIMIT 1", id).Scan(&x)
+	return err == nil
+}
+
 func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 	logInfo("CreateAnnonce", "user=%d", userId)
 
@@ -263,10 +296,43 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		jsonErr(w, "type_annonce doit être 'don' ou 'vente'", http.StatusBadRequest)
 		return
 	}
+
+	// Prix : strictement > 0 pour une vente ; ignoré (null) pour un don.
+	if req.TypeAnnonce == "vente" {
+		if req.Prix == nil || *req.Prix <= 0 {
+			jsonErr(w, "un prix strictement supérieur à 0 est requis pour une vente", http.StatusBadRequest)
+			return
+		}
+	} else {
+		req.Prix = nil
+	}
+
 	if req.ModeRemise != "conteneur" && req.ModeRemise != "main_propre" {
 		jsonErr(w, "mode_remise doit être 'conteneur' ou 'main_propre'", http.StatusBadRequest)
 		return
 	}
+
+	// Remise : on exige le conteneur OU l'adresse selon le mode, et on neutralise l'autre.
+	if req.ModeRemise == "conteneur" {
+		if req.IDConteneur == nil || !conteneurActif(*req.IDConteneur) {
+			jsonErr(w, "veuillez sélectionner un conteneur actif", http.StatusBadRequest)
+			return
+		}
+		req.AdresseRemise = nil
+	} else { // main_propre
+		if req.AdresseRemise == nil || len(strings.TrimSpace(*req.AdresseRemise)) < 5 {
+			jsonErr(w, "veuillez indiquer une adresse de remise en main propre", http.StatusBadRequest)
+			return
+		}
+		adr := strings.TrimSpace(*req.AdresseRemise)
+		if len(adr) > 255 {
+			jsonErr(w, "l'adresse de remise est trop longue (max 255 caractères)", http.StatusBadRequest)
+			return
+		}
+		req.AdresseRemise = &adr
+		req.IDConteneur = nil
+	}
+
 	if len(req.Objets) == 0 {
 		jsonErr(w, "au moins un objet est requis", http.StatusBadRequest)
 		return
@@ -276,12 +342,20 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 	totalPhotos := 0
 
 	for i, obj := range req.Objets {
+		if !categorieObjetValide(strings.TrimSpace(obj.Categorie)) {
+			jsonErr(w, fmt.Sprintf("catégorie invalide pour l'objet %d", i+1), http.StatusBadRequest)
+			return
+		}
 		if !materiauActif(obj.Materiau) {
 			jsonErr(w, fmt.Sprintf("matériau invalide pour l'objet %d", i+1), http.StatusBadRequest)
 			return
 		}
 		if !validEtats[obj.Etat] {
 			jsonErr(w, fmt.Sprintf("état invalide pour l'objet %d", i+1), http.StatusBadRequest)
+			return
+		}
+		if obj.PoidsKg == nil || *obj.PoidsKg <= 0 {
+			jsonErr(w, fmt.Sprintf("le poids (kg) est requis pour l'objet %d (une estimation suffit)", i+1), http.StatusBadRequest)
 			return
 		}
 		if len(obj.Photos) == 0 {
@@ -303,9 +377,9 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 	}
 
 	res, err := tx.Exec(
-		`INSERT INTO annonces (id_particulier, titre, description, type_annonce, prix, mode_remise, statut)
-		 VALUES (?, ?, ?, ?, ?, ?, 'en_attente')`,
-		userId, req.Titre, req.Description, req.TypeAnnonce, req.Prix, req.ModeRemise)
+		`INSERT INTO annonces (id_particulier, titre, description, type_annonce, prix, mode_remise, id_conteneur, adresse_remise, statut)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'en_attente')`,
+		userId, req.Titre, req.Description, req.TypeAnnonce, req.Prix, req.ModeRemise, req.IDConteneur, req.AdresseRemise)
 	if err != nil {
 		tx.Rollback()
 		logError("CreateAnnonce", "insert annonce: %v", err)

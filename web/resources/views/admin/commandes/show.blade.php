@@ -33,7 +33,7 @@
         <div class="info-item">
             <span class="info-label">Annonce Réservée</span>
             <p class="info-value">
-                <a href="{{ route('admin.catalogue.show', $commande['id_annonce']) }}" style="color: var(--cherry); text-decoration: underline; font-weight: bold;">
+                <a href="{{ route('admin.annonces.show', $commande['id_annonce']) }}" style="color: var(--cherry); text-decoration: underline; font-weight: bold;">
                     {{ $commande['titre_annonce'] }}
                 </a>
             </p>

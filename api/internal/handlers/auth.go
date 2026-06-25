@@ -4,6 +4,8 @@ import (
 	"api/internal/models"
 	"api/internal/services"
 	"api/pkg/database"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -149,7 +151,13 @@ func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	// Invalider les anciens tokens (schéma Laravel : email, token, created_at)
 	database.DB.Exec("DELETE FROM password_reset_tokens WHERE email = ?", email)
 
-	token := fmt.Sprintf("%x%x", time.Now().UnixNano(), userId*99991)
+	// Token aléatoire cryptographique (32 octets → 64 caractères hex), non prédictible.
+	rawToken := make([]byte, 32)
+	if _, err := rand.Read(rawToken); err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	token := hex.EncodeToString(rawToken)
 
 	_, err = database.DB.Exec(
 		"INSERT INTO password_reset_tokens (email, token, created_at) VALUES (?, ?, NOW())",
@@ -203,4 +211,47 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 	database.DB.Exec("DELETE FROM password_reset_tokens WHERE token = ?", req.Token)
 
 	jsonOK(w, map[string]string{"message": "mot de passe mis à jour"}, http.StatusOK)
+}
+
+// ChangePassword permet à un utilisateur connecté de modifier son mot de passe
+// en fournissant son mot de passe actuel (vérifié) et le nouveau.
+func ChangePassword(w http.ResponseWriter, r *http.Request, userId int) {
+	var req struct {
+		AncienMotDePasse  string `json:"ancien_mot_de_passe"`
+		NouveauMotDePasse string `json:"nouveau_mot_de_passe"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "données invalides", http.StatusBadRequest)
+		return
+	}
+	if req.AncienMotDePasse == "" || len(req.NouveauMotDePasse) < 8 {
+		jsonErr(w, "mot de passe actuel requis et nouveau mot de passe (min 8 caractères)", http.StatusBadRequest)
+		return
+	}
+	if req.AncienMotDePasse == req.NouveauMotDePasse {
+		jsonErr(w, "le nouveau mot de passe doit être différent de l'ancien", http.StatusBadRequest)
+		return
+	}
+
+	var hashActuel string
+	if err := database.DB.QueryRow("SELECT mot_de_passe_hash FROM utilisateurs WHERE id_utilisateur = ?", userId).Scan(&hashActuel); err != nil {
+		jsonErr(w, "utilisateur introuvable", http.StatusNotFound)
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(hashActuel), []byte(req.AncienMotDePasse)); err != nil {
+		jsonErr(w, "mot de passe actuel incorrect", http.StatusBadRequest)
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NouveauMotDePasse), bcrypt.DefaultCost)
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	if _, err := database.DB.Exec("UPDATE utilisateurs SET mot_de_passe_hash = ? WHERE id_utilisateur = ?", string(hash), userId); err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, map[string]string{"message": "mot de passe modifié"}, http.StatusOK)
 }

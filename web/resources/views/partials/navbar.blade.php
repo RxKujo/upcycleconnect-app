@@ -7,22 +7,25 @@
         </a>
 
         <ul class="nav-links-public">
-            <li><a href="{{ route('annonces.index') }}" class="{{ request()->routeIs('annonces.*') ? 'active' : '' }}">Marché</a></li>
-            <li><a href="{{ route('evenements.index') }}" class="{{ request()->routeIs('evenements.*') ? 'active' : '' }}">Événements</a></li>
-            <li><a href="{{ route('formations.index') }}" class="{{ request()->routeIs('formations.*') ? 'active' : '' }}">Formations</a></li>
-            <li><a href="{{ route('forum.index') }}" class="{{ request()->routeIs('forum.*') ? 'active' : '' }}">Forum</a></li>
-            <li><a href="{{ route('ressources.index') }}" class="{{ request()->routeIs('ressources.*') ? 'active' : '' }}">Ressources</a></li>
+            <li><a href="{{ route('annonces.index') }}" class="{{ request()->routeIs('annonces.*') ? 'active' : '' }}" data-i18n="nav.market">Marché</a></li>
+            <li><a href="{{ route('evenements.index') }}" class="{{ request()->routeIs('evenements.*') || request()->routeIs('formations.*') ? 'active' : '' }}" data-i18n="nav.events">Formations &amp; événements</a></li>
+            <li><a href="{{ route('forum.index') }}" class="{{ request()->routeIs('forum.*') ? 'active' : '' }}" data-i18n="nav.forum">Forum</a></li>
+            <li><a href="{{ route('ressources.index') }}" class="{{ request()->routeIs('ressources.*') ? 'active' : '' }}" data-i18n="nav.resources">Ressources</a></li>
         </ul>
 
         <div class="auth-wrapper" id="auth-wrapper">
+            <div class="nav-lang" role="group" aria-label="Choix de la langue">
+                <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button>
+                <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+            </div>
             <a href="{{ route('panier.index') }}" class="nav-cart-link" aria-label="Panier" style="position:relative; display:inline-flex; align-items:center; padding:8px 14px; margin-right:8px; border:1px solid var(--border-color, rgba(0,0,0,0.15)); text-decoration:none; color:inherit;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
                     <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
                 </svg>
                 <span id="nav-cart-count" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--cherry,#a72f43); color:#fff; min-width:18px; height:18px; padding:0 5px; border-radius:9px; font-family:'DM Mono',monospace; font-size:0.65rem; align-items:center; justify-content:center;">0</span>
             </a>
-            <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-ghost" id="nav-register-btn">Inscription</a>
-            <a href="{{ route('particulier.login') }}" class="nav-btn nav-btn-primary" id="nav-login-btn">Connexion</a>
+            <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-ghost" id="nav-register-btn" data-i18n="nav.register">Inscription</a>
+            <a href="{{ route('particulier.login') }}" class="nav-btn nav-btn-primary" id="nav-login-btn" data-i18n="nav.login">Connexion</a>
 
             <div id="nav-user-menu" class="nav-user-menu">
                 <button id="nav-user-btn" class="nav-user-btn" aria-expanded="false" aria-label="Menu utilisateur">
@@ -36,17 +39,10 @@
                     </svg>
                 </button>
                 <div id="nav-user-dropdown" class="nav-user-dropdown">
-                    <a href="/particulier/profile">Mon espace</a>
-                    <a href="{{ route('particulier.planning.index') }}">Mon Planning</a>
-                    <a href="{{ route('depot.index') }}">Dépôt conteneur</a>
-                    <a href="{{ route('commandes.index') }}">Mes commandes</a>
+                    <a href="/particulier/dashboard">Mon espace</a>
+                    <a href="/particulier/annonces">Mes annonces</a>
+                    <a href="/particulier/formations">Mes formations</a>
                     <a href="/particulier/annonces/create">Déposer une annonce</a>
-                    <a href="/particulier/profile#score">Mon Upcycling Score</a>
-                    <hr style="border:none;border-top:1px solid rgba(18,3,9,0.15);margin:4px 0;">
-                    <div style="display:flex;gap:8px;padding:8px 16px;">
-                        <button onclick="setLang('fr')" id="lang-fr" style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;background:none;border:2px solid var(--coffee);padding:4px 10px;cursor:pointer;">FR</button>
-                        <button onclick="setLang('en')" id="lang-en" style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;background:none;border:2px solid var(--coffee);padding:4px 10px;cursor:pointer;">EN</button>
-                    </div>
                     <button id="nav-logout-btn">Déconnexion</button>
                 </div>
             </div>
@@ -58,13 +54,16 @@
     </div>
 
     <div class="nav-mobile" id="nav-mobile">
-        <a href="{{ route('annonces.index') }}">Marché</a>
-        <a href="{{ route('evenements.index') }}">Événements</a>
-        <a href="{{ route('formations.index') }}">Formations</a>
-        <a href="{{ route('forum.index') }}">Forum</a>
-        <a href="{{ route('ressources.index') }}">Ressources</a>
+        <a href="{{ route('annonces.index') }}" data-i18n="nav.market">Marché</a>
+        <a href="{{ route('evenements.index') }}" data-i18n="nav.events">Formations &amp; événements</a>
+        <a href="{{ route('forum.index') }}" data-i18n="nav.forum">Forum</a>
+        <a href="{{ route('ressources.index') }}" data-i18n="nav.resources">Ressources</a>
         <a href="{{ route('services-pro') }}">Services Pro</a>
         <a href="{{ route('a-propos') }}">À propos</a>
+        <div class="nav-lang" role="group" aria-label="Choix de la langue" style="margin-top:12px;">
+            <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button>
+            <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+        </div>
         <div class="nav-mobile-auth" id="nav-mobile-auth">
             <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-ghost">Inscription</a>
             <a href="{{ route('particulier.register') }}" class="nav-btn nav-btn-primary">Connexion</a>
@@ -167,6 +166,28 @@
         height: 3px;
         background: var(--cherry);
     }
+
+    /* Sélecteur de langue */
+    .nav-lang {
+        display: inline-flex;
+        gap: 4px;
+        margin-right: 6px;
+    }
+    .nav-lang-btn {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        background: var(--cream);
+        color: var(--coffee);
+        border: 2px solid var(--coffee);
+        padding: 5px 9px;
+        cursor: pointer;
+        line-height: 1;
+        transition: background 0.12s, color 0.12s;
+    }
+    .nav-lang-btn:hover { background: var(--wheat); }
+    .nav-lang-btn.active { background: var(--forest); color: #fff; }
 
     /* Zone auth */
     .auth-wrapper {
@@ -387,11 +408,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 { href: '/mes-commandes', text: 'Mes commandes' },
                 { href: '/panier', text: 'Mon panier' },
             ]},
-            particulier:  { home: '/particulier/profile', label: 'Mon espace', extras: [
-                { href: '/mes-commandes', text: 'Mes commandes' },
-                { href: '/panier', text: 'Mon panier' },
+            particulier:  { home: '/particulier/dashboard', label: 'Mon espace', extras: [
+                { href: '/particulier/annonces', text: 'Mes annonces' },
+                { href: '/particulier/formations', text: 'Mes formations' },
                 { href: '/particulier/annonces/create', text: "Déposer une annonce" },
-                { href: '/particulier/profile#score', text: 'Mon Upcycling Score' },
             ]},
         };
         const cfg = roleConfig[role] || roleConfig.particulier;

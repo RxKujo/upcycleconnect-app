@@ -218,7 +218,7 @@ func UnbanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 
 func GetMesEvenementsInscrits(w http.ResponseWriter, r *http.Request, userId int) {
 	rows, err := database.DB.Query(`
-		SELECT e.id_evenement, e.titre, e.date_debut, e.date_fin, e.lieu, i.statut_paiement, i.date_inscription
+		SELECT e.id_evenement, e.titre, e.date_debut, e.date_fin, e.lieu, e.statut, i.statut_paiement, i.date_inscription
 		FROM inscriptions_evenements i
 		JOIN evenements e ON e.id_evenement = i.id_evenement
 		WHERE i.id_utilisateur = ?
@@ -235,6 +235,7 @@ func GetMesEvenementsInscrits(w http.ResponseWriter, r *http.Request, userId int
 		DateDebut       time.Time  `json:"date_debut"`
 		DateFin         time.Time  `json:"date_fin"`
 		Lieu            *string    `json:"lieu,omitempty"`
+		Statut          string     `json:"statut"`
 		StatutPaiement  string     `json:"statut_paiement"`
 		DateInscription time.Time  `json:"date_inscription"`
 	}
@@ -242,7 +243,7 @@ func GetMesEvenementsInscrits(w http.ResponseWriter, r *http.Request, userId int
 	var result []EvenementInscrit
 	for rows.Next() {
 		var ev EvenementInscrit
-		if err := rows.Scan(&ev.IDEvenement, &ev.Titre, &ev.DateDebut, &ev.DateFin, &ev.Lieu, &ev.StatutPaiement, &ev.DateInscription); err == nil {
+		if err := rows.Scan(&ev.IDEvenement, &ev.Titre, &ev.DateDebut, &ev.DateFin, &ev.Lieu, &ev.Statut, &ev.StatutPaiement, &ev.DateInscription); err == nil {
 			result = append(result, ev)
 		}
 	}
@@ -401,15 +402,136 @@ func RevokeSouscription(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func ExportUserData(w http.ResponseWriter, r *http.Request, userId int) {
+	// ── Profil complet ──
 	var u models.Utilisateur
-	err := database.DB.QueryRow(`SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, date_creation FROM utilisateurs WHERE id_utilisateur = ?`, userId).
-		Scan(&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &u.Role, &u.DateCreation)
-	if err != nil {
+	var tel, ville, cp, adresse, entreprise sql.NullString
+	var score sql.NullFloat64
+	var certifie bool
+	if err := database.DB.QueryRow(`
+		SELECT id_utilisateur, nom, prenom, email, telephone, ville, code_postal, adresse_complete,
+		       role, upcycling_score, est_certifie, nom_entreprise, date_creation
+		FROM utilisateurs WHERE id_utilisateur = ?`, userId).
+		Scan(&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &tel, &ville, &cp, &adresse,
+			&u.Role, &score, &certifie, &entreprise, &u.DateCreation); err != nil {
 		jsonErr(w, "utilisateur non trouvé", http.StatusNotFound)
 		return
 	}
 
-	pdfBytes, err := services.GenerateUserDataPDF(u, time.Now().Format("02/01/2006 15:04"))
+	ns := func(v sql.NullString) string {
+		if v.Valid {
+			return v.String
+		}
+		return ""
+	}
+	certTxt := "Non"
+	if certifie {
+		certTxt = "Oui"
+	}
+	profil := [][2]string{
+		{"Identifiant", fmt.Sprintf("%d", u.IDUtilisateur)},
+		{"Nom", u.Nom},
+		{"Prénom", u.Prenom},
+		{"Email", u.Email},
+		{"Téléphone", ns(tel)},
+		{"Ville", ns(ville)},
+		{"Code postal", ns(cp)},
+		{"Adresse", ns(adresse)},
+		{"Rôle", u.Role},
+		{"Score upcycling", fmt.Sprintf("%.0f", score.Float64)},
+		{"Compte certifié", certTxt},
+		{"Inscrit le", u.DateCreation.Format("02/01/2006")},
+	}
+	if ns(entreprise) != "" {
+		profil = append(profil, [2]string{"Entreprise", ns(entreprise)})
+	}
+
+	df := func(t time.Time) string { return t.Format("02/01/2006") }
+	prixOuDon := func(typ string, prix float64) string {
+		if typ == "don" {
+			return "Don"
+		}
+		return fmt.Sprintf("%.2f EUR", prix)
+	}
+
+	// ── Annonces déposées ──
+	annonces := ExportSectionRows(`
+		SELECT titre, type_annonce, COALESCE(prix,0), statut, date_creation
+		FROM annonces WHERE id_particulier = ? ORDER BY date_creation DESC`, userId,
+		func(rows *sql.Rows) []string {
+			var titre, typ, statut string
+			var prix float64
+			var d time.Time
+			rows.Scan(&titre, &typ, &prix, &statut, &d)
+			return []string{titre, typ, prixOuDon(typ, prix), statut, df(d)}
+		})
+
+	// ── Commandes (achats) ──
+	commandes := ExportSectionRows(`
+		SELECT c.id_commande, a.titre, c.statut, c.date_commande
+		FROM commandes c JOIN annonces a ON a.id_annonce = c.id_annonce
+		WHERE c.id_acheteur = ? ORDER BY c.date_commande DESC`, userId,
+		func(rows *sql.Rows) []string {
+			var id int
+			var titre, statut string
+			var d time.Time
+			rows.Scan(&id, &titre, &statut, &d)
+			return []string{fmt.Sprintf("#%d", id), titre, statut, df(d)}
+		})
+
+	// ── Inscriptions aux événements ──
+	inscriptions := ExportSectionRows(`
+		SELECT e.titre, i.statut_paiement, COALESCE(i.prix_paye,0), i.date_inscription
+		FROM inscriptions_evenements i JOIN evenements e ON e.id_evenement = i.id_evenement
+		WHERE i.id_utilisateur = ? ORDER BY i.date_inscription DESC`, userId,
+		func(rows *sql.Rows) []string {
+			var titre, paiement string
+			var prix float64
+			var d time.Time
+			rows.Scan(&titre, &paiement, &prix, &d)
+			return []string{titre, paiement, fmt.Sprintf("%.2f EUR", prix), df(d)}
+		})
+
+	// ── Forum : sujets créés ──
+	sujets := ExportSectionRows(`
+		SELECT titre, categorie, statut, date_creation
+		FROM forum_sujets WHERE id_createur = ? ORDER BY date_creation DESC`, userId,
+		func(rows *sql.Rows) []string {
+			var titre, cat, statut string
+			var d time.Time
+			rows.Scan(&titre, &cat, &statut, &d)
+			return []string{titre, cat, statut, df(d)}
+		})
+
+	// ── Forum : messages publiés ──
+	messages := ExportSectionRows(`
+		SELECT contenu, date_publication
+		FROM forum_messages WHERE id_auteur = ? ORDER BY date_publication DESC`, userId,
+		func(rows *sql.Rows) []string {
+			var contenu string
+			var d time.Time
+			rows.Scan(&contenu, &d)
+			return []string{contenu, df(d)}
+		})
+
+	data := services.UserExportData{
+		User:   u,
+		Genere: time.Now().Format("02/01/2006 15:04"),
+		Profil: profil,
+		Sections: []services.ExportSection{
+			{Titre: "Mes annonces", Headers: []string{"Titre", "Type", "Prix", "Statut", "Date"},
+				Largeur: []float64{0.34, 0.13, 0.16, 0.19, 0.18}, Rows: annonces, Vide: "Aucune annonce déposée."},
+			{Titre: "Mes commandes", Headers: []string{"N°", "Article", "Statut", "Date"},
+				Largeur: []float64{0.12, 0.42, 0.24, 0.22}, Rows: commandes, Vide: "Aucune commande."},
+			{Titre: "Mes inscriptions aux événements", Headers: []string{"Événement", "Paiement", "Prix", "Date"},
+				Largeur: []float64{0.40, 0.20, 0.18, 0.22}, Rows: inscriptions, Vide: "Aucune inscription."},
+			{Titre: "Forum — sujets créés", Headers: []string{"Sujet", "Catégorie", "Statut", "Date"},
+				Largeur: []float64{0.38, 0.22, 0.18, 0.22}, Rows: sujets, Vide: "Aucun sujet créé."},
+			{Titre: "Forum — messages publiés", Headers: []string{"Message", "Date"},
+				Largeur: []float64{0.76, 0.24}, Rows: messages, Vide: "Aucun message publié."},
+		},
+	}
+
+	pdfBytes, err := services.GenerateUserDataPDF(data)
 	if err != nil {
 		jsonErr(w, "erreur lors de la génération du PDF", http.StatusInternalServerError)
 		return
@@ -419,4 +541,19 @@ func ExportUserData(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Disposition", "attachment; filename=\"mes_donnees_upcycleconnect.pdf\"")
 	w.WriteHeader(http.StatusOK)
 	w.Write(pdfBytes)
+}
+
+// ExportSectionRows exécute une requête et transforme chaque ligne en []string
+// via mapper. Retourne une slice vide (jamais nil) si aucune donnée ou erreur.
+func ExportSectionRows(query string, userId int, mapper func(*sql.Rows) []string) [][]string {
+	out := [][]string{}
+	rows, err := database.DB.Query(query, userId)
+	if err != nil {
+		return out
+	}
+	defer rows.Close()
+	for rows.Next() {
+		out = append(out, mapper(rows))
+	}
+	return out
 }

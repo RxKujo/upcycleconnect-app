@@ -1,5 +1,5 @@
 @extends('layouts.particulier')
-@section('title', 'Mon Profil')
+@section('title', 'Profil & paramètres')
 
 @section('styles')
 <style>
@@ -50,17 +50,19 @@
 @endsection
 
 @section('content')
-<x-page-header title="Mon Profil" />
+<div class="page-header">
+    <h1 class="page-title">Profil &amp; paramètres</h1>
+</div>
 
 <div id="loading" class="loading">Chargement...</div>
 
 <div id="profile-content" style="display: none;">
     <div class="profile-grid">
-        
+
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="card-title">Mes Informations</h3>
-                <x-btn variant="secondary" size="sm" id="edit-toggle" onclick="toggleEdit()">Modifier</x-btn>
+                <h3 class="card-title">Mes informations</h3>
+                <button class="btn-secondary btn-sm" id="edit-toggle" onclick="toggleEdit()">Modifier</button>
             </div>
 
             <div class="avatar-section">
@@ -102,9 +104,9 @@
                 <span class="info-val" id="val-date"></span>
             </div>
 
-            <div id="edit-buttons" style="display: none; margin-top: 16px; display: flex; gap: 12px;">
-                <x-btn size="sm" onclick="saveProfile()" id="save-btn" style="display: none;">Sauvegarder</x-btn>
-                <x-btn variant="secondary" size="sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;">Annuler</x-btn>
+            <div id="edit-buttons" style="display: none; margin-top: 16px; gap: 12px;">
+                <button class="btn-primary btn-sm" onclick="saveProfile()" id="save-btn" style="display: none;">Sauvegarder</button>
+                <button class="btn-secondary btn-sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;">Annuler</button>
             </div>
         </div>
 
@@ -126,42 +128,8 @@
             <div class="score-ladder" id="score-ladder"></div>
         </div>
 
-        <div class="card full-width">
-            <h3 class="card-title">Mes Evenements Inscrits</h3>
-            <div id="events-container">
-                <div class="loading">Chargement des evenements...</div>
-            </div>
-        </div>
-
-        <div class="card full-width">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="card-title">Mes Annonces</h3>
-                <x-btn size="sm" onclick="window.location.href='/particulier/annonces/create'">Deposer une annonce</x-btn>
-            </div>
-            <div id="annonces-container">
-                <div class="loading">Chargement des annonces...</div>
-            </div>
-        </div>
-
-        <div class="card full-width" id="card-commandes">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="card-title">Mes Achats</h3>
-                <a href="/mes-commandes" class="btn btn-secondary" style="font-size:0.85rem;padding:8px 16px;">Voir tout</a>
-            </div>
-            <div id="commandes-container">
-                <div class="loading">Chargement des commandes...</div>
-            </div>
-        </div>
-
-        <div class="card full-width" id="card-reservations">
-            <h3 class="card-title">Mes Réservations Formations</h3>
-            <div id="reservations-container">
-                <div class="loading">Chargement des réservations...</div>
-            </div>
-        </div>
-
         <div class="card">
-            <h3 class="card-title">Preferences de Notifications</h3>
+            <h3 class="card-title">Préférences de notifications</h3>
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label">Notifications push</div>
@@ -186,53 +154,38 @@
         </div>
 
         <div class="card">
-            <h3 class="card-title">Donnees Personnelles</h3>
+            <h3 class="card-title">Données personnelles</h3>
             <p style="margin-bottom: 16px; font-size: 0.95rem;">Recuperez un fichier contenant toutes vos informations</p>
-            <x-btn size="sm" onclick="downloadPDF()">Telecharger mes donnees</x-btn>
+            <button class="btn-primary btn-sm" onclick="downloadPDF()">Telecharger mes donnees</button>
         </div>
 
         <div class="card full-width">
-            <h3 class="card-title">Securite</h3>
-            <x-btn variant="secondary" size="sm" class="btn-disabled" disabled>Modifier mon mot de passe</x-btn>
-            <p style="font-size: 0.8rem; margin-top: 8px; color: rgba(18,3,9,0.5);">Fonctionnalite a venir</p>
+            <h3 class="card-title">Sécurité</h3>
+            <button class="btn-secondary btn-sm" type="button" onclick="togglePwdForm()">Modifier mon mot de passe</button>
+            <form id="pwd-form" style="display:none; margin-top:16px; max-width:380px;" onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label class="form-label" for="pwd-old">Mot de passe actuel</label>
+                    <input type="password" id="pwd-old" class="form-input" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pwd-new">Nouveau mot de passe (min. 8 caractères)</label>
+                    <input type="password" id="pwd-new" class="form-input" required minlength="8" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pwd-confirm">Confirmer le nouveau mot de passe</label>
+                    <input type="password" id="pwd-confirm" class="form-input" required minlength="8" autocomplete="new-password">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="submit" class="btn-primary btn-sm">Enregistrer</button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="togglePwdForm()">Annuler</button>
+                </div>
+            </form>
             <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(164,36,59,0.2);">
-                <p style="font-size:0.85rem; color:var(--cherry); margin-bottom:12px; font-family:'DM Mono',monospace; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.06em;">Zone dangereuse</p>
+                <p style="color:var(--cherry); margin-bottom:12px; font-family:'DM Mono',monospace; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.06em;">Zone dangereuse</p>
                 <button type="button" onclick="deleteMyAccount()" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:var(--cherry);background:none;border:2px solid var(--cherry);padding:8px 20px;cursor:pointer;letter-spacing:0.04em;">Supprimer mon compte</button>
                 <p style="font-size:0.75rem; color:rgba(18,3,9,0.5); margin-top:8px;">Vos donnees personnelles seront effacees (RGPD). Cette action est irreversible.</p>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Modal modification annonce -->
-<div id="modal-edit-annonce" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.55);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:32px;width:100%;max-width:520px;position:relative;">
-        <button id="modal-edit-annonce-close" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--coffee);">&times;</button>
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.06em;margin-bottom:24px;">Modifier l'annonce</h3>
-        <form id="form-edit-annonce">
-            <input type="hidden" id="edit-annonce-id">
-            <div class="form-group" style="margin-bottom:16px;">
-                <label for="edit-titre" class="form-label">Titre</label>
-                <input type="text" id="edit-titre" class="form-input" required maxlength="120">
-            </div>
-            <div class="form-group" style="margin-bottom:16px;">
-                <label for="edit-description" class="form-label">Description</label>
-                <textarea id="edit-description" class="form-input" rows="4" required style="resize:vertical;"></textarea>
-            </div>
-            <div id="edit-prix-row" class="form-group" style="margin-bottom:16px;">
-                <label for="edit-prix" class="form-label">Prix (€)</label>
-                <input type="number" id="edit-prix" class="form-input" step="0.01" min="0">
-            </div>
-            <div class="form-group" style="margin-bottom:24px;">
-                <label for="edit-mode" class="form-label">Mode de remise</label>
-                <select id="edit-mode" class="form-input">
-                    <option value="main_propre">En main propre</option>
-                    <option value="conteneur">Via conteneur</option>
-                </select>
-            </div>
-            <p style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--cherry);margin-bottom:16px;">La modification repasse l'annonce en attente de validation.</p>
-            <button type="submit" class="btn btn-primary btn-block">Enregistrer les modifications</button>
-        </form>
     </div>
 </div>
 @endsection
@@ -252,7 +205,6 @@ async function loadProfile() {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('profile-content').style.display = 'block';
 
-        // Fill profile info
         document.getElementById('display-name').textContent = userData.prenom + ' ' + userData.nom;
         document.getElementById('display-role').textContent = userData.role;
         document.getElementById('avatar-initials').textContent = (userData.prenom[0] || '') + (userData.nom[0] || '');
@@ -267,111 +219,42 @@ async function loadProfile() {
         document.getElementById('val-adresse').textContent = userData.adresse_complete || 'Non renseigne';
         document.getElementById('val-date').textContent = new Date(userData.date_creation).toLocaleDateString('fr-FR');
 
-        // Score (detail complet via endpoint dedie)
         document.getElementById('score-value').textContent = userData.upcycling_score || 0;
         loadScore();
 
-        // Notifications
         document.getElementById('notif-push').checked = userData.notif_push_active;
         document.getElementById('notif-email').checked = userData.notif_email_active;
-
-        // Load events
-        loadEvents();
-        loadAnnonces();
     } catch (err) {
         showAlert('Erreur de chargement du profil', 'error');
     }
 }
 
-const ANNONCE_STATUTS = {
-    en_attente: { label: 'En attente', cls: 'badge-waiting' },
-    validee:    { label: 'Validee',    cls: 'badge-valid' },
-    refusee:    { label: 'Refusee',    cls: 'badge-cherry' },
-    vendue:     { label: 'Vendue',     cls: 'badge-valid' },
-    annulee:    { label: 'Annulee',    cls: 'badge-waiting' },
-    retiree:    { label: 'Retiree',    cls: 'badge-waiting' }
-};
-
-function escapeHtml(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+function togglePwdForm() {
+    const f = document.getElementById('pwd-form');
+    if (!f) return;
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    if (f.style.display === 'none') f.reset();
 }
 
-async function loadAnnonces() {
-    const container = document.getElementById('annonces-container');
-    try {
-        const resp = await apiFetch('/api/v1/annonces/me');
-        if (!resp) return;
-        const annonces = await resp.json();
-
-        if (!annonces || annonces.length === 0) {
-            container.innerHTML = '<p style="text-align: center; padding: 20px; font-family: \'DM Mono\', monospace; color: rgba(18,3,9,0.5);">Vous n\'avez publie aucune annonce</p>';
-            return;
-        }
-
-        let html = '<div class="table-container"><table><thead><tr><th></th><th>Titre</th><th>Type</th><th>Prix</th><th>Statut</th><th>Date</th><th></th></tr></thead><tbody>';
-        annonces.forEach(a => {
-            const st = ANNONCE_STATUTS[a.statut] || { label: a.statut, cls: 'badge-waiting' };
-            const date = new Date(a.date_creation).toLocaleDateString('fr-FR');
-            const prix = a.type_annonce === 'don' ? 'Gratuit' : (parseFloat(a.prix || 0).toFixed(2) + ' €');
-            const thumb = a.photo
-                ? '<img src="/uploads/' + escapeHtml(a.photo) + '" alt="" style="width:48px;height:48px;object-fit:cover;border:1px solid rgba(18,3,9,0.15);">'
-                : '<div style="width:48px;height:48px;background:var(--wheat);"></div>';
-            const refus = (a.statut === 'refusee' && a.motif_refus)
-                ? '<div style="font-size:0.75rem;color:var(--cherry);margin-top:4px;">Motif : ' + escapeHtml(a.motif_refus) + '</div>' : '';
-            const cancelBtn = a.statut === 'en_attente'
-                ? '<button type="button" class="btn-cancel-annonce" data-id="' + a.id_annonce + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--cherry);background:none;border:1px solid var(--cherry);padding:4px 10px;cursor:pointer;">Annuler</button>'
-                : '';
-            const editBtn = (a.statut === 'en_attente' || a.statut === 'validee')
-                ? '<button type="button" class="btn-edit-annonce" data-id="' + a.id_annonce + '" data-titre="' + escapeHtml(a.titre) + '" data-description="' + escapeHtml(a.description || '') + '" data-prix="' + (a.prix || '') + '" data-mode="' + (a.mode_remise || '') + '" data-type="' + a.type_annonce + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--teal);background:none;border:1px solid var(--teal);padding:4px 10px;cursor:pointer;margin-right:6px;">Modifier</button>'
-                : '';
-            html += '<tr>'
-                + '<td>' + thumb + '</td>'
-                + '<td><a href="/annonces/' + a.id_annonce + '" style="text-decoration:none;font-weight:600;">' + escapeHtml(a.titre) + '</a>' + refus + '</td>'
-                + '<td>' + (a.type_annonce === 'don' ? 'Don' : 'Vente') + '</td>'
-                + '<td>' + prix + '</td>'
-                + '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td>'
-                + '<td>' + date + '</td>'
-                + '<td>' + editBtn + cancelBtn + '</td>'
-                + '</tr>';
-        });
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-
-        container.querySelectorAll('.btn-cancel-annonce').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (!await confirmAction('Annuler cette annonce ? Cette action est définitive.')) return;
-                btn.disabled = true;
-                const resp = await apiFetch('/api/v1/annonces/' + btn.dataset.id + '/annuler', {
-                    method: 'POST',
-                    body: JSON.stringify({ motif_retrait: 'Annulee par le vendeur' })
-                });
-                if (resp && resp.ok) {
-                    showAlert('Annonce annulee', 'success');
-                    loadAnnonces();
-                } else {
-                    btn.disabled = false;
-                    const d = resp ? await resp.json() : {};
-                    showAlert(d.erreur || 'Annulation impossible', 'error');
-                }
-            });
-        });
-        container.querySelectorAll('.btn-edit-annonce').forEach(btn => {
-            btn.addEventListener('click', () => openEditModal(btn));
-        });
-    } catch (err) {
-        container.innerHTML = '<p style="color: var(--cherry);">Erreur de chargement</p>';
+async function changePassword(e) {
+    e.preventDefault();
+    const oldp = document.getElementById('pwd-old').value;
+    const newp = document.getElementById('pwd-new').value;
+    const conf = document.getElementById('pwd-confirm').value;
+    if (newp.length < 8) { showAlert('Le nouveau mot de passe doit faire au moins 8 caractères', 'error'); return; }
+    if (newp !== conf) { showAlert('Les deux mots de passe ne correspondent pas', 'error'); return; }
+    if (newp === oldp) { showAlert('Le nouveau mot de passe doit être différent de l\'ancien', 'error'); return; }
+    const resp = await apiFetch('/api/v1/utilisateurs/me/password', {
+        method: 'PUT',
+        body: JSON.stringify({ ancien_mot_de_passe: oldp, nouveau_mot_de_passe: newp })
+    });
+    if (resp && resp.ok) {
+        showAlert('Mot de passe modifié avec succès', 'success');
+        togglePwdForm();
+    } else {
+        const d = resp ? await resp.json() : {};
+        showAlert(d.erreur || 'Erreur lors de la modification', 'error');
     }
-}
-
-function openEditModal(btn) {
-    const isVente = btn.dataset.type === 'vente';
-    document.getElementById('edit-annonce-id').value = btn.dataset.id;
-    document.getElementById('edit-titre').value = btn.dataset.titre;
-    document.getElementById('edit-description').value = btn.dataset.description;
-    document.getElementById('edit-prix').value = btn.dataset.prix;
-    document.getElementById('edit-mode').value = btn.dataset.mode;
-    document.getElementById('edit-prix-row').style.display = isVente ? 'block' : 'none';
-    document.getElementById('modal-edit-annonce').style.display = 'flex';
 }
 
 async function deleteMyAccount() {
@@ -384,66 +267,6 @@ async function deleteMyAccount() {
     } else {
         const d = resp ? await resp.json() : {};
         showAlert(d.erreur || 'Erreur lors de la suppression', 'error');
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('modal-edit-annonce-close').addEventListener('click', () => {
-        document.getElementById('modal-edit-annonce').style.display = 'none';
-    });
-    document.getElementById('modal-edit-annonce').addEventListener('click', function(e) {
-        if (e.target === this) this.style.display = 'none';
-    });
-    document.getElementById('form-edit-annonce').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const id = document.getElementById('edit-annonce-id').value;
-        const body = {
-            titre: document.getElementById('edit-titre').value.trim(),
-            description: document.getElementById('edit-description').value.trim(),
-            mode_remise: document.getElementById('edit-mode').value,
-        };
-        const prixVal = document.getElementById('edit-prix').value;
-        if (prixVal) body.prix = parseFloat(prixVal);
-        const btn = this.querySelector('button[type=submit]');
-        btn.disabled = true;
-        const resp = await apiFetch('/api/v1/annonces/' + id, { method: 'PUT', body: JSON.stringify(body) });
-        btn.disabled = false;
-        if (resp && resp.ok) {
-            document.getElementById('modal-edit-annonce').style.display = 'none';
-            showAlert('Annonce mise a jour — repassee en attente de validation', 'success');
-            loadAnnonces();
-        } else {
-            const d = resp ? await resp.json() : {};
-            showAlert(d.erreur || 'Erreur lors de la modification', 'error');
-        }
-    });
-});
-
-async function loadEvents() {
-    try {
-        const resp = await apiFetch('/api/v1/utilisateurs/me/evenements-inscrits');
-        if (!resp) return;
-        const events = await resp.json();
-        const container = document.getElementById('events-container');
-
-        if (events.length === 0) {
-            container.innerHTML = '<p style="text-align: center; padding: 20px; font-family: \'DM Mono\', monospace; color: rgba(18,3,9,0.5);">Vous n\'etes inscrit a aucun evenement</p>';
-            return;
-        }
-
-        let html = '<div class="table-container"><table><thead><tr><th>Titre</th><th>Date</th><th>Statut</th><th></th></tr></thead><tbody>';
-        events.forEach(ev => {
-            const date = new Date(ev.date_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-            const payeBadge = ev.statut_paiement === 'paye'
-                ? '<span class="badge badge-valid">Payé</span>'
-                : '<span class="badge badge-waiting">' + ev.statut_paiement + '</span>';
-            const billetBtn = '<a href="' + (typeof API_BASE !== 'undefined' ? '' : '') + '/evenements/' + ev.id_evenement + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--teal);text-decoration:none;border:1px solid var(--teal);padding:3px 8px;">Voir</a>';
-            html += '<tr><td style="font-weight:600;">' + escapeHtml(ev.titre) + '</td><td style="white-space:nowrap;">' + date + '</td><td>' + payeBadge + '</td><td>' + billetBtn + '</td></tr>';
-        });
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    } catch (err) {
-        document.getElementById('events-container').innerHTML = '<p style="color: var(--cherry);">Erreur de chargement</p>';
     }
 }
 
@@ -483,7 +306,7 @@ async function loadScore() {
                 const cert = p.confere_certification ? ' &#10003;' : '';
                 return '<div class="ladder-item' + (reached ? ' reached' : '') + '">'
                     + '<span class="ladder-dot" style="background:' + (reached ? (p.couleur || 'var(--forest)') : 'transparent') + ';"></span>'
-                    + '<span class="ladder-name">' + escapeHtml(p.nom) + cert + '</span>'
+                    + '<span class="ladder-name">' + (p.nom || '') + cert + '</span>'
                     + '<span class="ladder-seuil">' + p.seuil_min + '</span>'
                     + '</div>';
             }).join('');
@@ -498,6 +321,7 @@ function toggleEdit() {
     if (isEditing) {
         card.classList.add('editing');
         document.getElementById('edit-toggle').textContent = 'Annuler';
+        document.getElementById('edit-buttons').style.display = 'flex';
         document.getElementById('save-btn').style.display = 'inline-flex';
         document.getElementById('cancel-btn').style.display = 'inline-flex';
 
@@ -514,6 +338,7 @@ function cancelEdit() {
     profilePhotoB64 = null;
     document.getElementById('info-card').classList.remove('editing');
     document.getElementById('edit-toggle').textContent = 'Modifier';
+    document.getElementById('edit-buttons').style.display = 'none';
     document.getElementById('save-btn').style.display = 'none';
     document.getElementById('cancel-btn').style.display = 'none';
 }
@@ -608,71 +433,6 @@ async function downloadPDF() {
     }
 }
 
-async function loadCommandes() {
-    const container = document.getElementById('commandes-container');
-    try {
-        const resp = await apiFetch('/api/v1/commandes/me');
-        if (!resp || !resp.ok) { container.innerHTML = ''; return; }
-        const commandes = await resp.json();
-        if (!commandes || commandes.length === 0) {
-            container.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;padding:12px 0;">Aucun achat pour le moment</p>';
-            return;
-        }
-        const STATUTS = { commandee:'Commandée', deposee:'Déposée', en_conteneur:'En conteneur', recuperee:'Récupérée', annulee:'Annulée' };
-        const STATUT_COLORS = { commandee:'#fff4d6', deposee:'#e3eefd', en_conteneur:'#e3eefd', recuperee:'#dff5e1', annulee:'#fde2e2' };
-        const recent = commandes.slice(0, 5);
-        container.innerHTML = recent.map(c => {
-            const st = STATUTS[c.statut] || c.statut;
-            const bg = STATUT_COLORS[c.statut] || '#eee';
-            const prix = c.type_annonce === 'don' ? 'Gratuit' : parseFloat(c.prix).toFixed(2).replace('.', ',') + ' €';
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(18,3,9,0.08);">
-                <div>
-                    <a href="/annonces/${c.id_annonce}" style="font-weight:600;font-size:0.9rem;text-decoration:none;">${c.titre.substring(0,40)}${c.titre.length>40?'…':''}</a>
-                    <p style="font-family:'DM Mono',monospace;font-size:0.68rem;opacity:0.5;margin-top:2px;">#${c.id_commande} · ${new Date(c.date_commande).toLocaleDateString('fr-FR')}</p>
-                </div>
-                <div style="display:flex;gap:10px;align-items:center;">
-                    <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--cherry);">${prix}</span>
-                    <span style="background:${bg};font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;padding:3px 8px;border:1px solid rgba(18,3,9,0.15);">${st}</span>
-                </div>
-            </div>`;
-        }).join('');
-    } catch(e) {
-        container.innerHTML = '';
-    }
-}
-
-async function loadReservations() {
-    const container = document.getElementById('reservations-container');
-    try {
-        const resp = await apiFetch('/api/v1/utilisateurs/me/reservations');
-        if (!resp || !resp.ok) { container.innerHTML = ''; return; }
-        const items = await resp.json();
-        if (!items || items.length === 0) {
-            container.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;padding:12px 0;">Aucune réservation pour le moment</p>';
-            return;
-        }
-        const STATUTS = { en_attente: 'En attente', confirme: 'Confirmée', annule: 'Annulée' };
-        container.innerHTML = items.map(r => {
-            const d = new Date(r.date_debut).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
-            const st = STATUTS[r.statut_paiement] || r.statut_paiement;
-            const prix = r.prix === 0 ? 'Gratuit' : parseFloat(r.prix).toFixed(2).replace('.', ',') + ' €';
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(18,3,9,0.08);">
-                <div>
-                    <a href="/formations/${r.id_catalogue_item}" style="font-weight:600;font-size:0.9rem;text-decoration:none;">${r.titre}</a>
-                    <p style="font-family:'DM Mono',monospace;font-size:0.68rem;opacity:0.5;margin-top:2px;">${r.categorie} · ${d}${r.lieu ? ' · ' + r.lieu : ''}</p>
-                </div>
-                <div style="display:flex;gap:10px;align-items:center;">
-                    <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--cherry);">${prix}</span>
-                    <span style="font-family:'DM Mono',monospace;font-size:0.68rem;text-transform:uppercase;padding:3px 8px;border:1px solid rgba(18,3,9,0.15);">${st}</span>
-                </div>
-            </div>`;
-        }).join('');
-    } catch(e) {
-        container.innerHTML = '';
-    }
-}
-
-// Load on page ready
-document.addEventListener('DOMContentLoaded', () => { loadProfile(); loadCommandes(); loadReservations(); });
+document.addEventListener('DOMContentLoaded', loadProfile);
 </script>
 @endsection

@@ -5,10 +5,52 @@ import (
 	"api/internal/services"
 	"api/pkg/database"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
+
+// notifyAcheteurDepot prévient l'acheteur (pro) par email que son objet est
+// arrivé en conteneur et prêt à être récupéré (complément au push OneSignal,
+// utile en local et si le pro n'a pas activé les push).
+func notifyAcheteurDepot(idCommande int) {
+	var email, titre, conteneurRef, adresse, ville, limite string
+	err := database.DB.QueryRow(`
+		SELECT u.email, a.titre,
+		       COALESCE(cn.conteneur_ref,''), COALESCE(cn.adresse,''), COALESCE(cn.ville,''),
+		       COALESCE(DATE_FORMAT(c.date_limite_recuperation, '%d/%m/%Y'), '')
+		FROM commandes c
+		JOIN utilisateurs u ON u.id_utilisateur = c.id_acheteur
+		JOIN annonces a ON a.id_annonce = c.id_annonce
+		LEFT JOIN conteneurs cn ON cn.id_conteneur = c.id_conteneur
+		WHERE c.id_commande = ?`, idCommande).Scan(&email, &titre, &conteneurRef, &adresse, &ville, &limite)
+	if err != nil {
+		log.Printf("[notifyAcheteurDepot] récupération cmd %d: %v", idCommande, err)
+		return
+	}
+	lieu := strings.TrimSpace(adresse)
+	if ville != "" {
+		if lieu != "" {
+			lieu += ", "
+		}
+		lieu += ville
+	}
+	subject := "Votre objet est prêt à être récupéré — " + titre
+	body := "Bonjour,\n\nVotre commande \"" + titre + "\" est arrivée dans le conteneur " + conteneurRef
+	if lieu != "" {
+		body += " (" + lieu + ")"
+	}
+	body += ".\n"
+	if limite != "" {
+		body += "Vous avez jusqu'au " + limite + " pour la récupérer.\n"
+	}
+	body += "\nRendez-vous dans votre espace pro (Mes conteneurs) pour valider la réception avec le code-barre.\n\nL'équipe UpcycleConnect"
+	if err := services.SendSimpleEmail(email, subject, body); err != nil {
+		log.Printf("[notifyAcheteurDepot] envoi email: %v", err)
+	}
+}
 
 // loadPhotosConteneur retourne les photos d'un conteneur (ordonnées).
 func loadPhotosConteneur(idConteneur int) []models.PhotoConteneur {
@@ -258,6 +300,8 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 				services.NotifierObjetsEnConteneur(playerID, cmdID, conteneurRef)
 			}
 		}(idCommande)
+		// Email de complément (toujours envoyé, indispensable en local).
+		go notifyAcheteurDepot(idCommande)
 
 	case "recuperation_pro":
 		// La récupération est normalement en self-scan côté pro. Ici l'admin peut

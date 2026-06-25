@@ -28,14 +28,14 @@
     <header class="lp-hero">
         <div class="lp-wrap lp-hero__grid">
             <div>
-                <p class="lp-kicker"><span class="lp-tag">Plateforme française · économie circulaire</span></p>
-                <h1 class="lp-hero__title">Donne une <span class="lp-hl lp-hl--cherry">seconde vie</span> à <span class="lp-hl lp-hl--forest">tout.</span></h1>
-                <p class="lp-lead">Vends, donne ou échange tes objets et matériaux. Apprends l'upcycling avec des passionnés. Rejoins une communauté qui transforme les déchets des uns en trésors des autres.</p>
+                <p class="lp-kicker"><span class="lp-tag" data-i18n="home.hero.kicker">Plateforme française · économie circulaire</span></p>
+                <h1 class="lp-hero__title" data-i18n-html="home.hero.title">Donne une <span class="lp-hl lp-hl--cherry">seconde vie</span> à <span class="lp-hl lp-hl--forest">tout.</span></h1>
+                <p class="lp-lead" data-i18n="home.hero.lead">Vends, donne ou échange tes objets et matériaux. Apprends l'upcycling avec des passionnés. Rejoins une communauté qui transforme les déchets des uns en trésors des autres.</p>
                 <div class="lp-hero__ctas">
-                    <a class="btn" href="{{ route('particulier.register') }}">Je m'inscris gratuitement</a>
-                    <a class="btn btn--ghost" href="{{ route('annonces.index') }}">Explorer le marché &darr;</a>
+                    <a class="btn" href="{{ route('particulier.register') }}" data-i18n="home.hero.cta1">Je m'inscris gratuitement</a>
+                    <a class="btn btn--ghost" href="{{ route('annonces.index') }}" data-i18n-html="home.hero.cta2">Explorer le marché &darr;</a>
                 </div>
-                <p class="lp-hero__note">// inscription gratuite · sans engagement · sans carte bancaire</p>
+                <p class="lp-hero__note" data-i18n="home.hero.note">// inscription gratuite · sans engagement · sans carte bancaire</p>
             </div>
 
             <div class="lp-hero__card-zone">
@@ -86,10 +86,10 @@
     {{-- ============ STATS ============ --}}
     <section class="lp-stats" aria-label="Notre impact">
         <div class="lp-wrap lp-stats__grid">
-            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['objets_sauves'] ?? 0) }}">0</b><span>objets sauvés de la benne</span></div>
-            <div class="lp-stat reveal"><b data-count="48" data-suffix=" t">0</b><span>de CO&#8322; évité cette année</span></div>
-            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['membres'] ?? 0) }}">0</b><span>membres actifs</span></div>
-            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['ateliers_an'] ?? 0) }}">0</b><span>ateliers organisés</span></div>
+            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['objets_sauves'] ?? 0) }}">0</b><span data-i18n="home.stats.objets">objets sauvés de la benne</span></div>
+            <div class="lp-stat reveal"><b data-count="48" data-suffix=" t">0</b><span data-i18n-html="home.stats.co2">de CO&#8322; évité cette année</span></div>
+            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['membres'] ?? 0) }}">0</b><span data-i18n="home.stats.membres">membres actifs</span></div>
+            <div class="lp-stat reveal"><b data-count="{{ (int)($stats['ateliers_an'] ?? 0) }}">0</b><span data-i18n="home.stats.ateliers">ateliers organisés</span></div>
         </div>
     </section>
 
@@ -97,14 +97,14 @@
     <section class="lp-marche" id="marche">
         <div class="lp-wrap">
             <div class="lp-sec-head reveal">
-                <h2>Le marché de la <em>récup'</em></h2>
-                <span class="lp-tag">Vendre · Donner · Échanger</span>
+                <h2 data-i18n-html="home.market.title">Le marché de la <em>récup'</em></h2>
+                <span class="lp-tag" data-i18n="home.market.tag">Vendre · Donner · Échanger</span>
             </div>
 
             <div class="lp-filtres" role="toolbar" aria-label="Filtrer les annonces">
-                <button class="lp-chip on" data-filtre="tout">Tout voir</button>
-                <button class="lp-chip" data-filtre="vente">À vendre</button>
-                <button class="lp-chip" data-filtre="don">À donner</button>
+                <button class="lp-chip on" data-filtre="tout" data-i18n="home.market.all">Tout voir</button>
+                <button class="lp-chip" data-filtre="vente" data-i18n="home.market.forsale">À vendre</button>
+                <button class="lp-chip" data-filtre="don" data-i18n="home.market.fordonation">À donner</button>
             </div>
 
             @if(count($annonces) > 0)
@@ -141,13 +141,13 @@
             </div>
             @else
             <div class="lp-empty">
-                <p>Aucune annonce pour le moment.</p>
-                <a class="btn" href="{{ route('particulier.register') }}">Être le premier à déposer</a>
+                <p data-i18n="home.market.empty">Aucune annonce pour le moment.</p>
+                <a class="btn" href="{{ route('particulier.register') }}" data-i18n="home.market.first">Être le premier à déposer</a>
             </div>
             @endif
 
             <div class="lp-sec-cta">
-                <a class="btn btn--ghost" href="{{ route('annonces.index') }}">Voir tout le marché &rarr;</a>
+                <a class="btn btn--ghost" href="{{ route('annonces.index') }}" data-i18n-html="home.market.seeall">Voir tout le marché &rarr;</a>
             </div>
         </div>
     </section>
@@ -165,45 +165,45 @@
     <section class="lp-piliers" id="communaute">
         <div class="lp-wrap">
             <div class="lp-sec-head reveal">
-                <h2>Bien plus qu'une <em>marketplace</em></h2>
-                <span class="lp-tag">Apprendre · Partager · Progresser</span>
+                <h2 data-i18n-html="home.pillars.title">Bien plus qu'une <em>marketplace</em></h2>
+                <span class="lp-tag" data-i18n="home.pillars.tag">Apprendre · Partager · Progresser</span>
             </div>
             <div class="lp-grille lp-grille--2">
                 <a class="lp-pilier reveal" href="{{ route('forum.index') }}">
                     <h3>
                         <span class="lp-pic">
                             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2.678 11.894a1 1 0 0 1 .287.801 10.97 10.97 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8.06 8.06 0 0 0 8 14c3.996 0 7-2.807 7-6 0-3.192-3.004-6-7-6S1 4.808 1 8c0 1.468.617 2.83 1.678 3.894zm-.493 3.905a21.682 21.682 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a9.68 9.68 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105z"/></svg>
-                        </span>Le forum d'entraide
+                        </span><span data-i18n="home.pillar.forum.title">Le forum d'entraide</span>
                     </h3>
-                    <p>Une question sur la restauration d'un meuble ? Un doute sur une peinture ? La communauté répond : bricoleurs du dimanche, artisans confirmés et passionnés de récup' s'entraident tous les jours.</p>
-                    <span class="lp-tag">Rejoindre les discussions &rarr;</span>
+                    <p data-i18n="home.pillar.forum.desc">Une question sur la restauration d'un meuble ? Un doute sur une peinture ? La communauté répond : bricoleurs du dimanche, artisans confirmés et passionnés de récup' s'entraident tous les jours.</p>
+                    <span class="lp-tag" data-i18n-html="home.pillar.forum.cta">Rejoindre les discussions &rarr;</span>
                 </a>
-                <a class="lp-pilier reveal" href="{{ route('formations.index') }}">
+                <a class="lp-pilier reveal" href="{{ route('evenements.index') }}">
                     <h3>
                         <span class="lp-pic">
                             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.282-.12a.5.5 0 0 0 .025-.917l-7.5-3.5ZM8 8.46 1.758 5.965 8 3.052l6.242 2.913L8 8.46Z"/><path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466 4.176 9.032Z"/></svg>
-                        </span>Formations &amp; ateliers
+                        </span><span data-i18n="home.pillar.training.title">Formations &amp; ateliers</span>
                     </h3>
-                    <p>Des ateliers en ligne et en présentiel pour apprendre à transformer : menuiserie de récup', couture zéro déchet, soudure, rempaillage… Animés par des pros de la plateforme.</p>
-                    <span class="lp-tag">Voir le catalogue &rarr;</span>
+                    <p data-i18n="home.pillar.training.desc">Des ateliers en ligne et en présentiel pour apprendre à transformer : menuiserie de récup', couture zéro déchet, soudure, rempaillage… Animés par des pros de la plateforme.</p>
+                    <span class="lp-tag" data-i18n-html="home.pillar.training.cta">Voir le catalogue &rarr;</span>
                 </a>
                 <a class="lp-pilier reveal" href="{{ route('ressources.index') }}">
                     <h3>
                         <span class="lp-pic">
                             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5Zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Z"/><path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2Z"/><path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1Z"/></svg>
-                        </span>Ressources &amp; articles
+                        </span><span data-i18n="home.pillar.resources.title">Ressources &amp; articles</span>
                     </h3>
-                    <p>Guides pratiques, tutos pas-à-pas et idées de projets pour passer à l'action : identifier un bois, chiner malin, réparer plutôt que jeter. Du concret, sans blabla.</p>
-                    <span class="lp-tag">Lire les guides &rarr;</span>
+                    <p data-i18n="home.pillar.resources.desc">Guides pratiques, tutos pas-à-pas et idées de projets pour passer à l'action : identifier un bois, chiner malin, réparer plutôt que jeter. Du concret, sans blabla.</p>
+                    <span class="lp-tag" data-i18n-html="home.pillar.resources.cta">Lire les guides &rarr;</span>
                 </a>
                 <a class="lp-pilier reveal" href="{{ route('annonces.index') }}">
                     <h3>
                         <span class="lp-pic">
                             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"/><path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
-                        </span>Le réseau local
+                        </span><span data-i18n="home.pillar.local.title">Le réseau local</span>
                     </h3>
-                    <p>Trouve les annonces, ateliers et événements près de chez toi. L'upcycling, c'est d'abord du circuit court : moins de transport, plus de rencontres.</p>
-                    <span class="lp-tag">Explorer ma région &rarr;</span>
+                    <p data-i18n="home.pillar.local.desc">Trouve les annonces, ateliers et événements près de chez toi. L'upcycling, c'est d'abord du circuit court : moins de transport, plus de rencontres.</p>
+                    <span class="lp-tag" data-i18n-html="home.pillar.local.cta">Explorer ma région &rarr;</span>
                 </a>
             </div>
         </div>
@@ -213,24 +213,24 @@
     <section class="lp-etapes" id="etapes">
         <div class="lp-wrap">
             <div class="lp-sec-head reveal">
-                <h2>Comment ça <em>marche</em> ?</h2>
-                <span class="lp-tag">3 étapes · 5 minutes</span>
+                <h2 data-i18n-html="home.steps.title">Comment ça <em>marche</em> ?</h2>
+                <span class="lp-tag" data-i18n="home.steps.tag">3 étapes · 5 minutes</span>
             </div>
             <div class="lp-grille lp-grille--3">
                 <article class="lp-etape reveal">
                     <div class="lp-num">1</div>
-                    <h3>Crée ton compte</h3>
-                    <p>Inscription gratuite en 2 minutes. Particulier ou pro, chacun a sa place. Pas de carte bancaire demandée.</p>
+                    <h3 data-i18n="home.step1.title">Crée ton compte</h3>
+                    <p data-i18n="home.step1.desc">Inscription gratuite en 2 minutes. Particulier ou pro, chacun a sa place. Pas de carte bancaire demandée.</p>
                 </article>
                 <article class="lp-etape reveal">
                     <div class="lp-num">2</div>
-                    <h3>Publie ou chine</h3>
-                    <p>Poste une annonce en quelques clics — vente ou don — ou explore les trouvailles près de chez toi.</p>
+                    <h3 data-i18n="home.step2.title">Publie ou chine</h3>
+                    <p data-i18n="home.step2.desc">Poste une annonce en quelques clics — vente ou don — ou explore les trouvailles près de chez toi.</p>
                 </article>
                 <article class="lp-etape reveal">
                     <div class="lp-num">3</div>
-                    <h3>Transforme &amp; partage</h3>
-                    <p>Donne une seconde vie à ta trouvaille, montre le résultat à la communauté et inspire les suivants.</p>
+                    <h3 data-i18n-html="home.step3.title">Transforme &amp; partage</h3>
+                    <p data-i18n="home.step3.desc">Donne une seconde vie à ta trouvaille, montre le résultat à la communauté et inspire les suivants.</p>
                 </article>
             </div>
         </div>
@@ -240,34 +240,34 @@
     <section class="lp-pro" id="pro">
         <div class="lp-wrap">
             <div class="lp-sec-head reveal">
-                <h2>Artisans &amp; pros, <em>c'est par ici</em></h2>
-                <span class="lp-tag lp-tag--wheat">Boutique · Visibilité · Outils</span>
+                <h2 data-i18n-html="home.pro.title">Artisans &amp; pros, <em>c'est par ici</em></h2>
+                <span class="lp-tag lp-tag--wheat" data-i18n="home.pro.tag">Boutique · Visibilité · Outils</span>
             </div>
             <div class="lp-tickets">
                 <article class="lp-ticket lp-ticket--a reveal">
                     <h3 class="lp-plan">Essential Pro</h3>
-                    <div class="lp-tarif">15,99&euro;<small>/mois</small></div>
-                    <span class="lp-mono lp-ticket__sub">Pour se lancer sérieusement</span>
+                    <div class="lp-tarif">15,99&euro;<small data-i18n="home.pro.permonth">/mois</small></div>
+                    <span class="lp-mono lp-ticket__sub" data-i18n="home.pro.essential.sub">Pour se lancer sérieusement</span>
                     <ul>
-                        <li>Dashboard 30 jours</li>
-                        <li>3 alertes matériaux géolocalisées</li>
-                        <li>Statistiques locales</li>
-                        <li>Badge « Pro vérifié »</li>
+                        <li data-i18n="home.pro.essential.f1">Dashboard 30 jours</li>
+                        <li data-i18n="home.pro.essential.f2">3 alertes matériaux géolocalisées</li>
+                        <li data-i18n="home.pro.essential.f3">Statistiques locales</li>
+                        <li data-i18n="home.pro.essential.f4">Badge « Pro vérifié »</li>
                     </ul>
-                    <a class="btn btn--forest" href="{{ route('services-pro') }}">Découvrir l'offre</a>
+                    <a class="btn btn--forest" href="{{ route('services-pro') }}" data-i18n="home.pro.cta">Découvrir l'offre</a>
                 </article>
                 <article class="lp-ticket lp-ticket--b reveal">
-                    <span class="lp-tag lp-ticket__pop">Le + populaire</span>
+                    <span class="lp-tag lp-ticket__pop" data-i18n="home.pro.popular">Le + populaire</span>
                     <h3 class="lp-plan">Expert Pro</h3>
-                    <div class="lp-tarif">29,99&euro;<small>/mois</small></div>
-                    <span class="lp-mono lp-ticket__sub">Pour développer son activité</span>
+                    <div class="lp-tarif">29,99&euro;<small data-i18n="home.pro.permonth">/mois</small></div>
+                    <span class="lp-mono lp-ticket__sub" data-i18n="home.pro.expert.sub">Pour développer son activité</span>
                     <ul>
-                        <li>Tout Essential Pro, et&nbsp;:</li>
-                        <li>Alertes matériaux illimitées</li>
-                        <li>Badges communautaires</li>
-                        <li>Export PDF annuel</li>
+                        <li data-i18n="home.pro.expert.f1">Tout Essential Pro, et&nbsp;:</li>
+                        <li data-i18n="home.pro.expert.f2">Alertes matériaux illimitées</li>
+                        <li data-i18n="home.pro.expert.f3">Badges communautaires</li>
+                        <li data-i18n="home.pro.expert.f4">Export PDF annuel</li>
                     </ul>
-                    <a class="btn" href="{{ route('services-pro') }}">Découvrir l'offre</a>
+                    <a class="btn" href="{{ route('services-pro') }}" data-i18n="home.pro.cta">Découvrir l'offre</a>
                 </article>
             </div>
         </div>
@@ -277,21 +277,21 @@
     <section class="lp-temoins">
         <div class="lp-wrap">
             <div class="lp-sec-head reveal">
-                <h2>Ils ont <em>sauvé</em> des trésors</h2>
-                <span class="lp-tag">La communauté témoigne</span>
+                <h2 data-i18n-html="home.reviews.title">Ils ont <em>sauvé</em> des trésors</h2>
+                <span class="lp-tag" data-i18n="home.reviews.tag">La communauté témoigne</span>
             </div>
             <div class="lp-grille lp-grille--3">
                 <article class="lp-temoin reveal">
-                    <q>J'ai meublé tout mon atelier avec des matériaux trouvés ici. Et j'ai rencontré deux clients fidèles au passage.</q>
-                    <div class="lp-qui"><span class="lp-avatar">SK</span><div><b>Sarah K.</b><span>Ébéniste · Montreuil</span></div></div>
+                    <q data-i18n="home.review1.text">J'ai meublé tout mon atelier avec des matériaux trouvés ici. Et j'ai rencontré deux clients fidèles au passage.</q>
+                    <div class="lp-qui"><span class="lp-avatar">SK</span><div><b>Sarah K.</b><span data-i18n="home.review1.role">Ébéniste · Montreuil</span></div></div>
                 </article>
                 <article class="lp-temoin reveal">
-                    <q>Le forum m'a sauvé : je ne savais pas par où commencer pour restaurer ma commode. Trois réponses en une heure.</q>
-                    <div class="lp-qui"><span class="lp-avatar lp-avatar--teal">YB</span><div><b>Yanis B.</b><span>Débutant motivé · Lyon</span></div></div>
+                    <q data-i18n="home.review2.text">Le forum m'a sauvé : je ne savais pas par où commencer pour restaurer ma commode. Trois réponses en une heure.</q>
+                    <div class="lp-qui"><span class="lp-avatar lp-avatar--teal">YB</span><div><b>Yanis B.</b><span data-i18n="home.review2.role">Débutant motivé · Lyon</span></div></div>
                 </article>
                 <article class="lp-temoin reveal">
-                    <q>Plutôt que de payer la déchetterie, je donne mes chutes de chantier. Elles partent en 48h et font des heureux.</q>
-                    <div class="lp-qui"><span class="lp-avatar lp-avatar--cherry">ML</span><div><b>Marc L.</b><span>Menuisier · Nantes</span></div></div>
+                    <q data-i18n="home.review3.text">Plutôt que de payer la déchetterie, je donne mes chutes de chantier. Elles partent en 48h et font des heureux.</q>
+                    <div class="lp-qui"><span class="lp-avatar lp-avatar--cherry">ML</span><div><b>Marc L.</b><span data-i18n="home.review3.role">Menuisier · Nantes</span></div></div>
                 </article>
             </div>
         </div>
@@ -308,13 +308,13 @@
     {{-- ============ CTA FINAL ============ --}}
     <section class="lp-final" id="rejoindre">
         <div class="lp-wrap">
-            <h2>Prêt&middot;e à <span class="lp-hl">chiner</span> ?</h2>
-            <p>Rejoins les membres qui réduisent les déchets, valorisent les matériaux et connectent les communautés. C'est gratuit, et ça commence maintenant.</p>
+            <h2 data-i18n-html="home.final.title">Prêt&middot;e à <span class="lp-hl">chiner</span> ?</h2>
+            <p data-i18n="home.final.lead">Rejoins les membres qui réduisent les déchets, valorisent les matériaux et connectent les communautés. C'est gratuit, et ça commence maintenant.</p>
             <form class="lp-final__form" data-register-url="{{ route('particulier.register') }}">
-                <input type="email" placeholder="ton@email.fr" aria-label="Ton adresse email" required>
-                <button class="btn" type="submit">Créer mon compte</button>
+                <input type="email" placeholder="ton@email.fr" aria-label="Ton adresse email" data-i18n-ph="home.final.placeholder" required>
+                <button class="btn" type="submit" data-i18n="home.final.cta">Créer mon compte</button>
             </form>
-            <p class="lp-final__mini">// gratuit pour les particuliers · offres dédiées pour les pros</p>
+            <p class="lp-final__mini" data-i18n="home.final.mini">// gratuit pour les particuliers · offres dédiées pour les pros</p>
         </div>
     </section>
 

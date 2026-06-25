@@ -338,9 +338,10 @@ func StripePaymentIntentEvenement(w http.ResponseWriter, r *http.Request, userId
 
 	var titre string
 	var prix sql.NullFloat64
+	var placesDispo int
 	err := database.DB.QueryRow(`
-		SELECT titre, prix FROM evenements WHERE id_evenement = ? AND statut = 'valide'
-	`, req.IDEvenement).Scan(&titre, &prix)
+		SELECT titre, prix, nb_places_dispo FROM evenements WHERE id_evenement = ? AND statut = 'valide'
+	`, req.IDEvenement).Scan(&titre, &prix, &placesDispo)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "événement introuvable ou non disponible"})
@@ -349,6 +350,11 @@ func StripePaymentIntentEvenement(w http.ResponseWriter, r *http.Request, userId
 	if !prix.Valid || prix.Float64 == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "cet événement est gratuit, utilisez l'inscription directe"})
+		return
+	}
+	if placesDispo <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "plus de places disponibles"})
 		return
 	}
 
@@ -390,6 +396,93 @@ func StripePaymentIntentEvenement(w http.ResponseWriter, r *http.Request, userId
 	pi, err := stripepaymentintent.New(params)
 	if err != nil {
 		log.Printf("Erreur PaymentIntent événement: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur création paiement"})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{
+		"client_secret":  pi.ClientSecret,
+		"payment_intent": pi.ID,
+		"montant":        prix.Float64,
+		"titre":          titre,
+	})
+}
+
+// StripePaymentIntentCatalogue crée un Payment Intent pour une formation payante
+// du catalogue (mirroir de StripePaymentIntentEvenement). La réservation effective
+// est créée par le webhook payment_intent.succeeded (handleCataloguePaid).
+func StripePaymentIntentCatalogue(w http.ResponseWriter, r *http.Request, userId int) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var req struct {
+		IDCatalogueItem int `json:"id_catalogue_item"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "données invalides"})
+		return
+	}
+
+	var titre string
+	var prix sql.NullFloat64
+	var places int
+	err := database.DB.QueryRow(`
+		SELECT titre, prix, nb_places_dispo FROM catalogue_items WHERE id_catalogue_item = ? AND statut = 'publie'
+	`, req.IDCatalogueItem).Scan(&titre, &prix, &places)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "formation introuvable ou non disponible"})
+		return
+	}
+	if !prix.Valid || prix.Float64 == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "cette formation est gratuite, utilisez la réservation directe"})
+		return
+	}
+	if places <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "aucune place disponible"})
+		return
+	}
+
+	var already int
+	database.DB.QueryRow(
+		`SELECT COUNT(*) FROM catalogue_reservations WHERE id_catalogue_item = ? AND id_utilisateur = ? AND statut_paiement != 'annule'`,
+		req.IDCatalogueItem, userId,
+	).Scan(&already)
+	if already > 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "vous avez déjà réservé cette formation"})
+		return
+	}
+
+	amountCents := int64(prix.Float64 * 100)
+
+	customerID, err := getOrCreateStripeCustomer(userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur client Stripe"})
+		return
+	}
+
+	params := &stripe.PaymentIntentParams{
+		Amount:   stripe.Int64(amountCents),
+		Currency: stripe.String("eur"),
+		Customer: stripe.String(customerID),
+		Metadata: map[string]string{
+			"type":              "catalogue",
+			"id_catalogue_item": strconv.Itoa(req.IDCatalogueItem),
+			"id_utilisateur":    strconv.Itoa(userId),
+		},
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
+	}
+
+	pi, err := stripepaymentintent.New(params)
+	if err != nil {
+		log.Printf("Erreur PaymentIntent formation: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur création paiement"})
 		return
@@ -572,6 +665,39 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// creerFacture enregistre une facture légale pour un paiement encaissé.
+// Idempotent : le numéro est dérivé de l'identifiant Stripe (contrainte UNIQUE
+// sur numero_facture) → un webhook rejoué est silencieusement ignoré via
+// INSERT IGNORE. TVA 20 % : montant_ht = montant_ttc / 1.20.
+func creerFacture(idUtilisateur int, montantTTC float64, typeFacture, service, stripeID string) {
+	if idUtilisateur <= 0 || montantTTC <= 0 {
+		return
+	}
+	montantHT := montantTTC / 1.20
+	ref := stripeID
+	if len(ref) > 38 {
+		ref = ref[len(ref)-38:]
+	}
+	prefix := "FAC"
+	switch typeFacture {
+	case "abonnement":
+		prefix = "ABO"
+	case "commande":
+		prefix = "CMD"
+	case "evenement":
+		prefix = "EVT"
+	case "publicite":
+		prefix = "PUB"
+	}
+	numero := prefix + "-" + ref
+	if _, err := database.DB.Exec(`
+		INSERT IGNORE INTO factures (numero_facture, id_utilisateur, montant_ht, montant_ttc, type_facture, service, stripe_payment_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		numero, idUtilisateur, montantHT, montantTTC, typeFacture, service, stripeID); err != nil {
+		log.Printf("[facture] erreur création (%s, user=%d): %v", typeFacture, idUtilisateur, err)
+	}
+}
+
 func handleCheckoutSessionCompleted(event stripe.Event) {
 	var s stripe.CheckoutSession
 	if err := json.Unmarshal(event.Data.Raw, &s); err != nil {
@@ -607,6 +733,14 @@ func handleCheckoutSessionCompleted(event stripe.Event) {
 		VALUES (?, ?, NOW(), TRUE, ?, FALSE)
 	`, userId, idAbonnement, subID)
 
+	// Facture du paiement initial de l'abonnement (les renouvellements sont
+	// facturés par handleInvoicePaymentSucceeded).
+	factRef := subID
+	if factRef == "" {
+		factRef = s.ID
+	}
+	creerFacture(userId, float64(s.AmountTotal)/100, "abonnement", "Abonnement Pro", factRef)
+
 	log.Printf("Souscription créée: user=%d, abonnement=%d, stripe_sub=%s", userId, idAbonnement, subID)
 }
 
@@ -622,6 +756,8 @@ func handlePaymentIntentSucceeded(event stripe.Event) {
 		handleCommandePaid(&pi)
 	case "evenement":
 		handleEvenementPaid(&pi)
+	case "catalogue":
+		handleCataloguePaid(&pi)
 	case "panier":
 		handlePanierPaid(&pi)
 	}
@@ -630,7 +766,19 @@ func handlePaymentIntentSucceeded(event stripe.Event) {
 // insertCommandeWithRetry insère une commande + marque l'annonce vendue en transaction.
 // Retry jusqu'à 3 fois sur deadlock, idempotent grâce à la contrainte UNIQUE (stripe_payment_intent, id_annonce).
 // insertCommandeWithRetry insère une commande idempotente et retourne l'id_commande créé (0 si doublon).
-func insertCommandeWithRetry(piID string, idAnnonce, idAcheteur int, commissionPct, commission float64, dateLimite time.Time) (int64, error) {
+// conteneurDeAnnonce retourne l'id du conteneur désigné sur l'annonce (mode
+// conteneur), ou nil (don/main propre). La commande hérite ainsi du point de
+// collecte choisi par le vendeur, indispensable au suivi logistique.
+func conteneurDeAnnonce(idAnnonce int) *int {
+	var idc sql.NullInt64
+	if err := database.DB.QueryRow(`SELECT id_conteneur FROM annonces WHERE id_annonce = ?`, idAnnonce).Scan(&idc); err == nil && idc.Valid {
+		v := int(idc.Int64)
+		return &v
+	}
+	return nil
+}
+
+func insertCommandeWithRetry(piID string, idAnnonce, idAcheteur int, commissionPct, commission float64, dateLimite time.Time, idConteneur *int) (int64, error) {
 	for attempt := 0; attempt < 3; attempt++ {
 		tx, err := database.DB.Begin()
 		if err != nil {
@@ -638,9 +786,9 @@ func insertCommandeWithRetry(piID string, idAnnonce, idAcheteur int, commissionP
 		}
 
 		res, err := tx.Exec(`
-			INSERT IGNORE INTO commandes (id_annonce, id_acheteur, commission_pct, montant_commission, date_limite_recuperation, stripe_payment_intent, statut)
-			VALUES (?, ?, ?, ?, ?, ?, 'commandee')
-		`, idAnnonce, idAcheteur, commissionPct, commission, dateLimite, piID)
+			INSERT IGNORE INTO commandes (id_annonce, id_acheteur, commission_pct, montant_commission, date_limite_recuperation, stripe_payment_intent, id_conteneur, statut)
+			VALUES (?, ?, ?, ?, ?, ?, ?, 'commandee')
+		`, idAnnonce, idAcheteur, commissionPct, commission, dateLimite, piID, idConteneur)
 		if err != nil {
 			tx.Rollback()
 			return 0, fmt.Errorf("insert commande: %w", err)
@@ -687,10 +835,11 @@ func handleCommandePaid(pi *stripe.PaymentIntent) {
 
 	_ = modeRemise
 
-	if idCommande, err := insertCommandeWithRetry(pi.ID, idAnnonce, idAcheteur, commissionPct, commission, dateLimite); err != nil {
+	if idCommande, err := insertCommandeWithRetry(pi.ID, idAnnonce, idAcheteur, commissionPct, commission, dateLimite, conteneurDeAnnonce(idAnnonce)); err != nil {
 		log.Printf("Erreur commande annonce=%d pi=%s: %v", idAnnonce, pi.ID, err)
 	} else {
 		log.Printf("Commande créée via Stripe: annonce=%d, acheteur=%d, pi=%s", idAnnonce, idAcheteur, pi.ID)
+		creerFacture(idAcheteur, float64(pi.Amount)/100, "commande", fmt.Sprintf("Achat annonce #%d", idAnnonce), pi.ID)
 		if idCommande > 0 {
 			services.AwardScoreForCommande(int(idCommande))
 		}
@@ -727,6 +876,9 @@ func handlePanierPaid(pi *stripe.PaymentIntent) {
 		return
 	}
 
+	// Une seule facture pour l'ensemble du panier (montant total réellement payé).
+	creerFacture(idAcheteur, float64(pi.Amount)/100, "commande", "Achat panier", pi.ID)
+
 	for _, entry := range strings.Split(itemsMeta, "|") {
 		parts := strings.SplitN(entry, ":", 3)
 		if len(parts) != 3 {
@@ -749,7 +901,7 @@ func handlePanierPaid(pi *stripe.PaymentIntent) {
 		dateLimite := time.Now().AddDate(0, 0, 14)
 		_ = modeRemise
 
-		if idCommande, err := insertCommandeWithRetry(pi.ID, idAnnonce, idAcheteur, commissionPct, commission, dateLimite); err != nil {
+		if idCommande, err := insertCommandeWithRetry(pi.ID, idAnnonce, idAcheteur, commissionPct, commission, dateLimite, conteneurDeAnnonce(idAnnonce)); err != nil {
 			log.Printf("Erreur commande panier annonce=%d: %v", idAnnonce, err)
 		} else {
 			log.Printf("Commande panier créée: annonce=%d, acheteur=%d", idAnnonce, idAcheteur)
@@ -783,8 +935,42 @@ func handleEvenementPaid(pi *stripe.PaymentIntent) {
 		idEvenement,
 	)
 
+	creerFacture(idUtilisateur, prixPaye, "evenement", fmt.Sprintf("Inscription événement #%d", idEvenement), pi.ID)
+
 	log.Printf("Inscription événement payant: event=%d, user=%d, pi=%s", idEvenement, idUtilisateur, pi.ID)
 	services.AwardScoreForEvenement(idUtilisateur, idEvenement)
+}
+
+// handleCataloguePaid finalise une réservation de formation payante après paiement
+// Stripe. Idempotent grâce à la clé unique (id_catalogue_item, id_utilisateur) :
+// un webhook rejoué fait un UPDATE (RowsAffected=2) et ne re-décrémente pas les places.
+func handleCataloguePaid(pi *stripe.PaymentIntent) {
+	var idItem, idUtilisateur int
+	fmt.Sscanf(pi.Metadata["id_catalogue_item"], "%d", &idItem)
+	fmt.Sscanf(pi.Metadata["id_utilisateur"], "%d", &idUtilisateur)
+
+	prixPaye := float64(pi.Amount) / 100
+
+	res, err := database.DB.Exec(`
+		INSERT INTO catalogue_reservations (id_utilisateur, id_catalogue_item, date_reservation, statut_paiement, stripe_payment, prix_paye)
+		VALUES (?, ?, NOW(), 'paye', ?, ?)
+		ON DUPLICATE KEY UPDATE statut_paiement = 'paye', stripe_payment = VALUES(stripe_payment), prix_paye = VALUES(prix_paye)
+	`, idUtilisateur, idItem, pi.ID, prixPaye)
+	if err != nil {
+		log.Printf("Erreur réservation formation payante: %v", err)
+		return
+	}
+
+	// RowsAffected == 1 → insertion réelle (1ère réservation) : on décrémente + planning.
+	if aff, _ := res.RowsAffected(); aff == 1 {
+		database.DB.Exec(
+			`UPDATE catalogue_items SET nb_places_dispo = GREATEST(0, nb_places_dispo - 1) WHERE id_catalogue_item = ?`,
+			idItem,
+		)
+		go AddPlanningFromFormation(idUtilisateur, idItem)
+	}
+
+	log.Printf("Réservation formation payante: item=%d, user=%d, pi=%s", idItem, idUtilisateur, pi.ID)
 }
 
 func handleSubscriptionUpdated(event stripe.Event) {
@@ -846,23 +1032,42 @@ func handleInvoicePaymentSucceeded(event stripe.Event) {
 		return
 	}
 
-	// Ignorer la première facture (déjà traitée par checkout.session.completed)
-	if invoice.BillingReason == stripe.InvoiceBillingReasonSubscriptionCreate {
-		return
-	}
-
 	subID := services.ExtractInvoiceSubscriptionID(event.Data.Raw)
 	if subID == "" {
 		return
 	}
 
-	// Renouvellement abonnement de plan Pro
-	database.DB.Exec(`UPDATE souscriptions SET est_active = TRUE WHERE stripe_subscription_id = ?`, subID)
+	montant := float64(invoice.AmountPaid) / 100
+	isCreate := invoice.BillingReason == stripe.InvoiceBillingReasonSubscriptionCreate
 
-	// Réactivation d'une pub suspendue suite à un paiement échoué puis réussi (retry Stripe)
-	services.RéactiverPubliciteStripe(subID) //nolint:errcheck
+	// Abonnement de plan Pro : la facture initiale est déjà émise par
+	// checkout.session.completed → ici on ne facture que les renouvellements.
+	var uid int
+	if database.DB.QueryRow(
+		`SELECT id_utilisateur FROM souscriptions WHERE stripe_subscription_id = ? ORDER BY date_debut DESC LIMIT 1`,
+		subID,
+	).Scan(&uid) == nil && uid > 0 {
+		database.DB.Exec(`UPDATE souscriptions SET est_active = TRUE WHERE stripe_subscription_id = ?`, subID)
+		if !isCreate {
+			creerFacture(uid, montant, "abonnement", "Renouvellement abonnement Pro", invoice.ID)
+		}
+		log.Printf("Paiement abonnement reçu: sub=%s", subID)
+		return
+	}
 
-	log.Printf("Paiement reçu pour souscription: %s", subID)
+	// Publicité Pro : pas de checkout session → on facture aussi le 1er paiement.
+	var pid int
+	if database.DB.QueryRow(
+		`SELECT id_professionnel FROM publicites WHERE stripe_subscription_id = ? LIMIT 1`,
+		subID,
+	).Scan(&pid) == nil && pid > 0 {
+		services.RéactiverPubliciteStripe(subID) //nolint:errcheck
+		creerFacture(pid, montant, "publicite", "Publicité Pro (mensuel)", invoice.ID)
+		log.Printf("Paiement publicité reçu: sub=%s", subID)
+		return
+	}
+
+	log.Printf("Paiement reçu pour souscription inconnue: %s", subID)
 }
 
 // AdminSyncStripePlans crée les Products et Prices Stripe pour tous les abonnements

@@ -63,8 +63,9 @@
                 @else
                 <span class="event-card-free">Gratuit</span>
                 @endif
-                <span class="event-card-places {{ ($e['nb_places_dispo'] ?? 0) <= 3 ? 'low' : '' }}">
-                    {{ $e['nb_places_dispo'] ?? 0 }} / {{ $e['nb_places_total'] ?? 0 }} places
+                @php $dispoCard = $e['nb_places_dispo'] ?? 0; @endphp
+                <span class="event-card-places {{ $dispoCard <= 3 ? 'low' : '' }}">
+                    @if($dispoCard <= 0) Complet @else Il reste {{ $dispoCard }} place{{ $dispoCard > 1 ? 's' : '' }} @endif
                 </span>
             </div>
         </a>

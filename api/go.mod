@@ -3,6 +3,7 @@ module api
 go 1.25.3
 
 require (
+	github.com/boombuler/barcode v1.1.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/joho/godotenv v1.5.1
@@ -11,4 +12,7 @@ require (
 	golang.org/x/crypto v0.49.0
 )
 
-require filippo.io/edwards25519 v1.1.0 // indirect
+require (
+	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/ruudk/golang-pdf417 v0.0.0-20181029194003-1af4ab5afa58 // indirect
+)

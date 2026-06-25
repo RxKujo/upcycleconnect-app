@@ -732,7 +732,7 @@
                             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' }
                         }).finally(() => {
                             const returnUrl = new URLSearchParams(window.location.search).get('return');
-                            window.location.href = returnUrl || '/particulier/profile';
+                            window.location.href = returnUrl || '/particulier/dashboard';
                         });
                     }
                 } else if (response.status === 401) {

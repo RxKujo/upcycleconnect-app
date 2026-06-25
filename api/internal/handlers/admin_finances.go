@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"api/pkg/database"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -21,30 +20,44 @@ import (
 // ─── Revenus par source / mois ────────────────────────────────────────────────
 
 type RevenuLigne struct {
-	Mois       string  `json:"mois"`
-	TypeSource string  `json:"type_source"`
-	NbFactures int     `json:"nb_factures"`
-	TotalHT    float64 `json:"total_ht"`
-	TotalTTC   float64 `json:"total_ttc"`
+	Mois           string  `json:"mois"`
+	TypeSource     string  `json:"type_source"`
+	NbTransactions int     `json:"nb_transactions"`
+	TotalHT        float64 `json:"total_ht"`
+	TotalTTC       float64 `json:"total_ttc"`
 }
 
 // GetRevenusSynthese agrège les revenus par type_facture et par mois.
+// Renvoie un tableau plat (consommé directement par la vue), filtrable par
+// année (défaut : année courante), type de source et mois.
 func GetRevenusSynthese(w http.ResponseWriter, r *http.Request) {
 	annee := r.URL.Query().Get("annee")
 	if annee == "" {
 		annee = strconv.Itoa(time.Now().Year())
 	}
+	typeSource := r.URL.Query().Get("type")
+	mois := r.URL.Query().Get("mois")
 
-	rows, err := database.DB.Query(`
+	query := `
 		SELECT DATE_FORMAT(f.date_emission, '%Y-%m') AS mois,
 		       f.type_facture,
-		       COUNT(*)                              AS nb_factures,
+		       COUNT(*)                              AS nb_transactions,
 		       SUM(f.montant_ht)                     AS total_ht,
 		       SUM(f.montant_ttc)                    AS total_ttc
 		FROM factures f
-		WHERE YEAR(f.date_emission) = ?
-		GROUP BY mois, f.type_facture
-		ORDER BY mois ASC, f.type_facture ASC`, annee)
+		WHERE YEAR(f.date_emission) = ?`
+	args := []interface{}{annee}
+	if typeSource != "" {
+		query += " AND f.type_facture = ?"
+		args = append(args, typeSource)
+	}
+	if mois != "" {
+		query += " AND MONTH(f.date_emission) = ?"
+		args = append(args, mois)
+	}
+	query += " GROUP BY mois, f.type_facture ORDER BY mois ASC, f.type_facture ASC"
+
+	rows, err := database.DB.Query(query, args...)
 	if err != nil {
 		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
 		return
@@ -54,27 +67,12 @@ func GetRevenusSynthese(w http.ResponseWriter, r *http.Request) {
 	out := []RevenuLigne{}
 	for rows.Next() {
 		var l RevenuLigne
-		if rows.Scan(&l.Mois, &l.TypeSource, &l.NbFactures, &l.TotalHT, &l.TotalTTC) == nil {
+		if rows.Scan(&l.Mois, &l.TypeSource, &l.NbTransactions, &l.TotalHT, &l.TotalTTC) == nil {
 			out = append(out, l)
 		}
 	}
 
-	var totalHT, totalTTC float64
-	var nbTotal int
-	database.DB.QueryRow(`
-		SELECT COUNT(*), COALESCE(SUM(montant_ht),0), COALESCE(SUM(montant_ttc),0)
-		FROM factures WHERE YEAR(date_emission) = ?`, annee).
-		Scan(&nbTotal, &totalHT, &totalTTC)
-
-	jsonOK(w, map[string]interface{}{
-		"annee":  annee,
-		"lignes": out,
-		"totaux": map[string]interface{}{
-			"nb_factures": nbTotal,
-			"total_ht":    totalHT,
-			"total_ttc":   totalTTC,
-		},
-	}, http.StatusOK)
+	jsonOK(w, out, http.StatusOK)
 }
 
 // ─── Liste des factures ───────────────────────────────────────────────────────
@@ -335,50 +333,27 @@ func GetFinanceDashboard(w http.ResponseWriter, r *http.Request) {
 	if annee == "" {
 		annee = strconv.Itoa(time.Now().Year())
 	}
+	moisCourant := time.Now().Format("2006-01")
 
-	type kpi struct {
-		NbSouscriptionsActives int     `json:"nb_souscriptions_actives"`
-		RevenuAbonnements      float64 `json:"revenu_abonnements_annee"`
-		RevenuCommandes        float64 `json:"revenu_commandes_annee"`
-		RevenuEvenements       float64 `json:"revenu_evenements_annee"`
-		RevenuPublicites       float64 `json:"revenu_publicites_annee"`
-		TotalRevenuHT          float64 `json:"total_revenu_ht"`
-		TotalRevenuTTC         float64 `json:"total_revenu_ttc"`
-	}
+	var totalHTMois, totalTTCMois, totalHTAnnee float64
+	var nbTransactions, nbAbonnementsActifs int
 
-	var k kpi
-	database.DB.QueryRow("SELECT COUNT(*) FROM souscriptions WHERE est_active = 1").Scan(&k.NbSouscriptionsActives)
-	database.DB.QueryRow(`SELECT COALESCE(SUM(montant_ht),0) FROM factures WHERE type_facture='abonnement' AND YEAR(date_emission)=?`, annee).Scan(&k.RevenuAbonnements)
-	database.DB.QueryRow(`SELECT COALESCE(SUM(montant_ht),0) FROM factures WHERE type_facture='commande' AND YEAR(date_emission)=?`, annee).Scan(&k.RevenuCommandes)
-	database.DB.QueryRow(`SELECT COALESCE(SUM(montant_ht),0) FROM factures WHERE type_facture='evenement' AND YEAR(date_emission)=?`, annee).Scan(&k.RevenuEvenements)
-	database.DB.QueryRow(`SELECT COALESCE(SUM(montant_ht),0) FROM factures WHERE type_facture='publicite' AND YEAR(date_emission)=?`, annee).Scan(&k.RevenuPublicites)
-	k.TotalRevenuHT = k.RevenuAbonnements + k.RevenuCommandes + k.RevenuEvenements + k.RevenuPublicites
-	k.TotalRevenuTTC = k.TotalRevenuHT * 1.20
+	database.DB.QueryRow(`
+		SELECT COALESCE(SUM(montant_ht),0), COALESCE(SUM(montant_ttc),0)
+		FROM factures WHERE DATE_FORMAT(date_emission,'%Y-%m') = ?`, moisCourant).
+		Scan(&totalHTMois, &totalTTCMois)
+	database.DB.QueryRow(`
+		SELECT COALESCE(SUM(montant_ht),0), COUNT(*)
+		FROM factures WHERE YEAR(date_emission) = ?`, annee).
+		Scan(&totalHTAnnee, &nbTransactions)
+	database.DB.QueryRow(`SELECT COUNT(*) FROM souscriptions WHERE est_active = 1`).
+		Scan(&nbAbonnementsActifs)
 
-	type moisData struct {
-		Mois  string  `json:"mois"`
-		Total float64 `json:"total_ht"`
-	}
-	moisRows, _ := database.DB.Query(`
-		SELECT DATE_FORMAT(date_emission,'%Y-%m'), COALESCE(SUM(montant_ht),0)
-		FROM factures WHERE YEAR(date_emission) = ?
-		GROUP BY DATE_FORMAT(date_emission,'%Y-%m')
-		ORDER BY 1 ASC`, annee)
-	mensuel := []moisData{}
-	if moisRows != nil {
-		defer moisRows.Close()
-		for moisRows.Next() {
-			var m moisData
-			if moisRows.Scan(&m.Mois, &m.Total) == nil {
-				mensuel = append(mensuel, m)
-			}
-		}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"annee":   annee,
-		"kpis":    k,
-		"mensuel": mensuel,
-	})
+	jsonOK(w, map[string]interface{}{
+		"total_ht_mois":         totalHTMois,
+		"total_ttc_mois":        totalTTCMois,
+		"total_ht_annee":        totalHTAnnee,
+		"nb_transactions":       nbTransactions,
+		"nb_abonnements_actifs": nbAbonnementsActifs,
+	}, http.StatusOK)
 }

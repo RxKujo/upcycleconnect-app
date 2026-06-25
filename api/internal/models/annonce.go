@@ -10,6 +10,8 @@ type Annonce struct {
 	TypeAnnonce    string     `json:"type_annonce"`
 	Prix           *float64   `json:"prix,omitempty"`
 	ModeRemise     string     `json:"mode_remise"`
+	IDConteneur    *int       `json:"id_conteneur,omitempty"`
+	AdresseRemise  *string    `json:"adresse_remise,omitempty"`
 	Statut         string     `json:"statut"`
 	MotifRefus     *string    `json:"motif_refus,omitempty"`
 	MotifRetrait   *string    `json:"motif_retrait,omitempty"`
@@ -20,7 +22,20 @@ type Annonce struct {
 	MateriauObjet  *string    `json:"materiau_objet,omitempty"`
 	EtatObjet      *string    `json:"etat_objet,omitempty"`
 
+	Conteneur      *ConteneurInfo `json:"conteneur,omitempty"`
+
 	Objets         []ObjetAnnonce `json:"objets,omitempty"`
+}
+
+// ConteneurInfo : infos d'affichage du point de collecte lié à une annonce.
+type ConteneurInfo struct {
+	IDConteneur int      `json:"id_conteneur"`
+	Ref         string   `json:"conteneur_ref"`
+	Adresse     string   `json:"adresse"`
+	Ville       string   `json:"ville"`
+	CodePostal  *string  `json:"code_postal,omitempty"`
+	Latitude    *float64 `json:"latitude,omitempty"`
+	Longitude   *float64 `json:"longitude,omitempty"`
 }
 
 type ObjetAnnonce struct {
@@ -50,6 +65,8 @@ type CreateAnnonceRequest struct {
 	TypeAnnonce string               `json:"type_annonce"`
 	Prix        *float64             `json:"prix,omitempty"`
 	ModeRemise  string               `json:"mode_remise"`
+	IDConteneur *int                 `json:"id_conteneur,omitempty"`
+	AdresseRemise *string            `json:"adresse_remise,omitempty"`
 	Objets      []CreateObjetRequest `json:"objets"`
 }
 

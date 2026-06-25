@@ -739,7 +739,7 @@
 
                     // Redirect after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/particulier/profile';
+                        window.location.href = '/particulier/dashboard';
                     }, 2000);
                 } else if (response.status === 400) {
                     // Validation errors from API

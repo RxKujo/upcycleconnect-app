@@ -2,6 +2,13 @@
 @section('title', isset($evenement) ? 'Modifier événement' : 'Nouvel événement')
 
 @section('content')
+<style>
+    .autocomplete-wrapper { position: relative; }
+    .autocomplete-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: var(--cream); border: var(--border); border-top: none; max-height: 240px; overflow-y: auto; box-shadow: var(--shadow-sm); }
+    .autocomplete-item { padding: 10px 14px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.85rem; border-bottom: 1px solid rgba(18,3,9,0.1); }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: var(--wheat); }
+</style>
 <div class="page-header">
     <h1 class="page-title">{{ isset($evenement) ? 'Modifier événement' : 'Nouvel événement' }}</h1>
     <a href="{{ route('admin.evenements.index') }}" class="btn-secondary btn-sm">← Retour</a>
@@ -51,8 +58,13 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="lieu">Lieu</label>
-                <input id="lieu" name="lieu" class="form-input" value="{{ old('lieu', $evenement['lieu'] ?? '') }}">
+                <label class="form-label" for="lieu">Lieu (vide si distanciel)</label>
+                <div class="autocomplete-wrapper">
+                    <input id="lieu" name="lieu" class="form-input" autocomplete="off"
+                           placeholder="Commencez à taper une adresse…"
+                           value="{{ old('lieu', $evenement['lieu'] ?? '') }}">
+                    <div class="autocomplete-dropdown" id="lieuSuggestions"></div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -140,5 +152,42 @@ function syncDates() {
 ['date_debut_date','date_debut_hour','date_debut_minute','date_fin_date','date_fin_hour','date_fin_minute']
     .forEach(id => document.getElementById(id).addEventListener('change', syncDates));
 syncDates();
+
+// === Autocomplétion adresse (Base Adresse Nationale - data.geopf.fr) ===
+(function () {
+    var lieuInput = document.getElementById('lieu');
+    var lieuSuggestions = document.getElementById('lieuSuggestions');
+    if (!lieuInput || !lieuSuggestions) return;
+    var debounceTimer = null;
+    function closeSuggestions() { lieuSuggestions.style.display = 'none'; lieuSuggestions.innerHTML = ''; }
+    lieuInput.addEventListener('input', function () {
+        var value = lieuInput.value.trim();
+        clearTimeout(debounceTimer);
+        if (value.length < 3) { closeSuggestions(); return; }
+        debounceTimer = setTimeout(async function () {
+            try {
+                var res = await fetch('https://data.geopf.fr/geocodage/search/?q=' + encodeURIComponent(value) + '&limit=5');
+                if (!res.ok) throw new Error();
+                var data = await res.json();
+                var features = data.features || [];
+                if (features.length === 0) { closeSuggestions(); return; }
+                lieuSuggestions.innerHTML = '';
+                features.forEach(function (feature) {
+                    var item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.textContent = feature.properties.label;
+                    item.addEventListener('mousedown', function (e) {
+                        e.preventDefault();
+                        lieuInput.value = feature.properties.label;
+                        closeSuggestions();
+                    });
+                    lieuSuggestions.appendChild(item);
+                });
+                lieuSuggestions.style.display = 'block';
+            } catch (e) { closeSuggestions(); }
+        }, 300);
+    });
+    lieuInput.addEventListener('blur', function () { setTimeout(closeSuggestions, 150); });
+})();
 </script>
 @endsection

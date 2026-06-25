@@ -28,18 +28,18 @@ class EvenementCatalogueController extends Controller
 
     public function show($id)
     {
+        // L'appel réseau est dans le try ; le abort() est volontairement HORS du try,
+        // sinon l'HttpException (404) serait rattrapée et transformée en 500.
         try {
             $response = Http::timeout(5)->get("{$this->apiUrl}/api/v1/evenements/{$id}");
-
-            if (!$response->successful()) {
-                abort(404, 'Événement non trouvé');
-            }
-
-            $evenement = $response->json();
         } catch (\Exception $e) {
-            abort(500, 'Erreur de connexion à l\'API');
+            abort(503, 'Service indisponible, réessayez dans un instant.');
         }
 
-        return view('catalogue.show', compact('evenement'));
+        if (!$response->successful()) {
+            abort(404, 'Événement non trouvé');
+        }
+
+        return view('catalogue.show', ['evenement' => $response->json()]);
     }
 }

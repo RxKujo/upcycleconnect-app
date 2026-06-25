@@ -90,6 +90,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('detail-type').textContent = 'Achat direct';
         document.getElementById('link-commandes').style.display = 'inline-flex';
         window.UCPanier && window.UCPanier.clear();
+    } else if (type === 'catalogue') {
+        document.getElementById('detail-type').textContent = 'Réservation formation';
+        const lp = document.getElementById('link-profil');
+        lp.href = '/particulier/formations';
+        lp.textContent = 'Mes formations';
+        lp.style.display = 'inline-flex';
     }
 
     // Optionnel : récupérer le montant via l'API

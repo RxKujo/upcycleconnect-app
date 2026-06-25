@@ -708,8 +708,8 @@
                         </svg>
                     </button>
                     <div class="user-dropdown" id="user-dropdown">
-                        <a href="/particulier/profile">Mon profil</a>
-                        <a href="/particulier/profile#annonces">Mes annonces</a>
+                        <a href="/particulier/dashboard">Mon espace</a>
+                        <a href="/particulier/annonces">Mes annonces</a>
                         <button id="logout-btn">Déconnexion</button>
                     </div>
                 </div>

@@ -232,8 +232,25 @@
 
         <div class="card full-width">
             <h3 class="card-title">Securite</h3>
-            <x-btn variant="secondary" size="sm" class="btn-disabled" disabled>Modifier mon mot de passe</x-btn>
-            <p style="font-size: 0.8rem; margin-top: 8px; color: rgba(18,3,9,0.5);">Fonctionnalite a venir</p>
+            <x-btn variant="secondary" size="sm" type="button" onclick="togglePwdForm()">Modifier mon mot de passe</x-btn>
+            <form id="pwd-form" style="display:none; margin-top:16px; max-width:380px;" onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label class="form-label" for="pwd-old">Mot de passe actuel</label>
+                    <input type="password" id="pwd-old" class="form-input" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pwd-new">Nouveau mot de passe (min. 8 caractères)</label>
+                    <input type="password" id="pwd-new" class="form-input" required minlength="8" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="pwd-confirm">Confirmer le nouveau mot de passe</label>
+                    <input type="password" id="pwd-confirm" class="form-input" required minlength="8" autocomplete="new-password">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="submit" class="btn-primary btn-sm">Enregistrer</button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="togglePwdForm()">Annuler</button>
+                </div>
+            </form>
             <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(164,36,59,0.2);">
                 <p style="font-family:'DM Mono',monospace;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.06em;color:var(--cherry);margin-bottom:12px;">Zone dangereuse</p>
                 <button type="button" onclick="deleteMyAccount()" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:var(--cherry);background:none;border:2px solid var(--cherry);padding:8px 20px;cursor:pointer;letter-spacing:0.04em;">Supprimer mon compte</button>
@@ -614,6 +631,34 @@ function openProEditModal(btn) {
     document.getElementById('pro-edit-mode').value = btn.dataset.mode;
     document.getElementById('pro-edit-prix-row').style.display = isVente ? 'block' : 'none';
     document.getElementById('modal-pro-edit-annonce').style.display = 'flex';
+}
+
+function togglePwdForm() {
+    const f = document.getElementById('pwd-form');
+    if (!f) return;
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    if (f.style.display === 'none') f.reset();
+}
+
+async function changePassword(e) {
+    e.preventDefault();
+    const oldp = document.getElementById('pwd-old').value;
+    const newp = document.getElementById('pwd-new').value;
+    const conf = document.getElementById('pwd-confirm').value;
+    if (newp.length < 8) { showAlert('Le nouveau mot de passe doit faire au moins 8 caractères', 'error'); return; }
+    if (newp !== conf) { showAlert('Les deux mots de passe ne correspondent pas', 'error'); return; }
+    if (newp === oldp) { showAlert('Le nouveau mot de passe doit être différent de l\'ancien', 'error'); return; }
+    const resp = await apiFetch('/api/v1/utilisateurs/me/password', {
+        method: 'PUT',
+        body: JSON.stringify({ ancien_mot_de_passe: oldp, nouveau_mot_de_passe: newp })
+    });
+    if (resp && resp.ok) {
+        showAlert('Mot de passe modifié avec succès', 'success');
+        togglePwdForm();
+    } else {
+        const d = resp ? await resp.json() : {};
+        showAlert(d.erreur || 'Erreur lors de la modification', 'error');
+    }
 }
 
 async function deleteMyAccount() {

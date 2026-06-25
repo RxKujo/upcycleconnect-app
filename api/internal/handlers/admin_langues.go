@@ -205,6 +205,61 @@ func UpsertTranslation(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]interface{}{"id_translation": idTrad, "message": "traduction enregistrée"}, http.StatusOK)
 }
 
+// BulkUpsertTranslations enregistre une grille entière de traductions en une fois.
+// Pour chaque entrée : valeur non vide → upsert ; valeur vide → suppression de la
+// case (cle, id_langue). Les clés sont définies par les développeurs ; l'admin ne
+// fait que renseigner/effacer des valeurs. Idempotent (UNIQUE cle+id_langue).
+func BulkUpsertTranslations(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Items []struct {
+			Cle      string `json:"cle"`
+			IDLangue int    `json:"id_langue"`
+			Valeur   string `json:"valeur"`
+		} `json:"items"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "données invalides", http.StatusBadRequest)
+		return
+	}
+
+	tx, err := database.DB.Begin()
+	if err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	var nbUpsert, nbDelete int
+	for _, it := range req.Items {
+		cle := strings.TrimSpace(it.Cle)
+		valeur := strings.TrimSpace(it.Valeur)
+		if cle == "" || it.IDLangue == 0 {
+			continue
+		}
+		if valeur == "" {
+			res, _ := tx.Exec(`DELETE FROM translations WHERE cle = ? AND id_langue = ?`, cle, it.IDLangue)
+			if n, _ := res.RowsAffected(); n > 0 {
+				nbDelete++
+			}
+			continue
+		}
+		if _, err := tx.Exec(`
+			INSERT INTO translations (cle, id_langue, valeur)
+			VALUES (?, ?, ?)
+			ON DUPLICATE KEY UPDATE valeur = VALUES(valeur)`, cle, it.IDLangue, valeur); err != nil {
+			jsonErr(w, "erreur enregistrement : "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		nbUpsert++
+	}
+
+	if err := tx.Commit(); err != nil {
+		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]interface{}{"message": "traductions enregistrées", "upsert": nbUpsert, "suppr": nbDelete}, http.StatusOK)
+}
+
 func DeleteTranslation(w http.ResponseWriter, r *http.Request, id string) {
 	res, err := database.DB.Exec("DELETE FROM translations WHERE id_translation = ?", id)
 	if err != nil {

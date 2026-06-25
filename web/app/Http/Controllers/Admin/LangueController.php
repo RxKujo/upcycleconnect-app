@@ -73,6 +73,7 @@ class LangueController extends Controller
             'id_langue' => 'required|integer',
             'valeur'    => 'required|string',
         ]);
+        $data['id_langue'] = (int) $data['id_langue']; // l'API Go attend un entier, pas une chaîne
 
         $r = Http::withToken($this->token())->asJson()
             ->post($this->api() . '/api/v1/admin/translations', $data);
@@ -81,6 +82,37 @@ class LangueController extends Controller
             return back()->with('error', $r->json('erreur') ?? 'Erreur traduction');
         }
         return redirect()->route('admin.langues.index')->with('success', 'Traduction enregistrée.');
+    }
+
+    // Enregistrement de la grille complète (matrice clés × langues) en une fois.
+    // Chaque ligne porte une clé ; chaque colonne une langue. Valeur vide = effacée.
+    public function saveTranslations(Request $request)
+    {
+        $cles = $request->input('cle', []);   // [rowIndex => clé]
+        $vals = $request->input('val', []);   // [rowIndex => [id_langue => valeur]]
+
+        $items = [];
+        foreach ($cles as $i => $cle) {
+            $cle = trim((string) $cle);
+            if ($cle === '') {
+                continue; // ligne « nouvelle clé » laissée vide → ignorée
+            }
+            foreach (($vals[$i] ?? []) as $idLangue => $valeur) {
+                $items[] = [
+                    'cle'       => $cle,
+                    'id_langue' => (int) $idLangue,
+                    'valeur'    => (string) $valeur,
+                ];
+            }
+        }
+
+        $r = Http::withToken($this->token())->asJson()
+            ->post($this->api() . '/api/v1/admin/translations/bulk', ['items' => $items]);
+
+        if (!$r->successful()) {
+            return back()->with('error', $r->json('erreur') ?? 'Erreur enregistrement');
+        }
+        return redirect()->route('admin.langues.index')->with('success', 'Traductions enregistrées.');
     }
 
     public function destroyTranslation($id)

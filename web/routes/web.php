@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
+use App\Http\Controllers\Admin\CategorieObjetController;
 use App\Http\Controllers\Admin\MateriauController;
 use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\EvenementController;
@@ -13,7 +14,6 @@ use App\Http\Controllers\Admin\ConteneurController;
 use App\Http\Controllers\Admin\CommandeController;
 use App\Http\Controllers\Admin\ScoreController;
 use App\Http\Controllers\Admin\AbonnementController as AdminAbonnementController;
-use App\Http\Controllers\Admin\CatalogueController as AdminCatalogueController;
 use App\Http\Controllers\Admin\PubliciteController as AdminPubliciteController;
 use App\Http\Controllers\Admin\LangueController as AdminLangueController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
@@ -26,7 +26,6 @@ use App\Http\Controllers\Salarie\ModerationController as SalarieModerationContro
 use App\Http\Controllers\Salarie\PlanningController as SalariePlanningController;
 use App\Http\Controllers\Salarie\BoiteIdeeController as SalarieBoiteIdeeController;
 use App\Http\Controllers\EvenementCatalogueController;
-use App\Http\Controllers\FormationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
 use App\Http\Controllers\RessourceController;
@@ -48,8 +47,9 @@ Route::get('/evenements/{id}', [EvenementCatalogueController::class, 'show'])->n
 Route::redirect('/conseils', '/ressources');
 Route::redirect('/conseils/{id}', '/ressources');
 
-Route::get('/formations', [FormationController::class, 'index'])->name('formations.index');
-Route::get('/formations/{id}', [FormationController::class, 'show'])->name('formations.show');
+// « Formations » fusionnées dans le catalogue d'événements — redirections de compat.
+Route::get('/formations', fn() => redirect()->route('evenements.index'))->name('formations.index');
+Route::get('/formations/{id}', fn($id) => redirect()->route('evenements.show', $id))->name('formations.show');
 
 Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
 Route::get('/forum/{id}', [ForumController::class, 'show'])->name('forum.show');
@@ -79,11 +79,25 @@ Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriel
 Route::get('/depot', fn() => view('public.depot.index'))->name('depot.index');
 
 Route::prefix('particulier')->group(function () {
+    Route::get('/', fn() => redirect()->route('particulier.dashboard'));
+    Route::get('/dashboard', fn() => view('particulier.dashboard'))->name('particulier.dashboard');
+
+    Route::get('/annonces', fn() => view('particulier.annonces.index'))->name('particulier.annonces.index');
     Route::get('/annonces/create', function () {
-        $resp = \Illuminate\Support\Facades\Http::get(config('services.api.url') . '/api/v1/public/materiaux');
-        $materiaux = $resp->successful() ? $resp->json() : [];
-        return view('particulier.annonces.create', ['materiaux' => is_array($materiaux) ? $materiaux : []]);
+        $api = rtrim(config('services.api.url'), '/');
+        $get = function (string $path) use ($api) {
+            $r = \Illuminate\Support\Facades\Http::get($api . $path);
+            return $r->successful() && is_array($r->json()) ? $r->json() : [];
+        };
+        return view('particulier.annonces.create', [
+            'materiaux'   => $get('/api/v1/public/materiaux'),
+            'categories'  => $get('/api/v1/public/categories-objets'),
+            'conteneurs'  => $get('/api/v1/public/conteneurs'),
+        ]);
     })->name('particulier.annonces.create');
+
+    Route::get('/formations', fn() => view('particulier.formations.index'))->name('particulier.formations.index');
+
     Route::get('/profile', fn() => view('particulier.profile.show'))->name('particulier.profile.show');
     Route::get('/planning', fn() => view('particulier.planning.index'))->name('particulier.planning.index');
 });
@@ -160,6 +174,11 @@ Route::prefix('admin')->group(function () {
         Route::put('/templates/{id}/toggle', [TemplateController::class, 'toggle'])->name('admin.templates.toggle');
         Route::delete('/templates/{id}', [TemplateController::class, 'destroy'])->name('admin.templates.destroy');
 
+        Route::get('/categories-objets', [CategorieObjetController::class, 'index'])->name('admin.categories-objets.index');
+        Route::post('/categories-objets', [CategorieObjetController::class, 'store'])->name('admin.categories-objets.store');
+        Route::put('/categories-objets/{id}', [CategorieObjetController::class, 'update'])->name('admin.categories-objets.update');
+        Route::delete('/categories-objets/{id}', [CategorieObjetController::class, 'destroy'])->name('admin.categories-objets.destroy');
+
         Route::get('/categories', [CategorieController::class, 'index'])->name('admin.categories.index');
         Route::get('/categories/create', [CategorieController::class, 'create'])->name('admin.categories.create');
         Route::post('/categories', [CategorieController::class, 'store'])->name('admin.categories.store');
@@ -198,15 +217,8 @@ Route::prefix('admin')->group(function () {
         Route::put('/conteneurs/{id}/tickets/{ticketId}/resolve', [ConteneurController::class, 'resolveTicket'])->name('admin.conteneurs.tickets.resolve');
         Route::get('/commandes/{idCommande}/barcode/pdf', [ConteneurController::class, 'generateBarcodePdf'])->name('admin.commandes.barcode.pdf');
 
-        Route::get('/catalogue', [AdminCatalogueController::class, 'index'])->name('admin.catalogue.index');
-        Route::get('/catalogue/create', [AdminCatalogueController::class, 'create'])->name('admin.catalogue.create');
-        Route::post('/catalogue', [AdminCatalogueController::class, 'store'])->name('admin.catalogue.store');
-        Route::get('/catalogue/{id}', [AdminCatalogueController::class, 'show'])->name('admin.catalogue.show');
-        Route::get('/catalogue/{id}/edit', [AdminCatalogueController::class, 'edit'])->name('admin.catalogue.edit');
-        Route::put('/catalogue/{id}', [AdminCatalogueController::class, 'update'])->name('admin.catalogue.update');
-        Route::delete('/catalogue/{id}', [AdminCatalogueController::class, 'destroy'])->name('admin.catalogue.destroy');
-        Route::put('/catalogue/{id}/valider', [AdminCatalogueController::class, 'valider'])->name('admin.catalogue.valider');
-        Route::get('/catalogue/{id}/reservations', [AdminCatalogueController::class, 'reservations'])->name('admin.catalogue.reservations');
+        // Catalogue fusionné dans Événements — redirection de compat.
+        Route::get('/catalogue', fn() => redirect()->route('admin.evenements.index'))->name('admin.catalogue.index');
 
         Route::get('/abonnements', [AdminAbonnementController::class, 'index'])->name('admin.abonnements.index');
 
@@ -233,6 +245,7 @@ Route::prefix('admin')->group(function () {
             Route::put('/{id}', [AdminLangueController::class, 'updateLangue'])->name('update');
             Route::delete('/{id}', [AdminLangueController::class, 'destroyLangue'])->name('destroy');
             Route::post('/translations', [AdminLangueController::class, 'upsertTranslation'])->name('translations.upsert');
+            Route::post('/translations/bulk', [AdminLangueController::class, 'saveTranslations'])->name('translations.bulk');
             Route::delete('/translations/{id}', [AdminLangueController::class, 'destroyTranslation'])->name('translations.destroy');
         });
 

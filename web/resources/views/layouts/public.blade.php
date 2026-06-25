@@ -310,21 +310,70 @@ async function passerTutoriel() {
     document.getElementById('tuto-overlay').style.display = 'none';
 }
 
+// ─── Moteur i18n ───────────────────────────────────────────────────────────
+// FR = langue source : les textes en dur des pages font foi. Les autres langues
+// sont chargées depuis le back-office admin via /api/v1/public/i18n/{code} et
+// remplacent le contenu des éléments [data-i18n] (repli sur le texte d'origine
+// si la clé n'est pas encore traduite).
+const _i18nCache = {};
+
+async function applyTranslations(lang) {
+    // Mémorise le contenu d'origine une seule fois (sert de repli).
+    // [data-i18n] = texte simple ; [data-i18n-html] = contenu avec balises (titres stylés…).
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        if (el.dataset.i18nOrig === undefined) el.dataset.i18nOrig = el.textContent;
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        if (el.dataset.i18nOrigHtml === undefined) el.dataset.i18nOrigHtml = el.innerHTML;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        if (el.dataset.i18nOrigPh === undefined) el.dataset.i18nOrigPh = el.getAttribute('placeholder') || '';
+    });
+
+    if (lang === 'fr') {
+        document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = el.dataset.i18nOrig; });
+        document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = el.dataset.i18nOrigHtml; });
+        document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.setAttribute('placeholder', el.dataset.i18nOrigPh); });
+        return;
+    }
+
+    let dict = _i18nCache[lang];
+    if (!dict) {
+        try {
+            const res = await fetch('{{ config("services.api.public_url") }}/api/v1/public/i18n/' + encodeURIComponent(lang));
+            dict = res.ok ? await res.json() : {};
+        } catch (e) {
+            dict = {};
+        }
+        _i18nCache[lang] = dict;
+    }
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = (dict && dict[key]) ? dict[key] : el.dataset.i18nOrig;
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        el.innerHTML = (dict && dict[key]) ? dict[key] : el.dataset.i18nOrigHtml;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const key = el.getAttribute('data-i18n-ph');
+        el.setAttribute('placeholder', (dict && dict[key]) ? dict[key] : el.dataset.i18nOrigPh);
+    });
+}
+
 function setLang(lang) {
     localStorage.setItem('uc_lang', lang);
     document.documentElement.lang = lang;
-    const fr = document.getElementById('lang-fr');
-    const en = document.getElementById('lang-en');
-    if (fr) fr.style.background = lang === 'fr' ? 'var(--forest)' : '';
-    if (fr) fr.style.color = lang === 'fr' ? 'white' : '';
-    if (en) en.style.background = lang === 'en' ? 'var(--forest)' : '';
-    if (en) en.style.color = lang === 'en' ? 'white' : '';
+    document.querySelectorAll('.nav-lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+    });
+    applyTranslations(lang);
 }
-// Initialise lang switcher state
-(function() {
-    const lang = localStorage.getItem('uc_lang') || 'fr';
-    setLang(lang);
-})();
+
+document.addEventListener('DOMContentLoaded', function () {
+    setLang(localStorage.getItem('uc_lang') || 'fr');
+});
 </script>
 </body>
 </html>

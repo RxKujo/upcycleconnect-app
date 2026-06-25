@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"api/internal/models"
 	"api/internal/services"
 	"api/pkg/database"
 	"database/sql"
@@ -41,6 +42,8 @@ type PublicAnnonce struct {
 	TypeAnnonce  string              `json:"type_annonce"`
 	Prix         *float64            `json:"prix,omitempty"`
 	ModeRemise   string              `json:"mode_remise"`
+	AdresseRemise *string            `json:"adresse_remise,omitempty"`
+	Conteneur    *models.ConteneurInfo `json:"conteneur,omitempty"`
 	Ville        string              `json:"ville"`
 	DateCreation string              `json:"date_creation"`
 	Vendeur      PublicAnnonceVendeur `json:"vendeur"`
@@ -198,15 +201,23 @@ func GetPublicAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	var prix sql.NullFloat64
 	var nom string
 	var dateCreation time.Time
+	var adresseRemise, cRef, cAdr, cVille, cCP sql.NullString
+	var idConteneur sql.NullInt64
+	var cLat, cLng sql.NullFloat64
 
 	err := database.DB.QueryRow(`
-		SELECT a.id_annonce, a.titre, a.description, a.type_annonce, a.prix, a.mode_remise, a.date_creation,
-			   u.prenom, u.nom, COALESCE(u.ville, '') as ville, COALESCE(u.upcycling_score, 0) as score, COALESCE(u.est_certifie, false) as certifie
+		SELECT a.id_annonce, a.titre, a.description, a.type_annonce, a.prix, a.mode_remise,
+			   a.id_conteneur, a.adresse_remise, a.date_creation,
+			   u.prenom, u.nom, COALESCE(u.ville, '') as ville, COALESCE(u.upcycling_score, 0) as score, COALESCE(u.est_certifie, false) as certifie,
+			   c.conteneur_ref, c.adresse, c.ville, c.code_postal, c.latitude, c.longitude
 		FROM annonces a
 		JOIN utilisateurs u ON a.id_particulier = u.id_utilisateur
+		LEFT JOIN conteneurs c ON c.id_conteneur = a.id_conteneur
 		WHERE a.id_annonce = ? AND a.statut = 'validee'
-	`, id).Scan(&a.IDAnnonce, &a.Titre, &a.Description, &a.TypeAnnonce, &prix, &a.ModeRemise, &dateCreation,
-		&a.Vendeur.Prenom, &nom, &a.Vendeur.Ville, &a.Vendeur.Score, &a.Vendeur.Certifie)
+	`, id).Scan(&a.IDAnnonce, &a.Titre, &a.Description, &a.TypeAnnonce, &prix, &a.ModeRemise,
+		&idConteneur, &adresseRemise, &dateCreation,
+		&a.Vendeur.Prenom, &nom, &a.Vendeur.Ville, &a.Vendeur.Score, &a.Vendeur.Certifie,
+		&cRef, &cAdr, &cVille, &cCP, &cLat, &cLng)
 
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -218,6 +229,27 @@ func GetPublicAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	if prix.Valid {
 		p := prix.Float64
 		a.Prix = &p
+	}
+	if adresseRemise.Valid {
+		a.AdresseRemise = &adresseRemise.String
+	}
+	if idConteneur.Valid && cAdr.Valid {
+		ci := &models.ConteneurInfo{
+			IDConteneur: int(idConteneur.Int64),
+			Ref:         cRef.String,
+			Adresse:     cAdr.String,
+			Ville:       cVille.String,
+		}
+		if cCP.Valid {
+			ci.CodePostal = &cCP.String
+		}
+		if cLat.Valid {
+			ci.Latitude = &cLat.Float64
+		}
+		if cLng.Valid {
+			ci.Longitude = &cLng.Float64
+		}
+		a.Conteneur = ci
 	}
 	a.DateCreation = dateCreation.Format("2006-01-02T15:04:05Z")
 	a.Ville = a.Vendeur.Ville

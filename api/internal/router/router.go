@@ -34,6 +34,7 @@ const (
 	prefixAdmin           = "/api/v1/admin"
 	prefixAdminUsers      = "/api/v1/admin/utilisateurs"
 	prefixAdminCategories = "/api/v1/admin/categories"
+	prefixAdminCatObjets  = "/api/v1/admin/categories-objets"
 	prefixAdminMateriaux  = "/api/v1/admin/materiaux"
 	prefixAdminTemplates  = "/api/v1/admin/templates"
 	prefixAdminEv         = "/api/v1/admin/evenements"
@@ -209,6 +210,8 @@ func routePublicResources(w http.ResponseWriter, req *http.Request, path, method
 		handlers.GetPublicConteneursAvecGeo(w, req)
 	case match(path, prefixPublic+"/materiaux") && method == "GET":
 		handlers.GetMateriauxActifs(w, req)
+	case match(path, prefixPublic+"/categories-objets") && method == "GET":
+		handlers.GetCategoriesObjets(w, req)
 	case match(path, prefixPublic+"/categories") && method == "GET":
 		handlers.GetCategories(w, req)
 	case match(path, prefixPublic+"/evenements") && method == "GET":
@@ -272,6 +275,8 @@ func routeAuthMe(w http.ResponseWriter, req *http.Request, path, method string, 
 		handlers.GetMyScore(w, req, userId)
 	case match(path, prefixMe+"/export-pdf") && method == "GET":
 		handlers.ExportUserData(w, req, userId)
+	case match(path, prefixMe+"/password") && method == "PUT":
+		handlers.ChangePassword(w, req, userId)
 	case match(path, prefixMe+"/notifications") && method == "PUT":
 		handlers.UpdateNotifications(w, req, userId)
 	case match(path, prefixMe+"/reservations") && method == "GET":
@@ -335,6 +340,8 @@ func routeAuthStripe(w http.ResponseWriter, req *http.Request, path, method stri
 		handlers.StripePaymentIntentCommande(w, req, userId)
 	case match(path, prefixStripe+"/payment-intent/evenement") && method == "POST":
 		handlers.StripePaymentIntentEvenement(w, req, userId)
+	case match(path, prefixStripe+"/payment-intent/catalogue") && method == "POST":
+		handlers.StripePaymentIntentCatalogue(w, req, userId)
 	case match(path, prefixStripe+"/payment-intent/panier") && method == "POST":
 		handlers.StripePaymentIntentPanier(w, req, userId)
 	default:
@@ -639,6 +646,7 @@ func routeCatalogue(w http.ResponseWriter, req *http.Request, path, method strin
 
 func routeAdmin(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
 	return routeAdminUsers(w, req, path, method) ||
+		routeAdminCategoriesObjets(w, req, path, method) ||
 		routeAdminCategories(w, req, path, method) ||
 		routeAdminMateriaux(w, req, path, method) ||
 		routeAdminTemplates(w, req, path, method) ||
@@ -701,6 +709,23 @@ func routeAdminUsers(w http.ResponseWriter, req *http.Request, path, method stri
 		handlers.GetAbonnements(w, req)
 	case match(path, prefixAdmin+"/stripe/sync-plans") && method == "POST":
 		handlers.AdminSyncStripePlans(w, req)
+	default:
+		return false
+	}
+	return true
+}
+
+func routeAdminCategoriesObjets(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixAdminCatObjets)
+	switch {
+	case match(path, prefixAdminCatObjets) && method == "GET":
+		handlers.GetCategoriesObjetsAdmin(w, req)
+	case match(path, prefixAdminCatObjets) && method == "POST":
+		handlers.CreateCategorieObjet(w, req)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateCategorieObjet(w, req, p[0])
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteCategorieObjet(w, req, p[0])
 	default:
 		return false
 	}
@@ -897,6 +922,8 @@ func routeAdminLangues(w http.ResponseWriter, req *http.Request, path, method st
 	// Traductions
 	case match(path, prefixAdminTrad) && method == "GET":
 		handlers.GetTranslations(w, req)
+	case len(pT) == 1 && pT[0] == "bulk" && method == "POST":
+		handlers.BulkUpsertTranslations(w, req)
 	case match(path, prefixAdminTrad) && method == "POST":
 		handlers.UpsertTranslation(w, req)
 	case len(pT) == 1 && method == "DELETE":

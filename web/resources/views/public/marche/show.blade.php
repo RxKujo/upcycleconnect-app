@@ -78,7 +78,8 @@
                 @endif
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            {{-- Achat réservé aux professionnels / artisans (cf. cahier des charges) --}}
+            <div id="buyBlock" style="display:none; flex-direction:column; gap:12px;">
                 <button type="button"
                         id="btnAddPanier"
                         class="btn btn-primary btn-lg btn-block"
@@ -95,6 +96,13 @@
                     @endif
                 </button>
                 <a href="{{ route('panier.index') }}" class="btn btn-secondary btn-block">Voir mon panier</a>
+            </div>
+
+            {{-- Message affiché aux particuliers / visiteurs --}}
+            <div id="proOnlyNote" style="display:none; padding:14px 16px; background:var(--wheat,#D8C99B); border:2px solid var(--coffee,#120309); font-size:0.9rem; line-height:1.5;">
+                <strong>Récupération réservée aux professionnels et artisans.</strong><br>
+                Les objets déposés par les particuliers sont récupérés par les pros via les conteneurs UpcycleConnect.
+                <span id="proOnlyCta"></span>
             </div>
             <p id="panierFlash" style="display:none; margin-top:12px; padding:10px 14px; background:#dff5e1; border-left:3px solid var(--forest,#3a7d44); font-size:0.9rem;"></p>
 
@@ -116,9 +124,50 @@
             </div>
             @endif
 
-            <p class="font-mono" style="font-size:0.7rem; margin-top:16px; opacity:0.4;">
-                Remise : {{ ($annonce['mode_remise'] ?? '') === 'conteneur' ? 'Via conteneur' : 'En main propre' }}
-            </p>
+            @php
+                $mode = $annonce['mode_remise'] ?? '';
+                $cont = $annonce['conteneur'] ?? null;
+                $adrRemise = $annonce['adresse_remise'] ?? null;
+                $mapsUrl = null;
+                if ($mode === 'conteneur' && $cont) {
+                    $dest = (isset($cont['latitude'], $cont['longitude']) && $cont['latitude'] !== null && $cont['longitude'] !== null)
+                        ? $cont['latitude'] . ',' . $cont['longitude']
+                        : trim(($cont['adresse'] ?? '') . ', ' . ($cont['code_postal'] ?? '') . ' ' . ($cont['ville'] ?? ''));
+                    $mapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . urlencode($dest);
+                } elseif ($mode === 'main_propre' && $adrRemise) {
+                    $mapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' . urlencode($adrRemise);
+                }
+            @endphp
+
+            <div style="margin-top:20px; border:2px solid var(--coffee); background:white; box-shadow:var(--shadow-sm); padding:16px 18px;">
+                <div class="font-mono" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--teal); margin-bottom:8px;">
+                    {{ $mode === 'conteneur' ? 'Point de collecte' : 'Remise en main propre' }}
+                </div>
+
+                @if($mode === 'conteneur')
+                    @if($cont)
+                        <div style="font-weight:600; font-size:1rem; margin-bottom:2px;">
+                            {{ $cont['conteneur_ref'] ?? 'Conteneur' }}
+                        </div>
+                        <div style="font-size:0.95rem; line-height:1.4;">
+                            {{ $cont['adresse'] ?? '' }}@if(!empty($cont['code_postal']) || !empty($cont['ville'])),
+                            {{ $cont['code_postal'] ?? '' }} {{ $cont['ville'] ?? '' }}@endif
+                        </div>
+                    @else
+                        <div style="font-size:0.95rem;">Via conteneur — point de collecte communiqué après validation.</div>
+                    @endif
+                @else
+                    @if($adrRemise)
+                        <div style="font-size:0.95rem; line-height:1.4;">{{ $adrRemise }}</div>
+                    @else
+                        <div style="font-size:0.95rem;">Remise en main propre — adresse communiquée par le vendeur.</div>
+                    @endif
+                @endif
+
+                @if($mapsUrl)
+                    <a href="{{ $mapsUrl }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="margin-top:12px; display:inline-block;">Itinéraire Google Maps →</a>
+                @endif
+            </div>
         </div>
     </div>
 </div>
@@ -135,6 +184,33 @@
 
 @section('scripts')
 <script>
+// Achat des objets réservé aux professionnels / artisans (cf. cahier des charges).
+(function() {
+    var buyBlock = document.getElementById('buyBlock');
+    var note = document.getElementById('proOnlyNote');
+    var cta = document.getElementById('proOnlyCta');
+    var role = null;
+    var token = localStorage.getItem('auth_token');
+    if (token) {
+        try {
+            var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            role = payload.role || null;
+        } catch (e) { role = null; }
+    }
+    if (role === 'professionnel') {
+        if (buyBlock) buyBlock.style.display = 'flex';
+        if (note) note.style.display = 'none';
+    } else {
+        if (buyBlock) buyBlock.style.display = 'none';
+        if (note) note.style.display = 'block';
+        if (cta) {
+            cta.innerHTML = token
+                ? ''
+                : '<br><a href="/register-pro" style="color:var(--cherry,#A4243B);font-weight:600;">Devenir professionnel →</a>';
+        }
+    }
+})();
+
 (function() {
     var btn = document.getElementById('btnAddPanier');
     if (!btn) return;

@@ -1,0 +1,25 @@
+# Reverse-proxy HTTPS (certificat Let's Encrypt automatique).
+# Un seul domaine : le site Laravel, l'API Go (/api/*) et Mailpit (/mailpit) sont
+# servis derrière le même hôte HTTPS — donc l'API est en même origine (pas de CORS).
+{$DOMAIN} {
+    encode zstd gzip
+
+    # API Go (inclut le webhook Stripe /api/v1/stripe/webhook)
+    handle /api/* {
+        reverse_proxy api:8888
+    }
+
+    # Interface Mailpit, protégée par basic-auth (utilisateur "admin").
+    # Mot de passe communiqué hors dépôt ; seul le hash bcrypt figure ci-dessous.
+    handle /mailpit* {
+        basic_auth {
+            admin $2a$14$dnnTedOpNPDotupzuRV7F.NQxdm7KstJi4m9uS6uBqZ5ps2kKsBPy
+        }
+        reverse_proxy mailpit:8025
+    }
+
+    # Tout le reste : application Laravel (nginx + php-fpm)
+    handle {
+        reverse_proxy nginx:80
+    }
+}

@@ -86,15 +86,23 @@
                 @endif
             </div>
 
+            @php $dispo = $evenement['nb_places_dispo'] ?? 0; @endphp
             <div class="event-sidebar-places">
                 <div class="event-places-header">
-                    <span class="event-places-label">Places restantes</span>
-                    <span class="event-places-value">{{ $evenement['nb_places_dispo'] }} / {{ $evenement['nb_places_total'] }}</span>
+                    <span class="event-places-label">Disponibilité</span>
+                    <span class="event-places-value">
+                        @if($dispo <= 0) Complet @else Il reste {{ $dispo }} place{{ $dispo > 1 ? 's' : '' }} @endif
+                    </span>
                 </div>
                 <div class="event-places-bar">
                     <div class="event-places-bar-fill" style="width: {{ $pct }}%;"></div>
                 </div>
             </div>
+
+            @if(($evenement['format'] ?? '') === 'presentiel' && !empty($evenement['lieu']))
+            <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($evenement['lieu']) }}"
+               target="_blank" rel="noopener" class="btn btn-secondary btn-block">Itinéraire Google Maps →</a>
+            @endif
 
             @if(($evenement['nb_places_dispo'] ?? 0) > 0)
                 <div x-show="!subscribed">

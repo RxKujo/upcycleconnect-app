@@ -121,11 +121,11 @@
                 </a>
 
                 <p class="sidebar-section-label">Catalogue & contenu</p>
-                <a href="{{ route('admin.catalogue.index') }}" class="{{ request()->is('admin/catalogue*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catalogue
+                <a href="{{ route('admin.categories.index') }}" class="{{ request()->is('admin/categories') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories prestations
                 </a>
-                <a href="{{ route('admin.categories.index') }}" class="{{ request()->is('admin/categories*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories
+                <a href="{{ route('admin.categories-objets.index') }}" class="{{ request()->is('admin/categories-objets*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories d'objets
                 </a>
                 <a href="{{ route('admin.materiaux.index') }}" class="{{ request()->is('admin/materiaux*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Matériaux

@@ -74,10 +74,11 @@
             </div>
 
             @if(in_array($pub['statut'], ['en_attente','refusee','expiree']))
-            <form method="POST" action="{{ route('pro.publicites.destroy', $pub['id_publicite']) }}" class="delete-form">
+            <form method="POST" action="{{ route('pro.publicites.destroy', $pub['id_publicite']) }}"
+                  data-confirm="Supprimer cette publicité ? Cette action est irréversible.">
                 @csrf
                 @method('DELETE')
-                <button type="button" class="btn-secondary btn-sm btn-delete" style="color:#A4243B;">Supprimer</button>
+                <button type="submit" class="btn-secondary btn-sm" style="color:#A4243B;">Supprimer</button>
             </form>
             @endif
         </div>
@@ -152,23 +153,10 @@
     </div>
 </div>
 
-{{-- Modale de confirmation suppression --}}
-<div id="confirm-modal" style="display:none; position:fixed; inset:0; background:rgba(18,3,9,0.55); z-index:99999; align-items:center; justify-content:center;">
-    <div style="background:var(--cream); border:3px solid var(--coffee); box-shadow:8px 8px 0 var(--coffee); padding:40px 48px; max-width:420px; width:90%; text-align:center;">
-        <p class="font-bebas" style="font-size:1.8rem; letter-spacing:0.08em; margin-bottom:12px;">Supprimer la publicité ?</p>
-        <p style="font-family:'DM Mono',monospace; font-size:0.85rem; color:#666; margin-bottom:32px;">Cette action est irréversible.</p>
-        <div style="display:flex; gap:16px; justify-content:center;">
-            <button id="confirm-cancel" class="btn-secondary btn-sm">Annuler</button>
-            <button id="confirm-ok" class="btn-primary btn-sm" style="background:var(--cherry);">Supprimer</button>
-        </div>
-    </div>
-</div>
-
 <script>
 (function () {
-    var pubModal    = document.getElementById('pub-modal');
-    var confirmModal = document.getElementById('confirm-modal');
-    var pendingForm = null;
+    var pubModal = document.getElementById('pub-modal');
+    if (!pubModal) return;
 
     function openPubModal() { pubModal.style.display = 'flex'; }
     function closePubModal() { pubModal.style.display = 'none'; }
@@ -188,29 +176,7 @@
     openPubModal();
     @endif
 
-    // Suppression
-    document.querySelectorAll('.btn-delete').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            pendingForm = btn.closest('.delete-form');
-            confirmModal.style.display = 'flex';
-        });
-    });
-
-    document.getElementById('confirm-cancel').addEventListener('click', function () {
-        confirmModal.style.display = 'none';
-        pendingForm = null;
-    });
-
-    document.getElementById('confirm-ok').addEventListener('click', function () {
-        if (pendingForm) pendingForm.submit();
-    });
-
-    confirmModal.addEventListener('click', function (e) {
-        if (e.target === confirmModal) {
-            confirmModal.style.display = 'none';
-            pendingForm = null;
-        }
-    });
+    // La suppression utilise la confirmation globale (data-confirm) — voir partials/_toast.
 })();
 </script>
 @endsection

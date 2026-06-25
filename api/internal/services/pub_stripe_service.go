@@ -9,8 +9,11 @@ import (
 	"os"
 	"strconv"
 
+	"strings"
+
 	stripe "github.com/stripe/stripe-go/v82"
 	stripecustomer "github.com/stripe/stripe-go/v82/customer"
+	stripepaymentmethod "github.com/stripe/stripe-go/v82/paymentmethod"
 	stripesub "github.com/stripe/stripe-go/v82/subscription"
 )
 
@@ -34,6 +37,11 @@ func CreatePubSubscription(proID int, pubID int) (string, error) {
 		return "", fmt.Errorf("customer Stripe: %w", err)
 	}
 
+	// En mode test uniquement, on attache une carte de test au client pour que
+	// l'abonnement se paie réellement (sinon il reste "incomplete"). En production,
+	// la carte est saisie par le professionnel via Stripe — ce bloc ne s'exécute pas.
+	ensureTestPaymentMethod(customerID)
+
 	params := &stripe.SubscriptionParams{
 		Customer: stripe.String(customerID),
 		Items: []*stripe.SubscriptionItemsParams{
@@ -52,6 +60,29 @@ func CreatePubSubscription(proID int, pubID int) (string, error) {
 
 	log.Printf("[STRIPE] Subscription pub créée: sub=%s pub=%d pro=%d", sub.ID, pubID, proID)
 	return sub.ID, nil
+}
+
+// ensureTestPaymentMethod attache une carte de test au client et la définit par
+// défaut, pour que les abonnements se paient automatiquement en environnement de
+// test. No-op si la clé Stripe n'est pas une clé de test (production).
+func ensureTestPaymentMethod(customerID string) {
+	if !strings.HasPrefix(os.Getenv("STRIPE_SECRET_KEY"), "sk_test") {
+		return
+	}
+	pm, err := stripepaymentmethod.Attach("pm_card_visa", &stripe.PaymentMethodAttachParams{
+		Customer: stripe.String(customerID),
+	})
+	if err != nil {
+		log.Printf("[STRIPE][test] attache carte de test: %v", err)
+		return
+	}
+	if _, err := stripecustomer.Update(customerID, &stripe.CustomerParams{
+		InvoiceSettings: &stripe.CustomerInvoiceSettingsParams{
+			DefaultPaymentMethod: stripe.String(pm.ID),
+		},
+	}); err != nil {
+		log.Printf("[STRIPE][test] définition carte par défaut: %v", err)
+	}
 }
 
 // CancelPubSubscription annule immédiatement une Stripe Subscription de publicité.
@@ -127,20 +158,37 @@ func ExtractInvoiceSubscriptionID(raw []byte) string {
 	var payload struct {
 		Parent struct {
 			SubscriptionDetails struct {
-				Subscription struct {
-					ID string `json:"id"`
-				} `json:"subscription"`
+				Subscription json.RawMessage `json:"subscription"`
 			} `json:"subscription_details"`
 		} `json:"parent"`
-		Subscription string `json:"subscription"` // legacy
+		Subscription json.RawMessage `json:"subscription"` // legacy
 	}
 	if err := json.Unmarshal(raw, &payload); err != nil {
 		return ""
 	}
-	if id := payload.Parent.SubscriptionDetails.Subscription.ID; id != "" {
+	if id := rawSubID(payload.Parent.SubscriptionDetails.Subscription); id != "" {
 		return id
 	}
-	return payload.Subscription
+	return rawSubID(payload.Subscription)
+}
+
+// rawSubID extrait un id d'abonnement depuis un champ Stripe qui peut être soit
+// une chaîne ("sub_..."), soit un objet développé ({"id":"sub_..."}).
+func rawSubID(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+	var s string
+	if json.Unmarshal(raw, &s) == nil && s != "" {
+		return s
+	}
+	var obj struct {
+		ID string `json:"id"`
+	}
+	if json.Unmarshal(raw, &obj) == nil {
+		return obj.ID
+	}
+	return ""
 }
 
 // getOrCreateStripeCustomerForPub trouve ou crée le Stripe Customer d'un pro.

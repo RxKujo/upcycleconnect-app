@@ -8,3 +8,12 @@ type CategoriePrestation struct {
 	Description  string    `json:"description"`
 	DateCreation time.Time `json:"date_creation"`
 }
+
+// CategorieObjet : liste fermée des catégories d'objets d'annonces,
+// gérée par les admins, distincte des spécialités artisans (CategoriePrestation).
+type CategorieObjet struct {
+	IDCategorieObjet int       `json:"id_categorie_objet"`
+	Nom              string    `json:"nom"`
+	Actif            bool      `json:"actif"`
+	DateCreation     time.Time `json:"date_creation"`
+}
