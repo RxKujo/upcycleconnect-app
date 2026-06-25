@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -52,6 +53,15 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// reCAPTCHA : le formulaire d'inscription pro envoie un token à vérifier.
+	// On ne contrôle que si le secret est configuré (sinon captcha désactivé).
+	if secret := os.Getenv("RECAPTCHA_SECRET_KEY"); secret != "" && req.Role == "professionnel" {
+		if !verifyRecaptcha(secret, req.CaptchaToken) {
+			jsonErr(w, "échec de la vérification anti-robot, merci de recommencer", http.StatusBadRequest)
+			return
+		}
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.MotDePasse), bcrypt.DefaultCost)
 	if err != nil {
 		jsonErr(w, "erreur de hashage", http.StatusInternalServerError)
@@ -73,6 +83,32 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	id, _ := res.LastInsertId()
 	jsonOK(w, map[string]interface{}{"message": "utilisateur créé avec succès", "id": id}, http.StatusCreated)
+}
+
+// verifyRecaptcha valide un token reCAPTCHA auprès de Google (siteverify).
+// Retourne false en cas de token vide, d'erreur réseau ou de réponse négative.
+func verifyRecaptcha(secret, token string) bool {
+	if token == "" {
+		return false
+	}
+	resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify", url.Values{
+		"secret":   {secret},
+		"response": {token},
+	})
+	if err != nil {
+		logError("verifyRecaptcha", "appel siteverify: %v", err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	var out struct {
+		Success bool `json:"success"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		logError("verifyRecaptcha", "decode reponse: %v", err)
+		return false
+	}
+	return out.Success
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {

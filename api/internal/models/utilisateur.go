@@ -38,6 +38,7 @@ type RegisterRequest struct {
 	Role            string  `json:"role" binding:"required"`
 	NomEntreprise   *string `json:"nom_entreprise"`
 	NumeroSiret     *string `json:"numero_siret"`
+	CaptchaToken    string  `json:"captcha_token"`
 }
 
 type LoginRequest struct {

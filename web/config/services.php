@@ -39,4 +39,11 @@ return [
         'secret' => env('JWT_SECRET'),
     ],
 
+    // Google reCAPTCHA v2. site_key : widget côté navigateur. secret_key : non
+    // utilisé par le web (la vérification du token se fait côté API Go).
+    'recaptcha' => [
+        'site_key'   => env('RECAPTCHA_SITE_KEY', ''),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY', ''),
+    ],
+
 ];
