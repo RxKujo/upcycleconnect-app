@@ -53,9 +53,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// reCAPTCHA : le formulaire d'inscription pro envoie un token à vérifier.
-	// On ne contrôle que si le secret est configuré (sinon captcha désactivé).
-	if secret := os.Getenv("RECAPTCHA_SECRET_KEY"); secret != "" && req.Role == "professionnel" {
+	// reCAPTCHA : les formulaires d'inscription (particulier et pro) envoient un
+	// token à vérifier. On ne contrôle que si le secret est configuré (sinon désactivé).
+	if secret := os.Getenv("RECAPTCHA_SECRET_KEY"); secret != "" {
 		if !verifyRecaptcha(secret, req.CaptchaToken) {
 			jsonErr(w, "échec de la vérification anti-robot, merci de recommencer", http.StatusBadRequest)
 			return

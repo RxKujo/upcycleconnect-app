@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         :root {
             --cherry: #A4243B;
@@ -533,6 +534,12 @@
                     </div>
                 </div>
 
+                @if(config('services.recaptcha.site_key'))
+                <div style="display:flex; justify-content:center; margin: 8px 0 4px;">
+                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                </div>
+                @endif
+
                 <button type="submit" class="btn-submit">S'inscrire</button>
             </form>
 
@@ -701,6 +708,17 @@
                 }
             });
 
+            // Check reCAPTCHA (seulement s'il est configuré ; sinon ignoré)
+            const RECAPTCHA_ON = @json((bool) config('services.recaptcha.site_key'));
+            let captchaResponse = '';
+            if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') {
+                captchaResponse = grecaptcha.getResponse();
+                if (!captchaResponse) {
+                    formIsValid = false;
+                    errors.push('Veuillez valider le captcha');
+                }
+            }
+
             if (!formIsValid) {
                 showAlert('Veuillez corriger les erreurs', 'error', errors);
                 return;
@@ -709,6 +727,7 @@
             // Prepare form data
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
+            data.captcha_token = captchaResponse;
 
             // Show loading state
             const submitBtn = form.querySelector('.btn-submit');
@@ -767,6 +786,7 @@
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');
                 loadingOverlay.classList.remove('active');
+                if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') grecaptcha.reset();
             }
         });
         // === Autocomplete adresse ===
