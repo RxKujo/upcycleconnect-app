@@ -60,8 +60,13 @@ services:
       MAIL_HOST: mailpit
       MAIL_PORT: "1025"
       MAIL_FROM: "noreply@upcycleconnect.fr"
+      # Dossier d'upload partagé avec nginx (volume uploads_data) pour que les
+      # photos déposées soient servies en statique au même chemin /uploads.
+      UPLOAD_DIR: /uploads/photos
     expose:
       - "8888"
+    volumes:
+      - uploads_data:/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -116,6 +121,9 @@ services:
     restart: always
     expose:
       - "80"
+    volumes:
+      # Sert les photos uploadées (écrites par l'API dans le même volume).
+      - uploads_data:/var/www/html/public/uploads:ro
     depends_on:
       - web
     networks:
@@ -163,6 +171,7 @@ volumes:
   laravel_logs:
   caddy_data:
   caddy_config:
+  uploads_data:
 
 networks:
   uc_network:
