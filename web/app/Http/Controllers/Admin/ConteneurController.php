@@ -222,6 +222,6 @@ class ConteneurController extends Controller
             'idCommande' => $idCommande
         ]);
 
-        return $pdf->download("CodeBarre_{$codeValeur}.pdf");
+        return $pdf->stream("CodeBarre_{$codeValeur}.pdf");
     }
 }
