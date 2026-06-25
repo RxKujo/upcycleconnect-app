@@ -861,11 +861,15 @@
                 }
             });
 
-            // Check reCAPTCHA
-            const captchaResponse = grecaptcha.getResponse();
-            if (!captchaResponse) {
-                formIsValid = false;
-                errors.push('Veuillez valider le captcha');
+            // Check reCAPTCHA (seulement s'il est configuré ; sinon ignoré)
+            const RECAPTCHA_ON = @json((bool) config('services.recaptcha.site_key'));
+            let captchaResponse = '';
+            if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') {
+                captchaResponse = grecaptcha.getResponse();
+                if (!captchaResponse) {
+                    formIsValid = false;
+                    errors.push('Veuillez valider le captcha');
+                }
             }
 
             if (!formIsValid) {
@@ -916,19 +920,19 @@
                     }, 2000);
                 } else if (response.status === 409) {
                     showAlert('Un compte existe déjà avec cette adresse email.', 'error');
-                    grecaptcha.reset();
+                    if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') grecaptcha.reset();
                 } else if (response.status === 400) {
                     const errorMessage = responseData.erreur || responseData.message || 'Erreur de validation';
                     showAlert(errorMessage, 'error');
-                    grecaptcha.reset();
+                    if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') grecaptcha.reset();
                 } else {
                     showAlert('Erreur serveur. Veuillez reessayer plus tard.', 'error');
-                    grecaptcha.reset();
+                    if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') grecaptcha.reset();
                 }
             } catch (error) {
                 console.error('Erreur:', error);
                 showAlert('Erreur reseau. Veuillez verifier votre connexion.', 'error');
-                grecaptcha.reset();
+                if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') grecaptcha.reset();
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');

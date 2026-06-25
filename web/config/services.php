@@ -27,7 +27,10 @@ return [
         // URL serveur-à-serveur (PHP → Go API via réseau Docker ou local).
         'url' => env('API_URL') ?: (file_exists('/.dockerenv') ? 'http://api:8888' : 'http://localhost:8888'),
         // URL publique utilisée par le navigateur (fetch JS) — toujours l'hôte accessible depuis la machine cliente.
-        'public_url' => env('API_PUBLIC_URL', 'http://localhost:8888'),
+        // En prod, l'API est servie sur le même domaine HTTPS (Caddy route /api/*), donc on retombe sur APP_URL.
+        // En dev (APP_URL en http://localhost:8000), on garde l'accès direct à l'API sur :8888.
+        'public_url' => env('API_PUBLIC_URL')
+            ?: (str_starts_with((string) env('APP_URL', ''), 'https') ? rtrim(env('APP_URL'), '/') : 'http://localhost:8888'),
     ],
 
     // Secret partagé avec l'API Go pour vérifier la signature des JWT.
