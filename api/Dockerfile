@@ -20,6 +20,7 @@ WORKDIR /app
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /app/server .
+COPY --from=builder /app/fonts ./fonts
 
 EXPOSE 8888
 
