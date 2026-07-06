@@ -25,7 +25,9 @@ const msgErrServeurAlerte = "erreur serveur"
 
 // GetAlertesPro liste les alertes du professionnel.
 func GetAlertesPro(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.AlertesActives },
+		"alertes non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -57,7 +59,9 @@ func GetAlertesPro(w http.ResponseWriter, r *http.Request, userID int) {
 
 // CreateAlertePro crée une alerte matériau en respectant les contraintes du plan.
 func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
-	plan, ok := middleware.RequireEssentialPro(userID, w)
+	plan, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.AlertesActives },
+		"alertes non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -128,7 +132,9 @@ func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
 
 // DeleteAlertePro supprime une alerte appartenant au pro.
 func DeleteAlertePro(w http.ResponseWriter, r *http.Request, alerteID string, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.AlertesActives },
+		"alertes non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -195,9 +201,9 @@ func SendAlertesMateriau(annonceID int, materiau string, villeAnnonce string) {
 			logError("SendAlertesMateriau", "email pro %d: %v", proID, err)
 		}
 
-		// Push OneSignal : Expert Pro uniquement (dashboard_annuel = true)
+		// Push OneSignal : uniquement si le plan inclut les alertes push.
 		plan, err := middleware.GetUserPlanInfo(proID)
-		if err == nil && plan.IsExpertPro() && playerID != "" {
+		if err == nil && plan.AlertesPush && playerID != "" {
 			services.NotifierAlerteMateriauPush(playerID, materiau, 1, villeAnnonce)
 		}
 	}

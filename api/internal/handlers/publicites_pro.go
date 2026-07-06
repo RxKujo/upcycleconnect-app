@@ -16,7 +16,9 @@ const coutMensuelPub = 100.00
 
 // GetMesPublicites retourne les publicités du pro connecté.
 func GetMesPublicites(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.PublicitesActives },
+		"publicités non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -31,7 +33,9 @@ func GetMesPublicites(w http.ResponseWriter, r *http.Request, userID int) {
 
 // CreatePublicitePro crée une publicité (statut en_attente, validation admin requise).
 func CreatePublicitePro(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.PublicitesActives },
+		"publicités non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -82,7 +86,9 @@ func CreatePublicitePro(w http.ResponseWriter, r *http.Request, userID int) {
 
 // DeletePublicitePro supprime une publicité et annule immédiatement la subscription Stripe associée.
 func DeletePublicitePro(w http.ResponseWriter, r *http.Request, pubID string, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.PublicitesActives },
+		"publicités non incluses dans votre abonnement")
 	if !ok {
 		return
 	}

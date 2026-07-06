@@ -198,9 +198,9 @@ func finaliserRecuperation(commandeID, userID int, codeBarre string) error {
 	// Créditer l'Upcycling Score du vendeur et de l'acheteur (tous les plans).
 	services.AwardScoreForCommande(commandeID)
 
-	// Recalculer les badges après récupération (Expert Pro uniquement).
+	// Recalculer les badges après récupération (plans avec badges uniquement).
 	plan, _ := middleware.GetUserPlanInfo(userID)
-	if plan != nil && plan.IsExpertPro() {
+	if plan != nil && plan.BadgesActives {
 		go services.ComputeAndAwardBadges(userID) //nolint:errcheck
 	}
 	return nil

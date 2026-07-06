@@ -322,7 +322,9 @@ func UpdateUserRole(w http.ResponseWriter, r *http.Request, id string) {
 func GetAbonnements(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT id_abonnement, nom, prix_mensuel, prix_annuel, type_cible, description, couleur,
-		       nb_alertes_max, rayon_alerte_max_km, dashboard_annuel, badges_actives
+		       nb_alertes_max, rayon_alerte_max_km,
+		       dashboard_mensuel, dashboard_annuel, export_pdf,
+		       alertes_actives, alertes_push, badges_actives, publicites_actives
 		FROM abonnements ORDER BY type_cible, prix_mensuel`)
 	if err != nil {
 		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
@@ -337,20 +339,27 @@ func GetAbonnements(w http.ResponseWriter, r *http.Request) {
 		var prixAnnuel sql.NullFloat64
 		var desc, couleur sql.NullString
 		var nbAlertes, rayon sql.NullInt64
-		var dashboard, badges bool
+		var dashMensuel, dashAnnuel, exportPDF, alertesAct, alertesPush, badges, publicites bool
 		if rows.Scan(&id, &nom, &prix, &prixAnnuel, &typeCible, &desc, &couleur,
-			&nbAlertes, &rayon, &dashboard, &badges) != nil {
+			&nbAlertes, &rayon,
+			&dashMensuel, &dashAnnuel, &exportPDF,
+			&alertesAct, &alertesPush, &badges, &publicites) != nil {
 			continue
 		}
 		m := map[string]interface{}{
 			"id_abonnement": id, "nom": nom, "prix_mensuel": prix, "type_cible": typeCible,
-			"description":      nullableString(desc),
-			"couleur":          nullableString(couleur),
-			"prix_annuel":      nullableFloat(prixAnnuel),
-			"nb_alertes_max":   nullableInt(nbAlertes),
+			"description":         nullableString(desc),
+			"couleur":             nullableString(couleur),
+			"prix_annuel":         nullableFloat(prixAnnuel),
+			"nb_alertes_max":      nullableInt(nbAlertes),
 			"rayon_alerte_max_km": nullableInt(rayon),
-			"dashboard_annuel": dashboard,
-			"badges_actives":   badges,
+			"dashboard_mensuel":   dashMensuel,
+			"dashboard_annuel":    dashAnnuel,
+			"export_pdf":          exportPDF,
+			"alertes_actives":     alertesAct,
+			"alertes_push":        alertesPush,
+			"badges_actives":      badges,
+			"publicites_actives":  publicites,
 		}
 		result = append(result, m)
 	}

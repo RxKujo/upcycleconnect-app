@@ -92,11 +92,12 @@ type dashboardEssentialResponse struct {
 
 // GetDashboardEssential retourne les métriques du mois courant.
 func GetDashboardEssential(w http.ResponseWriter, r *http.Request, userID int) {
-	plan, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.DashboardMensuel },
+		"tableau de bord non inclus dans votre abonnement")
 	if !ok {
 		return
 	}
-	_ = plan
 
 	pro, err := proCoords(userID)
 	if err != nil {
@@ -135,7 +136,9 @@ type dashboardExpertResponse struct {
 
 // GetDashboardExpert retourne les métriques de l'année courante + badges.
 func GetDashboardExpert(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireExpertPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.DashboardAnnuel },
+		"tableau de bord annuel non inclus dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -184,7 +187,9 @@ func GetDashboardExpert(w http.ResponseWriter, r *http.Request, userID int) {
 
 // ExportDashboardPDF génère et envoie un PDF du rapport annuel Expert Pro.
 func ExportDashboardPDF(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireExpertPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.ExportPDF },
+		"export PDF non inclus dans votre abonnement")
 	if !ok {
 		return
 	}

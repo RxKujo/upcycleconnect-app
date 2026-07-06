@@ -18,10 +18,15 @@ import (
 type PlanInfo struct {
 	IDAbonnement     int    `json:"id_abonnement"`
 	Nom              string `json:"nom"`
-	NbAlertesMax     *int   `json:"nb_alertes_max"`     // NULL = illimité (Expert Pro)
-	RayonAlertMaxKm  *int   `json:"rayon_alerte_max_km"` // NULL = modulable (Expert Pro)
+	NbAlertesMax     *int   `json:"nb_alertes_max"`     // NULL = illimité
+	RayonAlertMaxKm  *int   `json:"rayon_alerte_max_km"` // NULL = modulable
+	DashboardMensuel bool   `json:"dashboard_mensuel"`
 	DashboardAnnuel  bool   `json:"dashboard_annuel"`
+	ExportPDF        bool   `json:"export_pdf"`
+	AlertesActives   bool   `json:"alertes_actives"`
+	AlertesPush      bool   `json:"alertes_push"`
 	BadgesActives    bool   `json:"badges_actives"`
+	PublicitesActives bool  `json:"publicites_actives"`
 	EstProFessionnel bool   `json:"est_professionnel"` // vrai si role=professionnel avec un plan actif
 }
 
@@ -31,7 +36,8 @@ func GetUserPlanInfo(userID int) (*PlanInfo, error) {
 	const q = `
 		SELECT a.id_abonnement, a.nom,
 		       a.nb_alertes_max, a.rayon_alerte_max_km,
-		       a.dashboard_annuel, a.badges_actives
+		       a.dashboard_mensuel, a.dashboard_annuel, a.export_pdf,
+		       a.alertes_actives, a.alertes_push, a.badges_actives, a.publicites_actives
 		FROM souscriptions s
 		JOIN abonnements a ON a.id_abonnement = s.id_abonnement
 		WHERE s.id_utilisateur = ?
@@ -46,7 +52,8 @@ func GetUserPlanInfo(userID int) (*PlanInfo, error) {
 	err := database.DB.QueryRow(q, userID).Scan(
 		&info.IDAbonnement, &info.Nom,
 		&nbMax, &rayonMax,
-		&info.DashboardAnnuel, &info.BadgesActives,
+		&info.DashboardMensuel, &info.DashboardAnnuel, &info.ExportPDF,
+		&info.AlertesActives, &info.AlertesPush, &info.BadgesActives, &info.PublicitesActives,
 	)
 	if err == sql.ErrNoRows {
 		return &PlanInfo{EstProFessionnel: false}, nil
@@ -64,6 +71,27 @@ func GetUserPlanInfo(userID int) (*PlanInfo, error) {
 	}
 	info.EstProFessionnel = true
 	return &info, nil
+}
+
+// RequirePlanFeature vérifie que l'utilisateur a un plan professionnel actif ET
+// que le privilège ciblé (extrait via `has`) est activé pour ce plan. Écrit la
+// réponse 403/500 et retourne false si l'accès est refusé. C'est le mécanisme de
+// gating granulaire : chaque feature vérifie SON propre flag de plan.
+func RequirePlanFeature(userID int, w http.ResponseWriter, has func(*PlanInfo) bool, msg string) (*PlanInfo, bool) {
+	plan, err := GetUserPlanInfo(userID)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur serveur"})
+		return nil, false
+	}
+	if !plan.EstProFessionnel || !has(plan) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]string{"erreur": msg})
+		return nil, false
+	}
+	return plan, true
 }
 
 // IsEssentialPro retourne vrai si le plan est au moins Essential Pro

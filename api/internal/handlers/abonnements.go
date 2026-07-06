@@ -10,16 +10,21 @@ import (
 
 // AbonnementInput = payload admin pour créer / modifier un plan d'abonnement.
 type AbonnementInput struct {
-	Nom              string   `json:"nom"`
-	TypeCible        string   `json:"type_cible"`
-	PrixMensuel      float64  `json:"prix_mensuel"`
-	PrixAnnuel       *float64 `json:"prix_annuel"`
-	Description      string   `json:"description"`
-	Couleur          string   `json:"couleur"`
-	NbAlertesMax     *int     `json:"nb_alertes_max"`
-	RayonAlerteMaxKm *int     `json:"rayon_alerte_max_km"`
-	DashboardAnnuel  bool     `json:"dashboard_annuel"`
-	BadgesActives    bool     `json:"badges_actives"`
+	Nom               string   `json:"nom"`
+	TypeCible         string   `json:"type_cible"`
+	PrixMensuel       float64  `json:"prix_mensuel"`
+	PrixAnnuel        *float64 `json:"prix_annuel"`
+	Description       string   `json:"description"`
+	Couleur           string   `json:"couleur"`
+	NbAlertesMax      *int     `json:"nb_alertes_max"`
+	RayonAlerteMaxKm  *int     `json:"rayon_alerte_max_km"`
+	DashboardMensuel  bool     `json:"dashboard_mensuel"`
+	DashboardAnnuel   bool     `json:"dashboard_annuel"`
+	ExportPDF         bool     `json:"export_pdf"`
+	AlertesActives    bool     `json:"alertes_actives"`
+	AlertesPush       bool     `json:"alertes_push"`
+	BadgesActives     bool     `json:"badges_actives"`
+	PublicitesActives bool     `json:"publicites_actives"`
 }
 
 // validateAbonnement normalise et valide l'entrée. Retourne un message non vide si invalide.
@@ -63,10 +68,12 @@ func CreateAbonnement(w http.ResponseWriter, r *http.Request) {
 	}
 	res, err := database.DB.Exec(`
 		INSERT INTO abonnements (nom, type_cible, prix_mensuel, prix_annuel, description, couleur,
-			nb_alertes_max, rayon_alerte_max_km, dashboard_annuel, badges_actives)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			nb_alertes_max, rayon_alerte_max_km, dashboard_mensuel, dashboard_annuel, export_pdf,
+			alertes_actives, alertes_push, badges_actives, publicites_actives)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		in.Nom, in.TypeCible, in.PrixMensuel, in.PrixAnnuel, descOrNil(in.Description), in.Couleur,
-		in.NbAlertesMax, in.RayonAlerteMaxKm, in.DashboardAnnuel, in.BadgesActives)
+		in.NbAlertesMax, in.RayonAlerteMaxKm, in.DashboardMensuel, in.DashboardAnnuel, in.ExportPDF,
+		in.AlertesActives, in.AlertesPush, in.BadgesActives, in.PublicitesActives)
 	if err != nil {
 		jsonErr(w, "création impossible: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -92,10 +99,12 @@ func UpdateAbonnement(w http.ResponseWriter, r *http.Request, idStr string) {
 	}
 	res, err := database.DB.Exec(`
 		UPDATE abonnements SET nom=?, type_cible=?, prix_mensuel=?, prix_annuel=?, description=?, couleur=?,
-			nb_alertes_max=?, rayon_alerte_max_km=?, dashboard_annuel=?, badges_actives=?
+			nb_alertes_max=?, rayon_alerte_max_km=?, dashboard_mensuel=?, dashboard_annuel=?, export_pdf=?,
+			alertes_actives=?, alertes_push=?, badges_actives=?, publicites_actives=?
 		WHERE id_abonnement=?`,
 		in.Nom, in.TypeCible, in.PrixMensuel, in.PrixAnnuel, descOrNil(in.Description), in.Couleur,
-		in.NbAlertesMax, in.RayonAlerteMaxKm, in.DashboardAnnuel, in.BadgesActives, id)
+		in.NbAlertesMax, in.RayonAlerteMaxKm, in.DashboardMensuel, in.DashboardAnnuel, in.ExportPDF,
+		in.AlertesActives, in.AlertesPush, in.BadgesActives, in.PublicitesActives, id)
 	if err != nil {
 		jsonErr(w, "mise à jour impossible: "+err.Error(), http.StatusInternalServerError)
 		return

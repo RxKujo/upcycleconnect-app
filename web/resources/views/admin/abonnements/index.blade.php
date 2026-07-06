@@ -60,11 +60,20 @@
             @if(!empty($plan['description']))
             <p class="plan-desc">{{ $plan['description'] }}</p>
             @endif
+            @php
+                $priv = fn($on, $label) => '<li><span class="pic '.($on ? 'yes' : 'no').'">'.($on ? '✓' : '✕').'</span> '.$label.'</li>';
+                $alDetail = $plan['alertes_actives']
+                    ? ' ('.(is_null($plan['nb_alertes_max']) ? 'illimitées' : $plan['nb_alertes_max']).', '.(is_null($plan['rayon_alerte_max_km']) ? 'rayon libre' : $plan['rayon_alerte_max_km'].' km').')'
+                    : '';
+            @endphp
             <ul class="plan-privs">
-                <li><span class="pic yes">◆</span> Alertes : {{ is_null($plan['nb_alertes_max']) ? 'illimitées' : $plan['nb_alertes_max'] }}</li>
-                <li><span class="pic yes">◆</span> Rayon d'alerte : {{ is_null($plan['rayon_alerte_max_km']) ? 'illimité' : $plan['rayon_alerte_max_km'].' km' }}</li>
-                <li><span class="pic {{ $plan['dashboard_annuel'] ? 'yes' : 'no' }}">{{ $plan['dashboard_annuel'] ? '✓' : '✕' }}</span> Dashboard annuel</li>
-                <li><span class="pic {{ $plan['badges_actives'] ? 'yes' : 'no' }}">{{ $plan['badges_actives'] ? '✓' : '✕' }}</span> Badges premium</li>
+                {!! $priv($plan['alertes_actives'], 'Alertes annonces'.$alDetail) !!}
+                {!! $priv($plan['alertes_push'], 'Alertes push (OneSignal)') !!}
+                {!! $priv($plan['dashboard_mensuel'], 'Tableau de bord 30 jours') !!}
+                {!! $priv($plan['dashboard_annuel'], 'Tableau de bord annuel') !!}
+                {!! $priv($plan['export_pdf'], 'Export PDF du rapport') !!}
+                {!! $priv($plan['badges_actives'], 'Badges premium') !!}
+                {!! $priv($plan['publicites_actives'], 'Publicités / sponsoring') !!}
             </ul>
             <div class="plan-foot">
                 <span class="idlabel">#{{ $plan['id_abonnement'] }}</span>
@@ -131,8 +140,9 @@
                 </div>
 
                 <div class="form-group full" style="margin-top:6px;">
-                    <p style="font-family:'DM Mono',monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; opacity:0.6; margin:0 0 10px; border-top:2px solid rgba(18,3,9,0.1); padding-top:16px;">Privilèges</p>
+                    <p style="font-family:'DM Mono',monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; opacity:0.6; margin:0 0 4px; border-top:2px solid rgba(18,3,9,0.1); padding-top:16px;">Privilèges — réellement appliqués côté serveur</p>
                 </div>
+                <label class="ab-check full"><input type="checkbox" id="f-alertes-act"> Alertes d'annonces par matériau</label>
                 <div class="form-group">
                     <label class="form-label">Nb. d'alertes max</label>
                     <input type="number" id="f-alertes" class="form-input" min="0" placeholder="illimité si vide">
@@ -141,10 +151,14 @@
                 <div class="form-group">
                     <label class="form-label">Rayon d'alerte max (km)</label>
                     <input type="number" id="f-rayon" class="form-input" min="0" placeholder="illimité si vide">
-                    <div class="ab-hint">vide = illimité</div>
+                    <div class="ab-hint">vide = illimité (modulable)</div>
                 </div>
-                <label class="ab-check"><input type="checkbox" id="f-dashboard"> Dashboard annuel</label>
+                <label class="ab-check"><input type="checkbox" id="f-alertes-push"> Alertes push (OneSignal)</label>
+                <label class="ab-check"><input type="checkbox" id="f-dash-mens"> Tableau de bord 30 jours</label>
+                <label class="ab-check"><input type="checkbox" id="f-dashboard"> Tableau de bord annuel</label>
+                <label class="ab-check"><input type="checkbox" id="f-export"> Export PDF du rapport</label>
                 <label class="ab-check"><input type="checkbox" id="f-badges"> Badges premium</label>
+                <label class="ab-check"><input type="checkbox" id="f-pub"> Publicités / sponsoring</label>
             </div>
             <div style="display:flex; gap:12px; margin-top:24px;">
                 <button type="submit" class="btn-primary" id="ab-submit">Enregistrer</button>
@@ -185,8 +199,13 @@ function openPlanModal(plan) {
         $('f-desc').value = plan.description || '';
         $('f-alertes').value = plan.nb_alertes_max != null ? plan.nb_alertes_max : '';
         $('f-rayon').value = plan.rayon_alerte_max_km != null ? plan.rayon_alerte_max_km : '';
+        $('f-alertes-act').checked = !!plan.alertes_actives;
+        $('f-alertes-push').checked = !!plan.alertes_push;
+        $('f-dash-mens').checked = !!plan.dashboard_mensuel;
         $('f-dashboard').checked = !!plan.dashboard_annuel;
+        $('f-export').checked = !!plan.export_pdf;
         $('f-badges').checked = !!plan.badges_actives;
+        $('f-pub').checked = !!plan.publicites_actives;
         setColor(plan.couleur || '#244F26');
     } else {
         $('ab-title').textContent = 'Nouveau plan';
@@ -217,8 +236,13 @@ async function savePlan(e) {
         couleur: $('f-couleur-hex').value.trim() || '#244F26',
         nb_alertes_max: numOrNull($('f-alertes').value),
         rayon_alerte_max_km: numOrNull($('f-rayon').value),
+        alertes_actives: $('f-alertes-act').checked,
+        alertes_push: $('f-alertes-push').checked,
+        dashboard_mensuel: $('f-dash-mens').checked,
         dashboard_annuel: $('f-dashboard').checked,
+        export_pdf: $('f-export').checked,
         badges_actives: $('f-badges').checked,
+        publicites_actives: $('f-pub').checked,
     };
     const submit = $('ab-submit');
     submit.disabled = true; submit.textContent = '…';
