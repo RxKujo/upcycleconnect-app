@@ -21,6 +21,15 @@ type PlanningItem struct {
 	IDEvenement     *int    `json:"id_evenement"`
 	IDCatalogueItem *int    `json:"id_catalogue_item"`
 	EstManuel       bool    `json:"est_manuel"`
+
+	// Détails enrichis, présents uniquement pour les créneaux issus d'un événement
+	// (séances). Omis pour les créneaux manuels.
+	Lieu       *string  `json:"lieu,omitempty"`
+	Format     string   `json:"format,omitempty"`
+	Animateurs []string `json:"animateurs,omitempty"`
+	NbPlaces   *int     `json:"nb_places,omitempty"`
+	NbDispo    *int     `json:"nb_dispo,omitempty"`
+	Prix       *float64 `json:"prix,omitempty"`
 }
 
 // GetMonPlanning renvoie l'agenda du salarié : ses créneaux manuels (+ réservations
@@ -77,7 +86,8 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 	//    cumulés (ex. organisateur ET inscrit → un seul créneau par séance).
 	seances, err := database.DB.Query(`
 		SELECT s.id_seance, e.id_evenement, e.titre, s.titre, e.type_evenement,
-		       s.date_debut, s.date_fin,
+		       s.date_debut, s.date_fin, s.format, s.lieu,
+		       e.nb_places_total, e.nb_places_dispo, e.prix,
 		       (e.id_createur = ?)           AS organise,
 		       (a.id_salarie IS NOT NULL)    AS anime,
 		       (i.id_utilisateur IS NOT NULL) AS inscrit
@@ -93,12 +103,14 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 	if err == nil {
 		defer seances.Close()
 		for seances.Next() {
-			var idSeance, idEvenement int
-			var evTitre, typeEv, debut, fin string
-			var seanceTitre sql.NullString
+			var idSeance, idEvenement, nbTotal, nbDispo int
+			var evTitre, typeEv, debut, fin, format string
+			var seanceTitre, lieu sql.NullString
+			var prix float64
 			var organise, anime, inscrit bool
 			if err := seances.Scan(&idSeance, &idEvenement, &evTitre, &seanceTitre, &typeEv,
-				&debut, &fin, &organise, &anime, &inscrit); err != nil {
+				&debut, &fin, &format, &lieu, &nbTotal, &nbDispo, &prix,
+				&organise, &anime, &inscrit); err != nil {
 				continue
 			}
 
@@ -120,9 +132,16 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 				typeCreneau = "formation"
 			}
 
+			// Animateurs de la séance (nom complet).
+			var anims []string
+			for _, a := range fetchSeanceAnimateurs(idSeance) {
+				anims = append(anims, strings.TrimSpace(a.Prenom+" "+a.Nom))
+			}
+
 			idEv := idEvenement
 			roleCopy := role
-			items = append(items, PlanningItem{
+			nbT, nbD, px := nbTotal, nbDispo, prix
+			item := PlanningItem{
 				IDPlanning:    -idSeance, // id synthétique négatif : jamais en collision avec un id_planning réel
 				IDUtilisateur: userId,
 				Titre:         titre,
@@ -132,7 +151,17 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 				TypeCreneau:   typeCreneau,
 				IDEvenement:   &idEv,
 				EstManuel:     false, // lecture seule côté front (ni Modifier ni Supprimer)
-			})
+				Format:        format,
+				Animateurs:    anims,
+				NbPlaces:      &nbT,
+				NbDispo:       &nbD,
+				Prix:          &px,
+			}
+			if lieu.Valid && strings.TrimSpace(lieu.String) != "" {
+				v := lieu.String
+				item.Lieu = &v
+			}
+			items = append(items, item)
 		}
 	}
 

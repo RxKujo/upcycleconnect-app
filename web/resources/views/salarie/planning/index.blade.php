@@ -258,7 +258,13 @@
             desc: it.description || '',
             debut: parseDT(it.date_debut),
             fin: parseDT(it.date_fin),
-            manuel: it.est_manuel === true || it.est_manuel === 1
+            manuel: it.est_manuel === true || it.est_manuel === 1,
+            lieu: it.lieu || '',
+            format: it.format || '',
+            animateurs: it.animateurs || [],
+            nbPlaces: (it.nb_places != null ? it.nb_places : null),
+            nbDispo: (it.nb_dispo != null ? it.nb_dispo : null),
+            prix: (it.prix != null ? it.prix : null)
         };
     }).filter(function (e) { return e.debut && e.fin; });
 
@@ -616,11 +622,30 @@
         var descHtml = e.desc
             ? '<p style="margin:0;white-space:pre-wrap;line-height:1.5;">' + esc(e.desc) + '</p>'
             : '<p style="margin:0;opacity:0.5;font-style:italic;">Aucune description.</p>';
+
+        // Bloc infos enrichies (format, lieu, animateurs, places, prix) — événements uniquement.
+        var FORMAT_LABELS = { presentiel: 'Présentiel', distanciel: 'Distanciel' };
+        var infos = [];
+        if (e.format) infos.push(['Format', FORMAT_LABELS[e.format] || e.format]);
+        if (e.lieu) infos.push(['Lieu', e.lieu]);
+        if (e.animateurs && e.animateurs.length) infos.push(['Animateur' + (e.animateurs.length > 1 ? 's' : ''), e.animateurs.join(', ')]);
+        if (e.nbPlaces != null) infos.push(['Places', (e.nbDispo != null ? e.nbDispo + ' / ' + e.nbPlaces + ' dispo.' : String(e.nbPlaces))]);
+        if (e.prix != null) infos.push(['Prix', e.prix > 0 ? (Number(e.prix).toFixed(2).replace('.', ',') + ' €') : 'Gratuit']);
+        var infoHtml = infos.length
+            ? '<div style="border-top:2px solid rgba(18,3,9,0.12);padding-top:16px;margin-bottom:16px;display:grid;grid-template-columns:auto 1fr;gap:9px 18px;align-items:baseline;">' +
+              infos.map(function (r) {
+                  return '<div style="font-family:\'DM Mono\',monospace;font-size:0.68rem;text-transform:uppercase;opacity:0.5;white-space:nowrap;">' + esc(r[0]) + '</div>' +
+                         '<div style="font-size:0.94rem;line-height:1.35;">' + esc(r[1]) + '</div>';
+              }).join('') +
+              '</div>'
+            : '';
+
         document.getElementById('detail-body').innerHTML =
             '<div style="margin-bottom:18px;"><span class="cal-event type-' + esc(e.type) + '" style="display:inline-block;padding:4px 10px;font-size:0.8rem;">' + esc(TYPE_LABELS[e.type] || e.type) + '</span>' +
             (e.manuel ? '' : '<span class="tl-badge-auto" style="background:rgba(18,3,9,0.12);color:var(--coffee);margin-left:8px;">automatique</span>') + '</div>' +
             '<h3 style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;margin:0 0 8px;letter-spacing:0.03em;">' + esc(e.titre) + '</h3>' +
             '<p style="font-family:\'DM Mono\',monospace;font-size:0.85rem;color:var(--coffee);opacity:0.7;margin:0 0 20px;">' + quand + '</p>' +
+            infoHtml +
             '<div style="border-top:2px solid rgba(18,3,9,0.12);padding-top:16px;">' +
             '<div style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;opacity:0.5;margin-bottom:6px;">Description</div>' +
             descHtml + '</div>';
