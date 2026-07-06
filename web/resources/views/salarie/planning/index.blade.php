@@ -90,7 +90,10 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Mon Planning</h1>
-    <button class="btn-primary" id="btn-open-add">+ Ajouter un créneau</button>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button class="btn-secondary" id="btn-export-ics" title="Exporter au format iCalendar (Google Agenda, Outlook, Apple…)">⬇ Exporter (.ics)</button>
+        <button class="btn-primary" id="btn-open-add">+ Ajouter un créneau</button>
+    </div>
 </div>
 
 {{-- Stats rapides (recalculées en JS selon le mois affiché) --}}
@@ -206,6 +209,7 @@
         <h2 class="font-bebas" style="font-size:2rem;margin:0 0 24px;">Détail du créneau</h2>
         <div id="detail-body"></div>
         <div class="detail-actions">
+            <button type="button" class="btn-success" id="detail-itineraire" style="display:none;">🧭 Itinéraire</button>
             <button type="button" class="btn-primary" id="detail-edit">Modifier</button>
             <button type="button" class="btn-danger" id="detail-delete">Supprimer</button>
             <button type="button" class="btn-secondary" id="detail-close">Fermer</button>
@@ -652,6 +656,17 @@
         // Boutons Modifier / Supprimer masqués pour les créneaux automatiques
         document.getElementById('detail-edit').style.display = e.manuel ? '' : 'none';
         document.getElementById('detail-delete').style.display = e.manuel ? '' : 'none';
+        // Bouton Itinéraire : visible si un lieu (adresse) est renseigné.
+        var itin = document.getElementById('detail-itineraire');
+        if (e.lieu) {
+            itin.style.display = '';
+            itin.onclick = function () {
+                window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(e.lieu), '_blank', 'noopener');
+            };
+        } else {
+            itin.style.display = 'none';
+            itin.onclick = null;
+        }
         document.getElementById('modal-detail').style.display = 'flex';
     }
     function closeDetail() { document.getElementById('modal-detail').style.display = 'none'; }
@@ -670,6 +685,50 @@
     document.getElementById('modal-detail').addEventListener('mousedown', function (e) {
         if (e.target === this) closeDetail();
     });
+
+    // ─── Export iCalendar (.ics) ──────────────────────────────────
+    function icsEscape(s) {
+        return String(s == null ? '' : s)
+            .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+    }
+    function icsDate(dt) {
+        return dt.getFullYear() + pad(dt.getMonth() + 1) + pad(dt.getDate()) + 'T' +
+               pad(dt.getHours()) + pad(dt.getMinutes()) + pad(dt.getSeconds());
+    }
+    function buildICS() {
+        var stamp = icsDate(new Date());
+        var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//UpcycleConnect//Planning//FR', 'CALSCALE:GREGORIAN'];
+        EVENTS.forEach(function (e) {
+            var desc = e.desc || '';
+            if (e.animateurs && e.animateurs.length) desc += (desc ? '\n' : '') + 'Animateur(s) : ' + e.animateurs.join(', ');
+            lines.push('BEGIN:VEVENT');
+            lines.push('UID:planning-' + e.id + '@upcycleconnect');
+            lines.push('DTSTAMP:' + stamp);
+            lines.push('DTSTART:' + icsDate(e.debut));
+            lines.push('DTEND:' + icsDate(e.fin));
+            lines.push('SUMMARY:' + icsEscape(e.titre));
+            if (e.lieu) lines.push('LOCATION:' + icsEscape(e.lieu));
+            if (desc) lines.push('DESCRIPTION:' + icsEscape(desc));
+            lines.push('END:VEVENT');
+        });
+        lines.push('END:VCALENDAR');
+        return lines.join('\r\n');
+    }
+    var btnExport = document.getElementById('btn-export-ics');
+    if (btnExport) {
+        btnExport.addEventListener('click', function () {
+            if (!EVENTS.length) { toast('Aucun créneau à exporter.'); return; }
+            var blob = new Blob([buildICS()], { type: 'text/calendar;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'mon-planning-upcycleconnect.ics';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        });
+    }
 
     // Soumission : remplit les champs cachés au bon format + dernier garde-fou
     document.getElementById('planning-form').addEventListener('submit', function (e) {
