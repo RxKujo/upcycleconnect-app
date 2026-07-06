@@ -10,14 +10,16 @@
     .plan-nom { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; margin: 0; color: var(--coffee); line-height: 1; }
     .plan-prix { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; margin: 0 0 4px; line-height: 1; }
     .plan-prix-an { font-family: 'DM Mono', monospace; font-size: 0.72rem; opacity: 0.55; margin: 0 0 12px; }
-    .plan-desc { font-family: 'DM Mono', monospace; font-size: 0.78rem; opacity: 0.65; line-height: 1.55; margin: 0 0 16px; }
+    .plan-desc { font-family: 'DM Mono', monospace; font-size: 0.78rem; opacity: 0.65; line-height: 1.55; margin: 0 0 16px; min-height: 3.4em; }
     .plan-privs { list-style: none; padding: 0; margin: 0 0 18px; display: flex; flex-direction: column; gap: 7px; }
     .plan-privs li { display: flex; align-items: center; gap: 9px; font-size: 0.85rem; }
     .plan-privs .pic { font-family: 'DM Mono', monospace; font-weight: 700; width: 16px; text-align: center; }
     .plan-privs .yes { color: var(--forest); }
     .plan-privs .no { color: rgba(18,3,9,0.3); }
-    .plan-foot { margin-top: auto; padding-top: 16px; border-top: 2px solid rgba(18,3,9,0.1); display: flex; align-items: center; gap: 10px; }
-    .plan-foot .idlabel { font-family: 'DM Mono', monospace; font-size: 0.72rem; opacity: 0.4; margin-right: auto; }
+    .plan-foot { margin-top: auto; padding-top: 16px; border-top: 2px solid rgba(18,3,9,0.1); display: flex; flex-direction: column; gap: 10px; }
+    .plan-foot .idlabel { font-family: 'DM Mono', monospace; font-size: 0.72rem; opacity: 0.4; }
+    .plan-actions { display: flex; gap: 10px; }
+    .plan-actions button { flex: 1; white-space: nowrap; }
 
     /* Modale */
     .ab-overlay { display: none; position: fixed; inset: 0; background: rgba(18,3,9,0.6); z-index: 1000; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 40px 20px; }
@@ -76,9 +78,11 @@
                 {!! $priv($plan['publicites_actives'], 'Publicités / sponsoring') !!}
             </ul>
             <div class="plan-foot">
-                <span class="idlabel">#{{ $plan['id_abonnement'] }}</span>
-                <button type="button" class="btn-secondary btn-sm" onclick='openPlanModal(@json($plan))'>Modifier</button>
-                <button type="button" class="btn-danger btn-sm" onclick="deletePlan({{ $plan['id_abonnement'] }}, @js($plan['nom']))">Supprimer</button>
+                <span class="idlabel">Plan #{{ $plan['id_abonnement'] }}</span>
+                <div class="plan-actions">
+                    <button type="button" class="btn-secondary btn-sm" onclick='openPlanModal(@json($plan))'>Modifier</button>
+                    <button type="button" class="btn-danger btn-sm" onclick="deletePlan({{ $plan['id_abonnement'] }}, @js($plan['nom']))">Supprimer</button>
+                </div>
             </div>
         </div>
     </div>
