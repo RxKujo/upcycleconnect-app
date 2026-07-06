@@ -686,6 +686,7 @@ func routeAdminPro(w http.ResponseWriter, req *http.Request, path, method string
 
 func routeAdminUsers(w http.ResponseWriter, req *http.Request, path, method string) bool {
 	p := splitPath(path, prefixAdminUsers)
+	pa := splitPath(path, prefixAdmin+"/abonnements")
 	switch {
 	case match(path, prefixAdmin+segStats) && method == "GET":
 		handlers.GetAdminStats(w, req)
@@ -709,6 +710,12 @@ func routeAdminUsers(w http.ResponseWriter, req *http.Request, path, method stri
 		handlers.RevokeSouscription(w, req, p[0])
 	case match(path, prefixAdmin+"/abonnements") && method == "GET":
 		handlers.GetAbonnements(w, req)
+	case match(path, prefixAdmin+"/abonnements") && method == "POST":
+		handlers.CreateAbonnement(w, req)
+	case len(pa) == 1 && method == "PUT":
+		handlers.UpdateAbonnement(w, req, pa[0])
+	case len(pa) == 1 && method == "DELETE":
+		handlers.DeleteAbonnement(w, req, pa[0])
 	case match(path, prefixAdmin+"/stripe/sync-plans") && method == "POST":
 		handlers.AdminSyncStripePlans(w, req)
 	default:

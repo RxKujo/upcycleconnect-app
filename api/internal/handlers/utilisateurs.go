@@ -320,7 +320,10 @@ func UpdateUserRole(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func GetAbonnements(w http.ResponseWriter, r *http.Request) {
-	rows, err := database.DB.Query("SELECT id_abonnement, nom, prix_mensuel, type_cible, description FROM abonnements ORDER BY type_cible, prix_mensuel")
+	rows, err := database.DB.Query(`
+		SELECT id_abonnement, nom, prix_mensuel, prix_annuel, type_cible, description, couleur,
+		       nb_alertes_max, rayon_alerte_max_km, dashboard_annuel, badges_actives
+		FROM abonnements ORDER BY type_cible, prix_mensuel`)
 	if err != nil {
 		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
 		return
@@ -331,17 +334,51 @@ func GetAbonnements(w http.ResponseWriter, r *http.Request) {
 		var id int
 		var nom, typeCible string
 		var prix float64
-		var desc *string
-		if rows.Scan(&id, &nom, &prix, &typeCible, &desc) == nil {
-			result = append(result, map[string]interface{}{
-				"id_abonnement": id, "nom": nom, "prix_mensuel": prix, "type_cible": typeCible, "description": desc,
-			})
+		var prixAnnuel sql.NullFloat64
+		var desc, couleur sql.NullString
+		var nbAlertes, rayon sql.NullInt64
+		var dashboard, badges bool
+		if rows.Scan(&id, &nom, &prix, &prixAnnuel, &typeCible, &desc, &couleur,
+			&nbAlertes, &rayon, &dashboard, &badges) != nil {
+			continue
 		}
+		m := map[string]interface{}{
+			"id_abonnement": id, "nom": nom, "prix_mensuel": prix, "type_cible": typeCible,
+			"description":      nullableString(desc),
+			"couleur":          nullableString(couleur),
+			"prix_annuel":      nullableFloat(prixAnnuel),
+			"nb_alertes_max":   nullableInt(nbAlertes),
+			"rayon_alerte_max_km": nullableInt(rayon),
+			"dashboard_annuel": dashboard,
+			"badges_actives":   badges,
+		}
+		result = append(result, m)
 	}
 	if result == nil {
 		result = []map[string]interface{}{}
 	}
 	jsonOK(w, result, http.StatusOK)
+}
+
+func nullableString(v sql.NullString) interface{} {
+	if v.Valid {
+		return v.String
+	}
+	return nil
+}
+
+func nullableFloat(v sql.NullFloat64) interface{} {
+	if v.Valid {
+		return v.Float64
+	}
+	return nil
+}
+
+func nullableInt(v sql.NullInt64) interface{} {
+	if v.Valid {
+		return v.Int64
+	}
+	return nil
 }
 
 func GetUserSouscription(w http.ResponseWriter, r *http.Request, id string) {
