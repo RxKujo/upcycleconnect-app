@@ -12,9 +12,9 @@
 .cal-spacer { flex: 1; }
 
 /* ─── Grille calendrier ──────────────────────────────────────────── */
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; border: var(--border); box-shadow: var(--shadow); margin-bottom: 32px; }
-.calendar-day-label { background: var(--coffee); color: var(--wheat); font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; text-align: center; padding: 10px 4px; letter-spacing: 0.05em; }
-.calendar-cell { min-height: 92px; background: white; border: 1px solid rgba(18,3,9,0.1); padding: 6px; position: relative; cursor: pointer; transition: background 0.12s ease; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; border: var(--border); box-shadow: var(--shadow); margin-bottom: 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.calendar-day-label { background: var(--coffee); color: var(--wheat); font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; text-align: center; padding: 10px 4px; letter-spacing: 0.05em; min-width: 0; overflow: hidden; }
+.calendar-cell { min-height: 92px; min-width: 0; overflow: hidden; background: white; border: 1px solid rgba(18,3,9,0.1); padding: 6px; position: relative; cursor: pointer; transition: background 0.12s ease; }
 .calendar-cell:hover { background: rgba(216,201,155,0.25); }
 .calendar-cell.empty { background: rgba(18,3,9,0.03); cursor: default; }
 .calendar-cell.empty:hover { background: rgba(18,3,9,0.03); }
@@ -49,6 +49,7 @@
 .tl-block .tl-del { position: absolute; top: 3px; right: 5px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.85rem; line-height: 1; background: none; border: none; color: inherit; opacity: 0.75; padding: 2px; }
 .tl-block .tl-del:hover { opacity: 1; }
 .day-empty { color: rgba(18,3,9,0.4); font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; padding: 20px 0; }
+.day-empty-inline { position: absolute; top: 50%; left: 12px; right: 12px; transform: translateY(-50%); text-align: center; color: rgba(18,3,9,0.35); font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.82rem; letter-spacing: 0.04em; pointer-events: none; }
 .tl-badge-auto { display: inline-block; font-size: 0.6rem; background: rgba(255,255,255,0.25); padding: 1px 5px; margin-left: 6px; letter-spacing: 0.04em; }
 
 /* ─── Bandeaux « journée entière » (événements multi-jours) ──────── */
@@ -365,10 +366,6 @@
         title.textContent = selected.getDate() + ' ' + MOIS[selected.getMonth()] + ' ' + selected.getFullYear();
 
         var evs = eventsOfDay(selected);
-        if (!evs.length) {
-            body.innerHTML = '<div class="day-empty">Aucun créneau ce jour. Cliquez sur « + Créneau ce jour » pour en ajouter un.</div>';
-            return;
-        }
 
         // Sépare les événements « journée entière / multi-jours » (qui ne tiennent
         // pas dans la journée sélectionnée) des créneaux horaires classiques.
@@ -395,37 +392,39 @@
             html += '</div>';
         }
 
-        // Timeline horaire pour les créneaux qui tiennent dans la journée.
-        if (timed.length) {
-            var minH = 8, maxH = 19;
-            timed.forEach(function (e) {
-                var sh = e.debut.getHours();
-                var eh = e.fin.getHours() + (e.fin.getMinutes() > 0 ? 1 : 0);
-                if (sh < minH) minH = sh;
-                if (eh > maxH) maxH = eh;
-            });
-            if (minH < 0) minH = 0;
-            if (maxH > 24) maxH = 24;
+        // Timeline horaire — TOUJOURS affichée (emploi du temps permanent).
+        // La plage s'ajuste aux créneaux horaires du jour, sinon défaut 8h–19h.
+        var minH = 8, maxH = 19;
+        timed.forEach(function (e) {
+            var sh = e.debut.getHours();
+            var eh = e.fin.getHours() + (e.fin.getMinutes() > 0 ? 1 : 0);
+            if (sh < minH) minH = sh;
+            if (eh > maxH) maxH = eh;
+        });
+        if (minH < 0) minH = 0;
+        if (maxH > 24) maxH = 24;
 
-            html += '<div class="timeline" style="height:' + ((maxH - minH) * HOUR_PX) + 'px;">';
-            for (var h = minH; h < maxH; h++) {
-                html += '<div class="timeline-hour"><span class="hour-label">' + pad(h) + ':00</span></div>';
-            }
-            html += '<div class="timeline-events">';
-            var dayStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), minH, 0);
-            timed.forEach(function (e) {
-                var top = ((e.debut - dayStart) / 3600000) * HOUR_PX;
-                var height = Math.max(22, ((e.fin - e.debut) / 3600000) * HOUR_PX);
-                var label = pad(e.debut.getHours()) + ':' + pad(e.debut.getMinutes()) + ' – ' +
-                    pad(e.fin.getHours()) + ':' + pad(e.fin.getMinutes());
-                var autoTag = e.manuel ? '' : '<span class="tl-badge-auto">auto</span>';
-                html += '<div class="tl-block type-' + esc(e.type) + '" data-id="' + e.id + '" title="Voir le détail" style="top:' + top + 'px;height:' + height + 'px;cursor:pointer;">' +
-                    '<div class="tl-title">' + esc(e.titre) + autoTag + '</div>' +
-                    '<div class="tl-time">' + label + '</div>' +
-                    '</div>';
-            });
-            html += '</div></div>';
+        html += '<div class="timeline" style="height:' + ((maxH - minH) * HOUR_PX) + 'px;">';
+        for (var h = minH; h < maxH; h++) {
+            html += '<div class="timeline-hour"><span class="hour-label">' + pad(h) + ':00</span></div>';
         }
+        html += '<div class="timeline-events">';
+        var dayStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), minH, 0);
+        timed.forEach(function (e) {
+            var top = ((e.debut - dayStart) / 3600000) * HOUR_PX;
+            var height = Math.max(22, ((e.fin - e.debut) / 3600000) * HOUR_PX);
+            var label = pad(e.debut.getHours()) + ':' + pad(e.debut.getMinutes()) + ' – ' +
+                pad(e.fin.getHours()) + ':' + pad(e.fin.getMinutes());
+            var autoTag = e.manuel ? '' : '<span class="tl-badge-auto">auto</span>';
+            html += '<div class="tl-block type-' + esc(e.type) + '" data-id="' + e.id + '" title="Voir le détail" style="top:' + top + 'px;height:' + height + 'px;cursor:pointer;">' +
+                '<div class="tl-title">' + esc(e.titre) + autoTag + '</div>' +
+                '<div class="tl-time">' + label + '</div>' +
+                '</div>';
+        });
+        if (!evs.length) {
+            html += '<div class="day-empty-inline">Aucun créneau ce jour · cliquez sur « + Créneau ce jour »</div>';
+        }
+        html += '</div></div>';
 
         body.innerHTML = html;
 
