@@ -666,6 +666,7 @@
         // SIRET field: format as user types and validate on blur
         let siretCheckTimeout = null;
         const siretInput = document.getElementById('numero_siret');
+        const nomEntrepriseInput = document.getElementById('nom_entreprise');
 
         siretInput.addEventListener('input', () => {
             siretInput.value = siretInput.value.replace(/[^\d\s]/g, '');
@@ -677,43 +678,153 @@
             }
         });
 
+        // --- Vérification SIRET + correspondance du nom d'entreprise ---
+        // État de la dernière vérification INSEE (API recherche-entreprises).
+        const siretState = { siret: '', verified: false, matchOk: false, official: '', candidates: [], error: false };
+
+        // Formes juridiques et mots vides ignorés lors de la comparaison de noms.
+        const LEGAL_FORMS = /\b(SARL|SASU|SAS|EURL|SA|SCI|SNC|EIRL|EI|SELARL|SELAS|SCOP|GIE|SCA|SCS|ETS|ETABLISSEMENTS|ENTREPRISE|SOCIETE|STE)\b/g;
+        const STOP = new Set(['LE', 'LA', 'LES', 'DE', 'DES', 'DU', 'ET', 'L', 'D', 'AUX', 'AU', 'EN', 'A']);
+
+        // Normalise un nom : majuscules, sans accents, sans forme juridique ni ponctuation.
+        function normalizeName(s) {
+            return (s || '')
+                .toUpperCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(LEGAL_FORMS, ' ')
+                .replace(/[^A-Z0-9]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function nameTokens(s) {
+            return normalizeName(s).split(' ').filter(t => t.length >= 2 && !STOP.has(t));
+        }
+
+        // Comparaison tolérante : égalité, inclusion, ou fort recouvrement de mots.
+        function namesMatch(entered, official) {
+            const a = normalizeName(entered);
+            const b = normalizeName(official);
+            if (!a || !b) return false;
+            if (a === b) return true;
+            if (a.length >= 4 && b.includes(a)) return true;
+            if (b.length >= 4 && a.includes(b)) return true;
+            const ta = nameTokens(entered);
+            const tb = new Set(nameTokens(official));
+            if (ta.length === 0) return false;
+            const overlap = ta.filter(t => tb.has(t)).length;
+            return overlap === ta.length || (overlap / ta.length) >= 0.6;
+        }
+
+        // Rassemble tous les noms officiels exploitables d'un résultat INSEE.
+        function collectOfficialNames(r) {
+            const names = [r.nom_complet, r.nom_raison_sociale, r.sigle];
+            if (r.siege) {
+                names.push(r.siege.nom_commercial);
+                if (Array.isArray(r.siege.liste_enseignes)) names.push(...r.siege.liste_enseignes);
+            }
+            if (Array.isArray(r.matching_etablissements)) {
+                r.matching_etablissements.forEach(e => {
+                    names.push(e.nom_commercial);
+                    if (Array.isArray(e.liste_enseignes)) names.push(...e.liste_enseignes);
+                });
+            }
+            return names.filter(Boolean);
+        }
+
+        // Interroge l'API et renvoie le nom officiel + les variantes exploitables.
+        async function fetchSiret(raw) {
+            const resp = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${raw}`);
+            const data = await resp.json();
+            if (!(data.total_results > 0)) return { found: false };
+            const r = data.results[0];
+            return {
+                found: true,
+                official: r.nom_complet || r.nom_raison_sociale || '',
+                candidates: collectOfficialNames(r),
+            };
+        }
+
+        // Compare le nom saisi au(x) nom(s) officiel(s) et met à jour l'affichage.
+        function evaluateSiretMatch() {
+            if (!siretState.verified) return;
+            const entered = nomEntrepriseInput.value.trim();
+            if (!entered) {
+                siretState.matchOk = false;
+                siretStatus.className = 'siret-status checking';
+                siretStatus.textContent = siretState.official
+                    ? `SIRET trouvé — ${siretState.official}. Renseignez le nom de l'entreprise.`
+                    : "SIRET trouvé. Renseignez le nom de l'entreprise.";
+                return;
+            }
+            const ok = siretState.candidates.some(c => namesMatch(entered, c));
+            siretState.matchOk = ok;
+            if (ok) {
+                siretInput.classList.remove('error');
+                nomEntrepriseInput.classList.remove('error');
+                siretStatus.className = 'siret-status valid';
+                siretStatus.textContent = siretState.official ? `SIRET vérifié — ${siretState.official}` : 'SIRET vérifié';
+            } else {
+                nomEntrepriseInput.classList.add('error');
+                siretStatus.className = 'siret-status invalid';
+                siretStatus.textContent = siretState.official
+                    ? `Le nom saisi ne correspond pas au SIRET (officiel : ${siretState.official})`
+                    : 'Le nom saisi ne correspond pas au SIRET';
+            }
+        }
+
+        // Lance la vérification du SIRET courant (format déjà supposé valide).
+        async function runSiretCheck() {
+            const raw = siretInput.value.replace(/\s/g, '');
+            if (!patterns.siret.test(raw)) {
+                Object.assign(siretState, { siret: raw, verified: false, matchOk: false, official: '', candidates: [], error: false });
+                return;
+            }
+            siretStatus.className = 'siret-status checking';
+            siretStatus.textContent = 'Verification en cours...';
+            try {
+                const res = await fetchSiret(raw);
+                if (!res.found) {
+                    Object.assign(siretState, { siret: raw, verified: false, matchOk: false, official: '', candidates: [], error: false });
+                    siretStatus.className = 'siret-status invalid';
+                    siretStatus.textContent = 'SIRET non trouve dans la base INSEE';
+                    return;
+                }
+                Object.assign(siretState, { siret: raw, verified: true, official: res.official, candidates: res.candidates, error: false });
+                evaluateSiretMatch();
+            } catch {
+                // API injoignable : on ne peut pas prouver de non-correspondance → on n'bloque pas.
+                Object.assign(siretState, { siret: raw, verified: false, matchOk: false, official: '', candidates: [], error: true });
+                siretStatus.className = 'siret-status';
+                siretStatus.textContent = '';
+            }
+        }
+
         siretInput.addEventListener('blur', () => {
             const raw = siretInput.value.replace(/\s/g, '');
             if (raw.length === 0) {
                 siretStatus.className = 'siret-status';
                 siretInput.classList.remove('error');
+                Object.assign(siretState, { siret: '', verified: false, matchOk: false, official: '', candidates: [], error: false });
                 return;
             }
-
             if (!patterns.siret.test(raw)) {
                 siretInput.classList.add('error');
                 siretStatus.className = 'siret-status invalid';
                 siretStatus.textContent = 'Le SIRET doit contenir exactement 14 chiffres';
+                Object.assign(siretState, { siret: raw, verified: false, matchOk: false, official: '', candidates: [], error: false });
                 return;
             }
-
             siretInput.classList.remove('error');
-            siretStatus.className = 'siret-status checking';
-            siretStatus.textContent = 'Verification en cours...';
-
             clearTimeout(siretCheckTimeout);
-            siretCheckTimeout = setTimeout(async () => {
-                try {
-                    const resp = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${raw}`);
-                    const data = await resp.json();
-                    if (data.total_results > 0) {
-                        siretStatus.className = 'siret-status valid';
-                        const name = data.results[0]?.nom_complet || '';
-                        siretStatus.textContent = name ? `SIRET verifie — ${name}` : 'SIRET verifie';
-                    } else {
-                        siretStatus.className = 'siret-status invalid';
-                        siretStatus.textContent = 'SIRET non trouve dans la base INSEE';
-                    }
-                } catch {
-                    siretStatus.className = 'siret-status';
-                    siretStatus.textContent = '';
-                }
-            }, 300);
+            siretCheckTimeout = setTimeout(runSiretCheck, 300);
+        });
+
+        // Recompare dès que l'utilisateur modifie le nom de l'entreprise.
+        nomEntrepriseInput.addEventListener('blur', () => {
+            if (siretState.verified && siretState.siret === siretInput.value.replace(/\s/g, '')) {
+                evaluateSiretMatch();
+            }
         });
 
         let fallbackActive = false;
@@ -860,6 +971,26 @@
                     field.classList.add('error');
                 }
             });
+
+            // Correspondance SIRET ↔ nom d'entreprise : exigée dès lors que la
+            // vérification INSEE aboutit. On (re)lance la vérif si nécessaire pour
+            // couvrir le cas où l'utilisateur soumet sans avoir quitté le champ SIRET.
+            const siretRaw = siretInput.value.replace(/\s/g, '');
+            if (patterns.siret.test(siretRaw)) {
+                if (!siretState.verified || siretState.siret !== siretRaw) {
+                    await runSiretCheck();
+                }
+                if (siretState.verified) {
+                    evaluateSiretMatch();
+                    if (!siretState.matchOk) {
+                        formIsValid = false;
+                        nomEntrepriseInput.classList.add('error');
+                        errors.push(siretState.official
+                            ? `Le nom de l'entreprise ne correspond pas au SIRET (officiel : ${siretState.official})`
+                            : "Le nom de l'entreprise ne correspond pas au SIRET");
+                    }
+                }
+            }
 
             // Check reCAPTCHA (seulement s'il est configuré ; sinon ignoré)
             const RECAPTCHA_ON = @json((bool) config('services.recaptcha.site_key'));
