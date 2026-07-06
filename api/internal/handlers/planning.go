@@ -23,12 +23,25 @@ type PlanningItem struct {
 	EstManuel       bool    `json:"est_manuel"`
 }
 
+// GetMonPlanning renvoie l'agenda du salarié : ses créneaux manuels (+ réservations
+// de formations catalogue) FUSIONNÉS, à la lecture, avec un créneau calculé par
+// séance des événements VALIDÉS où il est concerné — qu'il les organise
+// (evenements.id_createur), qu'il anime une séance (animateurs_seances) ou qu'il
+// y soit inscrit (inscriptions_evenements). Rien n'est stocké : l'agenda est un
+// miroir toujours à jour des événements, sans risque de doublon ni de désync.
 func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
+	items := []PlanningItem{}
+
+	// 1) Créneaux modifiables persistés : saisies manuelles + formations catalogue.
+	//    On IGNORE volontairement les anciennes copies auto d'événements
+	//    (est_manuel=0 AND id_catalogue_item IS NULL) : elles sont désormais
+	//    recalculées en direct ci-dessous et feraient double emploi.
 	rows, err := database.DB.Query(`
 		SELECT id_planning, id_utilisateur, titre_creneau, description, date_debut, date_fin,
 		       type_creneau, id_evenement, id_catalogue_item, est_manuel
 		FROM planning_utilisateurs
 		WHERE id_utilisateur = ?
+		  AND (est_manuel = 1 OR id_catalogue_item IS NOT NULL)
 		ORDER BY date_debut ASC`, userId)
 	if err != nil {
 		jsonError(w, "erreur serveur", http.StatusInternalServerError)
@@ -36,7 +49,6 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 	}
 	defer rows.Close()
 
-	items := []PlanningItem{}
 	for rows.Next() {
 		var p PlanningItem
 		var desc sql.NullString
@@ -57,6 +69,71 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 			p.IDCatalogueItem = &v
 		}
 		items = append(items, p)
+	}
+
+	// 2) Créneaux calculés en direct : une ligne par séance d'événement validé
+	//    concernant le salarié. Les jointures sur cet utilisateur donnent 0 ou 1
+	//    ligne chacune (pas de multiplication) ; le WHERE dédoublonne les rôles
+	//    cumulés (ex. organisateur ET inscrit → un seul créneau par séance).
+	seances, err := database.DB.Query(`
+		SELECT s.id_seance, e.id_evenement, e.titre, s.titre, e.type_evenement,
+		       s.date_debut, s.date_fin,
+		       (e.id_createur = ?)           AS organise,
+		       (a.id_salarie IS NOT NULL)    AS anime,
+		       (i.id_utilisateur IS NOT NULL) AS inscrit
+		FROM seances_evenements s
+		JOIN evenements e ON e.id_evenement = s.id_evenement
+		LEFT JOIN animateurs_seances a
+		       ON a.id_seance = s.id_seance AND a.id_salarie = ?
+		LEFT JOIN inscriptions_evenements i
+		       ON i.id_evenement = e.id_evenement AND i.id_utilisateur = ?
+		WHERE e.statut = 'valide'
+		  AND (e.id_createur = ? OR a.id_salarie IS NOT NULL OR i.id_utilisateur IS NOT NULL)
+		ORDER BY s.date_debut ASC`, userId, userId, userId, userId)
+	if err == nil {
+		defer seances.Close()
+		for seances.Next() {
+			var idSeance, idEvenement int
+			var evTitre, typeEv, debut, fin string
+			var seanceTitre sql.NullString
+			var organise, anime, inscrit bool
+			if err := seances.Scan(&idSeance, &idEvenement, &evTitre, &seanceTitre, &typeEv,
+				&debut, &fin, &organise, &anime, &inscrit); err != nil {
+				continue
+			}
+
+			titre := evTitre
+			if seanceTitre.Valid && strings.TrimSpace(seanceTitre.String) != "" {
+				titre = evTitre + " — " + seanceTitre.String
+			}
+
+			// Rôle affiché (priorité : organisateur > animateur > participant).
+			role := "Vous participez à cet événement."
+			if organise {
+				role = "Vous organisez cet événement."
+			} else if anime {
+				role = "Vous animez cette séance."
+			}
+
+			typeCreneau := "evenement"
+			if strings.EqualFold(typeEv, "formation") {
+				typeCreneau = "formation"
+			}
+
+			idEv := idEvenement
+			roleCopy := role
+			items = append(items, PlanningItem{
+				IDPlanning:    -idSeance, // id synthétique négatif : jamais en collision avec un id_planning réel
+				IDUtilisateur: userId,
+				Titre:         titre,
+				Description:   &roleCopy,
+				DateDebut:     debut,
+				DateFin:       fin,
+				TypeCreneau:   typeCreneau,
+				IDEvenement:   &idEv,
+				EstManuel:     false, // lecture seule côté front (ni Modifier ni Supprimer)
+			})
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -197,21 +274,6 @@ func UpdatePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, us
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "créneau mis à jour"})
-}
-
-// AddPlanningFromEvenement ajoute automatiquement un créneau après inscription à un événement
-func AddPlanningFromEvenement(userId, evenementId int) {
-	var titre, dateDebut, dateFin string
-	err := database.DB.QueryRow(
-		"SELECT titre, date_debut, date_fin FROM evenements WHERE id_evenement = ?", evenementId).
-		Scan(&titre, &dateDebut, &dateFin)
-	if err != nil {
-		return
-	}
-	database.DB.Exec(`
-		INSERT IGNORE INTO planning_utilisateurs (id_utilisateur, titre_creneau, date_debut, date_fin, type_creneau, id_evenement, est_manuel)
-		VALUES (?, ?, ?, ?, 'evenement', ?, 0)`,
-		userId, titre, dateDebut, dateFin, evenementId)
 }
 
 // AddPlanningFromFormation ajoute automatiquement un créneau après réservation d'une formation

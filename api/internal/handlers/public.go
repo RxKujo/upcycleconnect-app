@@ -653,5 +653,6 @@ func GetPublicEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		"date_debut": e.DateDebut, "date_fin": e.DateFin,
 		"nb_places_total": e.NbPlacesTotal, "nb_places_dispo": e.NbPlacesDispo,
 		"prix": e.Prix, "statut": e.Statut,
+		"seances": fetchSeances(e.IDEvenement),
 	}, http.StatusOK)
 }

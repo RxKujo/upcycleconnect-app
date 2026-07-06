@@ -14,6 +14,7 @@ class EvenementController extends Controller
         'formation'  => 'Formation',
         'atelier'    => 'Atelier',
         'conference' => 'Conférence',
+        'conseil'    => 'Conseil',
     ];
 
     private array $formats = [
@@ -54,30 +55,12 @@ class EvenementController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'titre'          => 'required|string|max:200',
-            'type_evenement' => 'required|string',
-            'format'         => 'required|string',
-            'date_debut'     => 'required',
-            'date_fin'       => 'required',
-            'nb_places_total'=> 'required|integer|min:1',
-            'prix'           => 'required|numeric|min:0',
-            'description'    => 'required|string',
-        ]);
+        $this->validateEvenement($request);
 
-        $payload = [
-            'id_createur'    => (int) session('admin_id'),
-            'titre'          => $request->titre,
-            'description'    => $request->description,
-            'type_evenement' => $request->type_evenement,
-            'format'         => $request->format,
-            'lieu'           => $request->lieu ?: null,
-            'date_debut'     => $request->date_debut,
-            'date_fin'       => $request->date_fin,
-            'nb_places_total'=> (int) $request->nb_places_total,
-            'prix'           => (float) $request->prix,
-            'animateurs'     => array_map('intval', $request->input('animateurs', [])),
-        ];
+        $payload = array_merge(
+            ['id_createur' => (int) session('admin_id')],
+            $this->buildPayload($request),
+        );
 
         $response = Http::withToken(session('admin_token'))->asJson()->post($this->apiUrl, $payload);
 
@@ -118,29 +101,9 @@ class EvenementController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'titre'          => 'required|string|max:200',
-            'type_evenement' => 'required|string',
-            'format'         => 'required|string',
-            'date_debut'     => 'required',
-            'date_fin'       => 'required',
-            'nb_places_total'=> 'required|integer|min:1',
-            'prix'           => 'required|numeric|min:0',
-            'description'    => 'required|string',
-        ]);
+        $this->validateEvenement($request);
 
-        $payload = [
-            'titre'          => $request->titre,
-            'description'    => $request->description,
-            'type_evenement' => $request->type_evenement,
-            'format'         => $request->format,
-            'lieu'           => $request->lieu ?: null,
-            'date_debut'     => $request->date_debut,
-            'date_fin'       => $request->date_fin,
-            'nb_places_total'=> (int) $request->nb_places_total,
-            'prix'           => (float) $request->prix,
-            'animateurs'     => array_map('intval', $request->input('animateurs', [])),
-        ];
+        $payload = $this->buildPayload($request);
 
         $response = Http::withToken(session('admin_token'))->asJson()->put("{$this->apiUrl}/{$id}", $payload);
 
@@ -149,6 +112,62 @@ class EvenementController extends Controller
         }
 
         return redirect()->route('admin.evenements.show', $id)->with('success', 'Événement mis à jour.');
+    }
+
+    private function validateEvenement(Request $request): void
+    {
+        $request->validate([
+            'titre'                   => 'required|string|max:200',
+            'type_evenement'          => 'required|string',
+            'nb_places_total'         => 'required|integer|min:1',
+            'prix'                    => 'required|numeric|min:0',
+            'description'             => 'required|string',
+            'seances'                 => 'required|array|min:1',
+            'seances.*.titre'         => 'nullable|string|max:200',
+            'seances.*.format'        => 'required|in:presentiel,distanciel',
+            'seances.*.lieu'          => 'nullable|string|max:300',
+            'seances.*.date_debut'    => 'required',
+            'seances.*.date_fin'      => 'required',
+            'seances.*.animateurs'    => 'nullable|array',
+            'seances.*.animateurs.*'  => 'integer',
+        ], [
+            'seances.required' => 'Ajoutez au moins une séance.',
+            'seances.min'      => 'Ajoutez au moins une séance.',
+        ]);
+    }
+
+    private function buildPayload(Request $request): array
+    {
+        return [
+            'titre'           => $request->titre,
+            'description'     => $request->description,
+            'type_evenement'  => $request->type_evenement,
+            'nb_places_total' => (int) $request->nb_places_total,
+            'prix'            => (float) $request->prix,
+            'seances'         => $this->buildSeances($request),
+        ];
+    }
+
+    /**
+     * Normalise les séances soumises en un tableau prêt pour l'API.
+     */
+    private function buildSeances(Request $request): array
+    {
+        $seances = [];
+        foreach ($request->input('seances', []) as $s) {
+            if (empty($s['date_debut']) || empty($s['date_fin'])) {
+                continue;
+            }
+            $seances[] = [
+                'titre'      => trim($s['titre'] ?? '') ?: '',
+                'format'     => $s['format'] ?? 'presentiel',
+                'lieu'       => trim($s['lieu'] ?? '') ?: '',
+                'date_debut' => $s['date_debut'],
+                'date_fin'   => $s['date_fin'],
+                'animateurs' => array_map('intval', $s['animateurs'] ?? []),
+            ];
+        }
+        return $seances;
     }
 
     public function destroy($id)

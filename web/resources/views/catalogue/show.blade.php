@@ -47,6 +47,41 @@
                 <div class="event-description">{{ $evenement['description'] }}</div>
             </div>
 
+            @php $seances = $evenement['seances'] ?? []; @endphp
+
+            @if(count($seances) > 1)
+            <div class="event-card-block">
+                <h2 class="event-block-title">Programme — {{ count($seances) }} séances</h2>
+                <ol class="event-programme">
+                    @foreach($seances as $i => $s)
+                        @php
+                            $sd = \Carbon\Carbon::parse($s['date_debut']);
+                            $sf = \Carbon\Carbon::parse($s['date_fin']);
+                            $sameDay = $sd->isSameDay($sf);
+                        @endphp
+                        <li class="programme-seance">
+                            <span class="programme-num">{{ $i + 1 }}</span>
+                            <div class="programme-body">
+                                @if(!empty($s['titre']))
+                                    <span class="programme-titre">{{ $s['titre'] }}</span>
+                                @endif
+                                <span class="programme-date">
+                                    {{ $sd->locale('fr')->isoFormat('ddd D MMM Y') }}
+                                    · {{ $sd->format('H\hi') }} — {{ $sameDay ? $sf->format('H\hi') : $sf->locale('fr')->isoFormat('ddd D MMM · H\hi') }}
+                                </span>
+                                <span class="programme-lieu">
+                                    {{ ($s['format'] ?? '') === 'distanciel' ? 'À distance' : (!empty($s['lieu']) ? $s['lieu'] : 'Présentiel') }}
+                                    @if(!empty($s['animateurs']))
+                                        · {{ collect($s['animateurs'])->map(fn($a) => trim(($a['prenom'] ?? '').' '.($a['nom'] ?? '')))->filter()->implode(', ') }}
+                                    @endif
+                                </span>
+                            </div>
+                        </li>
+                    @endforeach
+                </ol>
+            </div>
+            @endif
+
             <div class="event-card-block">
                 <h2 class="event-block-title">Modalités</h2>
                 <div class="event-modalites-grid">
@@ -59,12 +94,24 @@
                         <span class="event-modalite-value">{{ $evenement['lieu'] ?? 'En ligne' }}</span>
                     </div>
                     <div class="event-modalite">
-                        <span class="event-modalite-label">Date</span>
-                        <span class="event-modalite-value">{{ $date->locale('fr')->isoFormat('dddd D MMMM Y') }}</span>
+                        <span class="event-modalite-label">{{ count($seances) > 1 ? 'Période' : 'Date' }}</span>
+                        <span class="event-modalite-value">
+                            @if(count($seances) > 1 && !$date->isSameDay($dateFin))
+                                {{ $date->locale('fr')->isoFormat('D MMM') }} → {{ $dateFin->locale('fr')->isoFormat('D MMM Y') }}
+                            @else
+                                {{ $date->locale('fr')->isoFormat('dddd D MMMM Y') }}
+                            @endif
+                        </span>
                     </div>
                     <div class="event-modalite">
-                        <span class="event-modalite-label">Horaire</span>
-                        <span class="event-modalite-value">{{ $date->format('H\hi') }} — {{ $dateFin->format('H\hi') }}</span>
+                        <span class="event-modalite-label">{{ count($seances) > 1 ? 'Séances' : 'Horaire' }}</span>
+                        <span class="event-modalite-value">
+                            @if(count($seances) > 1)
+                                {{ count($seances) }} créneaux
+                            @else
+                                {{ $date->format('H\hi') }} — {{ $dateFin->format('H\hi') }}
+                            @endif
+                        </span>
                     </div>
                 </div>
             </div>
@@ -410,6 +457,28 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 1rem;
     font-weight: 600;
     color: var(--coffee);
+}
+
+/* Programme des séances */
+.event-programme { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.programme-seance { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 14px; border-bottom: 1px dashed rgba(18,3,9,0.2); }
+.programme-seance:last-child { border-bottom: none; padding-bottom: 0; }
+.programme-num {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    background: var(--cherry); color: var(--cream);
+    border: 2px solid var(--coffee);
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem;
+}
+.programme-body { display: flex; flex-direction: column; gap: 3px; }
+.programme-titre { font-weight: 700; color: var(--coffee); font-size: 1rem; }
+.programme-date {
+    font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 600;
+    color: var(--coffee); text-transform: capitalize;
+}
+.programme-lieu {
+    font-size: 0.85rem; color: var(--coffee); opacity: 0.7;
 }
 
 /* Sidebar */

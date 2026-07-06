@@ -218,5 +218,6 @@
         })();
     </script>
     @yield('scripts')
+    @include('partials.datepicker')
 </body>
 </html>

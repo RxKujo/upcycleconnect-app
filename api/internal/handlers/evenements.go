@@ -6,8 +6,157 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
+
+// seanceLayouts liste les formats de date acceptés en provenance du front
+// (datetime-local, ISO avec ou sans zone, format MySQL…).
+var seanceLayouts = []string{
+	"2006-01-02T15:04:05Z07:00",
+	"2006-01-02T15:04:05Z",
+	"2006-01-02T15:04:05",
+	"2006-01-02 15:04:05",
+	"2006-01-02T15:04",
+	"2006-01-02 15:04",
+}
+
+// parseFlexibleTime tente de parser une date selon plusieurs layouts courants.
+func parseFlexibleTime(s string) (time.Time, bool) {
+	s = strings.TrimSpace(s)
+	for _, l := range seanceLayouts {
+		if t, err := time.Parse(l, s); err == nil {
+			return t, true
+		}
+	}
+	return time.Time{}, false
+}
+
+// computeEnvelope calcule l'enveloppe (début min / fin max) d'un ensemble de
+// séances, plus le format et le lieu de la première séance valide. Ces valeurs
+// alimentent les colonnes récapitulatives de la table evenements.
+func computeEnvelope(seances []models.SeanceInput) (debut, fin time.Time, format string, lieu *string, ok bool) {
+	for _, s := range seances {
+		d, okD := parseFlexibleTime(s.DateDebut)
+		f, okF := parseFlexibleTime(s.DateFin)
+		if !okD || !okF {
+			continue
+		}
+		if !ok || d.Before(debut) {
+			debut = d
+		}
+		if !ok || f.After(fin) {
+			fin = f
+		}
+		if !ok {
+			format = s.Format
+			if strings.TrimSpace(s.Lieu) != "" {
+				v := s.Lieu
+				lieu = &v
+			}
+			ok = true
+		}
+	}
+	if format == "" {
+		format = "presentiel"
+	}
+	return
+}
+
+// syncSeances remplace toutes les séances d'un événement par celles fournies,
+// insère leurs animateurs, puis reconstruit la table animateurs_evenements
+// comme l'union distincte des animateurs de séance (pour que le planning et
+// l'affichage « animateurs » de l'événement continuent de fonctionner).
+func syncSeances(eventId int64, seances []models.SeanceInput) {
+	// ON DELETE CASCADE nettoie animateurs_seances.
+	database.DB.Exec("DELETE FROM seances_evenements WHERE id_evenement = ?", eventId)
+	for i, s := range seances {
+		d, okD := parseFlexibleTime(s.DateDebut)
+		f, okF := parseFlexibleTime(s.DateFin)
+		if !okD || !okF {
+			continue
+		}
+		format := s.Format
+		if format == "" {
+			format = "presentiel"
+		}
+		var titre interface{}
+		if strings.TrimSpace(s.Titre) != "" {
+			titre = strings.TrimSpace(s.Titre)
+		}
+		var lieu interface{}
+		if strings.TrimSpace(s.Lieu) != "" {
+			lieu = strings.TrimSpace(s.Lieu)
+		}
+		res, err := database.DB.Exec(
+			`INSERT INTO seances_evenements (id_evenement, titre, format, lieu, date_debut, date_fin, ordre) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			eventId, titre, format, lieu, d, f, i,
+		)
+		if err != nil {
+			continue
+		}
+		sid, _ := res.LastInsertId()
+		for _, uid := range s.Animateurs {
+			database.DB.Exec("INSERT IGNORE INTO animateurs_seances (id_seance, id_salarie) VALUES (?, ?)", sid, uid)
+		}
+	}
+	// Reconstruire l'union des animateurs au niveau événement.
+	database.DB.Exec("DELETE FROM animateurs_evenements WHERE id_evenement = ?", eventId)
+	database.DB.Exec(
+		`INSERT INTO animateurs_evenements (id_evenement, id_salarie)
+		 SELECT DISTINCT ?, a.id_salarie
+		 FROM animateurs_seances a
+		 JOIN seances_evenements s ON s.id_seance = a.id_seance
+		 WHERE s.id_evenement = ?`,
+		eventId, eventId,
+	)
+}
+
+// fetchSeances renvoie les séances d'un événement, animateurs inclus.
+func fetchSeances(eventId int) []models.Seance {
+	rows, err := database.DB.Query(
+		`SELECT id_seance, titre, format, lieu, date_debut, date_fin, ordre
+		 FROM seances_evenements WHERE id_evenement = ? ORDER BY date_debut ASC, ordre ASC`, eventId)
+	if err != nil {
+		return []models.Seance{}
+	}
+	defer rows.Close()
+	result := []models.Seance{}
+	for rows.Next() {
+		var s models.Seance
+		var titre, lieu *string
+		var debut, fin time.Time
+		if err := rows.Scan(&s.IDSeance, &titre, &s.Format, &lieu, &debut, &fin, &s.Ordre); err != nil {
+			continue
+		}
+		s.Titre = titre
+		s.Lieu = lieu
+		s.DateDebut = debut.Format("2006-01-02T15:04:05")
+		s.DateFin = fin.Format("2006-01-02T15:04:05")
+		s.Animateurs = fetchSeanceAnimateurs(s.IDSeance)
+		result = append(result, s)
+	}
+	return result
+}
+
+func fetchSeanceAnimateurs(seanceId int) []models.AnimateurInfo {
+	rows, err := database.DB.Query(
+		`SELECT u.id_utilisateur, u.nom, u.prenom
+		 FROM animateurs_seances a JOIN utilisateurs u ON u.id_utilisateur = a.id_salarie
+		 WHERE a.id_seance = ?`, seanceId)
+	if err != nil {
+		return []models.AnimateurInfo{}
+	}
+	defer rows.Close()
+	result := []models.AnimateurInfo{}
+	for rows.Next() {
+		var a models.AnimateurInfo
+		if rows.Scan(&a.IDUtilisateur, &a.Nom, &a.Prenom) == nil {
+			result = append(result, a)
+		}
+	}
+	return result
+}
 
 func GetEvenements(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
@@ -53,6 +202,7 @@ func GetEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 	e.Animateurs = fetchAnimateurs(e.IDEvenement)
+	e.Seances = fetchSeances(e.IDEvenement)
 	jsonOK(w, e, http.StatusOK)
 }
 
@@ -89,16 +239,28 @@ func CreateEvenement(w http.ResponseWriter, r *http.Request, adminId int) {
 		return
 	}
 
+	// Les séances (si fournies) déterminent l'enveloppe date/format/lieu de l'événement.
+	format, lieu, debut, fin := req.Format, req.Lieu, req.DateDebut, req.DateFin
+	if len(req.Seances) > 0 {
+		if d, f, fmt2, l, ok := computeEnvelope(req.Seances); ok {
+			debut, fin, format, lieu = d, f, fmt2, l
+		}
+	}
+
 	res, err := database.DB.Exec(
 		`INSERT INTO evenements (id_createur, titre, description, type_evenement, format, lieu, date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_attente')`,
-		adminId, req.Titre, req.Description, req.TypeEvenement, req.Format, req.Lieu, req.DateDebut, req.DateFin, req.NbPlacesTotal, req.NbPlacesTotal, req.Prix,
+		adminId, req.Titre, req.Description, req.TypeEvenement, format, lieu, debut, fin, req.NbPlacesTotal, req.NbPlacesTotal, req.Prix,
 	)
 	if err != nil {
 		jsonErr(w, "impossible de créer l'événement", http.StatusInternalServerError)
 		return
 	}
 	id, _ := res.LastInsertId()
-	syncAnimateurs(id, req.Animateurs)
+	if len(req.Seances) > 0 {
+		syncSeances(id, req.Seances)
+	} else {
+		syncAnimateurs(id, req.Animateurs)
+	}
 	jsonOK(w, map[string]interface{}{"message": "événement créé", "id": id}, http.StatusCreated)
 }
 
@@ -109,9 +271,16 @@ func UpdateEvenement(w http.ResponseWriter, r *http.Request, id string, adminId 
 		return
 	}
 
+	format, lieu, debut, fin := req.Format, req.Lieu, req.DateDebut, req.DateFin
+	if len(req.Seances) > 0 {
+		if d, f, fmt2, l, ok := computeEnvelope(req.Seances); ok {
+			debut, fin, format, lieu = d, f, fmt2, l
+		}
+	}
+
 	res, err := database.DB.Exec(
 		`UPDATE evenements SET titre=?, description=?, type_evenement=?, format=?, lieu=?, date_debut=?, date_fin=?, nb_places_total=?, prix=? WHERE id_evenement=?`,
-		req.Titre, req.Description, req.TypeEvenement, req.Format, req.Lieu, req.DateDebut, req.DateFin, req.NbPlacesTotal, req.Prix, id,
+		req.Titre, req.Description, req.TypeEvenement, format, lieu, debut, fin, req.NbPlacesTotal, req.Prix, id,
 	)
 	if err != nil {
 		jsonErr(w, "impossible de modifier l'événement", http.StatusInternalServerError)
@@ -123,7 +292,11 @@ func UpdateEvenement(w http.ResponseWriter, r *http.Request, id string, adminId 
 		return
 	}
 	eventId, _ := strconv.ParseInt(id, 10, 64)
-	syncAnimateurs(eventId, req.Animateurs)
+	if len(req.Seances) > 0 {
+		syncSeances(eventId, req.Seances)
+	} else {
+		syncAnimateurs(eventId, req.Animateurs)
+	}
 	jsonOK(w, map[string]string{"message": "événement mis à jour"}, http.StatusOK)
 }
 
@@ -185,40 +358,19 @@ func AttenteEvenement(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func ValiderEvenement(w http.ResponseWriter, r *http.Request, id string, adminId int) {
-	res, err := database.DB.Exec("UPDATE evenements SET statut = 'valide', valide_par = ? WHERE id_evenement = ?", adminId, id)
+	_, err := database.DB.Exec("UPDATE evenements SET statut = 'valide', valide_par = ? WHERE id_evenement = ?", adminId, id)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la validation"})
 		return
 	}
-	if n, _ := res.RowsAffected(); n > 0 {
-		// Ajouter automatiquement l'événement au planning de chaque animateur salarié
-		// associé (table animateurs_evenements). Exécuté en goroutine pour ne pas
-		// bloquer la réponse HTTP.
-		evID, _ := strconv.Atoi(id)
-		go addEventToAnimateursPlanning(evID)
-	}
+	// Le planning des salariés (organisateurs / animateurs / inscrits) est désormais
+	// calculé en direct à la lecture par GetMonPlanning : aucun créneau n'est à
+	// insérer ici lors de la validation.
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "événement validé"})
-}
-
-// addEventToAnimateursPlanning crée les créneaux de planning pour tous les animateurs
-// d'un événement après sa validation par un responsable.
-func addEventToAnimateursPlanning(evenementID int) {
-	rows, err := database.DB.Query(
-		"SELECT id_salarie FROM animateurs_evenements WHERE id_evenement = ?", evenementID)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var salariesID int
-		if rows.Scan(&salariesID) == nil {
-			AddPlanningFromEvenement(salariesID, evenementID)
-		}
-	}
 }
 
 func RefuserEvenement(w http.ResponseWriter, r *http.Request, id string) {

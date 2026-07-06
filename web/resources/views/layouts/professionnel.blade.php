@@ -162,5 +162,6 @@
     </script>
     @yield('scripts')
     @stack('scripts')
+    @include('partials.datepicker')
 </body>
 </html>

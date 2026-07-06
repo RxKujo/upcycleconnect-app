@@ -33,7 +33,11 @@
         @endphp
 
         @foreach($evenements as $e)
-        @php $date = \Carbon\Carbon::parse($e['date_debut']); @endphp
+        @php
+            $date = \Carbon\Carbon::parse($e['date_debut']);
+            $dateFin = \Carbon\Carbon::parse($e['date_fin']);
+            $multiJours = !$date->isSameDay($dateFin);
+        @endphp
         <a href="{{ route('evenements.show', $e['id_evenement']) }}" class="event-card"
            data-type="{{ $e['type_evenement'] }}"
            data-format="{{ $e['format'] }}">
@@ -52,8 +56,12 @@
             <p class="event-card-desc">{{ \Illuminate\Support\Str::limit($e['description'] ?? '', 130) }}</p>
 
             <div class="event-card-meta">
+                @if($multiJours)
+                <p class="event-card-meta-line"><span>Programme</span> Du {{ $date->locale('fr')->isoFormat('D MMM') }} au {{ $dateFin->locale('fr')->isoFormat('D MMM Y') }} · plusieurs séances</p>
+                @else
                 <p class="event-card-meta-line"><span>Date</span> {{ $date->locale('fr')->isoFormat('dddd D MMMM Y') }}</p>
-                <p class="event-card-meta-line"><span>Horaire</span> {{ $date->format('H\hi') }} — {{ \Carbon\Carbon::parse($e['date_fin'])->format('H\hi') }}</p>
+                <p class="event-card-meta-line"><span>Horaire</span> {{ $date->format('H\hi') }} — {{ $dateFin->format('H\hi') }}</p>
+                @endif
                 <p class="event-card-meta-line"><span>Lieu</span> {{ $e['lieu'] ?? 'En ligne' }}</p>
             </div>
 

@@ -160,5 +160,6 @@
     } catch(e) {}
 })();
 </script>
+    @include('partials.datepicker')
 </body>
 </html>

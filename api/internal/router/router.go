@@ -474,6 +474,8 @@ func routeSalarieGeneral(w http.ResponseWriter, req *http.Request, path, method 
 	switch {
 	case match(path, prefixSalarie+segStats) && method == "GET":
 		handlers.GetSalarieStats(w, req, userId)
+	case match(path, prefixSalarie+"/animateurs") && method == "GET":
+		handlers.GetSalarieAnimateurs(w, req)
 	case match(path, prefixSalarie+"/templates") && method == "GET":
 		handlers.GetSalarieTemplates(w, req)
 	case match(path, prefixSalarie+"/templates") && method == "POST":

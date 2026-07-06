@@ -375,5 +375,6 @@ document.addEventListener('DOMContentLoaded', function () {
     setLang(localStorage.getItem('uc_lang') || 'fr');
 });
 </script>
+    @include('partials.datepicker')
 </body>
 </html>
