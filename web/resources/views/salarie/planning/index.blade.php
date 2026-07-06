@@ -91,7 +91,7 @@
 <div class="page-header">
     <h1 class="page-title">Mon Planning</h1>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
-        <button class="btn-secondary" id="btn-export-ics" title="Exporter au format iCalendar (Google Agenda, Outlook, Apple…)">⬇ Exporter (.ics)</button>
+        <button class="btn-secondary" id="btn-export-ics" title="Exporter au format iCalendar (Google Agenda, Outlook, Apple…)">Exporter (.ics)</button>
         <button class="btn-primary" id="btn-open-add">+ Ajouter un créneau</button>
     </div>
 </div>
@@ -209,7 +209,7 @@
         <h2 class="font-bebas" style="font-size:2rem;margin:0 0 24px;">Détail du créneau</h2>
         <div id="detail-body"></div>
         <div class="detail-actions">
-            <button type="button" class="btn-success" id="detail-itineraire" style="display:none;">🧭 Itinéraire</button>
+            <button type="button" class="btn-success" id="detail-itineraire" style="display:none;">Itinéraire</button>
             <button type="button" class="btn-primary" id="detail-edit">Modifier</button>
             <button type="button" class="btn-danger" id="detail-delete">Supprimer</button>
             <button type="button" class="btn-secondary" id="detail-close">Fermer</button>
