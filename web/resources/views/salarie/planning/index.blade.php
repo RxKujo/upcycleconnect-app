@@ -51,6 +51,17 @@
 .day-empty { color: rgba(18,3,9,0.4); font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; padding: 20px 0; }
 .tl-badge-auto { display: inline-block; font-size: 0.6rem; background: rgba(255,255,255,0.25); padding: 1px 5px; margin-left: 6px; letter-spacing: 0.04em; }
 
+/* ─── Bandeaux « journée entière » (événements multi-jours) ──────── */
+.allday-zone { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.allday-block { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border: 2px solid var(--coffee); box-shadow: 2px 2px 0 rgba(18,3,9,0.3); background: var(--forest); color: var(--cream); cursor: pointer; }
+.allday-block.type-evenement { background: var(--teal); }
+.allday-block.type-reunion { background: var(--cherry); }
+.allday-block.type-formation { background: #6c5ce7; }
+.allday-block.type-travail { background: var(--coffee); }
+.allday-block.type-perso { background: #b2bec3; color: var(--coffee); }
+.allday-block .allday-title { font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; }
+.allday-block .allday-span { font-family: 'DM Mono', monospace; font-size: 0.72rem; opacity: 0.85; white-space: nowrap; }
+
 /* ─── Modale custom ──────────────────────────────────────────────── */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(18,3,9,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .modal-box { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 40px; width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto; position: relative; }
@@ -359,40 +370,66 @@
             return;
         }
 
-        // Plage horaire dynamique
-        var minH = 8, maxH = 19;
+        // Sépare les événements « journée entière / multi-jours » (qui ne tiennent
+        // pas dans la journée sélectionnée) des créneaux horaires classiques.
+        var allDay = [], timed = [];
         evs.forEach(function (e) {
-            var sh = sameDay(e.debut, selected) ? e.debut.getHours() : 0;
-            var eh = sameDay(e.fin, selected) ? e.fin.getHours() + (e.fin.getMinutes() > 0 ? 1 : 0) : 24;
-            if (sh < minH) minH = sh;
-            if (eh > maxH) maxH = eh;
+            if (sameDay(e.debut, selected) && sameDay(e.fin, selected)) timed.push(e);
+            else allDay.push(e);
         });
-        if (minH < 0) minH = 0;
-        if (maxH > 24) maxH = 24;
 
-        var html = '<div class="timeline" style="height:' + ((maxH - minH) * HOUR_PX) + 'px;">';
-        for (var h = minH; h < maxH; h++) {
-            html += '<div class="timeline-hour"><span class="hour-label">' + pad(h) + ':00</span></div>';
+        var html = '';
+
+        // Bandeaux « journée entière » en haut (multi-jours).
+        if (allDay.length) {
+            html += '<div class="allday-zone">';
+            allDay.forEach(function (e) {
+                var autoTag = e.manuel ? '' : '<span class="tl-badge-auto">auto</span>';
+                var span = e.debut.getDate() + '/' + pad(e.debut.getMonth() + 1) + ' → ' +
+                    e.fin.getDate() + '/' + pad(e.fin.getMonth() + 1);
+                html += '<div class="allday-block type-' + esc(e.type) + '" data-id="' + e.id + '" title="Voir le détail">' +
+                    '<span class="allday-title">' + esc(e.titre) + autoTag + '</span>' +
+                    '<span class="allday-span">Journée entière · ' + span + '</span>' +
+                    '</div>';
+            });
+            html += '</div>';
         }
-        html += '<div class="timeline-events">';
-        evs.forEach(function (e) {
+
+        // Timeline horaire pour les créneaux qui tiennent dans la journée.
+        if (timed.length) {
+            var minH = 8, maxH = 19;
+            timed.forEach(function (e) {
+                var sh = e.debut.getHours();
+                var eh = e.fin.getHours() + (e.fin.getMinutes() > 0 ? 1 : 0);
+                if (sh < minH) minH = sh;
+                if (eh > maxH) maxH = eh;
+            });
+            if (minH < 0) minH = 0;
+            if (maxH > 24) maxH = 24;
+
+            html += '<div class="timeline" style="height:' + ((maxH - minH) * HOUR_PX) + 'px;">';
+            for (var h = minH; h < maxH; h++) {
+                html += '<div class="timeline-hour"><span class="hour-label">' + pad(h) + ':00</span></div>';
+            }
+            html += '<div class="timeline-events">';
             var dayStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), minH, 0);
-            var dayEnd = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), maxH, 0);
-            var s = e.debut < dayStart ? dayStart : e.debut;
-            var f = e.fin > dayEnd ? dayEnd : e.fin;
-            var top = ((s - dayStart) / 3600000) * HOUR_PX;
-            var height = Math.max(22, ((f - s) / 3600000) * HOUR_PX);
-            var label = pad(e.debut.getHours()) + ':' + pad(e.debut.getMinutes()) + ' – ' + pad(e.fin.getHours()) + ':' + pad(e.fin.getMinutes());
-            var autoTag = e.manuel ? '' : '<span class="tl-badge-auto">auto</span>';
-            html += '<div class="tl-block type-' + esc(e.type) + '" data-id="' + e.id + '" title="Voir le détail" style="top:' + top + 'px;height:' + height + 'px;cursor:pointer;">' +
-                '<div class="tl-title">' + esc(e.titre) + autoTag + '</div>' +
-                '<div class="tl-time">' + label + '</div>' +
-                '</div>';
-        });
-        html += '</div></div>';
+            timed.forEach(function (e) {
+                var top = ((e.debut - dayStart) / 3600000) * HOUR_PX;
+                var height = Math.max(22, ((e.fin - e.debut) / 3600000) * HOUR_PX);
+                var label = pad(e.debut.getHours()) + ':' + pad(e.debut.getMinutes()) + ' – ' +
+                    pad(e.fin.getHours()) + ':' + pad(e.fin.getMinutes());
+                var autoTag = e.manuel ? '' : '<span class="tl-badge-auto">auto</span>';
+                html += '<div class="tl-block type-' + esc(e.type) + '" data-id="' + e.id + '" title="Voir le détail" style="top:' + top + 'px;height:' + height + 'px;cursor:pointer;">' +
+                    '<div class="tl-title">' + esc(e.titre) + autoTag + '</div>' +
+                    '<div class="tl-time">' + label + '</div>' +
+                    '</div>';
+            });
+            html += '</div></div>';
+        }
+
         body.innerHTML = html;
 
-        body.querySelectorAll('.tl-block').forEach(function (blk) {
+        body.querySelectorAll('.tl-block, .allday-block').forEach(function (blk) {
             blk.addEventListener('click', function () { openDetail(+blk.dataset.id); });
         });
     }
