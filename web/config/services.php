@@ -46,4 +46,10 @@ return [
         'secret_key' => env('RECAPTCHA_SECRET_KEY', ''),
     ],
 
+    // OneSignal (notifications push web). Seul l'App ID est exposé au navigateur ;
+    // la REST API Key reste côté API Go (envoi des push).
+    'onesignal' => [
+        'app_id' => env('ONESIGNAL_APP_ID', ''),
+    ],
+
 ];
