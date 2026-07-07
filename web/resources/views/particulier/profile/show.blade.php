@@ -44,6 +44,11 @@
     /* En édition : label au-dessus du champ pleine largeur (plus aéré). */
     .editing .info-row { flex-direction: column; align-items: stretch; gap: 6px; padding: 14px 0; }
     .editing .info-key { margin-bottom: 2px; }
+    /* Le wrapper d'autocomplétion d'adresse ne doit exister qu'en édition,
+       sinon il casse l'alignement à droite de la valeur en lecture. */
+    .addr-ac-wrap { display: none; }
+    .editing .addr-ac-wrap { display: block; }
+    .edit-input[readonly] { background: rgba(18,3,9,0.04); color: var(--coffee); cursor: default; }
 
     .full-width { grid-column: 1 / -1; }
 
@@ -95,7 +100,7 @@
             <div class="info-row">
                 <span class="info-key"><span data-i18n="prof.city">Ville</span></span>
                 <span class="info-val" id="val-ville"></span>
-                <input class="edit-input" id="edit-ville" placeholder="Ville" data-i18n-ph="prof.city">
+                <input class="edit-input" id="edit-ville" placeholder="Renseignée via l'adresse" data-i18n-ph="prof.cityauto" readonly>
             </div>
             <div class="info-row">
                 <span class="info-key"><span data-i18n="prof.address">Adresse</span></span>

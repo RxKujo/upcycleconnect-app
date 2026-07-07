@@ -607,3 +607,8 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('adm.mod.events',     @en, '→ Moderate events'),
 ('adm.managemembers',  @en, '→ Manage members'),
 ('adm.vieworders',     @en, '→ View orders');
+
+-- ── Fix profil : placeholder ville auto-remplie ──────────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN ('prof.cityauto');
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prof.cityauto', @en, 'Filled from address');
