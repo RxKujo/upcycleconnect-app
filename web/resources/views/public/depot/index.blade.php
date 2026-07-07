@@ -115,11 +115,32 @@
 @vite('resources/js/conteneurs-map.js')
 <script>
 const API = '{{ config("services.api.public_url") }}';
-const token = localStorage.getItem('uc_token');
+// Accepte les deux clés de jeton (le login stocke sous auth_token ; d'autres
+// pages utilisent uc_token). Sans ça, un particulier connecté était pris pour
+// un visiteur et redirigé en boucle.
+const token = localStorage.getItem('uc_token') || localStorage.getItem('auth_token');
 let selectedConteneur = null;
 
+// Pas connecté : on l'explique clairement (au lieu d'une redirection muette).
+// La carte reste consultable (données publiques) ; seule la demande de dépôt
+// nécessite un compte.
 if (!token) {
-    window.location.href = '/login?return=/depot';
+    document.addEventListener('DOMContentLoaded', function () {
+        const wrap = document.querySelector('.depot-wrap');
+        if (!wrap) return;
+        const notice = document.createElement('div');
+        notice.setAttribute('role', 'alert');
+        notice.style.cssText = 'border:3px solid var(--cherry); background:#f8d7da; color:#842029; padding:16px 20px; margin-bottom:28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;';
+        notice.innerHTML =
+            '<span style="font-family:\'DM Mono\',monospace; font-size:0.9rem;">Connexion requise — déposer un objet en conteneur nécessite un compte <strong>particulier</strong>.</span>' +
+            '<a href="/login?return=%2Fdepot" class="btn btn-primary" style="width:auto; white-space:nowrap; padding:10px 22px;">Se connecter</a>';
+        wrap.insertBefore(notice, wrap.firstChild);
+        // Le formulaire de demande est désactivé tant qu'on n'est pas connecté.
+        const form = document.getElementById('form-depot');
+        if (form) {
+            form.querySelectorAll('input, textarea, select, button').forEach(function (el) { el.disabled = true; });
+        }
+    });
 }
 
 // La carte (marqueurs, popups, « Autour de moi », itinéraire) est gérée par le

@@ -32,7 +32,7 @@
 @section('scripts')
 <script>
 const API = '{{ config("services.api.public_url") }}';
-const token = localStorage.getItem('uc_token');
+const token = localStorage.getItem('uc_token') || localStorage.getItem('auth_token');
 
 async function loadEtapes() {
     const headers = token ? { 'Authorization': 'Bearer ' + token } : {};

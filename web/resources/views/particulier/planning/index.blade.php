@@ -104,7 +104,7 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/fr.global.min.js"></script>
 <script>
 const API = '{{ config("services.api.public_url") }}';
-const token = localStorage.getItem('uc_token');
+const token = localStorage.getItem('uc_token') || localStorage.getItem('auth_token');
 let calendar;
 let currentEvent = null;
 
