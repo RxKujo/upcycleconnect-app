@@ -6,10 +6,10 @@
 <div class="main-content">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
-        <h1 class="font-bebas" style="font-size:2.4rem;">Mes publicités</h1>
+        <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.myads">Mes publicités</span></h1>
         <div style="display:flex; gap:12px;">
             <a href="{{ route('pro.dashboard.essential') }}" class="btn-secondary btn-sm">← Dashboard</a>
-            <button type="button" id="btn-open-modal" class="btn-primary btn-sm">Nouvelle publicité</button>
+            <button type="button" id="btn-open-modal" class="btn-primary btn-sm"><span data-i18n="prod.ads.new">Nouvelle publicité</span></button>
         </div>
     </div>
 
@@ -26,7 +26,7 @@
 
     {{-- Info tarif --}}
     <div style="border:3px solid var(--coffee); box-shadow:4px 4px 0 var(--coffee); padding:20px 24px; margin-bottom:24px; background:var(--wheat);">
-        <span class="font-mono" style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; background:var(--teal); color:var(--cream); padding:2px 10px; border:2px solid var(--coffee); display:inline-block; margin-bottom:10px;">Tarifs & conditions</span>
+        <span class="font-mono" style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; background:var(--teal); color:var(--cream); padding:2px 10px; border:2px solid var(--coffee); display:inline-block; margin-bottom:10px;"><span data-i18n="prod.ads.terms">Tarifs & conditions</span></span>
         <p style="font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--coffee);">
             <strong>100 €/mois</strong> par publicité — Maximum <strong>5 publicités actives</strong>.<br>
             Toute publicité est soumise à validation par l'équipe UpcycleConnect avant mise en ligne.
@@ -68,7 +68,7 @@
 
                 @if($pub['statut'] === 'refusee' && !empty($pub['motif_refus']))
                     <div style="margin-top:12px;background:#f8d7da;border:2px solid #842029;padding:8px 12px;font-size:0.82rem;color:#842029;">
-                        <strong>Motif du refus :</strong> {{ $pub['motif_refus'] }}
+                        <strong><span data-i18n="prod.ads.refusal">Motif du refus :</span></strong> {{ $pub['motif_refus'] }}
                     </div>
                 @endif
 
@@ -84,15 +84,15 @@
                   data-confirm="Supprimer cette publicité ? Cette action est irréversible.">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn-secondary btn-sm" style="color:#A4243B;">Supprimer</button>
+                <button type="submit" class="btn-secondary btn-sm" style="color:#A4243B;"><span data-i18n="btn.delete">Supprimer</span></button>
             </form>
             @endif
         </div>
     </div>
     @empty
         <div class="card" style="text-align:center; padding:48px;">
-            <p style="color:#666; margin-bottom:16px;">Vous n'avez pas encore de publicité.</p>
-            <button type="button" id="btn-open-modal-empty" class="btn-primary">Créer ma première publicité</button>
+            <p style="color:#666; margin-bottom:16px;"><span data-i18n="prod.ads.empty">Vous n'avez pas encore de publicité.</span></p>
+            <button type="button" id="btn-open-modal-empty" class="btn-primary"><span data-i18n="prod.ads.createfirst">Créer ma première publicité</span></button>
         </div>
     @endforelse
 
@@ -103,7 +103,7 @@
     <div style="background:var(--cream); border:3px solid var(--coffee); box-shadow:8px 8px 0 var(--coffee); padding:40px; max-width:600px; width:100%; position:relative;">
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
-            <h2 class="font-bebas" style="font-size:2rem; letter-spacing:0.08em;">Nouvelle publicité</h2>
+            <h2 class="font-bebas" style="font-size:2rem; letter-spacing:0.08em;"><span data-i18n="prod.ads.new">Nouvelle publicité</span></h2>
             <button id="btn-close-modal" style="background:none; border:none; font-size:1.4rem; cursor:pointer; font-family:'DM Mono',monospace; color:var(--coffee);">✕</button>
         </div>
 
@@ -118,7 +118,7 @@
             </div>
 
             <div style="margin-bottom:20px;">
-                <label for="pub-visuel" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">URL du visuel (image)</label>
+                <label for="pub-visuel" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.visual">URL du visuel (image)</span></label>
                 <input id="pub-visuel" type="url" name="visuel_url" value="{{ old('visuel_url') }}" maxlength="500"
                     placeholder="https://..."
                     style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'Outfit',sans-serif; font-size:1rem; background:white;">
@@ -126,7 +126,7 @@
             </div>
 
             <div style="margin-bottom:20px;">
-                <label for="pub-url" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">URL de destination (clic)</label>
+                <label for="pub-url" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.url">URL de destination (clic)</span></label>
                 <input id="pub-url" type="url" name="url_cible" value="{{ old('url_cible') }}" maxlength="500"
                     placeholder="https://..."
                     style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'Outfit',sans-serif; font-size:1rem; background:white;">
@@ -135,12 +135,12 @@
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
                 <div>
-                    <label for="pub-debut" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Date de début</label>
+                    <label for="pub-debut" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.start">Date de début</span></label>
                     <input id="pub-debut" type="date" name="date_debut" value="{{ old('date_debut') }}"
                         style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'DM Mono',monospace; background:white;">
                 </div>
                 <div>
-                    <label for="pub-fin" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Date de fin</label>
+                    <label for="pub-fin" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.end">Date de fin</span></label>
                     <input id="pub-fin" type="date" name="date_fin" value="{{ old('date_fin') }}"
                         style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'DM Mono',monospace; background:white;">
                 </div>
@@ -152,8 +152,8 @@
             </div>
 
             <div style="display:flex; gap:12px; justify-content:flex-end;">
-                <button type="button" id="btn-close-modal-2" class="btn-secondary btn-sm">Annuler</button>
-                <button type="submit" class="btn-primary btn-sm">Soumettre</button>
+                <button type="button" id="btn-close-modal-2" class="btn-secondary btn-sm"><span data-i18n="btn.cancel">Annuler</span></button>
+                <button type="submit" class="btn-primary btn-sm"><span data-i18n="prod.ads.submit">Soumettre</span></button>
             </div>
         </form>
     </div>

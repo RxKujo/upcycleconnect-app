@@ -6,7 +6,7 @@
 <div class="main-content" style="max-width:680px;">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
-        <h1 class="font-bebas" style="font-size:2.4rem;">Nouvelle publicité</h1>
+        <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.ads.new">Nouvelle publicité</span></h1>
         <a href="{{ route('pro.publicites.index') }}" class="btn-secondary btn-sm">← Retour</a>
     </div>
 
@@ -22,7 +22,7 @@
             </div>
 
             <div style="margin-bottom:20px;">
-                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">URL du visuel (image)</label>
+                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.visual">URL du visuel (image)</span></label>
                 <input type="url" name="visuel_url" value="{{ old('visuel_url') }}" maxlength="500"
                     placeholder="https://..."
                     style="width:100%; padding:12px; border:3px solid #120309; font-family:'Outfit',sans-serif; font-size:1rem;">
@@ -30,7 +30,7 @@
             </div>
 
             <div style="margin-bottom:20px;">
-                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">URL de destination (clic)</label>
+                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.url">URL de destination (clic)</span></label>
                 <input type="url" name="url_cible" value="{{ old('url_cible') }}" maxlength="500"
                     placeholder="https://..."
                     style="width:100%; padding:12px; border:3px solid #120309; font-family:'Outfit',sans-serif; font-size:1rem;">
@@ -39,12 +39,12 @@
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
                 <div>
-                    <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Date de début</label>
+                    <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.start">Date de début</span></label>
                     <input type="date" name="date_debut" value="{{ old('date_debut') }}"
                         style="width:100%; padding:12px; border:3px solid #120309; font-family:'DM Mono',monospace;">
                 </div>
                 <div>
-                    <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Date de fin</label>
+                    <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.end">Date de fin</span></label>
                     <input type="date" name="date_fin" value="{{ old('date_fin') }}"
                         style="width:100%; padding:12px; border:3px solid #120309; font-family:'DM Mono',monospace;">
                 </div>
@@ -55,7 +55,7 @@
                 ⏳ Votre publicité sera <strong>soumise à validation</strong> avant mise en ligne.
             </div>
 
-            <button type="submit" class="btn-primary">Soumettre la publicité</button>
+            <button type="submit" class="btn-primary"><span data-i18n="prod.ads.submitfull">Soumettre la publicité</span></button>
         </form>
     </div>
 

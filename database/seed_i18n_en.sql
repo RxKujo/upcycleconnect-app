@@ -438,3 +438,30 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('prod.containers.barcode.ph',  @en, 'Enter or scan the code'),
 ('prod.containers.validatebtn', @en, 'Validate receipt'),
 ('prod.containers.pending',     @en, 'Awaiting pickup');
+
+-- ── LOT 6b : pro — publicites + dashboard expert + historique ────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'prod.ads.new','prod.ads.terms','prod.ads.refusal','prod.ads.empty','prod.ads.createfirst',
+  'prod.ads.f.visual','prod.ads.f.url','prod.ads.f.start','prod.ads.f.end','prod.ads.submit','prod.ads.submitfull',
+  'prod.expert.title','prod.monthlyview','prod.exportpdf','prod.badges','prod.badges.empty','prod.badges.recalc',
+  'prod.pickups.title'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prod.ads.new',         @en, 'New ad'),
+('prod.ads.terms',       @en, 'Pricing & terms'),
+('prod.ads.refusal',     @en, 'Refusal reason:'),
+('prod.ads.empty',       @en, 'You don''t have any ads yet.'),
+('prod.ads.createfirst', @en, 'Create my first ad'),
+('prod.ads.f.visual',    @en, 'Visual URL (image)'),
+('prod.ads.f.url',       @en, 'Destination URL (click)'),
+('prod.ads.f.start',     @en, 'Start date'),
+('prod.ads.f.end',       @en, 'End date'),
+('prod.ads.submit',      @en, 'Submit'),
+('prod.ads.submitfull',  @en, 'Submit the ad'),
+('prod.expert.title',  @en, 'Expert Pro dashboard'),
+('prod.monthlyview',   @en, 'Monthly view'),
+('prod.exportpdf',     @en, 'Export PDF'),
+('prod.badges',        @en, 'Your badges'),
+('prod.badges.empty',  @en, 'No badges earned yet. Keep collecting items!'),
+('prod.badges.recalc', @en, 'Recalculate my badges'),
+('prod.pickups.title', @en, 'My pickups');
