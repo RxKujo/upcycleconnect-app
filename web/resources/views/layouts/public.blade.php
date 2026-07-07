@@ -233,7 +233,7 @@
 
 <!-- Overlay tutoriel -->
 <div id="tuto-overlay" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.82);z-index:99999;align-items:center;justify-content:center;">
-    <div style="background:var(--cream);border:3px solid var(--coffee);box-shadow:8px 8px 0 var(--coffee);padding:48px;max-width:580px;width:90%;position:relative;">
+    <div id="tuto-card" style="background:var(--cream);border:3px solid var(--coffee);box-shadow:8px 8px 0 var(--coffee);padding:40px;width:460px;max-width:92vw;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <span id="tuto-step-num" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:var(--forest);font-weight:700;"></span>
             <button onclick="passerTutoriel()" style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;background:none;border:none;cursor:pointer;color:#888;text-decoration:underline;">Passer le tutoriel</button>
@@ -271,17 +271,91 @@
 })();
 
 let _tutoEtapes = [], _tutoIdx = 0, _tutoToken = '';
+let _tutoSpotEl = null, _tutoSpotPrevPos = '';
 
 function lancerTutoriel(etapes, token) {
     _tutoEtapes = etapes; _tutoIdx = 0; _tutoToken = token;
-    afficherEtape(0);
     document.getElementById('tuto-overlay').style.display = 'flex';
+    lockTutoUI();
+    afficherEtape(0);
+}
+
+// ── Blocage : verrouille le scroll, Tab et Échap tant que le tuto est ouvert ──
+function lockTutoUI() {
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', tutoKeyTrap, true);
+    window.addEventListener('resize', tutoReposition);
+    window.addEventListener('scroll', tutoReposition, true);
+}
+function unlockTutoUI() {
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', tutoKeyTrap, true);
+    window.removeEventListener('resize', tutoReposition);
+    window.removeEventListener('scroll', tutoReposition, true);
+    clearSpot();
+}
+function tutoKeyTrap(ev) {
+    if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); return; }
+    if (ev.key === 'Tab') {
+        const f = document.querySelectorAll('#tuto-card button');
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+        else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    }
+}
+
+// ── Spotlight : trou lumineux autour de l'élément ciblé (cible_element) ──
+function clearSpot() {
+    if (_tutoSpotEl) {
+        _tutoSpotEl.style.boxShadow = '';
+        _tutoSpotEl.style.zIndex = '';
+        _tutoSpotEl.style.position = _tutoSpotPrevPos || '';
+        _tutoSpotEl = null;
+    }
+}
+function setSpot(el) {
+    clearSpot();
+    _tutoSpotPrevPos = el.style.position || '';
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    el.style.zIndex = '100000';
+    el.style.boxShadow = '0 0 0 4px var(--forest), 0 0 0 9999px rgba(18,3,9,0.82)';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    _tutoSpotEl = el;
+}
+
+function placeCard(targetEl, position) {
+    const card = document.getElementById('tuto-card');
+    card.style.position = 'fixed';
+    if (!targetEl) {
+        card.style.top = '50%'; card.style.left = '50%'; card.style.transform = 'translate(-50%,-50%)';
+        return;
+    }
+    card.style.transform = 'none';
+    const r = targetEl.getBoundingClientRect();
+    const cw = card.offsetWidth, ch = card.offsetHeight, gap = 18;
+    let top, left;
+    switch (position) {
+        case 'top':   top = r.top - ch - gap;          left = r.left + r.width / 2 - cw / 2; break;
+        case 'left':  top = r.top + r.height / 2 - ch / 2; left = r.left - cw - gap;         break;
+        case 'right': top = r.top + r.height / 2 - ch / 2; left = r.right + gap;             break;
+        default:      top = r.bottom + gap;            left = r.left + r.width / 2 - cw / 2; break;
+    }
+    top  = Math.max(12, Math.min(top,  window.innerHeight - ch - 12));
+    left = Math.max(12, Math.min(left, window.innerWidth  - cw - 12));
+    card.style.top = top + 'px'; card.style.left = left + 'px';
+}
+
+function tutoReposition() {
+    const e = _tutoEtapes[_tutoIdx]; if (!e) return;
+    const targetEl = e.cible_element ? document.querySelector(e.cible_element) : null;
+    placeCard(targetEl, e.position);
 }
 
 function afficherEtape(idx) {
     const e = _tutoEtapes[idx];
     if (!e) return;
-    document.getElementById('tuto-step-num').textContent = 'Étape ' + e.ordre + ' / ' + _tutoEtapes.length;
+    document.getElementById('tuto-step-num').textContent = 'Étape ' + (idx + 1) + ' / ' + _tutoEtapes.length;
     document.getElementById('tuto-icone').textContent = e.icone || '';
     document.getElementById('tuto-titre').textContent = e.titre;
     document.getElementById('tuto-contenu').textContent = e.contenu;
@@ -296,6 +370,18 @@ function afficherEtape(idx) {
     }
     const dots = document.getElementById('tuto-dots');
     dots.innerHTML = _tutoEtapes.map((_, i) => `<div style="width:10px;height:10px;border-radius:50%;background:${i===idx?'var(--forest)':'rgba(18,3,9,0.2)'};"></div>`).join('');
+
+    // Étape guidée (spotlight) si elle cible un élément présent, sinon centrée.
+    const overlay = document.getElementById('tuto-overlay');
+    const targetEl = e.cible_element ? document.querySelector(e.cible_element) : null;
+    if (targetEl) {
+        overlay.style.background = 'transparent'; // l'ombre du spotlight assombrit la page
+        setSpot(targetEl);
+    } else {
+        clearSpot();
+        overlay.style.background = 'rgba(18,3,9,0.82)';
+    }
+    requestAnimationFrame(() => placeCard(targetEl, e.position));
 }
 
 function tutoNav(dir) {
@@ -304,13 +390,15 @@ function tutoNav(dir) {
 }
 
 async function terminerTutoriel() {
-    await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/termine', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
+    unlockTutoUI();
     document.getElementById('tuto-overlay').style.display = 'none';
+    try { await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/termine', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } }); } catch (e) {}
 }
 
 async function passerTutoriel() {
-    await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/passer', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
+    unlockTutoUI();
     document.getElementById('tuto-overlay').style.display = 'none';
+    try { await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/passer', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } }); } catch (e) {}
 }
 
 // ─── Moteur i18n ───────────────────────────────────────────────────────────

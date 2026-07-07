@@ -62,3 +62,29 @@ func AuthRequired(w http.ResponseWriter, r *http.Request) (int, string, bool) {
 func AdminRequired(role string) bool {
 	return role == "admin"
 }
+
+// OptionalAuth extrait (userId, role) du token s'il est présent et valide, sans
+// écrire d'erreur. Renvoie ok=false si absent/invalide (routes publiques qui
+// adaptent leur réponse selon l'authentification).
+func OptionalAuth(r *http.Request) (int, string, bool) {
+	parts := strings.Split(r.Header.Get("Authorization"), " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return 0, "", false
+	}
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(parts[1], claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil || !token.Valid {
+		return 0, "", false
+	}
+	idClaim, okID := claims["id"].(float64)
+	role, okRole := claims["role"].(string)
+	if !okID || !okRole {
+		return 0, "", false
+	}
+	return int(idClaim), role, true
+}
