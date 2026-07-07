@@ -38,18 +38,18 @@
 
 @section('content')
 <div class="ressources-wrap">
-    <h1 class="page-title">Ressources pédagogiques</h1>
-    <p class="page-sub">Actualités, conseils et astuces rédigés par l'équipe UpcycleConnect pour vous accompagner dans le réemploi et la réparation.</p>
+    <h1 class="page-title" data-i18n="resources.title">Ressources pédagogiques</h1>
+    <p class="page-sub" data-i18n="resources.subtitle">Actualités, conseils et astuces rédigés par l'équipe UpcycleConnect pour vous accompagner dans le réemploi et la réparation.</p>
 
     <div class="filters" id="filters"></div>
 
     <div id="articles-grid" class="articles-grid">
-        <div style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;color:#999;">Chargement…</div>
+        <div data-i18n="common.loading" style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;color:#999;">Chargement…</div>
     </div>
 
     <div id="empty-state" class="empty-state" style="display:none;">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;margin-bottom:8px;">Aucune ressource pour le moment</h3>
-        <p style="opacity:0.6;">L'équipe UpcycleConnect publiera bientôt des actualités et des conseils ici.</p>
+        <h3 data-i18n="resources.empty.title" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;margin-bottom:8px;">Aucune ressource pour le moment</h3>
+        <p data-i18n="resources.empty.body" style="opacity:0.6;">L'équipe UpcycleConnect publiera bientôt des actualités et des conseils ici.</p>
     </div>
 </div>
 

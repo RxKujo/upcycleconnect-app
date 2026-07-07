@@ -99,3 +99,42 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('pay.amount',                 @en, 'Amount:'),
 ('pay.now',                    @en, 'Pay now'),
 ('pay.note',                   @en, 'Secure payment by Stripe — card details are never stored.');
+
+-- ── LOT 3 : ressources (liste + fiche) + forum (liste + fiche) ───────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'resources.title','resources.subtitle','common.loading','resources.empty.title',
+  'resources.empty.body','resources.pdf','resources.all',
+  'forum.kicker','forum.title','forum.subtitle','forum.newtopic','forum.newtopic.title',
+  'forum.field.title','forum.field.category','forum.field.category.ph','forum.field.message',
+  'forum.by','forum.messages','forum.empty.title','forum.empty.body','forum.nomsg','forum.join',
+  'forum.login2reply','forum.yourreply','forum.reply.ph','forum.postreply','forum.reply','forum.report'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('resources.title',        @en, 'Educational resources'),
+('resources.subtitle',     @en, 'News, tips and advice written by the UpcycleConnect team to help you with reuse and repair.'),
+('common.loading',         @en, 'Loading…'),
+('resources.empty.title',  @en, 'No resources yet'),
+('resources.empty.body',   @en, 'The UpcycleConnect team will publish news and advice here soon.'),
+('resources.pdf',          @en, 'Download as PDF'),
+('resources.all',          @en, 'All resources'),
+('forum.kicker',           @en, 'Community'),
+('forum.title',            @en, 'Forum'),
+('forum.subtitle',         @en, 'Chat with the community, ask your questions and share your feedback'),
+('forum.newtopic',         @en, '+ New topic'),
+('forum.newtopic.title',   @en, 'Start a new topic'),
+('forum.field.title',      @en, 'Title'),
+('forum.field.category',   @en, 'Category (optional)'),
+('forum.field.category.ph',@en, 'e.g. repair, training, advice...'),
+('forum.field.message',    @en, 'Message'),
+('forum.by',               @en, 'By'),
+('forum.messages',         @en, 'Messages'),
+('forum.empty.title',      @en, 'No topics'),
+('forum.empty.body',       @en, 'Be the first to start a discussion!'),
+('forum.nomsg',            @en, 'No messages in this topic.'),
+('forum.join',             @en, 'Would you like to join this discussion?'),
+('forum.login2reply',      @en, 'Log in to reply'),
+('forum.yourreply',        @en, 'Your reply'),
+('forum.reply.ph',         @en, 'Write your message...'),
+('forum.postreply',        @en, 'Post my reply'),
+('forum.reply',            @en, 'Reply'),
+('forum.report',           @en, 'Report');

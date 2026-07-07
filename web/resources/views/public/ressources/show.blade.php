@@ -76,8 +76,8 @@
     </div>
 
     <div class="res-actions no-print" style="margin-top:48px;">
-        <button type="button" class="btn btn-primary" id="btn-pdf" data-filename="{{ \Illuminate\Support\Str::slug($article['titre'] ?? 'ressource') }}">Télécharger en PDF</button>
-        <a href="{{ route('ressources.index') }}" class="btn btn-secondary">Toutes les ressources</a>
+        <button type="button" class="btn btn-primary" id="btn-pdf" data-filename="{{ \Illuminate\Support\Str::slug($article['titre'] ?? 'ressource') }}" data-i18n="resources.pdf">Télécharger en PDF</button>
+        <a href="{{ route('ressources.index') }}" class="btn btn-secondary" data-i18n="resources.all">Toutes les ressources</a>
     </div>
 </div>
 

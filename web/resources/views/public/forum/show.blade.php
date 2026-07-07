@@ -55,37 +55,37 @@
                         data-msg-id="{{ $message['id_message'] }}"
                         data-msg-author="{{ $message['auteur_prenom'] }} {{ $message['auteur_nom_initiale'] }}"
                         style="font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; padding:6px 12px; border:var(--border); background:transparent; cursor:pointer; opacity:0.7;">
-                    ↳ Répondre
+                    ↳ <span data-i18n="forum.reply">Répondre</span>
                 </button>
                 <button type="button" class="report-btn"
                         data-msg-id="{{ $message['id_message'] }}"
                         style="font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; padding:6px 12px; border:1px solid #b00; background:transparent; color:#b00; cursor:pointer; opacity:0.6;">
-                    ⚑ Signaler
+                    ⚑ <span data-i18n="forum.report">Signaler</span>
                 </button>
             </div>
         </div>
         @empty
-        <p style="text-align:center; opacity:0.6; padding:40px;">Aucun message dans ce sujet.</p>
+        <p style="text-align:center; opacity:0.6; padding:40px;" data-i18n="forum.nomsg">Aucun message dans ce sujet.</p>
         @endforelse
     </div>
 
     <div id="replyLoginBox" style="display:none; border:var(--border); padding:32px; background:white; box-shadow:var(--shadow-sm); text-align:center;">
-        <p style="font-size:1rem; margin-bottom:16px; opacity:0.7;">Vous souhaitez participer à cette discussion ?</p>
-        <a href="{{ route('particulier.login') }}?return={{ urlencode(request()->getPathInfo()) }}" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour répondre">
+        <p style="font-size:1rem; margin-bottom:16px; opacity:0.7;" data-i18n="forum.join">Vous souhaitez participer à cette discussion ?</p>
+        <a href="{{ route('particulier.login') }}?return={{ urlencode(request()->getPathInfo()) }}" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour répondre" data-i18n="forum.login2reply">
             Se connecter pour répondre
         </a>
     </div>
 
     <form id="replyForm" autocomplete="off" style="display:none; border:var(--border); padding:24px; background:white; box-shadow:var(--shadow-sm);" onsubmit="return submitReply(event, {{ $sujet['id_sujet'] }});">
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; margin-bottom:8px;">Votre réponse</h3>
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; margin-bottom:8px;" data-i18n="forum.yourreply">Votre réponse</h3>
         <div id="replyContext" style="display:none; font-family:'DM Mono',monospace; font-size:0.72rem; opacity:0.6; margin-bottom:12px; padding:8px 12px; background:rgba(0,0,0,0.04); border-left:2px solid var(--teal);">
             <span id="replyContextText"></span>
             <button type="button" id="cancelReplyContext" style="float:right; background:none; border:none; cursor:pointer; color:#b00; font-family:inherit; font-size:0.72rem;">✕ retirer</button>
         </div>
         <input type="hidden" name="id_parent_message" id="replyParentId" value="" />
-        <textarea name="contenu" id="replyTextarea" autocomplete="off" required minlength="2" rows="5" placeholder="Écrivez votre message..." style="width:100%; padding:10px 12px; border:var(--border); background:var(--cream); font-family:inherit; resize:vertical; margin-bottom:16px;"></textarea>
+        <textarea name="contenu" id="replyTextarea" autocomplete="off" required minlength="2" rows="5" placeholder="Écrivez votre message..." data-i18n-ph="forum.reply.ph" style="width:100%; padding:10px 12px; border:var(--border); background:var(--cream); font-family:inherit; resize:vertical; margin-bottom:16px;"></textarea>
         <div style="display:flex; gap:12px;">
-            <button type="submit" class="btn btn-primary">Publier ma réponse</button>
+            <button type="submit" class="btn btn-primary" data-i18n="forum.postreply">Publier ma réponse</button>
         </div>
         <p id="replyError" style="margin-top:12px; color:#b00; display:none;"></p>
     </form>
