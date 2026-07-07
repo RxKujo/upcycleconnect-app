@@ -3,6 +3,7 @@ package workers
 import (
 	"api/internal/services"
 	"api/pkg/database"
+	"api/pkg/glpi"
 	"database/sql"
 	"fmt"
 	"log"
@@ -70,12 +71,34 @@ func processConteneursExpires() {
 		if e.conteneurID > 0 {
 			conteneurArg = e.conteneurID
 		}
-		if _, err := database.DB.Exec(`
+		res, err := database.DB.Exec(`
 			INSERT INTO tickets_incidents (id_signaleur, id_conteneur, sujet, description, statut)
-			VALUES (?, ?, ?, ?, 'ouvert')`, e.acheteurID, conteneurArg, sujet, desc); err != nil {
+			VALUES (?, ?, ?, ?, 'ouvert')`, e.acheteurID, conteneurArg, sujet, desc)
+		if err != nil {
 			log.Printf("[WORKER] Erreur création ticket pour commande #%d: %v", e.commandeID, err)
+		} else if ticketID, _ := res.LastInsertId(); ticketID > 0 {
+			mirrorTicketToGLPI(ticketID, sujet, desc)
 		}
 		log.Printf("[WORKER] Commande #%d expirée (objet: %s)", e.commandeID, e.titre)
+	}
+}
+
+// mirrorTicketToGLPI crée le ticket correspondant dans GLPI (si configuré) et
+// stocke l'id GLPI. L'app reste la source de vérité ; GLPI est un miroir support.
+func mirrorTicketToGLPI(ticketID int64, sujet, desc string) {
+	if !glpi.Configured() {
+		return
+	}
+	glpiID, err := glpi.CreateTicket(sujet, desc)
+	if err != nil {
+		log.Printf("[GLPI] création ticket #%d : %v", ticketID, err)
+		return
+	}
+	if glpiID != "" {
+		if _, err := database.DB.Exec(
+			"UPDATE tickets_incidents SET glpi_ticket_id = ? WHERE id_ticket = ?", glpiID, ticketID); err != nil {
+			log.Printf("[GLPI] maj glpi_ticket_id ticket #%d : %v", ticketID, err)
+		}
 	}
 }
 

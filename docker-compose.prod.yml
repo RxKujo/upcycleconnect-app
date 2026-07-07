@@ -62,7 +62,24 @@ services:
       MAIL_FROM: "noreply@upcycleconnect.fr"
       # Dossier d'upload partagé avec nginx (volume uploads_data) pour que les
       # photos déposées soient servies en statique au même chemin /uploads.
+      # Utilisé uniquement si STORAGE_DRIVER != s3 (repli local).
       UPLOAD_DIR: /uploads/photos
+      # Stockage objet : laisser "local" pour servir via nginx (défaut), ou
+      # "s3" + AWS_* pour un bucket S3-compatible (OVH/Scaleway/AWS).
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+      AWS_BUCKET: ${AWS_BUCKET:-}
+      AWS_ENDPOINT: ${AWS_ENDPOINT:-}
+      AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT:-false}
+      # Push OneSignal (envoi). Vide = push ignoré.
+      ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID:-}
+      ONESIGNAL_API_KEY: ${ONESIGNAL_API_KEY:-}
+      # GLPI (miroir tickets). Vide = miroir désactivé.
+      GLPI_URL: ${GLPI_URL:-}
+      GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
+      GLPI_USER_TOKEN: ${GLPI_USER_TOKEN:-}
     expose:
       - "8888"
     volumes:
@@ -101,6 +118,20 @@ services:
       API_PUBLIC_URL: "https://${DOMAIN}"
       RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
       RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY}
+      # Médias : défaut = disque local servi par nginx (/uploads). Pour un
+      # bucket S3-compatible : MEDIA_DISK=s3, MEDIA_URL=<URL publique bucket>,
+      # et renseigner AWS_* ci-dessous.
+      MEDIA_DISK: ${MEDIA_DISK:-uploads_local}
+      MEDIA_URL: ${MEDIA_URL:-/uploads}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-}
+      AWS_BUCKET: ${AWS_BUCKET:-}
+      AWS_ENDPOINT: ${AWS_ENDPOINT:-}
+      AWS_URL: ${AWS_URL:-}
+      AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT:-false}
+      # Push OneSignal (client web) : App ID exposé au navigateur.
+      ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID:-}
     volumes:
       - laravel_storage:/var/www/html/storage/app
       - laravel_logs:/var/www/html/storage/logs

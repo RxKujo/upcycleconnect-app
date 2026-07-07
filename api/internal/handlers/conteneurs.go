@@ -4,6 +4,7 @@ import (
 	"api/internal/models"
 	"api/internal/services"
 	"api/pkg/database"
+	"api/pkg/glpi"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -16,16 +17,17 @@ import (
 // arrivé en conteneur et prêt à être récupéré (complément au push OneSignal,
 // utile en local et si le pro n'a pas activé les push).
 func notifyAcheteurDepot(idCommande int) {
+	var idAcheteur int
 	var email, titre, conteneurRef, adresse, ville, limite string
 	err := database.DB.QueryRow(`
-		SELECT u.email, a.titre,
+		SELECT c.id_acheteur, u.email, a.titre,
 		       COALESCE(cn.conteneur_ref,''), COALESCE(cn.adresse,''), COALESCE(cn.ville,''),
 		       COALESCE(DATE_FORMAT(c.date_limite_recuperation, '%d/%m/%Y'), '')
 		FROM commandes c
 		JOIN utilisateurs u ON u.id_utilisateur = c.id_acheteur
 		JOIN annonces a ON a.id_annonce = c.id_annonce
 		LEFT JOIN conteneurs cn ON cn.id_conteneur = c.id_conteneur
-		WHERE c.id_commande = ?`, idCommande).Scan(&email, &titre, &conteneurRef, &adresse, &ville, &limite)
+		WHERE c.id_commande = ?`, idCommande).Scan(&idAcheteur, &email, &titre, &conteneurRef, &adresse, &ville, &limite)
 	if err != nil {
 		log.Printf("[notifyAcheteurDepot] récupération cmd %d: %v", idCommande, err)
 		return
@@ -49,6 +51,20 @@ func notifyAcheteurDepot(idCommande int) {
 	body += "\nRendez-vous dans votre espace pro (Mes conteneurs) pour valider la réception avec le code-barre.\n\nL'équipe UpcycleConnect"
 	if err := services.SendSimpleEmail(email, subject, body); err != nil {
 		log.Printf("[notifyAcheteurDepot] envoi email: %v", err)
+	}
+
+	// Push OneSignal en parallèle de l'email, ciblé par External ID (= id acheteur).
+	pushBody := "« " + titre + " » est arrivé dans le conteneur " + conteneurRef
+	if lieu != "" {
+		pushBody += " (" + lieu + ")"
+	}
+	if err := services.SendPushToExternalIDs(
+		[]string{strconv.Itoa(idAcheteur)},
+		"Votre objet est prêt à être récupéré",
+		pushBody,
+		map[string]string{"type": "depot_arrive", "id_commande": strconv.Itoa(idCommande)},
+	); err != nil {
+		log.Printf("[notifyAcheteurDepot] envoi push: %v", err)
 	}
 }
 
@@ -337,7 +353,23 @@ func ResolveTicket(w http.ResponseWriter, r *http.Request, id string) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	// Miroir GLPI : passe le ticket correspondant en « résolu » côté GLPI.
+	go syncTicketResoluGLPI(id)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "ticket résolu"})
+}
+
+// syncTicketResoluGLPI propage la résolution vers GLPI si le ticket y est miroité.
+func syncTicketResoluGLPI(id string) {
+	var glpiID string
+	if err := database.DB.QueryRow(
+		"SELECT COALESCE(glpi_ticket_id, '') FROM tickets_incidents WHERE id_ticket = ?", id).Scan(&glpiID); err != nil {
+		return
+	}
+	if err := glpi.UpdateTicketStatus(glpiID, glpi.StatusSolved); err != nil {
+		log.Printf("[GLPI] maj statut ticket %s : %v", id, err)
+	}
 }
