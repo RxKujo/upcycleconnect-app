@@ -185,7 +185,7 @@ func GetPublicitesPro(proID int) ([]PublicitePro, error) {
 		       DATE_FORMAT(date_debut,'%Y-%m-%dT%H:%i:%s'),
 		       DATE_FORMAT(date_fin,'%Y-%m-%dT%H:%i:%s'),
 		       statut, nb_clics, nb_vues,
-		       COALESCE(cout_mensuel, 100.00)
+		       COALESCE(cout_mensuel, 100.00), motif_refus
 		FROM publicites
 		WHERE id_professionnel = ?
 		ORDER BY id_publicite DESC`, proID)
@@ -197,16 +197,17 @@ func GetPublicitesPro(proID int) ([]PublicitePro, error) {
 	var pubs []PublicitePro
 	for rows.Next() {
 		var p PublicitePro
-		var visuel, url, debut, fin sql.NullString
+		var visuel, url, debut, fin, motif sql.NullString
 		if err := rows.Scan(&p.IDPublicite, &p.Titre,
 			&visuel, &url, &debut, &fin,
-			&p.Statut, &p.NbClics, &p.NbVues, &p.CoutMensuel); err != nil {
+			&p.Statut, &p.NbClics, &p.NbVues, &p.CoutMensuel, &motif); err != nil {
 			return nil, err
 		}
 		if visuel.Valid { p.VisuelURL = &visuel.String }
 		if url.Valid   { p.URLCible  = &url.String }
 		if debut.Valid { p.DateDebut = &debut.String }
 		if fin.Valid   { p.DateFin   = &fin.String }
+		if motif.Valid { p.MotifRefus = &motif.String }
 		pubs = append(pubs, p)
 	}
 	return pubs, rows.Err()

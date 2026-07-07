@@ -204,11 +204,15 @@ func AdminRefuserPublicite(w http.ResponseWriter, r *http.Request, pubID string,
 	}
 	json.NewDecoder(r.Body).Decode(&req) //nolint:errcheck
 
+	var motif interface{}
+	if req.Motif != "" {
+		motif = req.Motif
+	}
 	_, err := database.DB.Exec(`
 		UPDATE publicites
-		SET statut = 'refusee', valide_par = ?
+		SET statut = 'refusee', valide_par = ?, motif_refus = ?
 		WHERE id_publicite = ? AND statut = 'en_attente'`,
-		adminID, pubID)
+		adminID, motif, pubID)
 	if err != nil {
 		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
 		return

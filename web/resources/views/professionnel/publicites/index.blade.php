@@ -66,6 +66,12 @@
                     @endif
                 </div>
 
+                @if($pub['statut'] === 'refusee' && !empty($pub['motif_refus']))
+                    <div style="margin-top:12px;background:#f8d7da;border:2px solid #842029;padding:8px 12px;font-size:0.82rem;color:#842029;">
+                        <strong>Motif du refus :</strong> {{ $pub['motif_refus'] }}
+                    </div>
+                @endif
+
                 @if($pub['visuel_url'])
                     <div style="margin-top:12px;">
                         <img src="{{ $pub['visuel_url'] }}" alt="Visuel" style="max-height:80px; border:2px solid #ccc;">
