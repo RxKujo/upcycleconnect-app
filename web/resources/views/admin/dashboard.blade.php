@@ -3,12 +3,12 @@
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">Tableau de bord</h1>
+    <h1 class="page-title"><span data-i18n="nav.dashboard">Tableau de bord</span></h1>
     <span class="font-mono" style="font-size:0.75rem;opacity:0.5;">{{ now()->format('d/m/Y H:i') }}</span>
 </div>
 
 <section style="margin-bottom:48px;">
-    <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;">Vue d'ensemble</h2>
+    <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;"><span data-i18n="adm.overview">Vue d'ensemble</span></h2>
     <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px;">
         <div class="card" style="text-align:center;padding:28px 20px;">
             <p class="font-mono" style="font-size:0.72rem;text-transform:uppercase;opacity:0.55;margin-bottom:8px;">Membres</p>
@@ -58,22 +58,22 @@
 </section>
 
 <section>
-    <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;">Accès rapides</h2>
+    <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;"><span data-i18n="adm.quickaccess">Accès rapides</span></h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
         <a href="{{ route('admin.annonces.index') }}" class="card" style="text-decoration:none;display:block;">
-            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;">→ Modérer les annonces</h3>
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;"><span data-i18n="adm.mod.listings">→ Modérer les annonces</span></h3>
             <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Valider ou refuser les annonces en attente.</p>
         </a>
         <a href="{{ route('admin.evenements.index') }}" class="card" style="text-decoration:none;display:block;">
-            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;">→ Modérer les événements</h3>
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--cherry);margin:0 0 6px;"><span data-i18n="adm.mod.events">→ Modérer les événements</span></h3>
             <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Valider ou refuser les événements soumis.</p>
         </a>
         <a href="{{ route('admin.utilisateurs.index') }}" class="card" style="text-decoration:none;display:block;">
-            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;">→ Gérer les membres</h3>
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;"><span data-i18n="adm.managemembers">→ Gérer les membres</span></h3>
             <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Bans, rôles, abonnements manuels.</p>
         </a>
         <a href="{{ route('admin.commandes.index') }}" class="card" style="text-decoration:none;display:block;">
-            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;">→ Voir les commandes</h3>
+            <h3 class="font-bebas" style="font-size:1.5rem;color:var(--forest);margin:0 0 6px;"><span data-i18n="adm.vieworders">→ Voir les commandes</span></h3>
             <p style="font-family:'DM Mono',monospace;font-size:0.78rem;opacity:0.6;">Suivi des achats et statuts de livraison.</p>
         </a>
     </div>

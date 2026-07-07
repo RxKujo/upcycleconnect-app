@@ -100,85 +100,89 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h1 class="font-bebas" style="font-size: 2rem; margin: 0; color: var(--wheat); letter-spacing: 0.06em; line-height: 0.95;">Upcycle<span style="color: var(--cream); display: block;">Connect</span></h1>
-                <span class="font-mono" style="font-size: 0.75rem; color: var(--cherry); font-weight: bold; margin-top: 8px; display: block;">Panel Administrateur</span>
+                <span class="font-mono" style="font-size: 0.75rem; color: var(--cherry); font-weight: bold; margin-top: 8px; display: block;"><span data-i18n="adm.panel">Panel Administrateur</span></span>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ route('admin.dashboard') }}" class="{{ request()->is('admin') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tableau de bord
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="nav.dashboard">Tableau de bord</span>
                 </a>
 
-                <p class="sidebar-section-label">À valider</p>
+                <p class="sidebar-section-label"><span data-i18n="adm.sec.tovalidate">À valider</span></p>
                 <a href="{{ route('admin.annonces.index') }}" class="{{ request()->is('admin/annonces*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Annonces</span>
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.listings">Annonces</span></span>
                     <span id="badge-annonces" class="sidebar-badge" style="display:none;"></span>
                 </a>
                 <a href="{{ route('admin.evenements.index') }}" class="{{ request()->is('admin/evenements*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Événements</span>
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.events">Événements</span></span>
                     <span id="badge-evenements" class="sidebar-badge" style="display:none;"></span>
                 </a>
                 <a href="{{ route('admin.publicites.index') }}" class="{{ request()->is('admin/publicites*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Publicités</span>
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="nav.ads">Publicités</span></span>
                     <span id="badge-publicites" class="sidebar-badge" style="display:none;"></span>
                 </a>
 
-                <p class="sidebar-section-label">Catalogue & contenu</p>
+                <p class="sidebar-section-label"><span data-i18n="adm.sec.catalog">Catalogue & contenu</span></p>
                 <a href="{{ route('admin.categories.index') }}" class="{{ request()->is('admin/categories') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories prestations
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.cat.services">Catégories prestations</span>
                 </a>
                 <a href="{{ route('admin.categories-objets.index') }}" class="{{ request()->is('admin/categories-objets*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Catégories d'objets
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.cat.objects">Catégories d'objets</span>
                 </a>
                 <a href="{{ route('admin.materiaux.index') }}" class="{{ request()->is('admin/materiaux*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Matériaux
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.materials">Matériaux</span>
                 </a>
                 <a href="{{ route('admin.templates.index') }}" class="{{ request()->is('admin/templates*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Modèles d'événements
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.tpl.title">Modèles d'événements</span>
                 </a>
                 <a href="{{ route('admin.tutoriel.index') }}" class="{{ request()->is('admin/tutoriel*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tutoriel
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.tutorial">Tutoriel</span>
                 </a>
                 <a href="{{ route('salarie.idees.index') }}" class="{{ request()->is('salarie/idees*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Boîte à idées
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.ideas">Boîte à idées</span>
                 </a>
 
-                <p class="sidebar-section-label">Logistique</p>
+                <p class="sidebar-section-label"><span data-i18n="adm.sec.logistics">Logistique</span></p>
                 <a href="{{ route('admin.commandes.index') }}" class="{{ request()->is('admin/commandes*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Commandes
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.orders">Commandes</span>
                 </a>
                 <a href="{{ route('admin.conteneurs.index') }}" class="{{ request()->is('admin/conteneurs*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Conteneurs
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="nav.containers">Conteneurs</span>
                 </a>
                 <a href="{{ route('admin.depot.index') }}" class="{{ request()->is('admin/depot*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Dépôts conteneur
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.deposits">Dépôts conteneur</span>
                 </a>
 
-                <p class="sidebar-section-label">Communauté</p>
+                <p class="sidebar-section-label"><span data-i18n="forum.kicker">Communauté</span></p>
                 <a href="{{ route('admin.utilisateurs.index') }}" class="{{ request()->is('admin/utilisateurs*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Utilisateurs
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.users">Utilisateurs</span>
                 </a>
                 <a href="{{ route('admin.abonnements.index') }}" class="{{ request()->is('admin/abonnements*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Abonnements
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.subscriptions">Abonnements</span>
                 </a>
                 <a href="{{ route('admin.scores.index') }}" class="{{ request()->is('admin/scores*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Upcycling Score
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="prof.score">Upcycling Score</span>
                 </a>
 
-                <p class="sidebar-section-label">Système & finances</p>
+                <p class="sidebar-section-label"><span data-i18n="adm.sec.system">Système & finances</span></p>
                 <a href="{{ route('admin.finances.index') }}" class="{{ request()->is('admin/finances*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Pilotage financier
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.finance">Pilotage financier</span>
                 </a>
                 <a href="{{ route('admin.notifications.index') }}" class="{{ request()->is('admin/notifications*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Notifications
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.notifications">Notifications</span>
                 </a>
                 <a href="{{ route('admin.langues.index') }}" class="{{ request()->is('admin/langues*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Langues & Trad.
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.languages">Langues & Trad.</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
+                <div class="nav-lang" style="display:flex; gap:4px; justify-content:center; margin-bottom:10px;">
+                    <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')" style="flex:1;background:transparent;color:var(--cream);border:2px solid var(--wheat);padding:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">FR</button>
+                    <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')" style="flex:1;background:transparent;color:var(--cream);border:2px solid var(--wheat);padding:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">EN</button>
+                </div>
+                <style>.nav-lang-btn.active{background:var(--wheat)!important;color:var(--coffee)!important;}</style>
                 <form action="{{ route('admin.logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn-secondary" style="width: 100%; text-align: center; justify-content: center; padding: 10px; font-size: 1.1rem; border-color: var(--wheat);">
-                        Déconnexion
+                    <button type="submit" class="btn-secondary" style="width: 100%; text-align: center; justify-content: center; padding: 10px; font-size: 1.1rem; border-color: var(--wheat);" data-i18n="nav.logout">Déconnexion
                     </button>
                 </form>
             </div>
@@ -226,5 +230,6 @@
 })();
 </script>
     @include('partials.datepicker')
+    @include('partials.i18n-engine')
 </body>
 </html>

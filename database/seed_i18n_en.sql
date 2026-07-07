@@ -574,3 +574,36 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('sal.ideas.edit',          @en, 'Edit idea'),
 ('sal.planning.selectday',  @en, 'Select a day'),
 ('sal.planning.detail',     @en, 'Slot details');
+
+-- ── LOT 8 : espace admin (nav layout + dashboard) ────────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'adm.panel','adm.sec.tovalidate','adm.sec.catalog','adm.sec.logistics','adm.sec.system',
+  'adm.listings','adm.events','adm.cat.services','adm.cat.objects','adm.materials','adm.tutorial',
+  'adm.orders','adm.deposits','adm.users','adm.subscriptions','adm.finance','adm.notifications','adm.languages',
+  'adm.overview','adm.quickaccess','adm.mod.listings','adm.mod.events','adm.managemembers','adm.vieworders'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('adm.panel',          @en, 'Admin panel'),
+('adm.sec.tovalidate', @en, 'To validate'),
+('adm.sec.catalog',    @en, 'Catalogue & content'),
+('adm.sec.logistics',  @en, 'Logistics'),
+('adm.sec.system',     @en, 'System & finances'),
+('adm.listings',       @en, 'Listings'),
+('adm.events',         @en, 'Events'),
+('adm.cat.services',   @en, 'Service categories'),
+('adm.cat.objects',    @en, 'Object categories'),
+('adm.materials',      @en, 'Materials'),
+('adm.tutorial',       @en, 'Tutorial'),
+('adm.orders',         @en, 'Orders'),
+('adm.deposits',       @en, 'Container deposits'),
+('adm.users',          @en, 'Users'),
+('adm.subscriptions',  @en, 'Subscriptions'),
+('adm.finance',        @en, 'Financial management'),
+('adm.notifications',  @en, 'Notifications'),
+('adm.languages',      @en, 'Languages & Translation'),
+('adm.overview',       @en, 'Overview'),
+('adm.quickaccess',    @en, 'Quick access'),
+('adm.mod.listings',   @en, '→ Moderate listings'),
+('adm.mod.events',     @en, '→ Moderate events'),
+('adm.managemembers',  @en, '→ Manage members'),
+('adm.vieworders',     @en, '→ View orders');
