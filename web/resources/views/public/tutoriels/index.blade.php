@@ -16,11 +16,11 @@
 
 @section('content')
 <div class="tutoriels-wrap">
-    <h1 class="page-title">Guide & Tutoriels</h1>
-    <p class="page-sub">Retrouvez ici les étapes du tutoriel de prise en main d'UpcycleConnect</p>
+    <h1 class="page-title" data-i18n="tuto.title">Guide & Tutoriels</h1>
+    <p class="page-sub" data-i18n="tuto.subtitle">Retrouvez ici les étapes du tutoriel de prise en main d'UpcycleConnect</p>
 
     <div id="etapes-list">
-        <div style="font-family:'DM Mono',monospace;text-transform:uppercase;font-size:0.85rem;color:#999;">Chargement...</div>
+        <div style="font-family:'DM Mono',monospace;text-transform:uppercase;font-size:0.85rem;color:#999;" data-i18n="common.loading">Chargement...</div>
     </div>
 
     <button class="relaunch-btn" onclick="relancerTutoriel()">
