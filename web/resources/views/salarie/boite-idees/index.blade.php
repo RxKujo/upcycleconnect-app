@@ -74,7 +74,7 @@
 
 <div class="page-header">
     <div>
-        <h1 class="page-title">Boîte à idées</h1>
+        <h1 class="page-title"><span data-i18n="sal.ideas">Boîte à idées</span></h1>
         <p style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;opacity:0.5;margin:8px 0 0;">
             Partagez vos idées avec l'équipe — réservé aux salariés
         </p>
@@ -110,7 +110,7 @@
 <div id="flux-section">
     @if(empty($idees))
         <div class="idee-empty">
-            <p class="big">Aucune idée pour le moment</p>
+            <p class="big"><span data-i18n="sal.ideas.empty">Aucune idée pour le moment</span></p>
             <p class="sub">Soyez le premier à proposer quelque chose !</p>
         </div>
     @else
@@ -126,7 +126,7 @@
 <div id="archives-section" style="display:none;">
     @if(empty($archivees))
         <div class="idee-empty">
-            <p class="big">Aucune idée archivée</p>
+            <p class="big"><span data-i18n="sal.ideas.emptyarchived">Aucune idée archivée</span></p>
             <p class="sub">Les idées que vous archivez apparaîtront ici.</p>
         </div>
     @else
@@ -141,7 +141,7 @@
 {{-- Modal ajout --}}
 <div id="modal-add" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.6);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:40px;width:100%;max-width:540px;position:relative;">
-        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;">Proposer une idée</h2>
+        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;"><span data-i18n="sal.ideas.propose">Proposer une idée</span></h2>
         <form action="{{ route('salarie.idees.store') }}" method="POST">
             @csrf
             <div class="form-group">
@@ -157,7 +157,7 @@
                 <input type="text" name="tags" class="form-input" maxlength="300" placeholder="Ex: recyclage, événement, formation">
             </div>
             <div style="display:flex;gap:12px;">
-                <button type="submit" class="btn-primary">Proposer</button>
+                <button type="submit" class="btn-primary"><span data-i18n="sal.ideas.proposebtn">Proposer</span></button>
                 <button type="button" class="btn-secondary" onclick="document.getElementById('modal-add').style.display='none'">Annuler</button>
             </div>
         </form>
@@ -167,7 +167,7 @@
 {{-- Modal édition --}}
 <div id="modal-edit" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.6);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:40px;width:100%;max-width:540px;position:relative;">
-        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;">Modifier l'idée</h2>
+        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;"><span data-i18n="sal.ideas.edit">Modifier l'idée</span></h2>
         <form id="form-edit" method="POST">
             @csrf @method('PUT')
             <div class="form-group">
@@ -183,7 +183,7 @@
                 <input type="text" id="edit-tags" name="tags" class="form-input" maxlength="300">
             </div>
             <div style="display:flex;gap:12px;">
-                <button type="submit" class="btn-primary">Enregistrer</button>
+                <button type="submit" class="btn-primary"><span data-i18n="btn.save">Enregistrer</span></button>
                 <button type="button" class="btn-secondary" onclick="document.getElementById('modal-edit').style.display='none'">Annuler</button>
             </div>
         </form>

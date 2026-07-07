@@ -3,10 +3,10 @@
 
 @section('content')
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 class="page-title">Modèles d'événements</h1>
+    <h1 class="page-title"><span data-i18n="sal.tpl.title">Modèles d'événements</span></h1>
     <div style="display:flex; gap:12px;">
         <a href="{{ route('salarie.evenements.index') }}" class="btn-secondary">← Mes événements</a>
-        <button type="button" class="btn-primary" onclick="openTplModal()">+ Nouveau modèle</button>
+        <button type="button" class="btn-primary" onclick="openTplModal()"><span data-i18n="sal.tpl.new">+ Nouveau modèle</span></button>
     </div>
 </div>
 
@@ -35,7 +35,7 @@
 <div class="modal-overlay" id="tplModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeTplModal()">&times;</button>
-        <h3 id="tplModalTitle">Nouveau modèle</h3>
+        <h3 id="tplModalTitle"><span data-i18n="sal.tpl.new2">Nouveau modèle</span></h3>
         <p class="modal-sub">Modèle réutilisable pour créer des événements</p>
         <form method="POST" id="tplForm" action="{{ route('salarie.templates.store') }}">
             @csrf
@@ -93,7 +93,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary" style="margin-top:8px;">Enregistrer</button>
+            <button type="submit" class="btn-primary" style="margin-top:8px;"><span data-i18n="btn.save">Enregistrer</span></button>
         </form>
     </div>
 </div>
@@ -139,7 +139,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4" style="text-align:center; padding:28px; color:#888;">Aucun modèle. Créez-en un avec « + Nouveau modèle ».</td></tr>
+            <tr><td colspan="4" style="text-align:center; padding:28px; color:#888;"><span data-i18n="sal.tpl.empty">Aucun modèle. Créez-en un avec « + Nouveau modèle ».</span></td></tr>
             @endforelse
         </tbody>
     </table>

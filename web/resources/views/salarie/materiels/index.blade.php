@@ -8,8 +8,8 @@
 @endphp
 
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 class="page-title">Matériel &amp; inventaire</h1>
-    <button type="button" class="btn-primary" onclick="document.getElementById('mat-modal').classList.add('active')">+ Ajouter</button>
+    <h1 class="page-title"><span data-i18n="sal.mat.title">Matériel &amp; inventaire</span></h1>
+    <button type="button" class="btn-primary" onclick="document.getElementById('mat-modal').classList.add('active')"><span data-i18n="sal.mat.add">+ Ajouter</span></button>
 </div>
 
 <p style="font-family:'DM Mono',monospace; font-size:0.8rem; color:#666; margin-bottom:24px; max-width:760px; line-height:1.6;">
@@ -22,7 +22,7 @@
 
 @if(empty($materiels))
     <div style="border:2px dashed rgba(18,3,9,0.2); padding:48px; text-align:center;">
-        <p style="opacity:0.6;">Aucun matériel pour le moment. Cliquez sur « Ajouter ».</p>
+        <p style="opacity:0.6;"><span data-i18n="sal.mat.empty">Aucun matériel pour le moment. Cliquez sur « Ajouter ».</span></p>
     </div>
 @else
 <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px;">
@@ -49,11 +49,11 @@
                 <a href="{{ route('salarie.materiels.show', $m['id_materiel']) }}" class="btn-secondary" style="flex:1; text-align:center; padding:8px;">Gérer</a>
                 @if($m['est_reserve'])
                     <form method="POST" action="{{ route('salarie.materiels.retour', $m['id_materiel']) }}" style="flex:1;">@csrf
-                        <button type="submit" class="btn-primary" style="width:100%; padding:8px;">Retour</button>
+                        <button type="submit" class="btn-primary" style="width:100%; padding:8px;"><span data-i18n="sal.mat.return">Retour</span></button>
                     </form>
                 @else
                     <form method="POST" action="{{ route('salarie.materiels.reserver', $m['id_materiel']) }}" style="flex:1;">@csrf
-                        <button type="submit" class="btn-primary" style="width:100%; padding:8px;">Réserver</button>
+                        <button type="submit" class="btn-primary" style="width:100%; padding:8px;"><span data-i18n="sal.mat.reserve">Réserver</span></button>
                     </form>
                 @endif
             </div>
@@ -67,7 +67,7 @@
 <div id="mat-modal" class="modal-overlay">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="document.getElementById('mat-modal').classList.remove('active')">&times;</button>
-        <h3>Ajouter un matériel</h3>
+        <h3><span data-i18n="sal.mat.addmodal">Ajouter un matériel</span></h3>
         <p class="modal-sub">Nouvel objet d'inventaire</p>
         <form method="POST" action="{{ route('salarie.materiels.store') }}" onsubmit="return prepareMatImages(this)">
             @csrf
@@ -96,7 +96,7 @@
                 <input type="file" id="mat-photos" accept="image/*" multiple>
                 <div id="mat-photos-hidden"></div>
             </div>
-            <button type="submit" class="btn-primary" style="width:100%; margin-top:8px;">Ajouter</button>
+            <button type="submit" class="btn-primary" style="width:100%; margin-top:8px;"><span data-i18n="btn.add">Ajouter</span></button>
         </form>
     </div>
 </div>

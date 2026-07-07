@@ -43,7 +43,7 @@
 @endphp
 
 <div class="page-header">
-    <h1 class="page-title">Signalements</h1>
+    <h1 class="page-title"><span data-i18n="sal.reports">Signalements</span></h1>
 </div>
 
 <div class="stats-grid">

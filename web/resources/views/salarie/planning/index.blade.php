@@ -89,7 +89,7 @@
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">Mon Planning</h1>
+    <h1 class="page-title"><span data-i18n="part.planning.title">Mon Planning</span></h1>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
         <button class="btn-secondary" id="btn-export-ics" title="Exporter au format iCalendar (Google Agenda, Outlook, Apple…)">Exporter (.ics)</button>
         <button class="btn-primary" id="btn-open-add">+ Ajouter un créneau</button>
@@ -128,7 +128,7 @@
 {{-- Panneau jour sélectionné (timeline) --}}
 <div class="card">
     <div class="day-panel-head">
-        <h2 class="day-panel-title" id="day-title">Sélectionnez un jour</h2>
+        <h2 class="day-panel-title" id="day-title"><span data-i18n="sal.planning.selectday">Sélectionnez un jour</span></h2>
         <button class="btn-secondary btn-sm" id="btn-add-day">+ Créneau ce jour</button>
     </div>
     <div id="day-body"></div>
@@ -137,7 +137,7 @@
 {{-- Modale création créneau (picker custom) --}}
 <div class="modal-overlay" id="modal-add">
     <div class="modal-box">
-        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;" id="modal-title">Nouveau créneau</h2>
+        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;" id="modal-title"><span data-i18n="part.planning.newslot">Nouveau créneau</span></h2>
         <form action="{{ route('salarie.planning.store') }}" method="POST" id="planning-form">
             @csrf
             <input type="hidden" name="_method" id="form-method" disabled>
@@ -206,7 +206,7 @@
 {{-- Modale détail créneau --}}
 <div class="modal-overlay" id="modal-detail">
     <div class="modal-box" style="max-width:520px;">
-        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 24px;">Détail du créneau</h2>
+        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 24px;"><span data-i18n="sal.planning.detail">Détail du créneau</span></h2>
         <div id="detail-body"></div>
         <div class="detail-actions">
             <button type="button" class="btn-success" id="detail-itineraire" style="display:none;">Itinéraire</button>

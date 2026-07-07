@@ -19,7 +19,7 @@
 
     {{-- Colonne gauche : photos + réservation --}}
     <div>
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; margin-bottom:12px;">Photos</h3>
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; margin-bottom:12px;"><span data-i18n="sal.mat.photos">Photos</span></h3>
         @if(empty($materiel['photos']))
             <p style="opacity:0.55; font-size:0.9rem;">Aucune photo.</p>
         @else
@@ -36,7 +36,7 @@
         </div>
         @endif
 
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; margin:28px 0 12px;">Réservation</h3>
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; margin:28px 0 12px;"><span data-i18n="sal.mat.reservation">Réservation</span></h3>
         @if($materiel['est_reserve'])
             <div style="border:3px solid var(--coffee); background:var(--wheat,#f0e0c0); padding:16px 18px;">
                 <p style="margin:0 0 6px;"><strong>Actuellement réservé</strong>
@@ -61,7 +61,7 @@
 
     {{-- Colonne droite : édition --}}
     <div>
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; margin-bottom:12px;">Informations</h3>
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; margin-bottom:12px;"><span data-i18n="prof.myinfo">Informations</span></h3>
         <form method="POST" action="{{ route('salarie.materiels.update', $materiel['id_materiel']) }}" onsubmit="return prepareMatImages(this)"
               style="border:3px solid var(--coffee); padding:20px 22px; display:flex; flex-direction:column; gap:16px;">
             @csrf @method('PUT')

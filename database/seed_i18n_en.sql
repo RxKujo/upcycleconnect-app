@@ -543,3 +543,34 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('sal.dash.ideasbox',         @en, '💡 Ideas box'),
 ('sal.dash.ideas.desc',       @en, 'Suggest and vote for the team''s ideas.'),
 ('sal.dash.planning',         @en, 'My schedule — upcoming');
+
+-- ── LOT 7b : salarie — materiel, evenements, templates, idees, planning ──────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'sal.mat.title','sal.mat.add','sal.mat.empty','sal.mat.return','sal.mat.reserve','sal.mat.addmodal',
+  'sal.mat.photos','sal.mat.reservation','sal.ev.empty','sal.ev.empty.desc','sal.ev.create',
+  'sal.tpl.title','sal.tpl.new','sal.tpl.new2','sal.tpl.empty','sal.ideas.empty','sal.ideas.emptyarchived',
+  'sal.ideas.propose','sal.ideas.proposebtn','sal.ideas.edit','sal.planning.selectday','sal.planning.detail'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('sal.mat.title',       @en, 'Equipment & inventory'),
+('sal.mat.add',         @en, '+ Add'),
+('sal.mat.empty',       @en, 'No equipment yet. Click "Add".'),
+('sal.mat.return',      @en, 'Return'),
+('sal.mat.reserve',     @en, 'Reserve'),
+('sal.mat.addmodal',    @en, 'Add equipment'),
+('sal.mat.photos',      @en, 'Photos'),
+('sal.mat.reservation', @en, 'Reservation'),
+('sal.ev.empty',        @en, 'No events'),
+('sal.ev.empty.desc',   @en, 'Create your first event (training, workshop, talk). It will be submitted for admin approval.'),
+('sal.ev.create',       @en, '+ Create an event'),
+('sal.tpl.title',       @en, 'Event templates'),
+('sal.tpl.new',         @en, '+ New template'),
+('sal.tpl.new2',        @en, 'New template'),
+('sal.tpl.empty',       @en, 'No templates. Create one with "+ New template".'),
+('sal.ideas.empty',         @en, 'No ideas yet'),
+('sal.ideas.emptyarchived', @en, 'No archived ideas'),
+('sal.ideas.propose',       @en, 'Suggest an idea'),
+('sal.ideas.proposebtn',    @en, 'Suggest'),
+('sal.ideas.edit',          @en, 'Edit idea'),
+('sal.planning.selectday',  @en, 'Select a day'),
+('sal.planning.detail',     @en, 'Slot details');
