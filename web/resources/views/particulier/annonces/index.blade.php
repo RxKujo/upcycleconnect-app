@@ -15,49 +15,49 @@
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">Mes annonces</h1>
-    <a href="{{ route('particulier.annonces.create') }}" class="btn-primary">+ Déposer une annonce</a>
+    <h1 class="page-title" data-i18n="nav.mylistings">Mes annonces</h1>
+    <a href="{{ route('particulier.annonces.create') }}" class="btn-primary" data-i18n="nav.postlisting">+ Déposer une annonce</a>
 </div>
 
 <div class="stats-row" id="stats-row" style="display:none;">
-    <div class="stat-mini"><div class="l">Total</div><div class="v" id="s-total">0</div></div>
-    <div class="stat-mini"><div class="l">En ligne</div><div class="v" id="s-validee">0</div></div>
-    <div class="stat-mini"><div class="l">En attente</div><div class="v" id="s-attente">0</div></div>
-    <div class="stat-mini"><div class="l">Vendues</div><div class="v" id="s-vendue">0</div></div>
+    <div class="stat-mini"><div class="l" data-i18n="stat.total">Total</div><div class="v" id="s-total">0</div></div>
+    <div class="stat-mini"><div class="l" data-i18n="stat.online">En ligne</div><div class="v" id="s-validee">0</div></div>
+    <div class="stat-mini"><div class="l" data-i18n="status.pending">En attente</div><div class="v" id="s-attente">0</div></div>
+    <div class="stat-mini"><div class="l" data-i18n="stat.sold">Vendues</div><div class="v" id="s-vendue">0</div></div>
 </div>
 
 <div id="annonces-container">
-    <div class="loading">Chargement des annonces...</div>
+    <div class="loading" data-i18n="common.loading">Chargement des annonces...</div>
 </div>
 
 <!-- Modal modification annonce -->
 <div id="modal-edit-annonce" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.55);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:32px;width:100%;max-width:520px;position:relative;">
         <button id="modal-edit-annonce-close" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--coffee);">&times;</button>
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.06em;margin-bottom:24px;">Modifier l'annonce</h3>
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.06em;margin-bottom:24px;" data-i18n="part.editlisting">Modifier l'annonce</h3>
         <form id="form-edit-annonce">
             <input type="hidden" id="edit-annonce-id">
             <div class="form-group" style="margin-bottom:16px;">
-                <label for="edit-titre" class="form-label">Titre</label>
+                <label for="edit-titre" class="form-label" data-i18n="field.title">Titre</label>
                 <input type="text" id="edit-titre" class="form-input" required maxlength="120">
             </div>
             <div class="form-group" style="margin-bottom:16px;">
-                <label for="edit-description" class="form-label">Description</label>
+                <label for="edit-description" class="form-label" data-i18n="field.description">Description</label>
                 <textarea id="edit-description" class="form-input" rows="4" required style="resize:vertical;"></textarea>
             </div>
             <div id="edit-prix-row" class="form-group" style="margin-bottom:16px;">
-                <label for="edit-prix" class="form-label">Prix (€)</label>
+                <label for="edit-prix" class="form-label" data-i18n="field.price">Prix (€)</label>
                 <input type="number" id="edit-prix" class="form-input" step="0.01" min="0">
             </div>
             <div class="form-group" style="margin-bottom:24px;">
-                <label for="edit-mode" class="form-label">Mode de remise</label>
+                <label for="edit-mode" class="form-label" data-i18n="field.handover">Mode de remise</label>
                 <select id="edit-mode" class="form-input">
-                    <option value="main_propre">En main propre</option>
-                    <option value="conteneur">Via conteneur</option>
+                    <option value="main_propre" data-i18n="handover.hand">En main propre</option>
+                    <option value="conteneur" data-i18n="handover.container">Via conteneur</option>
                 </select>
             </div>
-            <p style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--cherry);margin-bottom:16px;">La modification repasse l'annonce en attente de validation.</p>
-            <button type="submit" class="btn btn-primary btn-block" style="width:100%;">Enregistrer les modifications</button>
+            <p style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--cherry);margin-bottom:16px;" data-i18n="part.editnote">La modification repasse l'annonce en attente de validation.</p>
+            <button type="submit" class="btn btn-primary btn-block" style="width:100%;" data-i18n="btn.savechanges">Enregistrer les modifications</button>
         </form>
     </div>
 </div>

@@ -51,18 +51,18 @@
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">Profil &amp; paramètres</h1>
+    <h1 class="page-title" data-i18n="nav.profile">Profil &amp; paramètres</h1>
 </div>
 
-<div id="loading" class="loading">Chargement...</div>
+<div id="loading" class="loading" data-i18n="common.loading">Chargement...</div>
 
 <div id="profile-content" style="display: none;">
     <div class="profile-grid">
 
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="card-title">Mes informations</h3>
-                <button class="btn-secondary btn-sm" id="edit-toggle" onclick="toggleEdit()">Modifier</button>
+                <h3 class="card-title"><span data-i18n="prof.myinfo">Mes informations</span></h3>
+                <button class="btn-secondary btn-sm" id="edit-toggle" onclick="toggleEdit()"><span data-i18n="btn.edit">Modifier</span></button>
             </div>
 
             <div class="avatar-section">
@@ -76,46 +76,46 @@
             </div>
 
             <div class="photo-upload-zone" onclick="document.getElementById('photo-input').click()">
-                <p style="font-family: 'DM Mono', monospace; font-size: 0.8rem;">Cliquez pour changer la photo</p>
+                <p style="font-family: 'DM Mono', monospace; font-size: 0.8rem;"><span data-i18n="prof.changephoto">Cliquez pour changer la photo</span></p>
                 <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewProfilePhoto(event)">
             </div>
 
             <div class="info-row">
-                <span class="info-key">Email</span>
+                <span class="info-key"><span data-i18n="prof.email">Email</span></span>
                 <span class="info-val" id="val-email"></span>
             </div>
             <div class="info-row">
-                <span class="info-key">Telephone</span>
+                <span class="info-key"><span data-i18n="prof.phone">Telephone</span></span>
                 <span class="info-val" id="val-telephone"></span>
-                <input class="edit-input" id="edit-telephone" placeholder="Telephone">
+                <input class="edit-input" id="edit-telephone" placeholder="Telephone" data-i18n-ph="prof.phone">
             </div>
             <div class="info-row">
-                <span class="info-key">Ville</span>
+                <span class="info-key"><span data-i18n="prof.city">Ville</span></span>
                 <span class="info-val" id="val-ville"></span>
-                <input class="edit-input" id="edit-ville" placeholder="Ville">
+                <input class="edit-input" id="edit-ville" placeholder="Ville" data-i18n-ph="prof.city">
             </div>
             <div class="info-row">
-                <span class="info-key">Adresse</span>
+                <span class="info-key"><span data-i18n="prof.address">Adresse</span></span>
                 <span class="info-val" id="val-adresse"></span>
-                <input class="edit-input" id="edit-adresse" placeholder="Adresse complete">
+                <input class="edit-input" id="edit-adresse" placeholder="Adresse complete" data-i18n-ph="prof.address.ph">
             </div>
             <div class="info-row">
-                <span class="info-key">Inscription</span>
+                <span class="info-key"><span data-i18n="prof.joined">Inscription</span></span>
                 <span class="info-val" id="val-date"></span>
             </div>
 
             <div id="edit-buttons" style="display: none; margin-top: 16px; gap: 12px;">
-                <button class="btn-primary btn-sm" onclick="saveProfile()" id="save-btn" style="display: none;">Sauvegarder</button>
-                <button class="btn-secondary btn-sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;">Annuler</button>
+                <button class="btn-primary btn-sm" onclick="saveProfile()" id="save-btn" style="display: none;"><span data-i18n="btn.save">Sauvegarder</span></button>
+                <button class="btn-secondary btn-sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;"><span data-i18n="btn.cancel">Annuler</span></button>
             </div>
         </div>
 
         <div class="card" id="score-card">
-            <h3 class="card-title">Upcycling Score</h3>
+            <h3 class="card-title"><span data-i18n="prof.score">Upcycling Score</span></h3>
             <div class="score-display">
                 <div class="score-level" id="score-level" style="display:none;"></div>
                 <div class="score-number" id="score-value">0</div>
-                <div class="score-label">points &middot; <span id="score-dechets">0</span> kg de dechets evites</div>
+                <div class="score-label"><span data-i18n="prof.points">points</span> &middot; <span id="score-dechets">0</span> <span data-i18n="prof.wastekg">kg de dechets evites</span></div>
                 <div id="certif-container"></div>
             </div>
             <div class="score-progress" id="score-progress" style="display:none;">
@@ -129,11 +129,11 @@
         </div>
 
         <div class="card">
-            <h3 class="card-title">Préférences de notifications</h3>
+            <h3 class="card-title"><span data-i18n="prof.notifprefs">Préférences de notifications</span></h3>
             <div class="toggle-row">
                 <div>
-                    <div class="toggle-label">Notifications push</div>
-                    <div class="toggle-desc">Recevez des alertes en temps reel</div>
+                    <div class="toggle-label"><span data-i18n="prof.notifpush">Notifications push</span></div>
+                    <div class="toggle-desc"><span data-i18n="prof.notifpush.desc">Recevez des alertes en temps reel</span></div>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="notif-push" onchange="updateNotifs()">
@@ -142,42 +142,42 @@
             </div>
             <div class="toggle-row">
                 <div>
-                    <div class="toggle-label">Notifications email</div>
-                    <div class="toggle-desc">Recevez les mises a jour par email</div>
+                    <div class="toggle-label"><span data-i18n="prof.notifemail">Notifications email</span></div>
+                    <div class="toggle-desc"><span data-i18n="prof.notifemail.desc">Recevez les mises a jour par email</span></div>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="notif-email" onchange="updateNotifs()">
                     <span class="toggle-slider"></span>
                 </label>
             </div>
-            <p style="font-size: 0.8rem; margin-top: 12px; color: rgba(18,3,9,0.5);">Vous recevrez les mises a jour sur vos annonces et evenements</p>
+            <p style="font-size: 0.8rem; margin-top: 12px; color: rgba(18,3,9,0.5);"><span data-i18n="prof.notif.note">Vous recevrez les mises a jour sur vos annonces et evenements</span></p>
         </div>
 
         <div class="card">
-            <h3 class="card-title">Données personnelles</h3>
-            <p style="margin-bottom: 16px; font-size: 0.95rem;">Recuperez un fichier contenant toutes vos informations</p>
-            <button class="btn-primary btn-sm" onclick="downloadPDF()">Telecharger mes donnees</button>
+            <h3 class="card-title"><span data-i18n="prof.personaldata">Données personnelles</span></h3>
+            <p style="margin-bottom: 16px; font-size: 0.95rem;"><span data-i18n="prof.personaldata.desc">Recuperez un fichier contenant toutes vos informations</span></p>
+            <button class="btn-primary btn-sm" onclick="downloadPDF()"><span data-i18n="prof.download">Telecharger mes donnees</span></button>
         </div>
 
         <div class="card full-width">
-            <h3 class="card-title">Sécurité</h3>
-            <button class="btn-secondary btn-sm" type="button" onclick="togglePwdForm()">Modifier mon mot de passe</button>
+            <h3 class="card-title"><span data-i18n="prof.security">Sécurité</span></h3>
+            <button class="btn-secondary btn-sm" type="button" onclick="togglePwdForm()"><span data-i18n="prof.changepwd">Modifier mon mot de passe</span></button>
             <form id="pwd-form" style="display:none; margin-top:16px; max-width:380px;" onsubmit="changePassword(event)">
                 <div class="form-group">
-                    <label class="form-label" for="pwd-old">Mot de passe actuel</label>
+                    <label class="form-label" for="pwd-old"><span data-i18n="prof.pwd.current">Mot de passe actuel</span></label>
                     <input type="password" id="pwd-old" class="form-input" required autocomplete="current-password">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="pwd-new">Nouveau mot de passe (min. 8 caractères)</label>
+                    <label class="form-label" for="pwd-new"><span data-i18n="prof.pwd.new">Nouveau mot de passe (min. 8 caractères)</span></label>
                     <input type="password" id="pwd-new" class="form-input" required minlength="8" autocomplete="new-password">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="pwd-confirm">Confirmer le nouveau mot de passe</label>
+                    <label class="form-label" for="pwd-confirm"><span data-i18n="prof.pwd.confirm">Confirmer le nouveau mot de passe</span></label>
                     <input type="password" id="pwd-confirm" class="form-input" required minlength="8" autocomplete="new-password">
                 </div>
                 <div style="display:flex; gap:10px; margin-top:8px;">
-                    <button type="submit" class="btn-primary btn-sm">Enregistrer</button>
-                    <button type="button" class="btn-secondary btn-sm" onclick="togglePwdForm()">Annuler</button>
+                    <button type="submit" class="btn-primary btn-sm"><span data-i18n="btn.save">Enregistrer</span></button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="togglePwdForm()"><span data-i18n="btn.cancel">Annuler</span></button>
                 </div>
             </form>
             <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(164,36,59,0.2);">

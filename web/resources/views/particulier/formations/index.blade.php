@@ -16,13 +16,13 @@
 
 @section('content')
 <div class="page-header">
-    <h1 class="page-title">Mes formations &amp; événements</h1>
-    <a href="/evenements" class="btn-secondary">Voir le catalogue</a>
+    <h1 class="page-title" data-i18n="part.trainings.title">Mes formations &amp; événements</h1>
+    <a href="/evenements" class="btn-secondary" data-i18n="part.trainings.catalogue">Voir le catalogue</a>
 </div>
 
 <div class="card">
-    <h3 class="section-title">Mes inscriptions</h3>
-    <div id="events-container"><div class="empty-mini">Chargement…</div></div>
+    <h3 class="section-title" data-i18n="part.trainings.myregistrations">Mes inscriptions</h3>
+    <div id="events-container"><div class="empty-mini" data-i18n="common.loading">Chargement…</div></div>
 </div>
 @endsection
 
