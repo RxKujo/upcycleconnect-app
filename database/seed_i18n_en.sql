@@ -478,3 +478,28 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('abo.yearly',   @en, 'Yearly'),
 ('abo.loading',  @en, 'Loading offers…'),
 ('abo.current',  @en, 'Current plan —');
+
+-- ── LOT 6d : pro — profil (entreprise, ventes, abonnement, zone dangereuse) ───
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'prof.company','prof.companyname','prof.siret','prof.siretstatus','prof.mysales',
+  'prof.mytrainingbookings','prof.mysubscription','prof.price','prof.activesince','prof.changeplan',
+  'prof.managebilling','prof.onplan','prof.discoverpro','prof.dangerzone','prof.deleteaccount',
+  'prof.deleteaccount.desc'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prof.company',            @en, 'My company'),
+('prof.companyname',        @en, 'Company name'),
+('prof.siret',              @en, 'SIRET number'),
+('prof.siretstatus',        @en, 'SIRET status'),
+('prof.mysales',            @en, 'My sales'),
+('prof.mytrainingbookings', @en, 'My training bookings'),
+('prof.mysubscription',     @en, 'My subscription'),
+('prof.price',              @en, 'Price'),
+('prof.activesince',        @en, 'Active since'),
+('prof.changeplan',         @en, 'Change plan'),
+('prof.managebilling',      @en, 'Manage / Billing'),
+('prof.onplan',             @en, 'You''re on the plan'),
+('prof.discoverpro',        @en, 'Discover Pro plans'),
+('prof.dangerzone',         @en, 'Danger zone'),
+('prof.deleteaccount',      @en, 'Delete my account'),
+('prof.deleteaccount.desc', @en, 'Your personal data will be erased (GDPR). This action is irreversible.');

@@ -51,15 +51,15 @@
 @section('content')
 <x-page-header title="Mon Profil Professionnel" />
 
-<div id="loading" class="loading">Chargement...</div>
+<div id="loading" class="loading"><span data-i18n="common.loading">Chargement...</span></div>
 
 <div id="profile-content" style="display: none;">
     <div class="profile-grid">
         
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="card-title">Mes Informations</h3>
-                <x-btn variant="secondary" size="sm" id="edit-toggle" onclick="toggleEdit()">Modifier</x-btn>
+                <h3 class="card-title"><span data-i18n="prof.myinfo">Mes Informations</span></h3>
+                <x-btn variant="secondary" size="sm" id="edit-toggle" onclick="toggleEdit()"><span data-i18n="btn.edit">Modifier</span></x-btn>
             </div>
 
             <div class="avatar-section">
@@ -73,58 +73,58 @@
             </div>
 
             <div class="photo-upload-zone" onclick="document.getElementById('photo-input').click()">
-                <p style="font-family: 'DM Mono', monospace; font-size: 0.8rem;">Cliquez pour changer la photo</p>
+                <p style="font-family: 'DM Mono', monospace; font-size: 0.8rem;"><span data-i18n="prof.changephoto">Cliquez pour changer la photo</span></p>
                 <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewProfilePhoto(event)">
             </div>
 
             <div class="info-row">
-                <span class="info-key">Email</span>
+                <span class="info-key"><span data-i18n="prof.email">Email</span></span>
                 <span class="info-val" id="val-email"></span>
             </div>
             <div class="info-row">
-                <span class="info-key">Telephone</span>
+                <span class="info-key"><span data-i18n="prof.phone">Telephone</span></span>
                 <span class="info-val" id="val-telephone"></span>
                 <input class="edit-input" id="edit-telephone" placeholder="Telephone">
             </div>
             <div class="info-row">
-                <span class="info-key">Ville</span>
+                <span class="info-key"><span data-i18n="prof.city">Ville</span></span>
                 <span class="info-val" id="val-ville"></span>
                 <input class="edit-input" id="edit-ville" placeholder="Ville">
             </div>
             <div class="info-row">
-                <span class="info-key">Adresse</span>
+                <span class="info-key"><span data-i18n="prof.address">Adresse</span></span>
                 <span class="info-val" id="val-adresse"></span>
                 <input class="edit-input" id="edit-adresse" placeholder="Adresse complete">
             </div>
             <div class="info-row">
-                <span class="info-key">Inscription</span>
+                <span class="info-key"><span data-i18n="prof.joined">Inscription</span></span>
                 <span class="info-val" id="val-date"></span>
             </div>
 
             <div id="edit-buttons" style="display: none; margin-top: 16px; display: flex; gap: 12px;">
-                <x-btn size="sm" onclick="saveProfile()" id="save-btn" style="display: none;">Sauvegarder</x-btn>
-                <x-btn variant="secondary" size="sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;">Annuler</x-btn>
+                <x-btn size="sm" onclick="saveProfile()" id="save-btn" style="display: none;"><span data-i18n="btn.save">Sauvegarder</span></x-btn>
+                <x-btn variant="secondary" size="sm" onclick="cancelEdit()" id="cancel-btn" style="display: none;"><span data-i18n="btn.cancel">Annuler</span></x-btn>
             </div>
         </div>
 
         <div class="card">
-            <h3 class="card-title">Mon Entreprise</h3>
+            <h3 class="card-title"><span data-i18n="prof.company">Mon Entreprise</span></h3>
             <div class="info-row">
-                <span class="info-key">Nom entreprise</span>
+                <span class="info-key"><span data-i18n="prof.companyname">Nom entreprise</span></span>
                 <span class="info-val" id="val-entreprise"></span>
             </div>
             <div class="info-row">
-                <span class="info-key">Numero SIRET</span>
+                <span class="info-key"><span data-i18n="prof.siret">Numero SIRET</span></span>
                 <span class="info-val" id="val-siret"></span>
             </div>
             <div class="info-row">
-                <span class="info-key">Statut SIRET</span>
+                <span class="info-key"><span data-i18n="prof.siretstatus">Statut SIRET</span></span>
                 <span class="info-val" id="val-siret-status"></span>
             </div>
         </div>
 
         <div class="card" id="score-card">
-            <h3 class="card-title">Upcycling Score</h3>
+            <h3 class="card-title"><span data-i18n="prof.score">Upcycling Score</span></h3>
             <div class="score-display">
                 <div class="score-level" id="score-level" style="display:none;"></div>
                 <div class="score-number" id="score-value">0</div>
@@ -143,7 +143,7 @@
 
         <div class="card full-width" id="card-ventes">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="card-title" style="margin-bottom:0;">Mes Ventes</h3>
+                <h3 class="card-title" style="margin-bottom:0;"><span data-i18n="prof.mysales">Mes Ventes</span></h3>
             </div>
             <div id="ventes-container" style="margin-top:16px;">
                 <div style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;">Chargement…</div>
@@ -152,8 +152,8 @@
 
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h3 class="card-title" style="margin-bottom:0;">Mes Annonces</h3>
-                <button class="btn btn-sm" onclick="window.location.href='/particulier/annonces/create'">Deposer une annonce</button>
+                <h3 class="card-title" style="margin-bottom:0;"><span data-i18n="nav.mylistings">Mes Annonces</span></h3>
+                <button class="btn btn-sm" onclick="window.location.href='/particulier/annonces/create'"><span data-i18n="create.title"><span data-i18n="create.title">Deposer une annonce</span></span></button>
             </div>
             <div id="pro-annonces-container">
                 <div style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;">Chargement…</div>
@@ -161,18 +161,18 @@
         </div>
 
         <div class="card full-width" id="card-reservations">
-            <h3 class="card-title">Mes Réservations Formations</h3>
+            <h3 class="card-title"><span data-i18n="prof.mytrainingbookings">Mes Réservations Formations</span></h3>
             <div id="reservations-container">
                 <div style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;">Chargement…</div>
             </div>
         </div>
 
         <div class="card">
-            <h3 class="card-title">Preferences de Notifications</h3>
+            <h3 class="card-title"><span data-i18n="prof.notifprefs">Preferences de Notifications</span></h3>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(18,3,9,0.1);">
                 <div>
-                    <div style="font-size: 0.95rem;">Notifications push</div>
-                    <div style="font-size: 0.8rem; color: rgba(18,3,9,0.6); margin-top: 2px;">Recevez des alertes en temps reel</div>
+                    <div style="font-size: 0.95rem;"><span data-i18n="prof.notifpush">Notifications push</span></div>
+                    <div style="font-size: 0.8rem; color: rgba(18,3,9,0.6); margin-top: 2px;"><span data-i18n="prof.notifpush.desc">Recevez des alertes en temps reel</span></div>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="notif-push" onchange="updateNotifs()">
@@ -181,8 +181,8 @@
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0;">
                 <div>
-                    <div style="font-size: 0.95rem;">Notifications email</div>
-                    <div style="font-size: 0.8rem; color: rgba(18,3,9,0.6); margin-top: 2px;">Recevez les mises a jour par email</div>
+                    <div style="font-size: 0.95rem;"><span data-i18n="prof.notifemail">Notifications email</span></div>
+                    <div style="font-size: 0.8rem; color: rgba(18,3,9,0.6); margin-top: 2px;"><span data-i18n="prof.notifemail.desc">Recevez les mises a jour par email</span></div>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="notif-email" onchange="updateNotifs()">
@@ -192,34 +192,34 @@
         </div>
 
         <div class="card" id="card-abonnement">
-            <h3 class="card-title">Mon Abonnement</h3>
+            <h3 class="card-title"><span data-i18n="prof.mysubscription">Mon Abonnement</span></h3>
             <div id="abo-loading" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;">Chargement…</div>
             <div id="abo-content" style="display:none">
                 <div id="abo-badge" style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border:2px solid var(--coffee);font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;background:var(--forest);color:var(--cream);">
                     <span id="abo-nom">—</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(18,3,9,0.1);">
-                    <span class="info-key">Prix</span>
+                    <span class="info-key"><span data-i18n="prof.price">Prix</span></span>
                     <span id="abo-prix" class="info-val">—</span>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(18,3,9,0.1);">
-                    <span class="info-key">Actif depuis</span>
+                    <span class="info-key"><span data-i18n="prof.activesince">Actif depuis</span></span>
                     <span id="abo-depuis" class="info-val">—</span>
                 </div>
                 <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
-                    <a href="/professionnel/abonnement" class="btn btn-secondary" style="font-size:0.85rem;padding:8px 16px;">Changer de plan</a>
-                    <button onclick="openPortail()" class="btn btn-secondary" style="font-size:0.85rem;padding:8px 16px;">Gérer / Facturas</button>
+                    <a href="/professionnel/abonnement" class="btn btn-secondary" style="font-size:0.85rem;padding:8px 16px;"><span data-i18n="prof.changeplan">Changer de plan</span></a>
+                    <button onclick="openPortail()" class="btn btn-secondary" style="font-size:0.85rem;padding:8px 16px;"><span data-i18n="prof.managebilling">Gérer / Facturas</span></button>
                 </div>
             </div>
             <div id="abo-freemium" style="display:none">
-                <p style="font-size:0.9rem;margin-bottom:16px;color:var(--teal);">Vous êtes sur le plan <strong>Freemium</strong>. Passez à un plan Pro pour accéder à plus de fonctionnalités.</p>
-                <a href="/professionnel/abonnement" class="btn btn-primary" style="font-size:0.9rem;">Découvrir les offres Pro</a>
+                <p style="font-size:0.9rem;margin-bottom:16px;color:var(--teal);">Vous êtes sur le plan <strong><span data-i18n="pro.plan.free">Freemium</span></strong>. Passez à un plan Pro pour accéder à plus de fonctionnalités.</p>
+                <a href="/professionnel/abonnement" class="btn btn-primary" style="font-size:0.9rem;"><span data-i18n="prof.discoverpro">Découvrir les offres Pro</span></a>
             </div>
         </div>
 
         <div class="card">
-            <h3 class="card-title">Donnees Personnelles</h3>
-            <p style="margin-bottom: 16px; font-size: 0.95rem;">Recuperez un fichier contenant toutes vos informations</p>
+            <h3 class="card-title"><span data-i18n="prof.personaldata">Donnees Personnelles</span></h3>
+            <p style="margin-bottom: 16px; font-size: 0.95rem;"><span data-i18n="prof.personaldata.desc">Recuperez un fichier contenant toutes vos informations</span></p>
             <x-btn size="sm" onclick="downloadPDF()">Telecharger mes donnees</x-btn>
         </div>
 
@@ -248,13 +248,13 @@
                 </div>
                 <div style="display:flex; gap:10px; margin-top:8px;">
                     <button type="submit" class="btn-primary btn-sm">Enregistrer</button>
-                    <button type="button" class="btn-secondary btn-sm" onclick="togglePwdForm()">Annuler</button>
+                    <button type="button" class="btn-secondary btn-sm" onclick="togglePwdForm()"><span data-i18n="btn.cancel">Annuler</span></button>
                 </div>
             </form>
             <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(164,36,59,0.2);">
-                <p style="font-family:'DM Mono',monospace;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.06em;color:var(--cherry);margin-bottom:12px;">Zone dangereuse</p>
-                <button type="button" onclick="deleteMyAccount()" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:var(--cherry);background:none;border:2px solid var(--cherry);padding:8px 20px;cursor:pointer;letter-spacing:0.04em;">Supprimer mon compte</button>
-                <p style="font-size:0.75rem;color:rgba(18,3,9,0.5);margin-top:8px;">Vos donnees personnelles seront effacees (RGPD). Cette action est irreversible.</p>
+                <p style="font-family:'DM Mono',monospace;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.06em;color:var(--cherry);margin-bottom:12px;"><span data-i18n="prof.dangerzone">Zone dangereuse</span></p>
+                <button type="button" onclick="deleteMyAccount()" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:var(--cherry);background:none;border:2px solid var(--cherry);padding:8px 20px;cursor:pointer;letter-spacing:0.04em;"><span data-i18n="prof.deleteaccount">Supprimer mon compte</span></button>
+                <p style="font-size:0.75rem;color:rgba(18,3,9,0.5);margin-top:8px;"><span data-i18n="prof.deleteaccount.desc">Vos donnees personnelles seront effacees (RGPD). Cette action est irreversible.</span></p>
             </div>
         </div>
     </div>
@@ -264,30 +264,30 @@
 <div id="modal-pro-edit-annonce" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.55);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:32px;width:100%;max-width:520px;position:relative;">
         <button id="modal-pro-edit-annonce-close" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--coffee);">&times;</button>
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.06em;margin-bottom:24px;">Modifier l'annonce</h3>
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:0.06em;margin-bottom:24px;"><span data-i18n="part.editlisting">Modifier l'annonce</span></h3>
         <form id="form-pro-edit-annonce">
             <input type="hidden" id="pro-edit-annonce-id">
             <div class="form-group" style="margin-bottom:16px;">
-                <label for="pro-edit-titre" class="form-label">Titre</label>
+                <label for="pro-edit-titre" class="form-label"><span data-i18n="field.title">Titre</span></label>
                 <input type="text" id="pro-edit-titre" class="form-input" required maxlength="120">
             </div>
             <div class="form-group" style="margin-bottom:16px;">
-                <label for="pro-edit-description" class="form-label">Description</label>
+                <label for="pro-edit-description" class="form-label"><span data-i18n="field.description">Description</span></label>
                 <textarea id="pro-edit-description" class="form-input" rows="4" required style="resize:vertical;"></textarea>
             </div>
             <div id="pro-edit-prix-row" class="form-group" style="margin-bottom:16px;">
-                <label for="pro-edit-prix" class="form-label">Prix (€)</label>
+                <label for="pro-edit-prix" class="form-label"><span data-i18n="field.price">Prix (€)</span></label>
                 <input type="number" id="pro-edit-prix" class="form-input" step="0.01" min="0">
             </div>
             <div class="form-group" style="margin-bottom:24px;">
-                <label for="pro-edit-mode" class="form-label">Mode de remise</label>
+                <label for="pro-edit-mode" class="form-label"><span data-i18n="field.handover">Mode de remise</span></label>
                 <select id="pro-edit-mode" class="form-input">
-                    <option value="main_propre">En main propre</option>
-                    <option value="conteneur">Via conteneur</option>
+                    <option value="main_propre"><span data-i18n="handover.hand">En main propre</span></option>
+                    <option value="conteneur"><span data-i18n="handover.container">Via conteneur</span></option>
                 </select>
             </div>
-            <p style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--cherry);margin-bottom:16px;">La modification repasse l'annonce en attente de validation.</p>
-            <button type="submit" class="btn btn-primary btn-block">Enregistrer les modifications</button>
+            <p style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--cherry);margin-bottom:16px;"><span data-i18n="part.editnote">La modification repasse l'annonce en attente de validation.</span></p>
+            <button type="submit" class="btn btn-primary btn-block"><span data-i18n="btn.savechanges">Enregistrer les modifications</span></button>
         </form>
     </div>
 </div>
@@ -598,13 +598,13 @@ async function loadProAnnonces() {
             container.innerHTML = '<p style="font-family:\'DM Mono\',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;padding:12px 0;">Aucune annonce deposee.</p>';
             return;
         }
-        let html = '<div class="table-container" style="margin-top:0;"><table><thead><tr><th>Titre</th><th>Type</th><th>Prix</th><th>Statut</th><th>Date</th><th></th></tr></thead><tbody>';
+        let html = '<div class="table-container" style="margin-top:0;"><table><thead><tr><th><span data-i18n="field.title">Titre</span></th><th>Type</th><th><span data-i18n="prof.price">Prix</span></th><th>Statut</th><th>Date</th><th></th></tr></thead><tbody>';
         annonces.forEach(a => {
             const st = PRO_ANNONCE_STATUTS[a.statut] || { label: a.statut, cls: '' };
             const date = new Date(a.date_creation).toLocaleDateString('fr-FR');
             const prix = a.type_annonce === 'don' ? 'Gratuit' : (parseFloat(a.prix || 0).toFixed(2) + ' €');
             const editBtn = (a.statut === 'en_attente' || a.statut === 'validee')
-                ? '<button class="pro-btn-edit-annonce" data-id="' + a.id_annonce + '" data-titre="' + escapeHtml(a.titre) + '" data-description="' + escapeHtml(a.description || '') + '" data-prix="' + (a.prix || '') + '" data-mode="' + (a.mode_remise || '') + '" data-type="' + a.type_annonce + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--teal);background:none;border:1px solid var(--teal);padding:4px 10px;cursor:pointer;">Modifier</button>' : '';
+                ? '<button class="pro-btn-edit-annonce" data-id="' + a.id_annonce + '" data-titre="' + escapeHtml(a.titre) + '" data-description="' + escapeHtml(a.description || '') + '" data-prix="' + (a.prix || '') + '" data-mode="' + (a.mode_remise || '') + '" data-type="' + a.type_annonce + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;color:var(--teal);background:none;border:1px solid var(--teal);padding:4px 10px;cursor:pointer;"><span data-i18n="btn.edit">Modifier</span></button>' : '';
             html += '<tr><td><a href="/annonces/' + a.id_annonce + '" style="font-weight:600;text-decoration:none;">' + escapeHtml(a.titre) + '</a></td>'
                 + '<td>' + (a.type_annonce === 'don' ? 'Don' : 'Vente') + '</td>'
                 + '<td>' + prix + '</td>'
