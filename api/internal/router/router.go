@@ -58,6 +58,7 @@ const (
 	// Routes salarié — nouvelles
 	prefixSalarieIdees   = "/api/v1/salarie/idees"
 	prefixSalariePlanning = "/api/v1/salarie/planning"
+	prefixSalarieMateriels = "/api/v1/salarie/materiels"
 
 	// Segments de suffixes réutilisés — évitent les littéraux répétés.
 	segStats     = "/stats"
@@ -467,7 +468,34 @@ func routeSalarie(w http.ResponseWriter, req *http.Request, path, method string,
 		routeSalarieArticles(w, req, path, method, userId, role) ||
 		routeSalarieModeration(w, req, path, method, userId) ||
 		routeSalarieIdees(w, req, path, method, userId, role) ||
-		routeSalariePlanningDedicated(w, req, path, method, userId)
+		routeSalariePlanningDedicated(w, req, path, method, userId) ||
+		routeSalarieMateriels(w, req, path, method, userId)
+}
+
+// routeSalarieMateriels : inventaire du matériel (CRUD + photos + réservation).
+func routeSalarieMateriels(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	p := splitPath(path, prefixSalarieMateriels)
+	switch {
+	case match(path, prefixSalarieMateriels) && method == "GET":
+		handlers.GetMateriels(w, req, userId)
+	case match(path, prefixSalarieMateriels) && method == "POST":
+		handlers.CreateMateriel(w, req, userId)
+	case len(p) == 1 && method == "GET":
+		handlers.GetMateriel(w, req, p[0])
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateMateriel(w, req, p[0])
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteMateriel(w, req, p[0])
+	case len(p) == 3 && p[1] == "photos" && method == "DELETE":
+		handlers.DeleteMaterielPhoto(w, req, p[0], p[2])
+	case len(p) == 2 && p[1] == "reserver" && method == "POST":
+		handlers.ReserverMateriel(w, req, p[0], userId)
+	case len(p) == 2 && p[1] == "retour" && method == "POST":
+		handlers.RetourMateriel(w, req, p[0])
+	default:
+		return false
+	}
+	return true
 }
 
 func routeSalarieGeneral(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {

@@ -103,6 +103,9 @@
                 <a href="/salarie/planning" class="{{ request()->is('salarie/planning*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Planning
                 </a>
+                <a href="/salarie/materiels" class="{{ request()->is('salarie/materiels*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Matériel
+                </a>
                 <p class="sidebar-section-label">Communauté</p>
                 <a href="/salarie/idees" class="{{ request()->is('salarie/idees*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Boîte à idées

@@ -25,6 +25,7 @@ use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
 use App\Http\Controllers\Salarie\ModerationController as SalarieModerationController;
 use App\Http\Controllers\Salarie\PlanningController as SalariePlanningController;
 use App\Http\Controllers\Salarie\BoiteIdeeController as SalarieBoiteIdeeController;
+use App\Http\Controllers\Salarie\MaterielController as SalarieMaterielController;
 use App\Http\Controllers\EvenementCatalogueController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
@@ -290,6 +291,16 @@ Route::prefix('salarie')->group(function () {
         Route::get('/articles/{id}/edit', [SalarieArticleController::class, 'edit'])->name('salarie.articles.edit');
         Route::put('/articles/{id}', [SalarieArticleController::class, 'update'])->name('salarie.articles.update');
         Route::delete('/articles/{id}', [SalarieArticleController::class, 'destroy'])->name('salarie.articles.destroy');
+
+        // Matériel / inventaire
+        Route::get('/materiels', [SalarieMaterielController::class, 'index'])->name('salarie.materiels.index');
+        Route::post('/materiels', [SalarieMaterielController::class, 'store'])->name('salarie.materiels.store');
+        Route::get('/materiels/{id}', [SalarieMaterielController::class, 'show'])->name('salarie.materiels.show');
+        Route::put('/materiels/{id}', [SalarieMaterielController::class, 'update'])->name('salarie.materiels.update');
+        Route::delete('/materiels/{id}', [SalarieMaterielController::class, 'destroy'])->name('salarie.materiels.destroy');
+        Route::delete('/materiels/{id}/photos/{photoId}', [SalarieMaterielController::class, 'deletePhoto'])->name('salarie.materiels.photos.delete');
+        Route::post('/materiels/{id}/reserver', [SalarieMaterielController::class, 'reserver'])->name('salarie.materiels.reserver');
+        Route::post('/materiels/{id}/retour', [SalarieMaterielController::class, 'retour'])->name('salarie.materiels.retour');
 
         // Planning salarié
         Route::get('/planning', [SalariePlanningController::class, 'index'])->name('salarie.planning.index');
