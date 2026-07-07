@@ -399,3 +399,42 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('create.ready',           @en, 'READY TO PUBLISH?'),
 ('create.ready.desc',      @en, 'Check all the information carefully before creating your listing.'),
 ('create.submit',          @en, 'Create listing');
+
+-- ── LOT 6 : espace pro (nav + dashboard + alertes + conteneurs) ──────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'nav.alerts','nav.ads','nav.containers','nav.myprofile','nav.publicsite',
+  'prod.title','prod.yearlyview','prod.impact','prod.itemssaved','prod.co2','prod.visualsummary',
+  'prod.materials10km','prod.myalerts','prod.myads','prod.mycontainers',
+  'prod.alerts.title','prod.alerts.new','prod.radius','prod.alerts.create','prod.alerts.active','prod.alerts.empty',
+  'prod.containers.title','prod.history','prod.containers.validate','prod.containers.barcode',
+  'prod.containers.barcode.ph','prod.containers.validatebtn','prod.containers.pending'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('nav.alerts',      @en, 'Alerts'),
+('nav.ads',         @en, 'Ads'),
+('nav.containers',  @en, 'Containers'),
+('nav.myprofile',   @en, 'My profile'),
+('nav.publicsite',  @en, '↗ Public site'),
+('prod.title',          @en, 'Pro dashboard'),
+('prod.yearlyview',     @en, 'Yearly view (Expert Pro)'),
+('prod.impact',         @en, 'Environmental impact — This month'),
+('prod.itemssaved',     @en, 'Items saved'),
+('prod.co2',            @en, 'CO₂ avoided'),
+('prod.visualsummary',  @en, 'Visual summary'),
+('prod.materials10km',  @en, 'Available materials — 10 km radius'),
+('prod.myalerts',       @en, 'My material alerts'),
+('prod.myads',          @en, 'My ads'),
+('prod.mycontainers',   @en, 'My containers'),
+('prod.alerts.title',   @en, 'Material alerts'),
+('prod.alerts.new',     @en, 'New alert'),
+('prod.radius',         @en, 'Radius (km)'),
+('prod.alerts.create',  @en, 'Create alert'),
+('prod.alerts.active',  @en, 'My active alerts'),
+('prod.alerts.empty',   @en, 'No alerts set up.'),
+('prod.containers.title',       @en, 'Container orders'),
+('prod.history',                @en, 'History'),
+('prod.containers.validate',    @en, 'Validate a pickup'),
+('prod.containers.barcode',     @en, 'Pickup barcode'),
+('prod.containers.barcode.ph',  @en, 'Enter or scan the code'),
+('prod.containers.validatebtn', @en, 'Validate receipt'),
+('prod.containers.pending',     @en, 'Awaiting pickup');

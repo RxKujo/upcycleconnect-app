@@ -7,10 +7,10 @@
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
         <div>
-            <h1 class="font-bebas" style="font-size:2.4rem;">Dashboard Pro</h1>
+            <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.title">Dashboard Pro</span></h1>
             <p class="font-mono" style="font-size:0.8rem; color:#666;">Période : {{ $periode }}</p>
         </div>
-        <a href="{{ route('pro.dashboard.expert') }}" class="btn-secondary btn-sm">Vue annuelle (Expert Pro)</a>
+        <a href="{{ route('pro.dashboard.expert') }}" class="btn-secondary btn-sm"><span data-i18n="prod.yearlyview">Vue annuelle (Expert Pro)</span></a>
     </div>
 
     @if(session('error'))
@@ -21,26 +21,26 @@
 
     {{-- Impact écologique --}}
     <div class="card" x-data="barChart({{ json_encode($impact) }})">
-        <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:24px;">Impact écologique — Ce mois</h2>
+        <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:24px;"><span data-i18n="prod.impact">Impact écologique — Ce mois</span></h2>
 
         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-bottom:32px;">
             <div style="border:3px solid #120309; padding:24px; text-align:center;">
                 <div class="font-bebas" style="font-size:3rem; color:#244F26;">{{ $impact['nb_objets_recuperes'] ?? 0 }}</div>
-                <div class="font-mono" style="font-size:0.7rem; margin-top:4px;">Objets récupérés</div>
+                <div class="font-mono" style="font-size:0.7rem; margin-top:4px;"><span data-i18n="prod.itemssaved">Objets récupérés</span></div>
             </div>
             <div style="border:3px solid #120309; padding:24px; text-align:center;">
                 <div class="font-bebas" style="font-size:3rem; color:#18607D;">{{ number_format($impact['poids_dechet_kg'] ?? 0, 1) }} kg</div>
-                <div class="font-mono" style="font-size:0.7rem; margin-top:4px;">Déchets évités</div>
+                <div class="font-mono" style="font-size:0.7rem; margin-top:4px;"><span data-i18n="dash.wasteavoided">Déchets évités</span></div>
             </div>
             <div style="border:3px solid #120309; padding:24px; text-align:center;">
                 <div class="font-bebas" style="font-size:3rem; color:#A4243B;">{{ number_format($impact['co2_evite_kg'] ?? 0, 1) }} kg</div>
-                <div class="font-mono" style="font-size:0.7rem; margin-top:4px;">CO₂ évité</div>
+                <div class="font-mono" style="font-size:0.7rem; margin-top:4px;"><span data-i18n="prod.co2">CO₂ évité</span></div>
             </div>
         </div>
 
         {{-- Graphique en barres (Alpine.js) --}}
         <div style="border:3px solid #120309; padding:24px;">
-            <h3 class="font-mono" style="font-size:0.8rem; margin-bottom:16px;">Récapitulatif visuel</h3>
+            <h3 class="font-mono" style="font-size:0.8rem; margin-bottom:16px;"><span data-i18n="prod.visualsummary">Récapitulatif visuel</span></h3>
             <div style="display:flex; align-items:flex-end; gap:24px; height:120px;">
                 <template x-for="bar in bars" :key="bar.label">
                     <div style="display:flex; flex-direction:column; align-items:center; flex:1;">
@@ -55,7 +55,7 @@
 
     {{-- Stats matériaux --}}
     <div class="card">
-        <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:24px;">Matériaux disponibles — rayon 10 km</h2>
+        <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:24px;"><span data-i18n="prod.materials10km">Matériaux disponibles — rayon 10 km</span></h2>
 
         @if(empty($stats_materiaux))
             <p style="color:#666; font-style:italic;">Aucune annonce trouvée dans votre zone.</p>
@@ -81,9 +81,9 @@
 
     {{-- Navigation rapide --}}
     <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
-        <a href="{{ route('pro.alertes.index') }}" class="btn-secondary" style="text-align:center;">Mes alertes matériaux</a>
-        <a href="{{ route('pro.publicites.index') }}" class="btn-secondary" style="text-align:center;">Mes publicités</a>
-        <a href="{{ route('pro.conteneurs.index') }}" class="btn-secondary" style="text-align:center;">Mes conteneurs</a>
+        <a href="{{ route('pro.alertes.index') }}" class="btn-secondary" style="text-align:center;"><span data-i18n="prod.myalerts">Mes alertes matériaux</span></a>
+        <a href="{{ route('pro.publicites.index') }}" class="btn-secondary" style="text-align:center;"><span data-i18n="prod.myads">Mes publicités</span></a>
+        <a href="{{ route('pro.conteneurs.index') }}" class="btn-secondary" style="text-align:center;"><span data-i18n="prod.mycontainers">Mes conteneurs</span></a>
     </div>
 
 </div>

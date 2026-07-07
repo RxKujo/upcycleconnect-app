@@ -6,7 +6,7 @@
 <div class="main-content">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
-        <h1 class="font-bebas" style="font-size:2.4rem;">Alertes matériaux</h1>
+        <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.alerts.title">Alertes matériaux</span></h1>
         <a href="{{ route('pro.dashboard.essential') }}" class="btn-secondary btn-sm">← Dashboard</a>
     </div>
 
@@ -23,7 +23,7 @@
 
     {{-- Créer une alerte --}}
     <div class="card">
-        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;">Nouvelle alerte</h2>
+        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;"><span data-i18n="prod.alerts.new">Nouvelle alerte</span></h2>
         <form method="POST" action="{{ route('pro.alertes.store') }}" style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
             @csrf
             <div style="flex:1; min-width:180px;">
@@ -38,7 +38,7 @@
 
             @if(isset($plan) && $plan['rayon_alerte_max_km'] === null)
             <div style="flex:1; min-width:140px;">
-                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Rayon (km)</label>
+                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.radius">Rayon (km)</span></label>
                 <input type="number" name="rayon_km" min="1" max="500" value="{{ old('rayon_km', 10) }}"
                     style="width:100%; padding:10px; border:3px solid #120309; font-family:'DM Mono',monospace; font-size:0.85rem;">
             </div>
@@ -51,14 +51,14 @@
             </div>
             @endif
 
-            <button type="submit" class="btn-primary btn-sm">Créer l'alerte</button>
+            <button type="submit" class="btn-primary btn-sm"><span data-i18n="prod.alerts.create">Créer l'alerte</span></button>
         </form>
         @error('materiau')<p style="color:#A4243B;font-size:0.8rem;margin-top:6px;">{{ $message }}</p>@enderror
     </div>
 
     {{-- Liste des alertes --}}
     <div class="card">
-        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;">Mes alertes actives</h2>
+        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;"><span data-i18n="prod.alerts.active">Mes alertes actives</span></h2>
 
         @forelse($alertes as $alerte)
         <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid #ddd;">
@@ -75,11 +75,11 @@
                   data-confirm="Supprimer cette alerte ? Cette action est irréversible.">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn-secondary btn-sm" style="color:#A4243B;">Supprimer</button>
+                <button type="submit" class="btn-secondary btn-sm" style="color:#A4243B;"><span data-i18n="btn.delete">Supprimer</span></button>
             </form>
         </div>
         @empty
-            <p style="color:#666; font-style:italic;">Aucune alerte configurée.</p>
+            <p style="color:#666; font-style:italic;"><span data-i18n="prod.alerts.empty">Aucune alerte configurée.</span></p>
         @endforelse
     </div>
 
