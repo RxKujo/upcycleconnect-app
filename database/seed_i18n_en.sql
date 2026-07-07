@@ -465,3 +465,16 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('prod.badges.empty',  @en, 'No badges earned yet. Keep collecting items!'),
 ('prod.badges.recalc', @en, 'Recalculate my badges'),
 ('prod.pickups.title', @en, 'My pickups');
+
+-- ── LOT 6c : pro — abonnement + composant page-header i18n ────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'abo.title','abo.subtitle','abo.manage','abo.monthly','abo.yearly','abo.loading','abo.current'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('abo.title',    @en, 'Your Pro subscription'),
+('abo.subtitle', @en, 'Choose the plan that fits your business. Change or cancel anytime from your management area.'),
+('abo.manage',   @en, 'Manage my subscription →'),
+('abo.monthly',  @en, 'Monthly'),
+('abo.yearly',   @en, 'Yearly'),
+('abo.loading',  @en, 'Loading offers…'),
+('abo.current',  @en, 'Current plan —');
