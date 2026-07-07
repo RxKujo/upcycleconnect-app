@@ -32,71 +32,71 @@
 
 @section('content')
 <div class="depot-wrap">
-    <h1 class="page-title">Dépôt en conteneur</h1>
-    <p class="page-sub">Déposez vos objets dans l'un de nos conteneurs partenaires</p>
+    <h1 class="page-title" data-i18n="depot.title">Dépôt en conteneur</h1>
+    <p class="page-sub" data-i18n="depot.subtitle">Déposez vos objets dans l'un de nos conteneurs partenaires</p>
 
     <div class="depot-grid">
         <!-- Formulaire -->
         <div>
-            <h2 class="section-title">Ma demande de dépôt</h2>
-            <div id="alert-success" class="alert alert-success">Demande envoyée ! Notre équipe la traitera sous 48h.</div>
-            <div id="alert-error" class="alert alert-error">Erreur lors de l'envoi de votre demande.</div>
+            <h2 class="section-title" data-i18n="depot.form.title">Ma demande de dépôt</h2>
+            <div id="alert-success" class="alert alert-success" data-i18n="depot.alert.success">Demande envoyée ! Notre équipe la traitera sous 48h.</div>
+            <div id="alert-error" class="alert alert-error" data-i18n="depot.alert.error">Erreur lors de l'envoi de votre demande.</div>
 
             <form id="form-depot" onsubmit="submitDepot(event)">
                 <div class="form-group">
-                    <label class="form-label">Titre de l'objet *</label>
+                    <label class="form-label" data-i18n="depot.label.1">Titre de l'objet *</label>
                     <input type="text" id="depot-titre" class="form-input" placeholder="Ex: Table basse en bois" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Type d'objet *</label>
+                    <label class="form-label" data-i18n="depot.label.2">Type d'objet *</label>
                     <select id="depot-type" class="form-select" required>
-                        <option value="">Sélectionnez...</option>
-                        <option value="Mobilier">Mobilier</option>
-                        <option value="Électroménager">Électroménager</option>
-                        <option value="Vêtements">Vêtements</option>
-                        <option value="Électronique">Électronique</option>
-                        <option value="Livres / Médias">Livres / Médias</option>
-                        <option value="Jouets">Jouets</option>
-                        <option value="Décoration">Décoration</option>
-                        <option value="Outillage">Outillage</option>
-                        <option value="Autre">Autre</option>
+                        <option value="" data-i18n="depot.opt.1">Sélectionnez...</option>
+                        <option value="Mobilier" data-i18n="depot.opt.2">Mobilier</option>
+                        <option value="Électroménager" data-i18n="depot.opt.3">Électroménager</option>
+                        <option value="Vêtements" data-i18n="depot.opt.4">Vêtements</option>
+                        <option value="Électronique" data-i18n="depot.opt.5">Électronique</option>
+                        <option value="Livres / Médias" data-i18n="depot.opt.6">Livres / Médias</option>
+                        <option value="Jouets" data-i18n="depot.opt.7">Jouets</option>
+                        <option value="Décoration" data-i18n="depot.opt.8">Décoration</option>
+                        <option value="Outillage" data-i18n="depot.opt.9">Outillage</option>
+                        <option value="Autre" data-i18n="depot.opt.10">Autre</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description *</label>
+                    <label class="form-label" data-i18n="depot.label.3">Description *</label>
                     <textarea id="depot-description" class="form-textarea" placeholder="Décrivez l'état et les caractéristiques de l'objet..." required></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Quantité</label>
+                    <label class="form-label" data-i18n="depot.label.4">Quantité</label>
                     <input type="number" id="depot-quantite" class="form-input" value="1" min="1" max="20">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Adresse de retrait</label>
+                    <label class="form-label" data-i18n="depot.label.5">Adresse de retrait</label>
                     <input type="text" id="depot-adresse" class="form-input" placeholder="Adresse où l'objet peut être récupéré">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;">
                     <div class="form-group">
-                        <label class="form-label">Code postal</label>
+                        <label class="form-label" data-i18n="depot.label.6">Code postal</label>
                         <input type="text" id="depot-cp" class="form-input" placeholder="75001">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Ville</label>
+                        <label class="form-label" data-i18n="depot.label.7">Ville</label>
                         <input type="text" id="depot-ville" class="form-input" placeholder="Paris">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Conteneur sélectionné</label>
+                    <label class="form-label" data-i18n="depot.label.8">Conteneur sélectionné</label>
                     <input type="text" id="depot-conteneur-display" class="form-input" placeholder="Cliquez sur la carte pour sélectionner" readonly style="cursor:pointer;background:#f9f9f9;">
                     <input type="hidden" id="depot-conteneur-id">
                 </div>
-                <button type="submit" class="btn btn-primary">Envoyer ma demande</button>
+                <button type="submit" class="btn btn-primary" data-i18n="depot.submit">Envoyer ma demande</button>
             </form>
         </div>
 
         <!-- Carte -->
         <div>
-            <h2 class="section-title">Conteneurs proches</h2>
-            <p style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:#666;margin-bottom:16px;">
+            <h2 class="section-title" data-i18n="depot.map.title">Conteneurs proches</h2>
+            <p style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:#666;margin-bottom:16px;" data-i18n="depot.map.hint">
                 Cliquez sur un conteneur pour le sélectionner — ou « Autour de moi » pour les plus proches
             </p>
             <div id="map" data-conteneurs-map data-api="{{ config('services.api.public_url') }}" data-selectable="1"></div>
@@ -105,7 +105,7 @@
 
     <!-- Mes demandes -->
     <div class="mes-demandes" id="mes-demandes-section" style="display:none;">
-        <h2 class="section-title">Mes demandes</h2>
+        <h2 class="section-title" data-i18n="depot.mydemands">Mes demandes</h2>
         <div id="mes-demandes-list"></div>
     </div>
 </div>

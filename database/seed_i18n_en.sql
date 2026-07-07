@@ -235,3 +235,41 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('rgpd.h4',      @en, '4. Retention period'),
 ('rgpd.h5',      @en, '5. Your rights'),
 ('rgpd.h6',      @en, '6. Subcontractors');
+
+-- ── LOT 4c : depot (formulaire de depot en conteneur) ────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'depot.title','depot.subtitle','depot.form.title','depot.map.title','depot.map.hint',
+  'depot.mydemands','depot.alert.success','depot.alert.error','depot.submit',
+  'depot.label.1','depot.label.2','depot.label.3','depot.label.4','depot.label.5','depot.label.6',
+  'depot.label.7','depot.label.8',
+  'depot.opt.1','depot.opt.2','depot.opt.3','depot.opt.4','depot.opt.5','depot.opt.6','depot.opt.7',
+  'depot.opt.8','depot.opt.9','depot.opt.10'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('depot.title',         @en, 'Container drop-off'),
+('depot.subtitle',      @en, 'Drop off your items in one of our partner containers'),
+('depot.form.title',    @en, 'My drop-off request'),
+('depot.map.title',     @en, 'Nearby containers'),
+('depot.map.hint',      @en, 'Click a container to select it — or "Around me" for the nearest ones'),
+('depot.mydemands',     @en, 'My requests'),
+('depot.alert.success', @en, 'Request sent! Our team will process it within 48h.'),
+('depot.alert.error',   @en, 'Error while sending your request.'),
+('depot.submit',        @en, 'Send my request'),
+('depot.label.1', @en, 'Item title *'),
+('depot.label.2', @en, 'Item type *'),
+('depot.label.3', @en, 'Description *'),
+('depot.label.4', @en, 'Quantity'),
+('depot.label.5', @en, 'Pickup address'),
+('depot.label.6', @en, 'Postal code'),
+('depot.label.7', @en, 'City'),
+('depot.label.8', @en, 'Selected container'),
+('depot.opt.1',  @en, 'Select...'),
+('depot.opt.2',  @en, 'Furniture'),
+('depot.opt.3',  @en, 'Appliances'),
+('depot.opt.4',  @en, 'Clothing'),
+('depot.opt.5',  @en, 'Electronics'),
+('depot.opt.6',  @en, 'Books / Media'),
+('depot.opt.7',  @en, 'Toys'),
+('depot.opt.8',  @en, 'Decoration'),
+('depot.opt.9',  @en, 'Tools'),
+('depot.opt.10', @en, 'Other');
