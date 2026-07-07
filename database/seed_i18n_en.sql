@@ -365,3 +365,37 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('prof.pwd.current',     @en, 'Current password'),
 ('prof.pwd.new',         @en, 'New password (min. 8 characters)'),
 ('prof.pwd.confirm',     @en, 'Confirm new password');
+
+-- ── LOT 5c : particulier — creation d'annonce (formulaire multi-etapes) ───────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'btn.next','btn.prev',
+  'create.title','create.tab.description','create.tab.photos','create.tab.confirm',
+  'create.f.title','create.f.title.ph','create.f.desc','create.f.desc.ph','create.f.type',
+  'create.f.price','create.f.handover','create.opt.container','create.opt.hand',
+  'create.f.choosecontainer','create.selectcontainer','create.containeraddr',
+  'create.f.handoveraddr','create.f.handoveraddr.ph','create.ready','create.ready.desc','create.submit'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('btn.next', @en, 'Next'),
+('btn.prev', @en, 'Previous'),
+('create.title',           @en, 'Post a listing'),
+('create.tab.description', @en, 'Description'),
+('create.tab.photos',      @en, 'Photos & delivery'),
+('create.tab.confirm',     @en, 'Confirmation'),
+('create.f.title',         @en, 'Title *'),
+('create.f.title.ph',      @en, 'e.g. Vintage chair'),
+('create.f.desc',          @en, 'Description *'),
+('create.f.desc.ph',       @en, 'Describe your item in detail...'),
+('create.f.type',          @en, 'Listing type *'),
+('create.f.price',         @en, 'Price (EUR) *'),
+('create.f.handover',      @en, 'Handover method *'),
+('create.opt.container',   @en, 'Container'),
+('create.opt.hand',        @en, 'In person'),
+('create.f.choosecontainer',@en,'Choose the container *'),
+('create.selectcontainer', @en, '-- Select a collection point --'),
+('create.containeraddr',   @en, 'Container address'),
+('create.f.handoveraddr',  @en, 'Handover address *'),
+('create.f.handoveraddr.ph',@en,'e.g. 10 Rue de la Paix, Paris...'),
+('create.ready',           @en, 'READY TO PUBLISH?'),
+('create.ready.desc',      @en, 'Check all the information carefully before creating your listing.'),
+('create.submit',          @en, 'Create listing');

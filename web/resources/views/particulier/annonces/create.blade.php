@@ -63,7 +63,7 @@
 @section('content')
 <div class="form-container">
     <div class="page-header">
-        <h1 class="page-title">Deposer une annonce</h1>
+        <h1 class="page-title"><span data-i18n="create.title">Deposer une annonce</span></h1>
     </div>
 
     <div class="neo-progress-container">
@@ -74,9 +74,9 @@
             <div class="neo-progress-fill" id="step-fill" style="width: 33.33%;"></div>
         </div>
         <div class="neo-progress-labels">
-            <div class="neo-progress-label active" id="label-1" onclick="goToStep(1)">DESCRIPTION</div>
-            <div class="neo-progress-label" id="label-2" onclick="goToStep(2)">PHOTOS & LIVRAISON</div>
-            <div class="neo-progress-label" id="label-3" onclick="goToStep(3)">CONFIRMATION</div>
+            <div class="neo-progress-label active" id="label-1" onclick="goToStep(1)"><span data-i18n="create.tab.description">DESCRIPTION</span></div>
+            <div class="neo-progress-label" id="label-2" onclick="goToStep(2)"><span data-i18n="create.tab.photos">PHOTOS & LIVRAISON</span></div>
+            <div class="neo-progress-label" id="label-3" onclick="goToStep(3)"><span data-i18n="create.tab.confirm">CONFIRMATION</span></div>
         </div>
     </div>
 
@@ -85,38 +85,38 @@
         <div class="step-content active" id="step-1">
             <div class="card">
                 <div class="form-group">
-                    <label class="form-label">Titre *</label>
-                    <input type="text" class="form-input" id="titre" placeholder="Ex: Chaise vintage" maxlength="200" oninput="validateField('titre')">
+                    <label class="form-label"><span data-i18n="create.f.title">Titre *</span></label>
+                    <input type="text" class="form-input" id="titre" placeholder="Ex: Chaise vintage" data-i18n-ph="create.f.title.ph" maxlength="200" oninput="validateField('titre')">
                     <div id="titre-feedback"></div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Description *</label>
-                    <textarea class="form-textarea" id="description" placeholder="Decrivez votre objet en detail..." maxlength="5000" oninput="validateField('description')"></textarea>
+                    <label class="form-label"><span data-i18n="create.f.desc">Description *</span></label>
+                    <textarea class="form-textarea" id="description" placeholder="Decrivez votre objet en detail..." data-i18n-ph="create.f.desc.ph" maxlength="5000" oninput="validateField('description')"></textarea>
                     <div id="description-feedback"></div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Type d'annonce *</label>
+                    <label class="form-label"><span data-i18n="create.f.type">Type d'annonce *</span></label>
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" name="type_annonce" id="type_don" value="don" onchange="togglePrix()">
-                            <label for="type_don">Don</label>
+                            <label for="type_don"><span data-i18n="status.don">Don</span></label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" name="type_annonce" id="type_vente" value="vente" onchange="togglePrix()">
-                            <label for="type_vente">Vente</label>
+                            <label for="type_vente"><span data-i18n="status.vente">Vente</span></label>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group prix-group" id="prix-group">
-                    <label class="form-label">Prix (EUR) *</label>
+                    <label class="form-label"><span data-i18n="create.f.price">Prix (EUR) *</span></label>
                     <input type="number" class="form-input" id="prix" placeholder="0.00" min="0" step="0.01" style="max-width: 200px;">
                 </div>
 
                 <div class="btn-row">
-                    <x-btn onclick="goToStep(2)">Suivant</x-btn>
+                    <x-btn onclick="goToStep(2)"><span data-i18n="btn.next">Suivant</span></x-btn>
                 </div>
             </div>
         </div>
@@ -130,28 +130,28 @@
                 </x-btn>
 
                 <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 2px dashed var(--coffee);">
-                    <label class="form-label">Mode de remise *</label>
+                    <label class="form-label"><span data-i18n="create.f.handover">Mode de remise *</span></label>
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" name="mode_remise" id="mode_conteneur" value="conteneur" onchange="toggleRemise()">
-                            <label for="mode_conteneur">Conteneur</label>
+                            <label for="mode_conteneur"><span data-i18n="create.opt.container">Conteneur</span></label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" name="mode_remise" id="mode_main" value="main_propre" onchange="toggleRemise()">
-                            <label for="mode_main">Main propre</label>
+                            <label for="mode_main"><span data-i18n="create.opt.hand">Main propre</span></label>
                         </div>
                     </div>
 
                     {{-- Panneau conteneur --}}
                     <div id="conteneur-panel" style="display:none; margin-top:20px;">
-                        <label class="form-label" for="conteneur-select">Choisir le conteneur *</label>
+                        <label class="form-label" for="conteneur-select"><span data-i18n="create.f.choosecontainer">Choisir le conteneur *</span></label>
                         <select class="form-select" id="conteneur-select" onchange="onConteneurChange()">
-                            <option value="">-- Sélectionnez un point de collecte --</option>
+                            <option value="" data-i18n="create.selectcontainer">-- Sélectionnez un point de collecte --</option>
                         </select>
                         <div id="conteneur-info" style="display:none; margin-top:14px; padding:14px 16px; background:white; border:2px solid var(--coffee); box-shadow:var(--shadow-sm);">
-                            <div style="font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; color:var(--cherry); margin-bottom:6px;">Adresse du conteneur</div>
+                            <div style="font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; color:var(--cherry); margin-bottom:6px;"><span data-i18n="create.containeraddr">Adresse du conteneur</span></div>
                             <div id="conteneur-adresse" style="font-size:0.98rem; line-height:1.4; margin-bottom:12px;"></div>
-                            <a id="conteneur-maps" href="#" target="_blank" rel="noopener" class="btn-secondary btn-sm" style="text-decoration:none;">Itinéraire Google Maps →</a>
+                            <a id="conteneur-maps" href="#" target="_blank" rel="noopener" class="btn-secondary btn-sm" style="text-decoration:none;"><span data-i18n="market.directions">Itinéraire Google Maps →</span></a>
                         </div>
                         <p id="conteneur-empty" style="display:none; font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--cherry); margin-top:10px;">
                             Aucun conteneur actif disponible pour le moment.
@@ -160,9 +160,9 @@
 
                     {{-- Panneau main propre --}}
                     <div id="mainpropre-panel" style="display:none; margin-top:20px;">
-                        <label class="form-label" for="adresseSearch">Adresse de remise *</label>
+                        <label class="form-label" for="adresseSearch"><span data-i18n="create.f.handoveraddr">Adresse de remise *</span></label>
                         <div class="autocomplete-wrapper">
-                            <input type="text" id="adresseSearch" class="form-input" placeholder="Ex: 10 Rue de la Paix, Paris..." autocomplete="off">
+                            <input type="text" id="adresseSearch" class="form-input" placeholder="Ex: 10 Rue de la Paix, Paris..." data-i18n-ph="create.f.handoveraddr.ph" autocomplete="off">
                             <div class="autocomplete-dropdown" id="adresseSuggestions"></div>
                         </div>
                         <input type="hidden" id="adresse_remise_value">
@@ -173,16 +173,16 @@
                 </div>
 
                 <div class="btn-row">
-                    <x-btn variant="secondary" onclick="goToStep(1)">Precedent</x-btn>
-                    <x-btn onclick="goToStep(3)">Suivant</x-btn>
+                    <x-btn variant="secondary" onclick="goToStep(1)"><span data-i18n="btn.prev">Precedent</span></x-btn>
+                    <x-btn onclick="goToStep(3)"><span data-i18n="btn.next">Suivant</span></x-btn>
                 </div>
             </div>
         </div>
 
         <div class="step-content" id="step-3">
             <div class="card" style="text-align: center; padding: 40px 20px;">
-                <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; margin-bottom: 16px;">PRET A PUBLIER ?</h3>
-                <p style="margin-bottom: 32px; font-size: 1.1rem;">Verifiez bien toutes les informations avant de creer votre annonce.</p>
+                <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; margin-bottom: 16px;"><span data-i18n="create.ready">PRET A PUBLIER ?</span></h3>
+                <p style="margin-bottom: 32px; font-size: 1.1rem;"><span data-i18n="create.ready.desc">Verifiez bien toutes les informations avant de creer votre annonce.</span></p>
                 
                 <div id="recap-container" style="text-align: left; background: white; border: 2px solid var(--coffee); padding: 24px; margin-bottom: 32px; box-shadow: var(--shadow-sm);">
                 </div>
@@ -193,9 +193,9 @@
                 <div class="progress-text" id="progress-text"></div>
 
                 <div class="btn-row" style="justify-content: center;">
-                    <x-btn variant="secondary" onclick="goToStep(2)">Precedent</x-btn>
-                    <x-btn id="submit-btn" onclick="submitAnnonce()">Creer l'annonce</x-btn>
-                    <x-btn variant="secondary" href="/">Annuler</x-btn>
+                    <x-btn variant="secondary" onclick="goToStep(2)"><span data-i18n="btn.prev">Precedent</span></x-btn>
+                    <x-btn id="submit-btn" onclick="submitAnnonce()"><span data-i18n="create.submit">Creer l'annonce</span></x-btn>
+                    <x-btn variant="secondary" href="/"><span data-i18n="btn.cancel">Annuler</span></x-btn>
                 </div>
             </div>
         </div>
