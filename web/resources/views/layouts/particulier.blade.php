@@ -134,28 +134,33 @@
     <nav class="topbar" aria-label="Navigation du site">
         <a href="/" class="topbar-brand">Upcycle<span>Connect</span></a>
         <div class="topbar-nav">
-            <a href="/annonces">Marché</a>
-            <a href="/evenements">Formations &amp; événements</a>
-            <a href="/forum">Forum</a>
-            <a href="/ressources">Ressources</a>
+            <a href="/annonces" data-i18n="nav.market">Marché</a>
+            <a href="/evenements" data-i18n="nav.events">Formations &amp; événements</a>
+            <a href="/forum" data-i18n="nav.forum">Forum</a>
+            <a href="/ressources" data-i18n="nav.resources">Ressources</a>
         </div>
         <div class="topbar-right">
+            <div class="nav-lang" role="group" aria-label="Langue" style="display:flex; gap:2px;">
+                <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')" style="background:transparent;color:var(--cream);border:2px solid rgba(245,240,225,0.3);padding:5px 9px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">FR</button>
+                <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')" style="background:transparent;color:var(--cream);border:2px solid rgba(245,240,225,0.3);padding:5px 9px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">EN</button>
+            </div>
             <span class="topbar-user" id="topbar-user"></span>
-            <button class="btn-logout" onclick="logout()">Déconnexion</button>
+            <button class="btn-logout" onclick="logout()"  data-i18n="nav.logout">Déconnexion</button>
         </div>
+        <style>.nav-lang-btn.active{background:var(--wheat)!important;color:var(--coffee)!important;}</style>
     </nav>
 
     <div class="espace-shell">
         <aside class="espace-sidebar">
-            <div class="side-head">Mon espace</div>
+            <div class="side-head" data-i18n="nav.myspace">Mon espace</div>
             <nav class="side-nav" aria-label="Mon espace particulier">
-                <a href="{{ route('particulier.dashboard') }}" class="side-link {{ request()->routeIs('particulier.dashboard') ? 'active' : '' }}"><span class="ic"></span> Tableau de bord</a>
-                <a href="{{ route('particulier.annonces.index') }}" class="side-link {{ $isActive('particulier/annonces*') }}"><span class="ic"></span> Mes annonces</a>
-                <a href="{{ route('particulier.formations.index') }}" class="side-link {{ $isActive('particulier/formations*') }}"><span class="ic"></span> Mes formations</a>
-                <a href="{{ route('particulier.profile.show') }}" class="side-link {{ $isActive('particulier/profile*') }}"><span class="ic"></span> Profil &amp; paramètres</a>
+                <a href="{{ route('particulier.dashboard') }}" class="side-link {{ request()->routeIs('particulier.dashboard') ? 'active' : '' }}"><span class="ic"></span> <span data-i18n="nav.dashboard">Tableau de bord</span></a>
+                <a href="{{ route('particulier.annonces.index') }}" class="side-link {{ $isActive('particulier/annonces*') }}"><span class="ic"></span> <span data-i18n="nav.mylistings">Mes annonces</span></a>
+                <a href="{{ route('particulier.formations.index') }}" class="side-link {{ $isActive('particulier/formations*') }}"><span class="ic"></span> <span data-i18n="nav.mytrainings">Mes formations</span></a>
+                <a href="{{ route('particulier.profile.show') }}" class="side-link {{ $isActive('particulier/profile*') }}"><span class="ic"></span> <span data-i18n="nav.profile">Profil &amp; paramètres</span></a>
             </nav>
             <div class="side-cta">
-                <a href="{{ route('particulier.annonces.create') }}">+ Déposer une annonce</a>
+                <a href="{{ route('particulier.annonces.create') }}" data-i18n="nav.postlisting">+ Déposer une annonce</a>
             </div>
         </aside>
 
@@ -222,5 +227,6 @@
     @yield('scripts')
     @include('partials.datepicker')
     @include('partials.onesignal')
+    @include('partials.i18n-engine')
 </body>
 </html>

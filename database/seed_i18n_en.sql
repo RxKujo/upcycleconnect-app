@@ -273,3 +273,25 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('depot.opt.8',  @en, 'Decoration'),
 ('depot.opt.9',  @en, 'Tools'),
 ('depot.opt.10', @en, 'Other');
+
+-- ── LOT 5 : espace particulier (nav layout + dashboard) ──────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'nav.myspace','nav.dashboard','nav.mylistings','nav.mytrainings','nav.profile',
+  'nav.postlisting','nav.logout',
+  'dash.points','dash.managelistings','dash.myregistrations','dash.wasteavoided',
+  'dash.kgprofile','dash.recentactivity'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('nav.myspace',       @en, 'My space'),
+('nav.dashboard',     @en, 'Dashboard'),
+('nav.mylistings',    @en, 'My listings'),
+('nav.mytrainings',   @en, 'My training'),
+('nav.profile',       @en, 'Profile & settings'),
+('nav.postlisting',   @en, '+ Post a listing'),
+('nav.logout',        @en, 'Log out'),
+('dash.points',           @en, 'upcycling points'),
+('dash.managelistings',   @en, 'Manage my drop-offs →'),
+('dash.myregistrations',  @en, 'View my registrations →'),
+('dash.wasteavoided',     @en, 'Waste avoided'),
+('dash.kgprofile',        @en, 'kg · view my profile →'),
+('dash.recentactivity',   @en, 'Recent activity');
