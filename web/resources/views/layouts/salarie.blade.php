@@ -87,49 +87,54 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h1 class="font-bebas" style="font-size: 2rem; margin: 0; color: var(--wheat); letter-spacing: 0.06em; line-height: 0.95;">Upcycle<span style="color: var(--cream); display: block;">Connect</span></h1>
-                <span class="font-mono" style="font-size: 0.75rem; color: var(--forest); background:var(--wheat); padding:2px 8px; font-weight: bold; margin-top: 8px; display: inline-block;">Espace Salarié</span>
+                <span class="font-mono" style="font-size: 0.75rem; color: var(--forest); background:var(--wheat); padding:2px 8px; font-weight: bold; margin-top: 8px; display: inline-block;" data-i18n="sal.space">Espace Salarié</span>
             </div>
             <nav class="sidebar-nav">
                 <a href="/salarie/dashboard" class="{{ request()->is('salarie/dashboard') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tableau de bord
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="nav.dashboard">Tableau de bord</span>
                 </a>
-                <p class="sidebar-section-label">Catalogue</p>
+                <p class="sidebar-section-label" data-i18n="sal.cat.catalog">Catalogue</p>
                 <a href="/salarie/evenements" class="{{ request()->is('salarie/evenements*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Mes événements
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.myevents">Mes événements</span>
                 </a>
                 <a href="/salarie/templates" class="{{ request()->is('salarie/templates*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Modèles
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.templates">Modèles</span>
                 </a>
                 <a href="/salarie/planning" class="{{ request()->is('salarie/planning*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Planning
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.planning">Planning</span>
                 </a>
                 <a href="/salarie/materiels" class="{{ request()->is('salarie/materiels*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Matériel
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.materials">Matériel</span>
                 </a>
-                <p class="sidebar-section-label">Communauté</p>
+                <p class="sidebar-section-label" data-i18n="forum.kicker">Communauté</p>
                 <a href="/salarie/idees" class="{{ request()->is('salarie/idees*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Boîte à idées
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.ideas">Boîte à idées</span>
                 </a>
-                <p class="sidebar-section-label">Contenu</p>
+                <p class="sidebar-section-label" data-i18n="sal.cat.content">Contenu</p>
                 <a href="/salarie/articles" class="{{ request()->is('salarie/articles*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Articles & News
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.articles">Articles & News</span>
                 </a>
-                <p class="sidebar-section-label">Modération</p>
+                <p class="sidebar-section-label" data-i18n="sal.cat.moderation">Modération</p>
                 <a href="/salarie/forum/signalements" class="{{ request()->is('salarie/forum/signalements*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Signalements</span>
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.reports">Signalements</span></span>
                     <span id="badge-signalements" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
                 </a>
                 <a href="/salarie/forum/sujets" class="{{ request()->is('salarie/forum/sujets*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Sujets forum
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.forumtopics">Sujets forum</span>
                 </a>
                 <a href="/salarie/forum/mots-bannis" class="{{ request()->is('salarie/forum/mots-bannis*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Mots bannis
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.bannedwords">Mots bannis</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
+                <div class="nav-lang" style="display:flex; gap:4px; justify-content:center; margin-bottom:10px;">
+                    <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')" style="flex:1;background:transparent;color:var(--cream);border:2px solid var(--wheat);padding:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">FR</button>
+                    <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')" style="flex:1;background:transparent;color:var(--cream);border:2px solid var(--wheat);padding:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">EN</button>
+                </div>
+                <style>.nav-lang-btn.active{background:var(--wheat)!important;color:var(--coffee)!important;}</style>
                 <form action="/salarie/logout" method="POST">
                     @csrf
-                    <button type="submit" class="btn-secondary" style="width: 100%; text-align: center; justify-content: center; padding: 10px; font-size: 1.1rem; border-color: var(--wheat);">
+                    <button type="submit" class="btn-secondary" style="width: 100%; text-align: center; justify-content: center; padding: 10px; font-size: 1.1rem; border-color: var(--wheat);" data-i18n="nav.logout">
                         Déconnexion
                     </button>
                 </form>
@@ -165,5 +170,6 @@
 })();
 </script>
     @include('partials.datepicker')
+    @include('partials.i18n-engine')
 </body>
 </html>

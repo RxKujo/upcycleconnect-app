@@ -503,3 +503,43 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('prof.dangerzone',         @en, 'Danger zone'),
 ('prof.deleteaccount',      @en, 'Delete my account'),
 ('prof.deleteaccount.desc', @en, 'Your personal data will be erased (GDPR). This action is irreversible.');
+
+-- ── LOT 7 : espace salarie (nav layout + dashboard) ──────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'sal.space','sal.cat.catalog','sal.myevents','sal.templates','sal.planning','sal.materials',
+  'sal.ideas','sal.cat.content','sal.articles','sal.cat.moderation','sal.reports','sal.forumtopics',
+  'sal.bannedwords','common.seeall',
+  'sal.dash.eventspending','sal.dash.eventsvalidated','sal.dash.articlesdraft','sal.dash.articlespublished',
+  'sal.dash.reportspending','sal.dash.newevent','sal.dash.newevent.desc','sal.dash.newarticle',
+  'sal.dash.newarticle.desc','sal.dash.moderation','sal.dash.moderation.desc','sal.dash.ideasbox',
+  'sal.dash.ideas.desc','sal.dash.planning'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('sal.space',          @en, 'Staff area'),
+('sal.cat.catalog',    @en, 'Catalogue'),
+('sal.myevents',       @en, 'My events'),
+('sal.templates',      @en, 'Templates'),
+('sal.planning',       @en, 'Planning'),
+('sal.materials',      @en, 'Equipment'),
+('sal.ideas',          @en, 'Ideas box'),
+('sal.cat.content',    @en, 'Content'),
+('sal.articles',       @en, 'Articles & News'),
+('sal.cat.moderation', @en, 'Moderation'),
+('sal.reports',        @en, 'Reports'),
+('sal.forumtopics',    @en, 'Forum topics'),
+('sal.bannedwords',    @en, 'Banned words'),
+('common.seeall',      @en, 'See all'),
+('sal.dash.eventspending',    @en, 'Pending events'),
+('sal.dash.eventsvalidated',  @en, 'Validated events'),
+('sal.dash.articlesdraft',    @en, 'Draft articles'),
+('sal.dash.articlespublished',@en, 'Published articles'),
+('sal.dash.reportspending',   @en, 'Reports to handle'),
+('sal.dash.newevent',         @en, '+ New event'),
+('sal.dash.newevent.desc',    @en, 'Training, workshop or talk. Subject to admin approval.'),
+('sal.dash.newarticle',       @en, '+ New article'),
+('sal.dash.newarticle.desc',  @en, 'Write a News & Advice article as draft or published.'),
+('sal.dash.moderation',       @en, '⚑ Moderation'),
+('sal.dash.moderation.desc',  @en, 'Handle messages reported by the community.'),
+('sal.dash.ideasbox',         @en, '💡 Ideas box'),
+('sal.dash.ideas.desc',       @en, 'Suggest and vote for the team''s ideas.'),
+('sal.dash.planning',         @en, 'My schedule — upcoming');
