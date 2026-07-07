@@ -362,6 +362,24 @@ func ResolveTicket(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "ticket résolu"})
 }
 
+// mirrorSignalementToGLPI crée un ticket GLPI pour un signalement de forum
+// (miroir support), et stocke l'id GLPI. No-op si GLPI n'est pas configuré.
+func mirrorSignalementToGLPI(sigID int64, idMessage int, motif string) {
+	if !glpi.Configured() {
+		return
+	}
+	sujet := "Signalement forum — message #" + strconv.Itoa(idMessage)
+	desc := "Motif : " + motif
+	glpiID, err := glpi.CreateTicket(sujet, desc)
+	if err != nil {
+		log.Printf("[GLPI] signalement forum #%d : %v", sigID, err)
+		return
+	}
+	if glpiID != "" {
+		database.DB.Exec("UPDATE signalements_forum SET glpi_ticket_id = ? WHERE id_signalement = ?", glpiID, sigID) //nolint:errcheck
+	}
+}
+
 // syncTicketResoluGLPI propage la résolution vers GLPI si le ticket y est miroité.
 func syncTicketResoluGLPI(id string) {
 	var glpiID string

@@ -112,10 +112,28 @@ func scanMateriel(rows *sql.Rows) (models.Materiel, error) {
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
-// GetMateriels liste tout l'inventaire (avec photos + réservation active).
+// userSite renvoie le site (id_site_uc) du salarié, s'il en a un.
+func userSite(userId int) sql.NullInt64 {
+	var site sql.NullInt64
+	database.DB.QueryRow("SELECT id_site_uc FROM utilisateurs WHERE id_utilisateur = ?", userId).Scan(&site) //nolint:errcheck
+	return site
+}
+
+// GetMateriels liste l'inventaire visible par le salarié : le matériel de son
+// site + le matériel sans site (partagé). Un salarié sans site voit tout.
 func GetMateriels(w http.ResponseWriter, r *http.Request, userId int) {
-	rows, err := database.DB.Query(
-		"SELECT id_materiel, nom, description, etat, est_disponible, id_site FROM materiels ORDER BY nom")
+	site := userSite(userId)
+
+	var rows *sql.Rows
+	var err error
+	if site.Valid {
+		rows, err = database.DB.Query(
+			"SELECT id_materiel, nom, description, etat, est_disponible, id_site FROM materiels WHERE id_site = ? OR id_site IS NULL ORDER BY nom",
+			site.Int64)
+	} else {
+		rows, err = database.DB.Query(
+			"SELECT id_materiel, nom, description, etat, est_disponible, id_site FROM materiels ORDER BY nom")
+	}
 	if err != nil {
 		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
@@ -191,6 +209,13 @@ func CreateMateriel(w http.ResponseWriter, r *http.Request, userId int) {
 	dispo := true
 	if req.EstDisponible != nil {
 		dispo = *req.EstDisponible
+	}
+	// Par défaut, le matériel est rattaché au site du salarié créateur.
+	if req.IDSite == nil {
+		if site := userSite(userId); site.Valid {
+			v := int(site.Int64)
+			req.IDSite = &v
+		}
 	}
 
 	res, err := database.DB.Exec(

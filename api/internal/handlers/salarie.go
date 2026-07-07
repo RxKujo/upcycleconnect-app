@@ -705,11 +705,15 @@ func SignalerMessage(w http.ResponseWriter, r *http.Request, userId int) {
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "vous avez déjà signalé ce message"})
 		return
 	}
-	if _, err := database.DB.Exec("INSERT INTO signalements_forum (id_message, id_signaleur, motif) VALUES (?, ?, ?)",
-		req.IDMessage, userId, req.Motif); err != nil {
+	res, err := database.DB.Exec("INSERT INTO signalements_forum (id_message, id_signaleur, motif) VALUES (?, ?, ?)",
+		req.IDMessage, userId, req.Motif)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": err.Error()})
 		return
+	}
+	if sigID, _ := res.LastInsertId(); sigID > 0 {
+		go mirrorSignalementToGLPI(sigID, req.IDMessage, req.Motif)
 	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "signalement enregistré"})

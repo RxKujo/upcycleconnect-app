@@ -281,15 +281,18 @@ func SendNotifGroupe(w http.ResponseWriter, r *http.Request, adminID int) {
 	nbEnvoyesPush, nbEnvoyesEmail := 0, 0
 
 	if req.TypeEnvoi == "push" || req.TypeEnvoi == "push_email" {
-		playerIDs := []string{}
+		// Ciblage par External ID (= id utilisateur, défini via OneSignal.login
+		// côté client). Remplace l'ancien ciblage par player_id qui n'était
+		// jamais peuplé.
+		externalIDs := []string{}
 		for _, d := range dests {
-			if d.pushActive && d.playerID != "" {
-				playerIDs = append(playerIDs, d.playerID)
+			if d.pushActive {
+				externalIDs = append(externalIDs, strconv.Itoa(d.id))
 				nbEnvoyesPush++
 			}
 		}
-		if len(playerIDs) > 0 {
-			pushErr = services.SendPushToPlayers(playerIDs, req.Titre, req.Contenu, nil)
+		if len(externalIDs) > 0 {
+			pushErr = services.SendPushToExternalIDs(externalIDs, req.Titre, req.Contenu, nil)
 		}
 	}
 
