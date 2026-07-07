@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+@section('pub_slot')@include('partials.pub-slot')@endsection
+
 @section('title', 'Marché')
 @section('meta_description', 'Parcourez les annonces de matériaux et objets recyclés sur UpcycleConnect.')
 

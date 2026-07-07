@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+@section('pub_slot')@include('partials.pub-slot')@endsection
+
 @section('title', 'Ressources Pédagogiques')
 
 @section('styles')

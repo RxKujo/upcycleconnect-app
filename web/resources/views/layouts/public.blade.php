@@ -206,6 +206,8 @@
         @yield('content')
     </main>
 
+    @yield('pub_slot')
+
     @include('partials.footer')
 
     <script>

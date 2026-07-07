@@ -1,4 +1,6 @@
 @extends('layouts.particulier')
+
+@section('pub_slot')@include('partials.pub-slot')@endsection
 @section('title', 'Tableau de bord')
 
 @section('styles')

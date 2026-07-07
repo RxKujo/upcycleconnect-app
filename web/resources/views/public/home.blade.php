@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+@section('pub_slot')@include('partials.pub-slot')@endsection
+
 @section('title', 'Accueil')
 @section('meta_description', 'UpcycleConnect — la plateforme française de l\'économie circulaire. Vendez, donnez, échangez vos objets et matériaux, et apprenez l\'upcycling avec une communauté engagée.')
 

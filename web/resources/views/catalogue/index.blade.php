@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+@section('pub_slot')@include('partials.pub-slot')@endsection
+
 @section('title', 'Événements & formations')
 @section('meta_description', 'Ateliers, formations et conférences UpcycleConnect. Consultez le catalogue et inscrivez-vous.')
 

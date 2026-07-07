@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+@section('pub_slot')@include('partials.pub-slot')@endsection
+
 @section('title', $annonce['titre'] ?? 'Annonce')
 @section('meta_description', Illuminate\Support\Str::limit($annonce['description'] ?? '', 160))
 @section('og_title', $annonce['titre'] ?? 'Annonce')

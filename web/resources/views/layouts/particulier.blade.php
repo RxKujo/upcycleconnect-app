@@ -162,6 +162,7 @@
         <main class="espace-main">
             <div id="alert-container"></div>
             @yield('content')
+            @yield('pub_slot')
         </main>
     </div>
 
