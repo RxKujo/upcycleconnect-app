@@ -43,7 +43,7 @@
             </div>
 
             <div class="event-card-block">
-                <h2 class="event-block-title">Description</h2>
+                <h2 class="event-block-title" data-i18n="events.description">Description</h2>
                 <div class="event-description">{{ $evenement['description'] }}</div>
             </div>
 
@@ -83,18 +83,18 @@
             @endif
 
             <div class="event-card-block">
-                <h2 class="event-block-title">Modalités</h2>
+                <h2 class="event-block-title" data-i18n="events.terms">Modalités</h2>
                 <div class="event-modalites-grid">
                     <div class="event-modalite">
-                        <span class="event-modalite-label">Format</span>
+                        <span class="event-modalite-label" data-i18n="events.format">Format</span>
                         <span class="event-modalite-value">{{ $formatLabels[$evenement['format']] ?? '' }}</span>
                     </div>
                     <div class="event-modalite">
-                        <span class="event-modalite-label">Lieu</span>
+                        <span class="event-modalite-label" data-i18n="events.place">Lieu</span>
                         <span class="event-modalite-value">{{ $evenement['lieu'] ?? 'En ligne' }}</span>
                     </div>
                     <div class="event-modalite">
-                        <span class="event-modalite-label">{{ count($seances) > 1 ? 'Période' : 'Date' }}</span>
+                        <span class="event-modalite-label" data-i18n="{{ count($seances) > 1 ? 'events.period' : 'events.date' }}">{{ count($seances) > 1 ? 'Période' : 'Date' }}</span>
                         <span class="event-modalite-value">
                             @if(count($seances) > 1 && !$date->isSameDay($dateFin))
                                 {{ $date->locale('fr')->isoFormat('D MMM') }} → {{ $dateFin->locale('fr')->isoFormat('D MMM Y') }}
@@ -104,7 +104,7 @@
                         </span>
                     </div>
                     <div class="event-modalite">
-                        <span class="event-modalite-label">{{ count($seances) > 1 ? 'Séances' : 'Horaire' }}</span>
+                        <span class="event-modalite-label" data-i18n="{{ count($seances) > 1 ? 'events.sessions' : 'events.time' }}">{{ count($seances) > 1 ? 'Séances' : 'Horaire' }}</span>
                         <span class="event-modalite-value">
                             @if(count($seances) > 1)
                                 {{ count($seances) }} créneaux
@@ -127,18 +127,18 @@
             <div class="event-sidebar-price-block">
                 @if(($evenement['prix'] ?? 0) > 0)
                 <span class="event-sidebar-price">{{ number_format($evenement['prix'], 2) }}&euro;</span>
-                <span class="event-sidebar-price-sub">par participant</span>
+                <span class="event-sidebar-price-sub" data-i18n="events.perperson">par participant</span>
                 @else
-                <span class="event-sidebar-free">Gratuit</span>
+                <span class="event-sidebar-free" data-i18n="status.free">Gratuit</span>
                 @endif
             </div>
 
             @php $dispo = $evenement['nb_places_dispo'] ?? 0; @endphp
             <div class="event-sidebar-places">
                 <div class="event-places-header">
-                    <span class="event-places-label">Disponibilité</span>
+                    <span class="event-places-label" data-i18n="events.availability">Disponibilité</span>
                     <span class="event-places-value">
-                        @if($dispo <= 0) Complet @else Il reste {{ $dispo }} place{{ $dispo > 1 ? 's' : '' }} @endif
+                        @if($dispo <= 0) <span data-i18n="events.full">Complet</span> @else Il reste {{ $dispo }} place{{ $dispo > 1 ? 's' : '' }} @endif
                     </span>
                 </div>
                 <div class="event-places-bar">
@@ -148,28 +148,28 @@
 
             @if(($evenement['format'] ?? '') === 'presentiel' && !empty($evenement['lieu']))
             <a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($evenement['lieu']) }}"
-               target="_blank" rel="noopener" class="btn btn-secondary btn-block">Itinéraire Google Maps →</a>
+               target="_blank" rel="noopener" class="btn btn-secondary btn-block" data-i18n="market.directions">Itinéraire Google Maps →</a>
             @endif
 
             @if(($evenement['nb_places_dispo'] ?? 0) > 0)
                 <div x-show="!subscribed">
                     <button type="button" class="btn btn-primary btn-lg btn-block" x-on:click="subscribe()" x-bind:disabled="loading">
                         <span x-show="!loading">
-                            @if(($evenement['prix'] ?? 0) > 0) Payer & m'inscrire
-                            @else M'inscrire gratuitement
+                            @if(($evenement['prix'] ?? 0) > 0) <span data-i18n="events.payregister">Payer & m'inscrire</span>
+                            @else <span data-i18n="events.register.free">M'inscrire gratuitement</span>
                             @endif
                         </span>
-                        <span x-show="loading" style="display:none;">Traitement…</span>
+                        <span x-show="loading" style="display:none;" data-i18n="common.processing">Traitement…</span>
                     </button>
                 </div>
                 <div x-show="subscribed" style="display:none; flex-direction:column; gap:12px;">
-                    <div class="event-success-banner">&#10003; Vous êtes inscrit</div>
-                    <button type="button" class="btn btn-secondary btn-block" x-on:click="downloadTicket()">
+                    <div class="event-success-banner">&#10003; <span data-i18n="events.registered">Vous êtes inscrit</span></div>
+                    <button type="button" class="btn btn-secondary btn-block" x-on:click="downloadTicket()" data-i18n="events.ticket">
                         Télécharger mon billet PDF
                     </button>
                 </div>
             @else
-                <button type="button" class="btn btn-secondary btn-block" disabled>Événement complet</button>
+                <button type="button" class="btn btn-secondary btn-block" disabled data-i18n="events.soldout">Événement complet</button>
             @endif
 
             <p class="event-sidebar-note">
@@ -339,17 +339,17 @@ document.addEventListener('DOMContentLoaded', function() {
 {{-- Modal Stripe événement --}}
 <div id="stripe-event-modal" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.7);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:3px solid var(--coffee);box-shadow:8px 8px 0 var(--coffee);padding:40px;max-width:500px;width:calc(100% - 32px);max-height:90vh;overflow-y:auto;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.08em;margin-bottom:8px;">Paiement sécurisé</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.08em;margin-bottom:8px;" data-i18n="pay.title">Paiement sécurisé</div>
         <div style="font-family:'DM Mono',monospace;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--teal);margin-bottom:28px;">
-            Montant : <strong style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--cherry);vertical-align:middle;margin-left:6px;" id="modal-event-amount"></strong>
+            <span data-i18n="pay.amount">Montant :</span> <strong style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--cherry);vertical-align:middle;margin-left:6px;" id="modal-event-amount"></strong>
         </div>
         <div id="stripe-event-payment-element" style="margin-bottom:24px;"></div>
         <div id="stripe-event-error" style="color:var(--cherry);font-size:0.9rem;margin-bottom:16px;min-height:20px;font-family:'DM Mono',monospace;"></div>
         <div style="display:flex;gap:12px;">
-            <button id="btn-payer-event" style="flex:1;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.1em;text-transform:uppercase;background:var(--cherry);color:var(--cream);border:3px solid var(--coffee);box-shadow:3px 3px 0 var(--coffee);cursor:pointer;">Payer maintenant</button>
-            <button id="btn-annuler-event" style="padding:16px 20px;font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;background:var(--cream);color:var(--coffee);border:3px solid var(--coffee);cursor:pointer;">Annuler</button>
+            <button id="btn-payer-event" style="flex:1;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:0.1em;text-transform:uppercase;background:var(--cherry);color:var(--cream);border:3px solid var(--coffee);box-shadow:3px 3px 0 var(--coffee);cursor:pointer;" data-i18n="pay.now">Payer maintenant</button>
+            <button id="btn-annuler-event" style="padding:16px 20px;font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;background:var(--cream);color:var(--coffee);border:3px solid var(--coffee);cursor:pointer;" data-i18n="btn.cancel">Annuler</button>
         </div>
-        <p style="font-family:'DM Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);opacity:0.7;margin-top:12px;">Paiement sécurisé par Stripe — données bancaires jamais stockées.</p>
+        <p style="font-family:'DM Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);opacity:0.7;margin-top:12px;" data-i18n="pay.note">Paiement sécurisé par Stripe — données bancaires jamais stockées.</p>
     </div>
 </div>
 @endsection

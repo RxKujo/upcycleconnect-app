@@ -7,17 +7,17 @@
 
 @section('content')
 <div class="page-container">
-    <p class="section-label">Agenda</p>
-    <h1 class="page-title">Événements &amp; formations</h1>
-    <p class="page-subtitle">Ateliers, formations et conférences organisés par la communauté</p>
+    <p class="section-label" data-i18n="events.kicker">Agenda</p>
+    <h1 class="page-title" data-i18n="events.title">Événements &amp; formations</h1>
+    <p class="page-subtitle" data-i18n="events.subtitle">Ateliers, formations et conférences organisés par la communauté</p>
 
     <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:36px;" id="filters">
-        <button class="filter-btn active" data-filter="all">Tout</button>
-        <button class="filter-btn" data-filter="atelier">Ateliers</button>
-        <button class="filter-btn" data-filter="formation">Formations</button>
-        <button class="filter-btn" data-filter="conference">Conférences</button>
-        <button class="filter-btn" data-filter="presentiel">Présentiel</button>
-        <button class="filter-btn" data-filter="distanciel">Distanciel</button>
+        <button class="filter-btn active" data-filter="all" data-i18n="events.filter.all">Tout</button>
+        <button class="filter-btn" data-filter="atelier" data-i18n="events.filter.atelier">Ateliers</button>
+        <button class="filter-btn" data-filter="formation" data-i18n="events.filter.formation">Formations</button>
+        <button class="filter-btn" data-filter="conference" data-i18n="events.filter.conference">Conférences</button>
+        <button class="filter-btn" data-filter="presentiel" data-i18n="events.filter.presentiel">Présentiel</button>
+        <button class="filter-btn" data-filter="distanciel" data-i18n="events.filter.distanciel">Distanciel</button>
     </div>
 
     @if(count($evenements) > 0)
@@ -59,23 +59,23 @@
 
             <div class="event-card-meta">
                 @if($multiJours)
-                <p class="event-card-meta-line"><span>Programme</span> Du {{ $date->locale('fr')->isoFormat('D MMM') }} au {{ $dateFin->locale('fr')->isoFormat('D MMM Y') }} · plusieurs séances</p>
+                <p class="event-card-meta-line"><span data-i18n="events.program">Programme</span> Du {{ $date->locale('fr')->isoFormat('D MMM') }} au {{ $dateFin->locale('fr')->isoFormat('D MMM Y') }} · plusieurs séances</p>
                 @else
-                <p class="event-card-meta-line"><span>Date</span> {{ $date->locale('fr')->isoFormat('dddd D MMMM Y') }}</p>
-                <p class="event-card-meta-line"><span>Horaire</span> {{ $date->format('H\hi') }} — {{ $dateFin->format('H\hi') }}</p>
+                <p class="event-card-meta-line"><span data-i18n="events.date">Date</span> {{ $date->locale('fr')->isoFormat('dddd D MMMM Y') }}</p>
+                <p class="event-card-meta-line"><span data-i18n="events.time">Horaire</span> {{ $date->format('H\hi') }} — {{ $dateFin->format('H\hi') }}</p>
                 @endif
-                <p class="event-card-meta-line"><span>Lieu</span> {{ $e['lieu'] ?? 'En ligne' }}</p>
+                <p class="event-card-meta-line"><span data-i18n="events.place">Lieu</span> {{ $e['lieu'] ?? 'En ligne' }}</p>
             </div>
 
             <div class="event-card-footer">
                 @if(($e['prix'] ?? 0) > 0)
                 <span class="event-card-price">{{ number_format($e['prix'], 2) }}&euro;</span>
                 @else
-                <span class="event-card-free">Gratuit</span>
+                <span class="event-card-free" data-i18n="status.free">Gratuit</span>
                 @endif
                 @php $dispoCard = $e['nb_places_dispo'] ?? 0; @endphp
                 <span class="event-card-places {{ $dispoCard <= 3 ? 'low' : '' }}">
-                    @if($dispoCard <= 0) Complet @else Il reste {{ $dispoCard }} place{{ $dispoCard > 1 ? 's' : '' }} @endif
+                    @if($dispoCard <= 0) <span data-i18n="events.full">Complet</span> @else Il reste {{ $dispoCard }} place{{ $dispoCard > 1 ? 's' : '' }} @endif
                 </span>
             </div>
         </a>
@@ -83,8 +83,8 @@
     </div>
     @else
     <div class="empty-state">
-        <h3>Aucun événement à venir</h3>
-        <p>Les prochains ateliers et formations apparaîtront ici.</p>
+        <h3 data-i18n="events.empty.title">Aucun événement à venir</h3>
+        <p data-i18n="events.empty.body">Les prochains ateliers et formations apparaîtront ici.</p>
     </div>
     @endif
 </div>
