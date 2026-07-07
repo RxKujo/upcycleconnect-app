@@ -97,9 +97,9 @@
         <div>
             <h2 class="section-title">Conteneurs proches</h2>
             <p style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:#666;margin-bottom:16px;">
-                Cliquez sur un conteneur pour le sélectionner
+                Cliquez sur un conteneur pour le sélectionner — ou « Autour de moi » pour les plus proches
             </p>
-            <div id="map"></div>
+            <div id="map" data-conteneurs-map data-api="{{ config('services.api.public_url') }}" data-selectable="1"></div>
         </div>
     </div>
 
@@ -112,56 +112,31 @@
 @endsection
 
 @section('scripts')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+@vite('resources/js/conteneurs-map.js')
 <script>
 const API = '{{ config("services.api.public_url") }}';
 const token = localStorage.getItem('uc_token');
-let map, selectedConteneur = null;
+let selectedConteneur = null;
 
 if (!token) {
     window.location.href = '/login?return=/depot';
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
-    map = L.map('map').setView([46.603354, 1.888334], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    const conteneurs = await loadConteneurs();
-    conteneurs.forEach(c => {
-        if (!c.latitude || !c.longitude) return;
-        const marker = L.marker([c.latitude, c.longitude]).addTo(map);
-        marker.bindPopup(`
-            <b>${c.conteneur_ref}</b><br>
-            ${c.adresse}, ${c.ville}<br>
-            Capacité: ${c.capacite} objets
-        `);
-        marker.on('click', function() {
+// La carte (marqueurs, popups, « Autour de moi », itinéraire) est gérée par le
+// module réutilisable resources/js/conteneurs-map.js. Ici on écoute seulement la
+// sélection d'un conteneur pour remplir le formulaire de dépôt.
+document.addEventListener('DOMContentLoaded', function() {
+    const mapEl = document.getElementById('map');
+    if (mapEl) {
+        mapEl.addEventListener('conteneur:selected', function(e) {
+            const c = e.detail.conteneur;
             selectedConteneur = c;
             document.getElementById('depot-conteneur-id').value = c.id_conteneur;
             document.getElementById('depot-conteneur-display').value = c.conteneur_ref + ' — ' + c.adresse + ', ' + c.ville;
         });
-    });
-
-    if (conteneurs.length > 0 && conteneurs.some(c => c.latitude)) {
-        const withGeo = conteneurs.filter(c => c.latitude);
-        const avgLat = withGeo.reduce((s,c) => s + c.latitude, 0) / withGeo.length;
-        const avgLng = withGeo.reduce((s,c) => s + c.longitude, 0) / withGeo.length;
-        map.setView([avgLat, avgLng], 8);
     }
-
     loadMesDemandes();
 });
-
-async function loadConteneurs() {
-    try {
-        const r = await fetch(API + '/api/v1/public/conteneurs');
-        if (!r.ok) return [];
-        return await r.json();
-    } catch(e) { return []; }
-}
 
 async function submitDepot(e) {
     e.preventDefault();
