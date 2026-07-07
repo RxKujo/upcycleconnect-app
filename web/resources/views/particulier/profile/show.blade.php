@@ -41,6 +41,9 @@
     .edit-input { width: 100%; border: 2px solid var(--coffee); padding: 8px 12px; font-family: 'Outfit', sans-serif; font-size: 0.95rem; display: none; border-radius: 0; }
     .editing .info-val { display: none; }
     .editing .edit-input { display: block; }
+    /* En édition : label au-dessus du champ pleine largeur (plus aéré). */
+    .editing .info-row { flex-direction: column; align-items: stretch; gap: 6px; padding: 14px 0; }
+    .editing .info-key { margin-bottom: 2px; }
 
     .full-width { grid-column: 1 / -1; }
 
@@ -207,10 +210,16 @@ async function loadProfile() {
 
         document.getElementById('display-name').textContent = userData.prenom + ' ' + userData.nom;
         document.getElementById('display-role').textContent = userData.role;
-        document.getElementById('avatar-initials').textContent = (userData.prenom[0] || '') + (userData.nom[0] || '');
 
+        // Reconstruit l'avatar à chaque appel (idempotent) : le rendu photo
+        // remplaçait le <span id="avatar-initials">, ce qui faisait planter le
+        // rechargement après sauvegarde (null.textContent).
+        const initials = ((userData.prenom || ' ')[0] || '') + ((userData.nom || ' ')[0] || '');
+        const avatarEl = document.getElementById('avatar-display');
         if (userData.photo_profil_url) {
-            document.getElementById('avatar-display').innerHTML = '<img src="' + window.MEDIA_BASE + '/' + userData.photo_profil_url + '" alt="Avatar">';
+            avatarEl.innerHTML = '<img src="' + window.MEDIA_BASE + '/' + userData.photo_profil_url + '" alt="Avatar">';
+        } else {
+            avatarEl.innerHTML = '<span id="avatar-initials">' + initials + '</span>';
         }
 
         document.getElementById('val-email').textContent = userData.email;
@@ -433,6 +442,16 @@ async function downloadPDF() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadProfile);
+document.addEventListener('DOMContentLoaded', function () {
+    loadProfile();
+    // Autocomplétion d'adresse : remplit aussi la ville à la sélection.
+    if (window.initAddressAutocomplete) {
+        window.initAddressAutocomplete(
+            document.getElementById('edit-adresse'),
+            { city: document.getElementById('edit-ville') }
+        );
+    }
+});
 </script>
+@include('partials.address-autocomplete')
 @endsection

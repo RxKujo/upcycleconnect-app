@@ -311,10 +311,15 @@ async function loadProfile() {
         // Fill profile info
         document.getElementById('display-name').textContent = userData.prenom + ' ' + userData.nom;
         document.getElementById('display-role').textContent = 'Professionnel';
-        document.getElementById('avatar-initials').textContent = (userData.prenom[0] || '') + (userData.nom[0] || '');
 
+        // Avatar reconstruit à chaque appel (idempotent) : évite le null.textContent
+        // au rechargement après sauvegarde (le rendu photo écrase #avatar-initials).
+        const initials = ((userData.prenom || ' ')[0] || '') + ((userData.nom || ' ')[0] || '');
+        const avatarEl = document.getElementById('avatar-display');
         if (userData.photo_profil_url) {
-            document.getElementById('avatar-display').innerHTML = '<img src="' + window.MEDIA_BASE + '/' + userData.photo_profil_url + '" alt="Avatar">';
+            avatarEl.innerHTML = '<img src="' + window.MEDIA_BASE + '/' + userData.photo_profil_url + '" alt="Avatar">';
+        } else {
+            avatarEl.innerHTML = '<span id="avatar-initials">' + initials + '</span>';
         }
 
         document.getElementById('val-email').textContent = userData.email;
