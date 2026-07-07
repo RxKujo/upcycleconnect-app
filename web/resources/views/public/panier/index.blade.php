@@ -91,8 +91,8 @@
 
 @section('content')
 <div class="page-container" style="max-width:900px;">
-    <p class="section-label">Achats</p>
-    <h1 class="page-title">Mon panier</h1>
+    <p class="section-label" data-i18n="cart.kicker">Achats</p>
+    <h1 class="page-title" data-i18n="cart.title">Mon panier</h1>
 
     <div id="panierEmpty" style="text-align:center; padding:72px 24px; border:var(--border); background:white; box-shadow:var(--shadow-sm);">
         <div style="width:84px; height:84px; margin:0 auto 24px; border:3px solid var(--coffee); display:flex; align-items:center; justify-content:center; background:var(--wheat);">
@@ -101,13 +101,13 @@
                 <path d="M1 1h4l2.6 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
             </svg>
         </div>
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:0.04em; margin-bottom:10px;">Votre panier est vide</h3>
-        <p style="opacity:0.6; max-width:420px; margin:0 auto 28px; line-height:1.5;">
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:0.04em; margin-bottom:10px;" data-i18n="cart.empty.title">Votre panier est vide</h3>
+        <p style="opacity:0.6; max-width:420px; margin:0 auto 28px; line-height:1.5;" data-i18n="cart.empty.body">
             Parcourez le marché et ajoutez des objets à récupérer ou à acheter. Ils apparaîtront ici.
         </p>
         <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-            <a href="{{ route('annonces.index') }}" class="btn btn-primary">Explorer le marché</a>
-            <a href="/" class="btn btn-secondary">Retour à l'accueil</a>
+            <a href="{{ route('annonces.index') }}" class="btn btn-primary" data-i18n="cart.explore">Explorer le marché</a>
+            <a href="/" class="btn btn-secondary" data-i18n="cart.home">Retour à l'accueil</a>
         </div>
     </div>
 
@@ -116,24 +116,24 @@
 
         <div style="border:var(--border); padding:24px; background:white; box-shadow:var(--shadow-sm);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <span class="font-mono" style="font-size:0.85rem; opacity:0.6;">Sous-total articles</span>
+                <span class="font-mono" style="font-size:0.85rem; opacity:0.6;" data-i18n="cart.subtotal">Sous-total articles</span>
                 <span id="panierSousTotal" style="font-family:'Bebas Neue',sans-serif; font-size:1.6rem;">0,00 €</span>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <span class="font-mono" style="font-size:0.75rem; opacity:0.5;">Commission UpcycleConnect</span>
+                <span class="font-mono" style="font-size:0.75rem; opacity:0.5;" data-i18n="cart.commission">Commission UpcycleConnect</span>
                 <span id="panierCommission" style="font-family:'DM Mono',monospace; font-size:0.85rem; color:var(--teal);">—</span>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:2px solid var(--coffee); padding-top:16px; margin-bottom:20px;">
-                <span class="font-mono" style="font-size:0.9rem; font-weight:700;">Total à payer</span>
+                <span class="font-mono" style="font-size:0.9rem; font-weight:700;" data-i18n="cart.total">Total à payer</span>
                 <span id="panierTotal" style="font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--cherry);">0,00 €</span>
             </div>
             <p id="panierAuthWarn" style="display:none; font-size:0.85rem; color:var(--cherry); margin-bottom:16px;">
-                Vous devez être <a href="/login?return=%2Fpanier" style="text-decoration:underline;">connecté</a> pour valider votre commande.
+                <span data-i18n="cart.authwarn.1">Vous devez être</span> <a href="/login?return=%2Fpanier" style="text-decoration:underline;" data-i18n="cart.authwarn.link">connecté</a> <span data-i18n="cart.authwarn.2">pour valider votre commande.</span>
             </p>
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                <button type="button" id="btnCheckout" class="btn btn-primary btn-lg">Payer par carte</button>
-                <button type="button" id="btnClear" class="btn btn-secondary">Vider le panier</button>
-                <a href="{{ route('annonces.index') }}" class="btn btn-secondary">Continuer mes achats</a>
+                <button type="button" id="btnCheckout" class="btn btn-primary btn-lg" data-i18n="cart.paycard">Payer par carte</button>
+                <button type="button" id="btnClear" class="btn btn-secondary" data-i18n="cart.clear">Vider le panier</button>
+                <a href="{{ route('annonces.index') }}" class="btn btn-secondary" data-i18n="cart.continue">Continuer mes achats</a>
             </div>
             <p id="checkoutResult" style="display:none; margin-top:16px; padding:14px; font-size:0.9rem;"></p>
         </div>
@@ -143,17 +143,17 @@
 {{-- Modal Stripe --}}
 <div id="stripe-modal-overlay" class="stripe-modal-overlay">
     <div class="stripe-modal">
-        <div class="stripe-modal-title">Paiement sécurisé</div>
+        <div class="stripe-modal-title" data-i18n="pay.title">Paiement sécurisé</div>
         <div class="stripe-modal-amount">
-            Total à débiter : <strong id="modal-amount-display">0,00 €</strong>
+            <span data-i18n="cart.tocharge">Total à débiter :</span> <strong id="modal-amount-display">0,00 €</strong>
         </div>
         <div id="stripe-payment-element"></div>
         <div id="stripe-error"></div>
         <div class="stripe-modal-actions">
-            <button id="btn-payer">Payer maintenant</button>
-            <button id="btn-annuler-paiement">Annuler</button>
+            <button id="btn-payer" data-i18n="pay.now">Payer maintenant</button>
+            <button id="btn-annuler-paiement" data-i18n="btn.cancel">Annuler</button>
         </div>
-        <p class="commission-note">Paiement sécurisé par Stripe — vos données bancaires ne sont jamais stockées.</p>
+        <p class="commission-note" data-i18n="pay.note">Paiement sécurisé par Stripe — vos données bancaires ne sont jamais stockées.</p>
     </div>
 </div>
 @endsection

@@ -138,3 +138,27 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('forum.postreply',        @en, 'Post my reply'),
 ('forum.reply',            @en, 'Reply'),
 ('forum.report',           @en, 'Report');
+
+-- ── LOT 4 : panier (checkout) ────────────────────────────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'cart.kicker','cart.title','cart.empty.title','cart.empty.body','cart.explore','cart.home',
+  'cart.subtotal','cart.commission','cart.total','cart.authwarn.1','cart.authwarn.link',
+  'cart.authwarn.2','cart.paycard','cart.clear','cart.continue','cart.tocharge'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('cart.kicker',        @en, 'Purchases'),
+('cart.title',         @en, 'My cart'),
+('cart.empty.title',   @en, 'Your cart is empty'),
+('cart.empty.body',    @en, 'Browse the marketplace and add items to collect or buy. They will appear here.'),
+('cart.explore',       @en, 'Explore the marketplace'),
+('cart.home',          @en, 'Back to home'),
+('cart.subtotal',      @en, 'Items subtotal'),
+('cart.commission',    @en, 'UpcycleConnect commission'),
+('cart.total',         @en, 'Total to pay'),
+('cart.authwarn.1',    @en, 'You must be'),
+('cart.authwarn.link', @en, 'logged in'),
+('cart.authwarn.2',    @en, 'to place your order.'),
+('cart.paycard',       @en, 'Pay by card'),
+('cart.clear',         @en, 'Empty cart'),
+('cart.continue',      @en, 'Continue shopping'),
+('cart.tocharge',      @en, 'Total to charge:');
