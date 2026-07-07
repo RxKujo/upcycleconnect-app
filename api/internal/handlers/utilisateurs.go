@@ -5,12 +5,11 @@ import (
 	"api/internal/models"
 	"api/internal/services"
 	"api/pkg/database"
+	"api/pkg/storage"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -101,14 +100,13 @@ func UpdateMe(w http.ResponseWriter, r *http.Request, id int) {
 
 	var photoURL *string
 	if req.PhotoProfil != nil && *req.PhotoProfil != "" {
-		filename, data, err := decodeBase64Image(*req.PhotoProfil)
+		ext, data, err := decodeBase64Image(*req.PhotoProfil)
 		if err == nil {
-			uploadDir := getUploadDir()
-			os.MkdirAll(uploadDir, 0755)
-			filePath := filepath.Join(uploadDir, filename)
-			if werr := os.WriteFile(filePath, data, 0644); werr == nil {
-				rel := "photos/" + filename
-				photoURL = &rel
+			// generateUUID + extension : un fichier unique par avatar
+			// (l'ancien code réutilisait l'extension comme nom de fichier).
+			key := "photos/" + generateUUID() + "." + ext
+			if serr := storage.Default().Save(key, data, storage.ContentType(key)); serr == nil {
+				photoURL = &key
 			}
 		}
 	}

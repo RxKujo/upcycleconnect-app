@@ -3,14 +3,13 @@
 import (
 	"api/internal/models"
 	"api/pkg/database"
+	"api/pkg/storage"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -388,9 +387,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 	}
 	annonceId, _ := res.LastInsertId()
 
-	uploadDir := getUploadDir()
-	os.MkdirAll(uploadDir, 0755)
-
 	photoOrdre := 0
 	for _, obj := range req.Objets {
 		objRes, err := tx.Exec(
@@ -419,7 +415,8 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 				return
 			}
 			filename := generateUUID() + "." + ext
-			if err := os.WriteFile(filepath.Join(uploadDir, filename), data, 0644); err != nil {
+			key := "photos/" + filename
+			if err := storage.Default().Save(key, data, storage.ContentType(key)); err != nil {
 				tx.Rollback()
 				logError("CreateAnnonce", "file write: %v", err)
 				jsonErr(w, "erreur sauvegarde photo", http.StatusInternalServerError)
@@ -427,7 +424,7 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 			}
 			if _, err = tx.Exec(
 				`INSERT INTO photos_objets (id_objet, url_photo, ordre) VALUES (?, ?, ?)`,
-				objetId, "photos/"+filename, photoOrdre); err != nil {
+				objetId, key, photoOrdre); err != nil {
 				tx.Rollback()
 				logError("CreateAnnonce", "insert photo: %v", err)
 				jsonErr(w, "erreur enregistrement photo", http.StatusInternalServerError)
@@ -556,8 +553,7 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		return
 	}
 
-	// Supprime les fichiers photos du disque.
-	uploadDir := getUploadDir()
+	// Supprime les fichiers photos du stockage.
 	photoRows, err := database.DB.Query(
 		`SELECT po.url_photo FROM photos_objets po JOIN objets_annonces oa ON po.id_objet = oa.id_objet WHERE oa.id_annonce = ?`, id)
 	if err == nil {
@@ -565,7 +561,7 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		for photoRows.Next() {
 			var url string
 			if photoRows.Scan(&url) == nil {
-				os.Remove(filepath.Join(uploadDir, filepath.Base(url)))
+				storage.Default().Delete(url) //nolint:errcheck
 			}
 		}
 	}
@@ -703,13 +699,6 @@ func AttenteAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 // ─── Utilitaires fichiers ─────────────────────────────────────────────────────
-
-func getUploadDir() string {
-	if dir := os.Getenv("UPLOAD_DIR"); dir != "" {
-		return dir
-	}
-	return "../web/public/uploads/photos"
-}
 
 func decodeBase64Image(b64 string) (string, []byte, error) {
 	ext := "jpg"

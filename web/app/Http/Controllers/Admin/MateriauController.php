@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class MateriauController extends Controller
 {
@@ -76,7 +77,8 @@ class MateriauController extends Controller
     }
 
     /**
-     * Décode une icône base64 (data URL) et l'écrit dans public/uploads/materiaux.
+     * Décode une icône base64 (data URL) et l'écrit sur le disque média
+     * (public/uploads en local, bucket S3 en prod, cf. config/media.php).
      * Retourne le chemin relatif (materiaux/xxx.ext) ou null si absent/invalide.
      */
     private function saveBase64Icon(?string $b64): ?string
@@ -89,12 +91,8 @@ class MateriauController extends Controller
         if (!in_array($ext, ['jpg', 'png', 'webp', 'svg'], true) || $data === false || strlen($data) > 2 * 1024 * 1024) {
             return null;
         }
-        $dir = public_path('uploads/materiaux');
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        $filename = uniqid('mat-') . '.' . $ext;
-        file_put_contents($dir . '/' . $filename, $data);
-        return 'materiaux/' . $filename;
+        $key = 'materiaux/' . uniqid('mat-') . '.' . $ext;
+        Storage::disk(media_disk())->put($key, $data);
+        return $key;
     }
 }

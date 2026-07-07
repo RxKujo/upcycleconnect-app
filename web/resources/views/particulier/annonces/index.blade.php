@@ -105,7 +105,7 @@ async function loadAnnonces() {
             const date = new Date(a.date_creation).toLocaleDateString('fr-FR');
             const prix = a.type_annonce === 'don' ? 'Gratuit' : (parseFloat(a.prix || 0).toFixed(2) + ' €');
             const thumb = a.photo
-                ? '<img src="/uploads/' + escapeHtml(a.photo) + '" alt="" style="width:48px;height:48px;object-fit:cover;border:1px solid rgba(18,3,9,0.15);">'
+                ? '<img src="' + window.MEDIA_BASE + '/' + escapeHtml(a.photo) + '" alt="" style="width:48px;height:48px;object-fit:cover;border:1px solid rgba(18,3,9,0.15);">'
                 : '<div style="width:48px;height:48px;background:var(--wheat);"></div>';
             const refus = (a.statut === 'refusee' && a.motif_refus)
                 ? '<div style="font-size:0.75rem;color:var(--cherry);margin-top:4px;">Motif : ' + escapeHtml(a.motif_refus) + '</div>' : '';

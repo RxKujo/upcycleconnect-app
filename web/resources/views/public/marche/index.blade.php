@@ -36,7 +36,7 @@
            style="padding:0; display:flex; flex-direction:column; text-decoration:none;">
             <div style="height:200px; background:repeating-linear-gradient(45deg, var(--wheat), var(--wheat) 14px, #c9b97f 14px, #c9b97f 28px); border-bottom:var(--border); display:flex; align-items:center; justify-content:center; overflow:hidden;">
                 @if(!empty($annonce['objets']) && !empty($annonce['objets'][0]['photos']))
-                <img src="/uploads/{{ $annonce['objets'][0]['photos'][0]['url'] }}" alt="{{ $annonce['titre'] }}" style="width:100%; height:100%; object-fit:cover;">
+                <img src="{{ media_url($annonce['objets'][0]['photos'][0]['url']) }}" alt="{{ $annonce['titre'] }}" style="width:100%; height:100%; object-fit:cover;">
                 @else
                 <span class="font-mono" style="font-size:0.72rem; letter-spacing:0.08em; color:var(--coffee); background:var(--cream); border:2px solid var(--coffee); box-shadow:2px 2px 0 rgba(18,3,9,0.3); padding:6px 14px;">PAS DE PHOTO</span>
                 @endif

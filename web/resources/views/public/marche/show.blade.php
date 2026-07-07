@@ -26,7 +26,7 @@
         <div>
             <div style="border:var(--border); box-shadow:var(--shadow); background:var(--wheat); height:400px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:16px;">
                 @if(!empty($annonce['objets']) && !empty($annonce['objets'][0]['photos']))
-                <img id="mainPhoto" src="/uploads/{{ $annonce['objets'][0]['photos'][0]['url'] }}" alt="{{ $annonce['titre'] }}" style="width:100%; height:100%; object-fit:cover;">
+                <img id="mainPhoto" src="{{ media_url($annonce['objets'][0]['photos'][0]['url']) }}" alt="{{ $annonce['titre'] }}" style="width:100%; height:100%; object-fit:cover;">
                 @else
                 <span class="font-mono" style="font-size:0.85rem; opacity:0.4;">Pas de photo</span>
                 @endif
@@ -34,9 +34,9 @@
             @if(!empty($annonce['objets']) && count($annonce['objets'][0]['photos'] ?? []) > 1)
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 @foreach($annonce['objets'][0]['photos'] as $i => $photo)
-                <button type="button" class="thumb-btn{{ $i === 0 ? ' active' : '' }}" data-src="/uploads/{{ $photo['url'] }}"
+                <button type="button" class="thumb-btn{{ $i === 0 ? ' active' : '' }}" data-src="{{ media_url($photo['url']) }}"
                         style="width:80px; height:80px; border:var(--border); background:var(--wheat); overflow:hidden; padding:0; cursor:pointer;">
-                    <img src="/uploads/{{ $photo['url'] }}" alt="Vue {{ $i + 1 }}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <img src="{{ media_url($photo['url']) }}" alt="Vue {{ $i + 1 }}" style="width:100%; height:100%; object-fit:cover; display:block;">
                 </button>
                 @endforeach
             </div>

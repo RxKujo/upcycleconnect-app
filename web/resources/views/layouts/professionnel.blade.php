@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Espace Pro') — UpcycleConnect</title>
@@ -163,5 +164,6 @@
     @yield('scripts')
     @stack('scripts')
     @include('partials.datepicker')
+    @include('partials.onesignal')
 </body>
 </html>

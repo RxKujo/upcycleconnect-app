@@ -75,7 +75,7 @@
             <tr class="{{ $m['actif'] ? '' : 'mat-row-off' }}">
                 <td>
                     @if(!empty($m['icone']))
-                        <img src="/uploads/{{ $m['icone'] }}" alt="{{ $m['libelle'] }}" class="mat-icon">
+                        <img src="{{ media_url($m['icone']) }}" alt="{{ $m['libelle'] }}" class="mat-icon">
                     @else
                         <span style="color:#bbb;">—</span>
                     @endif
@@ -136,7 +136,7 @@
         document.getElementById('m_libelle').value = m.libelle;
         document.getElementById('m_iconeBase64').value = '';
         const prev = document.getElementById('m_iconePreview');
-        if (m.icone) { prev.src = '/uploads/' + m.icone; prev.style.display = 'block'; }
+        if (m.icone) { prev.src = window.MEDIA_BASE + '/' + m.icone; prev.style.display = 'block'; }
         else { prev.style.display = 'none'; }
         actifGroup.style.display = 'block';
         document.getElementById('m_actif').checked = !!m.actif;

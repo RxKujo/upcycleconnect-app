@@ -132,7 +132,7 @@
         <div style="display:flex; gap:16px; flex-wrap:wrap;">
             @foreach($photos as $photo)
             <div style="position:relative; width:160px;">
-                <img src="/uploads/{{ $photo['url_photo'] }}" alt="Conteneur {{ $conteneur['conteneur_ref'] }}"
+                <img src="{{ media_url($photo['url_photo']) }}" alt="Conteneur {{ $conteneur['conteneur_ref'] }}"
                      style="width:160px; height:120px; object-fit:cover; border:3px solid var(--coffee);">
                 <form action="{{ route('admin.conteneurs.photos.delete', [$conteneur['id_conteneur'], $photo['id_photo']]) }}"
                       method="POST" data-confirm="Supprimer cette photo ?" style="margin-top:6px;">

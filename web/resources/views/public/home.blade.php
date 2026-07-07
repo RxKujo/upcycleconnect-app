@@ -48,7 +48,7 @@
                     <a class="lp-annonce" data-tilt href="{{ route('annonces.show', $featured['id_annonce']) }}" aria-label="{{ $featured['titre'] }}">
                         <div class="lp-annonce__img lp-img--wheat">
                             @if(!empty($featured['objets'][0]['photos'][0]['url']))
-                                <img src="/uploads/{{ $featured['objets'][0]['photos'][0]['url'] }}" alt="{{ $featured['titre'] }}">
+                                <img src="{{ media_url($featured['objets'][0]['photos'][0]['url']) }}" alt="{{ $featured['titre'] }}">
                             @else
                                 <span class="lp-annonce__ph">{{ strtoupper(substr($fMat ?? '?', 0, 1)) }}</span>
                             @endif
@@ -119,7 +119,7 @@
                         <span class="lp-badge {{ $type === 'don' ? 'lp-badge--don' : 'lp-badge--vente' }}">{{ $type === 'don' ? 'Don' : 'Vente' }}</span>
                         <div class="lp-carte__img {{ $imgClasses[$i % count($imgClasses)] }}">
                             @if($photo)
-                                <img src="/uploads/{{ $photo }}" alt="{{ $annonce['titre'] }}">
+                                <img src="{{ media_url($photo) }}" alt="{{ $annonce['titre'] }}">
                             @else
                                 <span class="lp-annonce__ph">{{ strtoupper(substr($mat ?? '?', 0, 1)) }}</span>
                             @endif

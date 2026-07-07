@@ -210,7 +210,7 @@ async function loadProfile() {
         document.getElementById('avatar-initials').textContent = (userData.prenom[0] || '') + (userData.nom[0] || '');
 
         if (userData.photo_profil_url) {
-            document.getElementById('avatar-display').innerHTML = '<img src="/uploads/' + userData.photo_profil_url + '" alt="Avatar">';
+            document.getElementById('avatar-display').innerHTML = '<img src="' + window.MEDIA_BASE + '/' + userData.photo_profil_url + '" alt="Avatar">';
         }
 
         document.getElementById('val-email').textContent = userData.email;

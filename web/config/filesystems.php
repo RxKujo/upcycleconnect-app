@@ -23,6 +23,17 @@ return [
             'report' => false,
         ],
 
+        // Médias servis par Laravel depuis public/uploads (fallback local du
+        // disque "media", cf. config/media.php). En prod on bascule MEDIA_DISK=s3.
+        'uploads_local' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => '/uploads',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

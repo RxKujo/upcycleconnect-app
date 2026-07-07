@@ -124,7 +124,7 @@
                 <td>{{ $c['id_conteneur'] }}</td>
                 <td>
                     @if(!empty($c['photos']))
-                        <img src="/uploads/{{ $c['photos'][0]['url_photo'] }}" alt="Conteneur {{ $c['conteneur_ref'] }}" class="conteneur-thumb">
+                        <img src="{{ media_url($c['photos'][0]['url_photo']) }}" alt="Conteneur {{ $c['conteneur_ref'] }}" class="conteneur-thumb">
                         @if(count($c['photos']) > 1)
                             <span style="font-size:0.65rem; color:#888;">+{{ count($c['photos']) - 1 }}</span>
                         @endif

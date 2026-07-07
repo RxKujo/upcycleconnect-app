@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
@@ -102,8 +103,9 @@ class ConteneurController extends Controller
     }
 
     /**
-     * Décode un tableau d'images base64 (data URLs) et les écrit dans
-     * public/uploads/conteneurs. Retourne la liste des chemins relatifs valides.
+     * Décode un tableau d'images base64 (data URLs) et les écrit sur le disque
+     * média (public/uploads en local, bucket S3 en prod, cf. config/media.php).
+     * Retourne la liste des chemins relatifs valides.
      */
     private function saveBase64Images(array $b64List): array
     {
@@ -117,13 +119,9 @@ class ConteneurController extends Controller
             if (!in_array($ext, ['jpg', 'png', 'webp'], true) || $data === false || strlen($data) > 5 * 1024 * 1024) {
                 continue;
             }
-            $dir = public_path('uploads/conteneurs');
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-            $filename = uniqid('cont-') . '.' . $ext;
-            file_put_contents($dir . '/' . $filename, $data);
-            $paths[] = 'conteneurs/' . $filename;
+            $key = 'conteneurs/' . uniqid('cont-') . '.' . $ext;
+            Storage::disk(media_disk())->put($key, $data);
+            $paths[] = $key;
         }
         return $paths;
     }
@@ -133,13 +131,10 @@ class ConteneurController extends Controller
         $response = Http::withToken(session('admin_token'))
             ->delete("{$this->apiUrl}/photos/{$photoId}");
 
-        // Suppression du fichier physique si on connaît son chemin.
+        // Suppression du fichier physique sur le disque média.
         $url = $request->input('url_photo');
-        if ($url && str_starts_with($url, 'conteneurs/')) {
-            $file = public_path('uploads/' . $url);
-            if (is_file($file)) {
-                @unlink($file);
-            }
+        if ($url) {
+            Storage::disk(media_disk())->delete($url);
         }
 
         if ($response->failed()) {
