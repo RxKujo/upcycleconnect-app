@@ -26,6 +26,11 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// Indispensable : sinon Icon.Default préfixe son « imagePath » détecté (en dev,
+// l'URL absolue du serveur Vite) devant nos URLs déjà absolues → URL doublée, 404.
+// On supprime ce comportement pour que Leaflet utilise nos URLs telles quelles.
+delete L.Icon.Default.prototype._getIconUrl;
+
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: markerIcon2x,
     iconUrl: markerIcon,
@@ -187,6 +192,18 @@ function initCarte(el) {
     }
 
     charger();
+
+    // Recalcule la taille si l'élément était masqué à l'init puis affiché
+    // (ex. panneau « conteneur » d'un formulaire multi-étapes) — sinon Leaflet
+    // s'initialise à 0px et la carte reste grise.
+    if (typeof ResizeObserver !== 'undefined') {
+        let lastW = el.clientWidth;
+        new ResizeObserver(() => {
+            const w = el.clientWidth;
+            if (w > 0 && w !== lastW) { lastW = w; map.invalidateSize(); }
+        }).observe(el);
+    }
+
     return map;
 }
 
@@ -194,7 +211,13 @@ function initAll() {
     document.querySelectorAll('[data-conteneurs-map]').forEach((el) => {
         if (el.dataset.cmapInit) return;
         el.dataset.cmapInit = '1';
-        initCarte(el);
+        try {
+            initCarte(el);
+        } catch (err) {
+            console.error('[conteneurs-map] échec de l\'initialisation :', err);
+            el.innerHTML = '<div style="padding:16px;font:13px/1.5 monospace;color:#b00020;background:#fff3f3;">'
+                + 'Carte indisponible : ' + escapeHtml(err && err.message ? err.message : String(err)) + '</div>';
+        }
     });
 }
 

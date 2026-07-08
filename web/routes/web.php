@@ -77,7 +77,6 @@ Route::post('/auth/clear-role-sessions', [SessionController::class, 'clearRoleSe
 Route::get('/ressources', [RessourceController::class, 'index'])->name('ressources.index');
 Route::get('/ressources/{id}', [RessourceController::class, 'show'])->name('ressources.show');
 Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriels.index');
-Route::get('/depot', fn() => view('public.depot.index'))->name('depot.index');
 
 Route::prefix('particulier')->group(function () {
     Route::get('/', fn() => redirect()->route('particulier.dashboard'));
@@ -227,7 +226,6 @@ Route::prefix('admin')->group(function () {
         Route::put('/scores/paliers/{id}', [ScoreController::class, 'updatePalier'])->name('admin.scores.palier.update');
         Route::post('/scores/recompute', [ScoreController::class, 'recompute'])->name('admin.scores.recompute');
 
-        Route::get('/depot/demandes', fn() => view('admin.depot.index'))->name('admin.depot.index');
         Route::get('/tutoriel/etapes', fn() => view('admin.tutoriel.index'))->name('admin.tutoriel.index');
 
         // Publicités — modération + stats + rotation

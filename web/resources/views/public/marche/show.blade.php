@@ -78,6 +78,10 @@
                     <span class="font-mono" style="font-size:0.7rem; color:var(--forest);"><span data-i18n="market.score">Score Upcycling :</span> {{ $annonce['vendeur']['score_upcycling'] }}</span>
                 </p>
                 @endif
+                <button type="button" class="btn btn-secondary btn-block" style="margin-top:16px;"
+                        onclick="ucOpenConversation({{ $annonce['id_annonce'] }})">
+                    <span data-i18n="market.contactseller">Contacter le vendeur</span>
+                </button>
             </div>
 
             {{-- Achat réservé aux professionnels / artisans (cf. cahier des charges) --}}
@@ -164,6 +168,7 @@
                     @else
                         <div style="font-size:0.95rem;" data-i18n="market.pickup.hand.note">Remise en main propre — adresse communiquée par le vendeur.</div>
                     @endif
+                    <div style="margin-top:8px; font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; color:var(--forest,#244F26);" data-i18n="market.cash">Paiement en espèces à la remise — contactez le vendeur pour convenir d'un rendez-vous.</div>
                 @endif
 
                 @if($mapsUrl)

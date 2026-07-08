@@ -142,20 +142,17 @@
                         </div>
                     </div>
 
-                    {{-- Panneau conteneur --}}
+                    {{-- Panneau conteneur : carte interactive des points de collecte --}}
                     <div id="conteneur-panel" style="display:none; margin-top:20px;">
-                        <label class="form-label" for="conteneur-select"><span data-i18n="create.f.choosecontainer">Choisir le conteneur *</span></label>
-                        <select class="form-select" id="conteneur-select" onchange="onConteneurChange()">
-                            <option value="" data-i18n="create.selectcontainer">-- Sélectionnez un point de collecte --</option>
-                        </select>
+                        <label class="form-label"><span data-i18n="create.f.choosecontainer">Choisir le conteneur sur la carte *</span></label>
+                        <p style="font-family:'DM Mono',monospace; font-size:0.72rem; opacity:0.6; margin-bottom:10px;" data-i18n="depot.map.hint">Cliquez un conteneur sur la carte pour le sélectionner — ou « Autour de moi » pour le plus proche.</p>
+                        <div id="annonce-map" data-conteneurs-map data-api="{{ config('services.api.public_url') }}" data-selectable="1" style="height:380px; border:var(--border); box-shadow:var(--shadow-sm);"></div>
+                        <input type="hidden" id="conteneur-select">
                         <div id="conteneur-info" style="display:none; margin-top:14px; padding:14px 16px; background:white; border:2px solid var(--coffee); box-shadow:var(--shadow-sm);">
                             <div style="font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; color:var(--cherry); margin-bottom:6px;"><span data-i18n="create.containeraddr">Adresse du conteneur</span></div>
                             <div id="conteneur-adresse" style="font-size:0.98rem; line-height:1.4; margin-bottom:12px;"></div>
                             <a id="conteneur-maps" href="#" target="_blank" rel="noopener" class="btn-secondary btn-sm" style="text-decoration:none;"><span data-i18n="market.directions">Itinéraire Google Maps →</span></a>
                         </div>
-                        <p id="conteneur-empty" style="display:none; font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--cherry); margin-top:10px;">
-                            Aucun conteneur actif disponible pour le moment.
-                        </p>
                     </div>
 
                     {{-- Panneau main propre --}}
@@ -204,6 +201,7 @@
 @endsection
 
 @section('scripts')
+@vite('resources/js/conteneurs-map.js')
 <script>
 let currentStep = 1;
 let objetCount = 0;
@@ -251,8 +249,7 @@ function buildRecap() {
 
     let remiseLabel = '—';
     if (mode === 'conteneur') {
-        const c = CONTENEURS.find(x => x.id_conteneur === parseInt(document.getElementById('conteneur-select').value, 10));
-        remiseLabel = 'Conteneur' + (c ? ' — ' + c.adresse + ', ' + c.ville : '');
+        remiseLabel = 'Conteneur' + (selectedConteneur ? ' — ' + selectedConteneur.adresse + ', ' + selectedConteneur.ville : '');
     } else if (mode === 'main_propre') {
         remiseLabel = 'Main propre — ' + (document.getElementById('adresse_remise_value').value || '');
     }
@@ -309,38 +306,20 @@ function toggleRemise() {
     document.getElementById('mainpropre-panel').style.display = mode === 'main_propre' ? 'block' : 'none';
 }
 
-function populateConteneurs() {
-    const sel = document.getElementById('conteneur-select');
-    const empty = document.getElementById('conteneur-empty');
-    if (!CONTENEURS || CONTENEURS.length === 0) {
-        if (empty) empty.style.display = 'block';
-        sel.disabled = true;
-        return;
-    }
-    CONTENEURS.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id_conteneur;
-        opt.textContent = (c.conteneur_ref ? c.conteneur_ref + ' — ' : '') + c.adresse + ', ' + (c.code_postal ? c.code_postal + ' ' : '') + c.ville;
-        sel.appendChild(opt);
-    });
-}
-
-function onConteneurChange() {
-    const sel = document.getElementById('conteneur-select');
-    const info = document.getElementById('conteneur-info');
-    const id = parseInt(sel.value, 10);
-    const c = CONTENEURS.find(x => x.id_conteneur === id);
-    if (!c) { info.style.display = 'none'; return; }
-
+// Sélection d'un conteneur depuis la carte (module conteneurs-map.js).
+let selectedConteneur = null;
+function selectConteneur(c) {
+    if (!c) return;
+    selectedConteneur = c;
+    document.getElementById('conteneur-select').value = c.id_conteneur;
     document.getElementById('conteneur-adresse').textContent =
         c.adresse + ', ' + (c.code_postal ? c.code_postal + ' ' : '') + c.ville;
-
     const dest = (c.latitude != null && c.longitude != null)
         ? `${c.latitude},${c.longitude}`
         : `${c.adresse}, ${c.code_postal || ''} ${c.ville}`;
     document.getElementById('conteneur-maps').href =
         'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest);
-    info.style.display = 'block';
+    document.getElementById('conteneur-info').style.display = 'block';
 }
 
 // ── Autocomplétion d'adresse (API geopf.fr), comme à l'inscription ──────────
@@ -453,7 +432,6 @@ function validateStep2() {
 
 const MATERIAUX  = @json($materiaux ?? []);
 const CATEGORIES = @json($categories ?? []);
-const CONTENEURS = @json($conteneurs ?? []);
 
 function matOptions() {
     return '<option value="">-- Choisir --</option>' +
@@ -698,7 +676,10 @@ async function submitAnnonce() {
 }
 
 // Initialisation au chargement
-populateConteneurs();
 initAdresseAutocomplete();
+const _annonceMap = document.getElementById('annonce-map');
+if (_annonceMap) {
+    _annonceMap.addEventListener('conteneur:selected', function (e) { selectConteneur(e.detail.conteneur); });
+}
 </script>
 @endsection

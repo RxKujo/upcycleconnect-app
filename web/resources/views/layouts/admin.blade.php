@@ -148,9 +148,6 @@
                 <a href="{{ route('admin.conteneurs.index') }}" class="{{ request()->is('admin/conteneurs*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="nav.containers">Conteneurs</span>
                 </a>
-                <a href="{{ route('admin.depot.index') }}" class="{{ request()->is('admin/depot*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.deposits">Dépôts conteneur</span>
-                </a>
 
                 <p class="sidebar-section-label"><span data-i18n="forum.kicker">Communauté</span></p>
                 <a href="{{ route('admin.utilisateurs.index') }}" class="{{ request()->is('admin/utilisateurs*') ? 'active' : '' }}">

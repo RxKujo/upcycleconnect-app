@@ -16,7 +16,7 @@
 <div id="etapes-list"></div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 const API = '{{ config("services.api.public_url") }}';
 const TOKEN = '{{ session("admin_token") }}';
@@ -50,7 +50,7 @@ function render() {
                     </div>
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:8px;">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:8px;">
                 <div class="form-group">
                     <label class="form-label">Icône</label>
                     <input class="form-input" id="icone-${e.id_etape}" value="${escHtml(e.icone || '')}" placeholder="🌱">
@@ -58,6 +58,10 @@ function render() {
                 <div class="form-group">
                     <label class="form-label">Cible (sélecteur CSS)</label>
                     <input class="form-input" id="cible-${e.id_etape}" value="${escHtml(e.cible_element || '')}" placeholder=".nav-brand — vide = centré">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Page (chemin)</label>
+                    <input class="form-input" id="page-${e.id_etape}" value="${escHtml(e.page || '')}" placeholder="/annonces — vide = page courante">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Position</label>
@@ -89,6 +93,7 @@ async function save(id) {
         ordre: parseInt(document.getElementById('ordre-' + id).value),
         cible_element: document.getElementById('cible-' + id).value,
         position: document.getElementById('position-' + id).value,
+        page: document.getElementById('page-' + id).value,
         icone: document.getElementById('icone-' + id).value,
         role: document.getElementById('role-' + id).value,
         est_actif: document.getElementById('actif-' + id).checked
@@ -111,4 +116,4 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 load();
 </script>
-@endsection
+@endpush

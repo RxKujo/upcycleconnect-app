@@ -10,19 +10,20 @@ import (
 
 // Constantes de chemins — source unique de vérité pour toutes les routes.
 const (
-	prefixAuth         = "/api/v1/auth"
-	prefixPublic       = "/api/v1/public"
-	prefixMe           = "/api/v1/utilisateurs/me"
-	prefixPlanning     = "/api/v1/utilisateurs/me/planning"
-	prefixAnnonces     = "/api/v1/annonces"
-	prefixEvenements   = "/api/v1/evenements"
-	prefixForum        = "/api/v1/forum"
-	prefixCommandes    = "/api/v1/commandes"
-	prefixStripe       = "/api/v1/stripe"
-	prefixDepot        = "/api/v1/depot"
-	prefixTutoriel     = "/api/v1/tutoriel"
-	prefixCatalogue    = "/api/v1/catalogue"
-	prefixUtilisateurs = "/api/v1/utilisateurs"
+	prefixAuth          = "/api/v1/auth"
+	prefixPublic        = "/api/v1/public"
+	prefixMe            = "/api/v1/utilisateurs/me"
+	prefixPlanning      = "/api/v1/utilisateurs/me/planning"
+	prefixAnnonces      = "/api/v1/annonces"
+	prefixEvenements    = "/api/v1/evenements"
+	prefixForum         = "/api/v1/forum"
+	prefixCommandes     = "/api/v1/commandes"
+	prefixStripe        = "/api/v1/stripe"
+	prefixConversations = "/api/v1/conversations"
+	prefixMsgUnread     = "/api/v1/messages/unread-count"
+	prefixTutoriel      = "/api/v1/tutoriel"
+	prefixCatalogue     = "/api/v1/catalogue"
+	prefixUtilisateurs  = "/api/v1/utilisateurs"
 
 	prefixSalarie       = "/api/v1/salarie"
 	prefixSalarieEv     = "/api/v1/salarie/evenements"
@@ -41,7 +42,6 @@ const (
 	prefixAdminAnnonces   = "/api/v1/admin/annonces"
 	prefixAdminCommandes  = "/api/v1/admin/commandes"
 	prefixAdminConteneurs = "/api/v1/admin/conteneurs"
-	prefixAdminDepot      = "/api/v1/admin/depot/demandes"
 	prefixAdminPaliers    = "/api/v1/admin/paliers"
 	prefixAdminTutoriel   = "/api/v1/admin/tutoriel/etapes"
 	prefixAdminLangues    = "/api/v1/admin/langues"
@@ -50,14 +50,14 @@ const (
 	prefixAdminFinances   = "/api/v1/admin/finances"
 
 	// Routes pro (Essential Pro & Expert Pro)
-	prefixPro          = "/api/v1/pro"
-	prefixAdminPub     = "/api/v1/admin/publicites"
-	segAlertes         = "/alertes"
-	segPublicites      = "/publicites"
+	prefixPro      = "/api/v1/pro"
+	prefixAdminPub = "/api/v1/admin/publicites"
+	segAlertes     = "/alertes"
+	segPublicites  = "/publicites"
 
 	// Routes salarié — nouvelles
-	prefixSalarieIdees   = "/api/v1/salarie/idees"
-	prefixSalariePlanning = "/api/v1/salarie/planning"
+	prefixSalarieIdees     = "/api/v1/salarie/idees"
+	prefixSalariePlanning  = "/api/v1/salarie/planning"
 	prefixSalarieMateriels = "/api/v1/salarie/materiels"
 
 	// Segments de suffixes réutilisés — évitent les littéraux répétés.
@@ -260,7 +260,28 @@ func routeAuth(w http.ResponseWriter, req *http.Request, path, method string, us
 		routeAuthForum(w, req, path, method, userId) ||
 		routeAuthEvenements(w, req, path, method, userId, role) ||
 		routeAuthTutoriel(w, req, path, method, userId) ||
-		routeAuthDepot(w, req, path, method, userId)
+		routeAuthMessages(w, req, path, method, userId)
+}
+
+func routeAuthMessages(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
+	pConv := splitPath(path, prefixConversations)
+	switch {
+	case match(path, prefixMsgUnread) && method == "GET":
+		handlers.GetUnreadCount(w, req, userId)
+	case match(path, prefixConversations) && method == "POST":
+		handlers.CreateOrGetConversation(w, req, userId)
+	case match(path, prefixConversations) && method == "GET":
+		handlers.GetConversations(w, req, userId)
+	case len(pConv) == 2 && pConv[1] == "messages" && method == "GET":
+		handlers.GetConversationMessages(w, req, userId, pConv[0])
+	case len(pConv) == 2 && pConv[1] == "messages" && method == "POST":
+		handlers.SendMessage(w, req, userId, pConv[0])
+	case len(pConv) == 2 && pConv[1] == "vendu" && method == "PUT":
+		handlers.DeclarerVenduConversation(w, req, userId, pConv[0])
+	default:
+		return false
+	}
+	return true
 }
 
 func routeAuthMe(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
@@ -397,23 +418,11 @@ func routeAuthTutoriel(w http.ResponseWriter, req *http.Request, path, method st
 	return true
 }
 
-func routeAuthDepot(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
-	switch {
-	case match(path, prefixDepot+"/demande") && method == "POST":
-		handlers.CreateDemandeDepot(w, req, userId)
-	case match(path, prefixDepot+"/demandes/me") && method == "GET":
-		handlers.GetMesDemandesDepot(w, req, userId)
-	default:
-		return false
-	}
-	return true
-}
-
 // ─── Routes professionnel (Essential Pro & Expert Pro) ───────────────────────
 
 func routePro(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
 	pAlertes := splitPath(path, prefixPro+segAlertes)
-	pPubs    := splitPath(path, prefixPro+segPublicites)
+	pPubs := splitPath(path, prefixPro+segPublicites)
 
 	switch {
 	// Dashboard
@@ -559,8 +568,8 @@ func routeSalarieArticles(w http.ResponseWriter, req *http.Request, path, method
 }
 
 func routeSalarieModeration(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
-	pMsg  := splitPath(path, prefixSalarieMsg)
-	pSuj  := splitPath(path, prefixSalarieSujets)
+	pMsg := splitPath(path, prefixSalarieMsg)
+	pSuj := splitPath(path, prefixSalarieSujets)
 	pMots := splitPath(path, prefixSalarieMots)
 	switch {
 	case match(path, prefixSalarie+"/signalements") && method == "GET":
@@ -645,7 +654,7 @@ func routeSalariePlanningDedicated(w http.ResponseWriter, req *http.Request, pat
 // ─── Routes catalogue (auth) ─────────────────────────────────────────────────
 
 func routeCatalogue(w http.ResponseWriter, req *http.Request, path, method string, userId int, role string) bool {
-	p    := splitPath(path, prefixCatalogue)
+	p := splitPath(path, prefixCatalogue)
 	pUsr := splitPath(path, prefixUtilisateurs)
 	switch {
 	case match(path, prefixCatalogue) && method == "GET":
@@ -884,9 +893,8 @@ func routeAdminOrders(w http.ResponseWriter, req *http.Request, path, method str
 }
 
 func routeAdminInfra(w http.ResponseWriter, req *http.Request, path, method string) bool {
-	pCont   := splitPath(path, prefixAdminConteneurs)
-	pTick   := splitPath(path, prefixAdminConteneurs+segTickets)
-	pDep    := splitPath(path, prefixAdminDepot)
+	pCont := splitPath(path, prefixAdminConteneurs)
+	pTick := splitPath(path, prefixAdminConteneurs+segTickets)
 	switch {
 	case match(path, prefixAdminConteneurs) && method == "GET":
 		handlers.GetAllConteneurs(w, req)
@@ -904,13 +912,6 @@ func routeAdminInfra(w http.ResponseWriter, req *http.Request, path, method stri
 		handlers.UpdateConteneur(w, req, pCont[0])
 	case len(pTick) == 2 && pTick[1] == "resolve" && method == "PUT":
 		handlers.ResolveTicket(w, req, pTick[0])
-
-	case match(path, prefixAdminDepot) && method == "GET":
-		handlers.AdminGetDemandesDepot(w, req)
-	case len(pDep) == 2 && pDep[1] == "valider" && method == "PUT":
-		handlers.AdminValiderDemandeDepot(w, req, pDep[0])
-	case len(pDep) == 2 && pDep[1] == "refuser" && method == "PUT":
-		handlers.AdminRefuserDemandeDepot(w, req, pDep[0])
 
 	default:
 		return false
@@ -943,8 +944,8 @@ func routeAdminScoring(w http.ResponseWriter, req *http.Request, path, method st
 // ─── Routes admin — multilingue ───────────────────────────────────────────────
 
 func routeAdminLangues(w http.ResponseWriter, req *http.Request, path, method string) bool {
-	pL   := splitPath(path, prefixAdminLangues)
-	pT   := splitPath(path, prefixAdminTrad)
+	pL := splitPath(path, prefixAdminLangues)
+	pT := splitPath(path, prefixAdminTrad)
 	pI18 := splitPath(path, prefixPublic+"/i18n")
 	switch {
 	// Langues

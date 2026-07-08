@@ -16,6 +16,7 @@ type TutorielEtape struct {
 	Ordre        int    `json:"ordre"`
 	CibleElement string `json:"cible_element"`
 	Position     string `json:"position"`
+	Page         string `json:"page"`
 	Icone        string `json:"icone"`
 	Role         string `json:"role"`
 }
@@ -34,14 +35,14 @@ func GetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	_, role, authed := middleware.OptionalAuth(r)
 
 	query := `
-		SELECT id_etape, titre, contenu, ordre, COALESCE(cible_element,''), position, COALESCE(icone,''), COALESCE(role,'')
+		SELECT id_etape, titre, contenu, ordre, COALESCE(cible_element,''), position, COALESCE(page,''), COALESCE(icone,''), COALESCE(role,'')
 		FROM tutoriel_etapes
 		WHERE est_actif = 1 AND (role IS NULL OR role = ?)
 		ORDER BY ordre ASC`
 	args := []interface{}{role}
 	if !authed {
 		query = `
-			SELECT id_etape, titre, contenu, ordre, COALESCE(cible_element,''), position, COALESCE(icone,''), COALESCE(role,'')
+			SELECT id_etape, titre, contenu, ordre, COALESCE(cible_element,''), position, COALESCE(page,''), COALESCE(icone,''), COALESCE(role,'')
 			FROM tutoriel_etapes
 			WHERE est_actif = 1 AND role IS NULL
 			ORDER BY ordre ASC`
@@ -58,7 +59,7 @@ func GetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	etapes := []TutorielEtape{}
 	for rows.Next() {
 		var e TutorielEtape
-		if err := rows.Scan(&e.IDEtape, &e.Titre, &e.Contenu, &e.Ordre, &e.CibleElement, &e.Position, &e.Icone, &e.Role); err == nil {
+		if err := rows.Scan(&e.IDEtape, &e.Titre, &e.Contenu, &e.Ordre, &e.CibleElement, &e.Position, &e.Page, &e.Icone, &e.Role); err == nil {
 			etapes = append(etapes, e)
 		}
 	}
@@ -119,7 +120,7 @@ func PasserTutoriel(w http.ResponseWriter, r *http.Request, userId int) {
 // Admin CRUD tutoriel
 func AdminGetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
-		SELECT id_etape, titre, contenu, ordre, COALESCE(cible_element,''), position, COALESCE(icone,''), COALESCE(role,''), est_actif
+		SELECT id_etape, titre, contenu, ordre, COALESCE(cible_element,''), position, COALESCE(page,''), COALESCE(icone,''), COALESCE(role,''), est_actif
 		FROM tutoriel_etapes ORDER BY ordre ASC`)
 	if err != nil {
 		jsonError(w, "erreur serveur", http.StatusInternalServerError)
@@ -134,7 +135,7 @@ func AdminGetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	etapes := []EtapeAdmin{}
 	for rows.Next() {
 		var e EtapeAdmin
-		if err := rows.Scan(&e.IDEtape, &e.Titre, &e.Contenu, &e.Ordre, &e.CibleElement, &e.Position, &e.Icone, &e.Role, &e.EstActif); err == nil {
+		if err := rows.Scan(&e.IDEtape, &e.Titre, &e.Contenu, &e.Ordre, &e.CibleElement, &e.Position, &e.Page, &e.Icone, &e.Role, &e.EstActif); err == nil {
 			etapes = append(etapes, e)
 		}
 	}
@@ -149,6 +150,7 @@ func AdminUpdateTutorielEtape(w http.ResponseWriter, r *http.Request, idStr stri
 		Ordre        int    `json:"ordre"`
 		CibleElement string `json:"cible_element"`
 		Position     string `json:"position"`
+		Page         string `json:"page"`
 		Icone        string `json:"icone"`
 		Role         string `json:"role"`
 		EstActif     bool   `json:"est_actif"`
@@ -162,10 +164,15 @@ func AdminUpdateTutorielEtape(w http.ResponseWriter, r *http.Request, idStr stri
 	if body.Role != "" {
 		role = body.Role
 	}
+	// page vide -> NULL (étape affichée sur la page courante, centrée).
+	var page interface{}
+	if body.Page != "" {
+		page = body.Page
+	}
 	_, err := database.DB.Exec(`
-		UPDATE tutoriel_etapes SET titre=?, contenu=?, ordre=?, cible_element=?, position=?, icone=?, role=?, est_actif=?
+		UPDATE tutoriel_etapes SET titre=?, contenu=?, ordre=?, cible_element=?, position=?, page=?, icone=?, role=?, est_actif=?
 		WHERE id_etape=?`,
-		body.Titre, body.Contenu, body.Ordre, body.CibleElement, body.Position, body.Icone, role, body.EstActif, idStr)
+		body.Titre, body.Contenu, body.Ordre, body.CibleElement, body.Position, page, body.Icone, role, body.EstActif, idStr)
 	if err != nil {
 		jsonError(w, "erreur mise à jour", http.StatusInternalServerError)
 		return

@@ -228,5 +228,7 @@
     @include('partials.datepicker')
     @include('partials.onesignal')
     @include('partials.i18n-engine')
+    @include('partials.messagerie')
+    @include('partials.tutoriel-overlay')
 </body>
 </html>

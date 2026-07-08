@@ -14,9 +14,12 @@ DELETE FROM translations WHERE id_langue = @en AND cle IN (
   'market.kicker','market.title','market.subtitle','market.search',
   'market.filter.all','market.filter.don','market.filter.vente',
   'market.nophoto','market.empty.title','market.empty.body',
+  'market.contactseller','msg.send',
   'status.don','status.vente','status.free'
 );
 INSERT INTO translations (cle, id_langue, valeur) VALUES
+('market.contactseller', @en, 'Contact the seller'),
+('msg.send',           @en, 'Send'),
 ('market.kicker',      @en, 'Marketplace'),
 ('market.title',       @en, 'The Marketplace'),
 ('market.subtitle',    @en, 'Browse the community''s donation and sale listings'),
@@ -612,3 +615,8 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 DELETE FROM translations WHERE id_langue = @en AND cle IN ('prof.cityauto');
 INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('prof.cityauto', @en, 'Filled from address');
+
+-- Vente main propre : paiement espèces
+DELETE FROM translations WHERE id_langue=@en AND cle='market.cash';
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('market.cash', @en, 'Cash payment on handover — contact the seller to arrange a meetup.');
