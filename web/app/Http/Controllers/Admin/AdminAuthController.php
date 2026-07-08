@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Http;
 
 class AdminAuthController extends Controller
 {
+    // --- Affichage ---
+
     public function showLogin()
     {
         if (session('admin_token') && session('admin_role') === 'admin') {
@@ -16,6 +18,8 @@ class AdminAuthController extends Controller
 
         return view('admin.login');
     }
+
+    // --- Actions ---
 
     public function login(Request $request)
     {

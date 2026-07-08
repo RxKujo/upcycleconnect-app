@@ -2,7 +2,11 @@
 
 @section('title', 'Rotation WRR publicités')
 
+{{-- Vue admin : visualisation de la rotation équitable (WRR) des publicités actives.
+     Affiche le score de rotation de chaque pub et la répartition théorique des affichages. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">Rotation WRR — Publicités</h1>
     <div style="display:flex;gap:12px;">
@@ -13,11 +17,11 @@
 
 {{-- Explication algorithme --}}
 <div class="card" style="background:var(--coffee);color:var(--cream);margin-bottom:32px;">
-    <h2 class="font-bebas" style="font-size:1.6rem;margin:0 0 12px;color:var(--wheat);">Algorithme Weighted Round-Robin</h2>
+    <h2 class="font-bebas" style="font-size:1.6rem;margin:0 0 12px;color:var(--wheat);">Rotation équitable des publicités</h2>
     <p style="font-family:'DM Mono',monospace;font-size:0.85rem;line-height:1.6;opacity:0.85;margin:0;">
-        {{ $data['description'] ?? 'Score WRR : plus le score est élevé, plus la pub sera sélectionnée au prochain appel WRR.' }}
-        La pub avec le score le plus élevé est sélectionnée en priorité lors de chaque affichage.
-        Son score est ensuite décrémenté de son poids × 1, garantissant une rotation équitable selon le poids configuré.
+        Conformément au cahier des charges, <strong>tous les annonceurs qui paient ont exactement la même visibilité</strong>.
+        La rotation est strictement équitable (poids identique pour tous) : chaque pub active est affichée aussi souvent que les autres.
+        Le score ci-dessous ne sert qu'à équilibrer l'ordre de passage — il n'avantage aucun annonceur.
     </p>
 </div>
 
@@ -28,6 +32,7 @@
         <p style="font-family:'Bebas Neue',sans-serif;font-size:2rem;opacity:0.3;margin:0;">Aucune publicité active</p>
     </div>
 @else
+    {{-- === État actuel : classement des pubs par score de rotation === --}}
     @php $maxScore = max(array_column($pubs, 'score_rotation') ?: [1]); @endphp
     <div class="card">
         <h2 class="font-bebas" style="font-size:1.8rem;margin:0 0 8px;">

@@ -2,6 +2,9 @@
 
 @section('title', $article ? 'Modifier article' : 'Nouvel article')
 
+{{-- Formulaire article (éditeur WYSIWYG) --}}
+
+{{-- === Styles WYSIWYG === --}}
 @section('styles')
 <style>
 .editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; border: 3px solid var(--coffee); border-bottom: none; background: var(--wheat); padding: 8px; }
@@ -26,6 +29,7 @@
 @endsection
 
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
     <h1 class="page-title">{{ $article ? 'Modifier' : 'Nouvel' }} article</h1>
     <a href="{{ route('salarie.articles.index') }}" class="btn-secondary">← Retour</a>
@@ -38,6 +42,7 @@
     $contenuIsHtml = $contenu !== strip_tags($contenu);
 @endphp
 
+{{-- === Formulaire article === --}}
 <form action="{{ $action }}" method="POST" class="card" autocomplete="off" id="article-form">
     @csrf
     @if($isEdit) @method('PUT') @endif
@@ -101,6 +106,7 @@
 </form>
 @endsection
 
+{{-- === Scripts éditeur === --}}
 @section('scripts')
 <script>
 (function () {
@@ -131,7 +137,6 @@
         return null;
     }
     function unwrap(el) {
-        // Remplace le bloc par un paragraphe contenant son contenu.
         const p = document.createElement('p');
         p.innerHTML = el.innerHTML || '<br>';
         el.replaceWith(p);
@@ -166,7 +171,7 @@
         sync();
     });
 
-    // Filet de sécurité clavier : Ctrl+Entrée sort de la citation.
+    // Ctrl+Entrée sort de la citation
     editor.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             const bq = ancestorTag('blockquote');
@@ -180,7 +185,7 @@
 
     form.addEventListener('submit', function (e) {
         sync();
-        // Contenu vide = on bloque (le serveur l'exige aussi).
+        // Contenu vide interdit (côté serveur aussi)
         if (!editor.textContent.trim()) {
             e.preventDefault();
             alert('Le contenu de l\'article ne peut pas être vide.');

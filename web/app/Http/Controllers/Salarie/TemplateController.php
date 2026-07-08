@@ -6,12 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+/**
+ * Modèles d'événements réutilisables (préremplissage du formulaire de création).
+ * Proxy vers l'API Go.
+ */
 class TemplateController extends Controller
 {
+    // --- Helpers API ---
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('salarie_token'); }
     private function url(): string { return $this->api() . '/api/v1/salarie/templates'; }
 
+    // --- Lecture ---
+
+    /** Affiche la liste des modèles. */
     public function index()
     {
         $r = Http::withToken($this->token())->timeout(5)->get($this->url());
@@ -19,6 +27,9 @@ class TemplateController extends Controller
         return view('salarie.templates.index', compact('templates'));
     }
 
+    // --- Écriture ---
+
+    /** Crée un nouveau modèle. */
     public function store(Request $request)
     {
         $payload = $this->validatePayload($request);
@@ -29,6 +40,7 @@ class TemplateController extends Controller
         return redirect()->route('salarie.templates.index')->with('success', 'Modèle créé.');
     }
 
+    /** Met à jour un modèle existant (réactivé au passage). */
     public function update(Request $request, $id)
     {
         $payload = $this->validatePayload($request);
@@ -40,6 +52,7 @@ class TemplateController extends Controller
         return redirect()->route('salarie.templates.index')->with('success', 'Modèle mis à jour.');
     }
 
+    /** Supprime un modèle. */
     public function destroy($id)
     {
         $r = Http::withToken($this->token())->delete($this->url() . "/{$id}");
@@ -48,6 +61,8 @@ class TemplateController extends Controller
         }
         return redirect()->route('salarie.templates.index')->with('success', 'Modèle supprimé.');
     }
+
+    // --- Validation ---
 
     /**
      * Valide les champs et assemble le JSON `modele` consommé par le formulaire de création.

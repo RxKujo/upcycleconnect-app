@@ -2,6 +2,8 @@
 @section('title', 'Annonces')
 
 @section('content')
+
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">Annonces</h1>
 </div>
@@ -17,6 +19,7 @@
 </div>
 @endif
 
+{{-- === Filtres (recherche par titre, statut, type) === --}}
 <div style="display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; align-items: center;">
     <input type="text" id="search-input" class="form-input" style="flex: 1; min-width: 200px; max-width: 400px;"
            placeholder="Rechercher par titre..." oninput="filterTable()">
@@ -39,6 +42,7 @@
     Aucune annonce ne correspond aux filtres.
 </div>
 
+{{-- === Tableau des annonces === --}}
 <div class="table-container">
 <table id="annonces-table">
     <thead>
@@ -97,6 +101,7 @@
 </table>
 </div>
 
+{{-- === Scripts : filtrage du tableau côté client === --}}
 <script>
 function filterTable() {
     const search = document.getElementById('search-input').value.toLowerCase();

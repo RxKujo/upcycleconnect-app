@@ -42,7 +42,7 @@ func scanTemplates(query string) ([]Template, error) {
 	return out, nil
 }
 
-// GetTemplatesAdmin liste tous les modèles (actifs et inactifs) pour le back-office.
+// GetTemplatesAdmin — tous les modèles (actifs et inactifs).
 func GetTemplatesAdmin(w http.ResponseWriter, r *http.Request) {
 	out, err := scanTemplates(
 		"SELECT id_template, nom_template, COALESCE(description, ''), COALESCE(modele, '{}'), actif FROM templates_evenements ORDER BY nom_template")
@@ -79,7 +79,6 @@ func CreateTemplate(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]string{"message": "modèle créé"}, http.StatusCreated)
 }
 
-// UpdateTemplate met à jour un modèle existant (admin).
 func UpdateTemplate(w http.ResponseWriter, r *http.Request, id string) {
 	var req templateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || strings.TrimSpace(req.NomTemplate) == "" {
@@ -114,8 +113,8 @@ func ToggleTemplate(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "statut mis à jour"}, http.StatusOK)
 }
 
-// DeleteTemplate supprime définitivement un modèle. Les événements qui le
-// référençaient sont détachés (id_template = NULL) pour respecter la clé étrangère.
+// DeleteTemplate supprime un modèle ; les événements liés sont détachés
+// (id_template = NULL) pour respecter la FK.
 func DeleteTemplate(w http.ResponseWriter, r *http.Request, id string) {
 	if _, err := database.DB.Exec("UPDATE evenements SET id_template = NULL WHERE id_template = ?", id); err != nil {
 		jsonErr(w, "impossible de détacher les événements liés", http.StatusInternalServerError)
@@ -128,7 +127,7 @@ func DeleteTemplate(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "modèle supprimé"}, http.StatusOK)
 }
 
-// CreateTemplateSalarie permet à un salarié d'enregistrer un événement comme modèle.
+// CreateTemplateSalarie — enregistrement d'un modèle par un salarié.
 func CreateTemplateSalarie(w http.ResponseWriter, r *http.Request, userId int) {
 	CreateTemplate(w, r)
 }

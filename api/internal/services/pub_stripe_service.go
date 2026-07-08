@@ -1,3 +1,6 @@
+// pub_stripe_service.go : facturation Stripe des pubs — abonnements mensuels et
+// suspension/réactivation/expiration selon les webhooks.
+
 package services
 
 import (
@@ -17,14 +20,15 @@ import (
 	stripesub "github.com/stripe/stripe-go/v82/subscription"
 )
 
+// init configure la clé secrète Stripe depuis l'environnement.
 func init() {
 	if key := os.Getenv("STRIPE_SECRET_KEY"); key != "" {
 		stripe.Key = key
 	}
 }
 
-// CreatePubSubscription crée une Stripe Subscription mensuelle pour une publicité validée.
-// Si STRIPE_PRICE_PUB_MENSUEL n'est pas défini (dev/test), retourne ("", nil) sans erreur.
+// CreatePubSubscription crée une Subscription mensuelle pour une pub validée.
+// Sans STRIPE_PRICE_PUB_MENSUEL (dev/test) : retourne ("", nil).
 func CreatePubSubscription(proID int, pubID int) (string, error) {
 	priceID := os.Getenv("STRIPE_PRICE_PUB_MENSUEL")
 	if priceID == "" {
@@ -37,9 +41,8 @@ func CreatePubSubscription(proID int, pubID int) (string, error) {
 		return "", fmt.Errorf("customer Stripe: %w", err)
 	}
 
-	// En mode test uniquement, on attache une carte de test au client pour que
-	// l'abonnement se paie réellement (sinon il reste "incomplete"). En production,
-	// la carte est saisie par le professionnel via Stripe — ce bloc ne s'exécute pas.
+	// Mode test : carte de test pour que l'abonnement se paie (sinon "incomplete").
+	// En prod, la carte est saisie via Stripe — no-op ici.
 	ensureTestPaymentMethod(customerID)
 
 	params := &stripe.SubscriptionParams{
@@ -62,9 +65,8 @@ func CreatePubSubscription(proID int, pubID int) (string, error) {
 	return sub.ID, nil
 }
 
-// ensureTestPaymentMethod attache une carte de test au client et la définit par
-// défaut, pour que les abonnements se paient automatiquement en environnement de
-// test. No-op si la clé Stripe n'est pas une clé de test (production).
+// ensureTestPaymentMethod attache une carte de test par défaut (paiement auto en
+// test). No-op si la clé Stripe n'est pas une clé de test.
 func ensureTestPaymentMethod(customerID string) {
 	if !strings.HasPrefix(os.Getenv("STRIPE_SECRET_KEY"), "sk_test") {
 		return
@@ -85,8 +87,7 @@ func ensureTestPaymentMethod(customerID string) {
 	}
 }
 
-// CancelPubSubscription annule immédiatement une Stripe Subscription de publicité.
-// No-op si subscriptionID est vide.
+// CancelPubSubscription annule une Subscription de pub. No-op si ID vide.
 func CancelPubSubscription(subscriptionID string) error {
 	if subscriptionID == "" {
 		return nil
@@ -99,8 +100,7 @@ func CancelPubSubscription(subscriptionID string) error {
 	return nil
 }
 
-// SuspendrePubliciteStripe suspend une pub dont le paiement Stripe a échoué.
-// Retourne le nombre de lignes modifiées.
+// SuspendrePubliciteStripe suspend une pub au paiement échoué ; retourne les lignes modifiées.
 func SuspendrePubliciteStripe(stripeSubID string) (int64, error) {
 	if stripeSubID == "" {
 		return 0, nil
@@ -119,8 +119,7 @@ func SuspendrePubliciteStripe(stripeSubID string) (int64, error) {
 	return n, nil
 }
 
-// RéactiverPubliciteStripe réactive une pub suspendue après un paiement réussi (retry Stripe).
-// Retourne le nombre de lignes modifiées.
+// RéactiverPubliciteStripe réactive une pub suspendue après paiement réussi ; retourne les lignes modifiées.
 func RéactiverPubliciteStripe(stripeSubID string) (int64, error) {
 	if stripeSubID == "" {
 		return 0, nil
@@ -139,7 +138,7 @@ func RéactiverPubliciteStripe(stripeSubID string) (int64, error) {
 	return n, nil
 }
 
-// ExpirerPubliciteStripe marque une pub comme expirée suite à suppression définitive de la subscription.
+// ExpirerPubliciteStripe marque une pub expirée après suppression de la subscription.
 func ExpirerPubliciteStripe(stripeSubID string) error {
 	if stripeSubID == "" {
 		return nil
@@ -151,9 +150,9 @@ func ExpirerPubliciteStripe(stripeSubID string) error {
 	return err
 }
 
-// ExtractInvoiceSubscriptionID extrait le stripe_subscription_id depuis un payload JSON d'invoice Stripe.
-// Compatible avec l'API v82 (parent.subscription_details.subscription.id) et l'ancienne API (subscription).
-// Fonction pure — aucune dépendance DB ou réseau, utilisable dans les tests unitaires.
+// ExtractInvoiceSubscriptionID extrait le subscription_id d'un payload invoice.
+// Compatible API v82 (parent.subscription_details.subscription.id) et legacy (subscription).
+// Fonction pure (ni DB ni réseau).
 func ExtractInvoiceSubscriptionID(raw []byte) string {
 	var payload struct {
 		Parent struct {
@@ -172,8 +171,8 @@ func ExtractInvoiceSubscriptionID(raw []byte) string {
 	return rawSubID(payload.Subscription)
 }
 
-// rawSubID extrait un id d'abonnement depuis un champ Stripe qui peut être soit
-// une chaîne ("sub_..."), soit un objet développé ({"id":"sub_..."}).
+// rawSubID extrait un id d'abonnement d'un champ Stripe : chaîne ("sub_...") ou
+// objet développé ({"id":"sub_..."}).
 func rawSubID(raw json.RawMessage) string {
 	if len(raw) == 0 {
 		return ""
@@ -192,8 +191,7 @@ func rawSubID(raw json.RawMessage) string {
 }
 
 // getOrCreateStripeCustomerForPub trouve ou crée le Stripe Customer d'un pro.
-// Logique identique à getOrCreateStripeCustomer dans handlers/stripe.go,
-// isolée ici pour que le service soit autonome.
+// Duplique getOrCreateStripeCustomer (handlers/stripe.go) pour rester autonome.
 func getOrCreateStripeCustomerForPub(proID int) (string, error) {
 	var stripeCustomerID sql.NullString
 	var email, nom, prenom string

@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+// Admin : modèles d'événements (CRUD + activation). Le champ `modele` = JSON pré-rempli
+// pour le formulaire salarié. Proxy vers l'API Go.
 class TemplateController extends Controller
 {
     private function apiUrl(): string
     {
         return rtrim(config('services.api.url'), '/') . '/api/v1/admin/templates';
     }
+
+    // --- Lecture ---
 
     public function index()
     {
@@ -20,6 +24,8 @@ class TemplateController extends Controller
 
         return view('admin.templates.index', compact('templates'));
     }
+
+    // --- Actions (CRUD) ---
 
     public function store(Request $request)
     {
@@ -44,6 +50,7 @@ class TemplateController extends Controller
         return redirect()->route('admin.templates.index')->with('success', 'Modèle mis à jour.');
     }
 
+    // Active/désactive un modèle.
     public function toggle($id)
     {
         $response = Http::withToken(session('admin_token'))->put($this->apiUrl() . "/{$id}/toggle");
@@ -64,9 +71,9 @@ class TemplateController extends Controller
         return redirect()->route('admin.templates.index')->with('success', 'Modèle supprimé.');
     }
 
-    /**
-     * Valide les champs et assemble le JSON `modele` consommé par le formulaire salarié.
-     */
+    // --- Validation & assemblage du payload ---
+
+    // Valide et assemble le JSON `modele` consommé par le formulaire salarié.
     private function validatePayload(Request $request): array
     {
         $v = $request->validate([

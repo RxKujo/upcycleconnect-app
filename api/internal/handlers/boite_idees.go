@@ -1,8 +1,7 @@
 package handlers
 
-// Boîte à idées — espace d'échange interne entre salariés.
-// Visible uniquement par les rôles "salarie" et "admin" (filtre dans le router).
-// Format libre : titre + contenu + tags optionnels + système de vote (toggle idempotent).
+// Boîte à idées — échange interne salariés/admin (filtre dans le router).
+// Titre + contenu + tags optionnels + vote (toggle idempotent).
 
 import (
 	"api/internal/services"
@@ -14,6 +13,7 @@ import (
 	"time"
 )
 
+// Idee : une idée, enrichie du vote de l'utilisateur courant.
 type Idee struct {
 	IDIdee          int     `json:"id_idee"`
 	IDAuteur        int     `json:"id_auteur"`
@@ -29,6 +29,7 @@ type Idee struct {
 	MonVote         int     `json:"mon_vote"` // -1, 0 ou 1 selon le vote de l'utilisateur courant
 }
 
+// IdeeRequest : corps JSON de création/modification.
 type IdeeRequest struct {
 	Titre   string `json:"titre"`
 	Contenu string `json:"contenu"`
@@ -36,18 +37,12 @@ type IdeeRequest struct {
 }
 
 // GetIdeesSalaries liste les idées.
-//
-//   - Flux principal (défaut) : idées NON archivées, triées par popularité ou
-//     récence selon ?tri=populaire|recent.
-//   - Archives (?archives=1) : idées archivées. Un salarié ne voit que les
-//     siennes ; un admin voit toutes les archives (gestion sans restriction).
+//   - défaut : non archivées, triées par ?tri=populaire|recent.
+//   - ?archives=1 : idées archivées.
 func GetIdeesSalaries(w http.ResponseWriter, r *http.Request, userId int, role string) {
 	archivesMode := r.URL.Query().Get("archives") == "1"
 	tri := services.NormaliserTri(r.URL.Query().Get("tri"))
 
-	// Flux principal : idées non archivées. Archives : toutes les idées
-	// archivées, visibles par tout le monde (la gestion reste réservée à
-	// l'auteur ou l'admin, contrôlée à l'écriture).
 	where := "b.archived_at IS NULL"
 	if archivesMode {
 		where = "b.archived_at IS NOT NULL"
@@ -68,7 +63,7 @@ func GetIdeesSalaries(w http.ResponseWriter, r *http.Request, userId int, role s
 	}
 	defer rows.Close()
 
-	// On collecte avec la date parsée pour pouvoir trier via le service.
+	// Date parsée conservée pour le tri via le service.
 	type ideeAvecDate struct {
 		idee Idee
 		date time.Time
@@ -96,7 +91,7 @@ func GetIdeesSalaries(w http.ResponseWriter, r *http.Request, userId int, role s
 		}
 	}
 
-	// Tri métier (popularité / récence) délégué au service testé.
+	// Tri métier délégué au service.
 	triables := make([]services.IdeeTriable, len(collectees))
 	for i, c := range collectees {
 		triables[i] = services.IdeeTriable{ID: c.idee.IDIdee, NbVotes: c.idee.NbVotes, DatePublication: c.date}
@@ -114,7 +109,6 @@ func GetIdeesSalaries(w http.ResponseWriter, r *http.Request, userId int, role s
 	jsonOK(w, out, http.StatusOK)
 }
 
-// GetIdee retourne le détail d'une idée.
 func GetIdee(w http.ResponseWriter, r *http.Request, id string, userId int) {
 	var ide Idee
 	var nom string
@@ -148,7 +142,6 @@ func GetIdee(w http.ResponseWriter, r *http.Request, id string, userId int) {
 	jsonOK(w, ide, http.StatusOK)
 }
 
-// CreateIdee crée une nouvelle idée dans la boîte à idées.
 func CreateIdee(w http.ResponseWriter, r *http.Request, userId int) {
 	var req IdeeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -175,7 +168,7 @@ func CreateIdee(w http.ResponseWriter, r *http.Request, userId int) {
 	jsonOK(w, map[string]interface{}{"id_idee": id, "message": "idée ajoutée"}, http.StatusCreated)
 }
 
-// UpdateIdee modifie une idée (auteur uniquement, ou admin).
+// UpdateIdee : modifie une idée (auteur ou admin).
 func UpdateIdee(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	if !chargerAuteurEtAutoriser(w, id, userId, role) {
 		return
@@ -203,7 +196,7 @@ func UpdateIdee(w http.ResponseWriter, r *http.Request, id string, userId int, r
 	jsonOK(w, map[string]string{"message": "idée mise à jour"}, http.StatusOK)
 }
 
-// DeleteIdee supprime une idée (auteur ou admin).
+// DeleteIdee : supprime une idée (auteur ou admin).
 func DeleteIdee(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	if !chargerAuteurEtAutoriser(w, id, userId, role) {
 		return
@@ -215,9 +208,8 @@ func DeleteIdee(w http.ResponseWriter, r *http.Request, id string, userId int, r
 	jsonOK(w, map[string]string{"message": "idée supprimée"}, http.StatusOK)
 }
 
-// chargerAuteurEtAutoriser récupère l'auteur d'une idée et vérifie que
-// l'appelant a le droit de la gérer (auteur ou admin). Écrit la réponse
-// d'erreur appropriée et renvoie false si l'accès est refusé / l'idée absente.
+// chargerAuteurEtAutoriser vérifie que l'appelant peut gérer l'idée (auteur ou admin).
+// Écrit l'erreur et renvoie false si refusé ou idée absente.
 func chargerAuteurEtAutoriser(w http.ResponseWriter, id string, userId int, role string) bool {
 	var auteur int
 	if err := database.DB.QueryRow("SELECT id_auteur FROM boite_idees WHERE id_idee = ?", id).Scan(&auteur); err != nil {
@@ -231,7 +223,7 @@ func chargerAuteurEtAutoriser(w http.ResponseWriter, id string, userId int, role
 	return true
 }
 
-// ChangeStatutIdee fait évoluer le statut métier d'une idée (auteur ou admin).
+// ChangeStatutIdee : fait évoluer le statut d'une idée (auteur ou admin).
 func ChangeStatutIdee(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	if !chargerAuteurEtAutoriser(w, id, userId, role) {
 		return
@@ -254,7 +246,7 @@ func ChangeStatutIdee(w http.ResponseWriter, r *http.Request, id string, userId 
 	jsonOK(w, map[string]string{"message": "statut mis à jour", "statut": req.Statut}, http.StatusOK)
 }
 
-// ArchiverIdee archive une idée (auteur ou admin) — non destructif.
+// ArchiverIdee : archive une idée (auteur ou admin), non destructif.
 func ArchiverIdee(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	if !chargerAuteurEtAutoriser(w, id, userId, role) {
 		return
@@ -266,7 +258,7 @@ func ArchiverIdee(w http.ResponseWriter, r *http.Request, id string, userId int,
 	jsonOK(w, map[string]string{"message": "idée archivée"}, http.StatusOK)
 }
 
-// DesarchiverIdee remet une idée dans le flux principal (auteur ou admin).
+// DesarchiverIdee : remet une idée dans le flux principal (auteur ou admin).
 func DesarchiverIdee(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	if !chargerAuteurEtAutoriser(w, id, userId, role) {
 		return
@@ -278,14 +270,11 @@ func DesarchiverIdee(w http.ResponseWriter, r *http.Request, id string, userId i
 	jsonOK(w, map[string]string{"message": "idée désarchivée"}, http.StatusOK)
 }
 
-// VoterIdee gère un vote type Reddit (up / down) avec bascule idempotente.
-//
-// Direction reçue dans le corps {"valeur": 1|-1} (défaut : 1).
-//   - aucun vote existant      → on insère ; score += valeur
-//   - même direction recliquée → on retire (toggle off) ; score -= valeur
-//   - direction opposée        → on bascule ; score += 2 × valeur
-//
-// nb_votes (boite_idees) stocke le score net et peut devenir négatif.
+// VoterIdee : vote up/down idempotent. Corps {"valeur": 1|-1} (défaut 1).
+//   - pas de vote  → insère ; score += valeur
+//   - même sens    → retire ; score -= valeur
+//   - sens opposé  → bascule ; score += 2 × valeur
+// nb_votes stocke le score net (peut être négatif).
 func VoterIdee(w http.ResponseWriter, r *http.Request, id string, userId int) {
 	var exists bool
 	if err := database.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM boite_idees WHERE id_idee = ?)", id).Scan(&exists); err != nil || !exists {
@@ -293,7 +282,6 @@ func VoterIdee(w http.ResponseWriter, r *http.Request, id string, userId int) {
 		return
 	}
 
-	// Direction demandée (défaut : upvote).
 	var body struct {
 		Valeur int `json:"valeur"`
 	}
@@ -303,7 +291,6 @@ func VoterIdee(w http.ResponseWriter, r *http.Request, id string, userId int) {
 		dir = -1
 	}
 
-	// Vote actuel de l'utilisateur sur cette idée.
 	var current int
 	hasVote := database.DB.QueryRow(
 		"SELECT valeur FROM votes_idees WHERE id_idee = ? AND id_utilisateur = ?", id, userId).Scan(&current) == nil
@@ -318,7 +305,7 @@ func VoterIdee(w http.ResponseWriter, r *http.Request, id string, userId int) {
 		}
 		delta, monVote = dir, dir
 	case current == dir:
-		// Même direction recliquée → annulation du vote.
+		// Même sens → annulation.
 		database.DB.Exec("DELETE FROM votes_idees WHERE id_idee = ? AND id_utilisateur = ?", id, userId)
 		delta, monVote = -dir, 0
 	default:

@@ -2,11 +2,13 @@
 @section('title', $categorie ? 'Modifier catégorie' : 'Nouvelle catégorie')
 
 @section('content')
+{{-- Formulaire de catégorie de prestations (admin) : sert à la fois à la création et à l'édition selon la présence de $categorie. --}}
 <div class="page-header">
     <h1 class="page-title">{{ $categorie ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}</h1>
     <a href="{{ route('admin.categories.index') }}" class="btn-secondary btn-sm">← Retour</a>
 </div>
 
+{{-- === Formulaire (création ou mise à jour) === --}}
 <div class="card" style="max-width: 600px;">
     <form method="POST"
           action="{{ $categorie ? route('admin.categories.update', $categorie['id_categorie']) : route('admin.categories.store') }}">

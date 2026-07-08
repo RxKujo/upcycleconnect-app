@@ -6,11 +6,19 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+/**
+ * Boîte à idées collaborative : flux, archives, votes et modération de statut.
+ * Proxy vers l'API Go. Un admin conserve son layout de back-office.
+ */
 class BoiteIdeeController extends Controller
 {
+    // --- Helpers API ---
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('salarie_token'); }
 
+    // --- Lecture ---
+
+    /** Affiche le flux d'idées actives et la liste des idées archivées. */
     public function index()
     {
         $base = $this->api() . '/api/v1/salarie/idees';
@@ -30,6 +38,9 @@ class BoiteIdeeController extends Controller
         return view('salarie.boite-idees.index', compact('idees', 'archivees', 'isAdmin', 'layout'));
     }
 
+    // --- Modération (statut, archivage) ---
+
+    /** Change le statut d'une idée (nouvelle, en cours, retenue…). */
     public function statut(Request $request, $id)
     {
         $data = $request->validate([
@@ -45,6 +56,7 @@ class BoiteIdeeController extends Controller
         return back()->with('success', 'Statut mis à jour.');
     }
 
+    /** Archive une idée (la retire du flux principal). */
     public function archiver($id)
     {
         $r = Http::withToken($this->token())
@@ -56,6 +68,7 @@ class BoiteIdeeController extends Controller
         return back()->with('success', 'Idée archivée.');
     }
 
+    /** Restaure une idée archivée dans le flux principal. */
     public function desarchiver($id)
     {
         $r = Http::withToken($this->token())
@@ -67,6 +80,9 @@ class BoiteIdeeController extends Controller
         return back()->with('success', 'Idée désarchivée.');
     }
 
+    // --- Écriture (proposition d'idées) ---
+
+    /** Crée une nouvelle idée. */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -84,6 +100,7 @@ class BoiteIdeeController extends Controller
         return redirect()->route('salarie.idees.index')->with('success', 'Idée partagée !');
     }
 
+    /** Met à jour une idée existante. */
     public function update(Request $request, $id)
     {
         $data = $request->validate([
@@ -101,8 +118,10 @@ class BoiteIdeeController extends Controller
         return redirect()->route('salarie.idees.index')->with('success', 'Idée mise à jour.');
     }
 
+    /** Enregistre un vote (+1 ou -1) et renvoie le résultat en JSON. */
     public function voter(Request $request, $id)
     {
+        // Seules les valeurs +1 / -1 sont acceptées ; toute autre retombe à +1.
         $valeur = (int) $request->input('valeur', 1);
         if (!in_array($valeur, [1, -1], true)) {
             $valeur = 1;
@@ -114,6 +133,7 @@ class BoiteIdeeController extends Controller
         return response()->json($r->json() ?? [], $r->status());
     }
 
+    /** Supprime définitivement une idée. */
     public function destroy($id)
     {
         $r = Http::withToken($this->token())

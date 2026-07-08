@@ -1,7 +1,11 @@
+// Fichier annonce.go : structures d'une annonce (objets à vendre/donner), de ses
+// objets/photos rattachés et des requêtes de création, modification et validation.
+
 package models
 
 import "time"
 
+// Annonce : mise en vente ou don d'un ou plusieurs objets par un particulier.
 type Annonce struct {
 	IDAnnonce      int        `json:"id_annonce"`
 	IDParticulier  int        `json:"id_particulier"`

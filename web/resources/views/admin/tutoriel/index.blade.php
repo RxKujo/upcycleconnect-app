@@ -2,7 +2,11 @@
 
 @section('title', 'Étapes du tutoriel')
 
+{{-- Vue admin : édition des étapes du tutoriel d'accueil. La liste est chargée et
+     enregistrée en AJAX via l'API Go ; le rendu des cartes est généré en JavaScript. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">Étapes du tutoriel</h1>
 </div>
@@ -16,7 +20,8 @@
 <div id="etapes-list"></div>
 @endsection
 
-@section('scripts')
+{{-- === Scripts : chargement, rendu et sauvegarde des étapes (API Go) === --}}
+@push('scripts')
 <script>
 const API = '{{ config("services.api.public_url") }}';
 const TOKEN = '{{ session("admin_token") }}';
@@ -50,6 +55,32 @@ function render() {
                     </div>
                 </div>
             </div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">Icône</label>
+                    <input class="form-input" id="icone-${e.id_etape}" value="${escHtml(e.icone || '')}" placeholder="🌱">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cible (sélecteur CSS)</label>
+                    <input class="form-input" id="cible-${e.id_etape}" value="${escHtml(e.cible_element || '')}" placeholder=".nav-brand — vide = centré">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Page (chemin)</label>
+                    <input class="form-input" id="page-${e.id_etape}" value="${escHtml(e.page || '')}" placeholder="/annonces — vide = page courante">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Position</label>
+                    <select class="form-input" id="position-${e.id_etape}">
+                        ${['center','top','bottom','left','right'].map(p => `<option value="${p}" ${e.position === p ? 'selected' : ''}>${p}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rôle</label>
+                    <select class="form-input" id="role-${e.id_etape}">
+                        ${['','particulier','professionnel','salarie'].map(rl => `<option value="${rl}" ${(e.role || '') === rl ? 'selected' : ''}>${rl || 'Tous les rôles'}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
                 <label style="font-family:'DM Mono',monospace;font-size:0.82rem;text-transform:uppercase;display:flex;align-items:center;gap:8px;">
                     <input type="checkbox" id="actif-${e.id_etape}" ${e.est_actif ? 'checked' : ''}> Étape active
@@ -65,9 +96,11 @@ async function save(id) {
         titre: document.getElementById('titre-' + id).value,
         contenu: document.getElementById('contenu-' + id).value,
         ordre: parseInt(document.getElementById('ordre-' + id).value),
-        cible_element: '',
-        position: 'center',
-        icone: '',
+        cible_element: document.getElementById('cible-' + id).value,
+        position: document.getElementById('position-' + id).value,
+        page: document.getElementById('page-' + id).value,
+        icone: document.getElementById('icone-' + id).value,
+        role: document.getElementById('role-' + id).value,
         est_actif: document.getElementById('actif-' + id).checked
     };
     const r = await fetch(API + '/api/v1/admin/tutoriel/etapes/' + id, {
@@ -88,4 +121,4 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 load();
 </script>
-@endsection
+@endpush

@@ -1,11 +1,15 @@
+{{-- Layout PROFESSIONNEL — espace pro (navbar, contenu). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
+    <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Espace Pro') — UpcycleConnect</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -101,24 +105,32 @@
 </head>
 <body>
     @include('partials._toast')
+    {{-- === Navbar === --}}
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span> <span class="navbar-badge">Pro</span></a>
         <div class="navbar-links">
-            <a href="/professionnel/dashboard" class="{{ request()->is('professionnel/dashboard*') ? 'active' : '' }}">Dashboard</a>
-            <a href="/professionnel/alertes" class="{{ request()->is('professionnel/alertes*') ? 'active' : '' }}">Alertes</a>
-            <a href="/professionnel/publicites" class="{{ request()->is('professionnel/publicites*') ? 'active' : '' }}">Publicités</a>
-            <a href="/professionnel/conteneurs" class="{{ request()->is('professionnel/conteneurs*') ? 'active' : '' }}">Conteneurs</a>
-            <a href="/professionnel/profile" class="{{ request()->is('professionnel/profile*') ? 'active' : '' }}">Mon profil</a>
-            <a href="/" class="btn-public" title="Aller sur le site public">↗ Site public</a>
-            <button class="btn-logout" onclick="logout()">Deconnexion</button>
+            <a href="/professionnel/dashboard" class="{{ request()->is('professionnel/dashboard*') ? 'active' : '' }}" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="/professionnel/alertes" class="{{ request()->is('professionnel/alertes*') ? 'active' : '' }}" data-i18n="nav.alerts">Alertes</a>
+            <a href="/professionnel/publicites" class="{{ request()->is('professionnel/publicites*') ? 'active' : '' }}" data-i18n="nav.ads">Publicités</a>
+            <a href="/professionnel/conteneurs" class="{{ request()->is('professionnel/conteneurs*') ? 'active' : '' }}" data-i18n="nav.containers">Conteneurs</a>
+            <a href="/professionnel/profile" class="{{ request()->is('professionnel/profile*') ? 'active' : '' }}" data-i18n="nav.myprofile">Mon profil</a>
+            <a href="/" class="btn-public" title="Aller sur le site public" data-i18n="nav.publicsite">↗ Site public</a>
+            <span class="nav-lang" style="display:inline-flex; gap:2px;">
+                <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')" style="background:transparent;color:inherit;border:2px solid rgba(18,3,9,0.25);padding:5px 9px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">FR</button>
+                <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')" style="background:transparent;color:inherit;border:2px solid rgba(18,3,9,0.25);padding:5px 9px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">EN</button>
+            </span>
+            <button class="btn-logout" onclick="logout()" data-i18n="nav.logout">Deconnexion</button>
+            <style>.nav-lang-btn.active{background:var(--coffee)!important;color:var(--cream)!important;}</style>
         </div>
     </nav>
 
+    {{-- === Contenu === --}}
     <div class="main-content">
         <div id="alert-container"></div>
         @yield('content')
     </div>
 
+    {{-- === Scripts === --}}
     <script>
         const API_BASE = '{{ config("services.api.public_url") }}';
 
@@ -162,5 +174,11 @@
     </script>
     @yield('scripts')
     @stack('scripts')
+    {{-- === Partials === --}}
+    @include('partials.datepicker')
+    @include('partials.onesignal')
+    @include('partials.i18n-engine')
+    @include('partials.messagerie')
+    @include('partials.tutoriel-overlay')
 </body>
 </html>

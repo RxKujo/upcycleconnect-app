@@ -1,3 +1,5 @@
+// custom_time.go : date/heure tolérante au décodage JSON (sérialise en RFC3339).
+
 package models
 
 import (
@@ -6,10 +8,12 @@ import (
 	"time"
 )
 
+// CustomTime : time.Time acceptant plusieurs formats de date du front à la lecture JSON.
 type CustomTime struct {
 	time.Time
 }
 
+// UnmarshalJSON essaie plusieurs formats ; null/vide donne un time.Time zéro.
 func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "\"")
 	if s == "null" || s == "" {
@@ -34,6 +38,7 @@ func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("invalid time format: %s", s)
 }
 
+// MarshalJSON sérialise en RFC3339, ou null si à zéro.
 func (ct CustomTime) MarshalJSON() ([]byte, error) {
 	if ct.Time.IsZero() {
 		return []byte("null"), nil

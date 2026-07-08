@@ -1,0 +1,62 @@
+/* Styles de la carte conteneurs (popups + bouton « Autour de moi »).
+   Reprend l'ADN visuel du site (coffee/forest, bords épais). */
+
+.cmap-popup {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.cmap-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cmap-link,
+.cmap-btn {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: bold;
+    padding: 6px 12px;
+    border: 2px solid var(--coffee, #3b2417);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.cmap-link {
+    background: var(--wheat, #f0e0c0);
+    color: var(--coffee, #3b2417);
+}
+
+.cmap-btn {
+    background: var(--forest, #1b5e20);
+    color: #fff;
+}
+
+.cmap-link:hover,
+.cmap-btn:hover {
+    filter: brightness(0.95);
+}
+
+.leaflet-control button.cmap-locate {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: bold;
+    padding: 8px 12px;
+    background: var(--cream, #fff);
+    color: var(--coffee, #3b2417);
+    border: 2px solid var(--coffee, #3b2417);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+.leaflet-control button.cmap-locate:hover {
+    background: var(--wheat, #f0e0c0);
+}

@@ -1,7 +1,11 @@
 @extends('layouts.admin')
 @section('title', 'Matériaux')
 
+{{-- Vue admin : gestion du référentiel des matériaux (CRUD via modale, upload d'icône
+     en base64). Le code interne est immuable car référencé par les annonces/alertes. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1 class="page-title">Matériaux</h1>
     <button type="button" class="btn-primary" onclick="openMatModal()">+ Nouveau matériau</button>
@@ -25,6 +29,7 @@
     .mat-row-off { opacity:0.5; }
 </style>
 
+{{-- === Modale : création / édition d'un matériau === --}}
 <div class="modal-overlay" id="matModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeMatModal()">&times;</button>
@@ -59,6 +64,7 @@
     </div>
 </div>
 
+{{-- === Tableau : liste des matériaux === --}}
 <div class="table-container">
     <table>
         <thead>
@@ -75,7 +81,7 @@
             <tr class="{{ $m['actif'] ? '' : 'mat-row-off' }}">
                 <td>
                     @if(!empty($m['icone']))
-                        <img src="/uploads/{{ $m['icone'] }}" alt="{{ $m['libelle'] }}" class="mat-icon">
+                        <img src="{{ media_url($m['icone']) }}" alt="{{ $m['libelle'] }}" class="mat-icon">
                     @else
                         <span style="color:#bbb;">—</span>
                     @endif
@@ -110,6 +116,7 @@
     </table>
 </div>
 
+{{-- === Scripts : modale (nouveau/édition) et prévisualisation de l'icône === --}}
 <script>
     const matForm   = document.getElementById('matForm');
     const matMethod = document.getElementById('matMethod');
@@ -136,7 +143,7 @@
         document.getElementById('m_libelle').value = m.libelle;
         document.getElementById('m_iconeBase64').value = '';
         const prev = document.getElementById('m_iconePreview');
-        if (m.icone) { prev.src = '/uploads/' + m.icone; prev.style.display = 'block'; }
+        if (m.icone) { prev.src = window.MEDIA_BASE + '/' + m.icone; prev.style.display = 'block'; }
         else { prev.style.display = 'none'; }
         actifGroup.style.display = 'block';
         document.getElementById('m_actif').checked = !!m.actif;

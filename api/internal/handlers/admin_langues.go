@@ -1,8 +1,6 @@
 package handlers
 
-// Administration multilingue — gestion no-code des langues et traductions.
-// Permet d'ajouter une langue et ses libellés UI sans redéploiement.
-// Conformité WCAG 2.1 : flag RTL pour les langues droite-à-gauche.
+// Admin multilingue : gestion no-code des langues et traductions (sans redéploiement). Flag RTL (WCAG 2.1).
 
 import (
 	"api/pkg/database"
@@ -14,6 +12,7 @@ import (
 
 // ─── Langues ─────────────────────────────────────────────────────────────────
 
+// Langue représente une langue de l'interface (code ISO, activation, sens RTL).
 type Langue struct {
 	IDLangue  int    `json:"id_langue"`
 	CodeISO   string `json:"code_iso"`
@@ -22,6 +21,7 @@ type Langue struct {
 	RTL       bool   `json:"rtl"`
 }
 
+// GetLangues liste toutes les langues, triées par libellé.
 func GetLangues(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT id_langue, code_iso, libelle, est_active, COALESCE(rtl, 0)
@@ -42,6 +42,7 @@ func GetLangues(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, out, http.StatusOK)
 }
 
+// CreateLangue ajoute une langue (active par défaut) après normalisation du code ISO.
 func CreateLangue(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		CodeISO string `json:"code_iso"`
@@ -69,6 +70,7 @@ func CreateLangue(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]interface{}{"id_langue": id, "message": "langue créée"}, http.StatusCreated)
 }
 
+// UpdateLangue met à jour une langue en ne modifiant que les champs fournis.
 func UpdateLangue(w http.ResponseWriter, r *http.Request, id string) {
 	var req struct {
 		Libelle   string `json:"libelle"`
@@ -80,7 +82,7 @@ func UpdateLangue(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Lecture de l'état actuel pour ne modifier que les champs fournis
+	// Lecture de l'état actuel : ne modifier que les champs fournis.
 	var cur Langue
 	if err := database.DB.QueryRow(
 		"SELECT id_langue, code_iso, libelle, est_active, COALESCE(rtl,0) FROM langue WHERE id_langue = ?", id,
@@ -108,6 +110,7 @@ func UpdateLangue(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "langue mise à jour"}, http.StatusOK)
 }
 
+// DeleteLangue supprime une langue (échoue si des traductions y sont liées).
 func DeleteLangue(w http.ResponseWriter, r *http.Request, id string) {
 	res, err := database.DB.Exec("DELETE FROM langue WHERE id_langue = ?", id)
 	if err != nil {
@@ -123,6 +126,7 @@ func DeleteLangue(w http.ResponseWriter, r *http.Request, id string) {
 
 // ─── Traductions ─────────────────────────────────────────────────────────────
 
+// Translation représente une valeur traduite pour un couple (clé, langue).
 type Translation struct {
 	IDTranslation int    `json:"id_translation"`
 	Cle           string `json:"cle"`
@@ -131,6 +135,7 @@ type Translation struct {
 	Valeur        string `json:"valeur"`
 }
 
+// GetTranslations liste les traductions, filtrables par clé (LIKE) et par langue.
 func GetTranslations(w http.ResponseWriter, r *http.Request) {
 	cle := r.URL.Query().Get("cle")
 	lang := r.URL.Query().Get("langue")
@@ -196,7 +201,6 @@ func UpsertTranslation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Récupérer l'ID pour la réponse
 	var idTrad int
 	database.DB.QueryRow(
 		"SELECT id_translation FROM translations WHERE cle = ? AND id_langue = ?",
@@ -205,10 +209,8 @@ func UpsertTranslation(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]interface{}{"id_translation": idTrad, "message": "traduction enregistrée"}, http.StatusOK)
 }
 
-// BulkUpsertTranslations enregistre une grille entière de traductions en une fois.
-// Pour chaque entrée : valeur non vide → upsert ; valeur vide → suppression de la
-// case (cle, id_langue). Les clés sont définies par les développeurs ; l'admin ne
-// fait que renseigner/effacer des valeurs. Idempotent (UNIQUE cle+id_langue).
+// BulkUpsertTranslations : grille entière en une fois. Valeur non vide => upsert, vide => suppression.
+// Idempotent (UNIQUE cle+id_langue).
 func BulkUpsertTranslations(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Items []struct {
@@ -260,6 +262,7 @@ func BulkUpsertTranslations(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]interface{}{"message": "traductions enregistrées", "upsert": nbUpsert, "suppr": nbDelete}, http.StatusOK)
 }
 
+// DeleteTranslation supprime une traduction par son identifiant.
 func DeleteTranslation(w http.ResponseWriter, r *http.Request, id string) {
 	res, err := database.DB.Exec("DELETE FROM translations WHERE id_translation = ?", id)
 	if err != nil {
@@ -273,8 +276,7 @@ func DeleteTranslation(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "traduction supprimée"}, http.StatusOK)
 }
 
-// GetTranslationsByISO retourne toutes les traductions d'une langue sous forme map cle→valeur.
-// Endpoint public utilisé par le frontend pour charger les libellés d'interface.
+// GetTranslationsByISO : map cle→valeur d'une langue. Endpoint public (libellés UI du frontend).
 func GetTranslationsByISO(w http.ResponseWriter, r *http.Request, codeISO string) {
 	rows, err := database.DB.Query(`
 		SELECT t.cle, t.valeur

@@ -1,0 +1,636 @@
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Traductions anglaises (EN) — « fichier de langues » versionné.
+-- Alimente la table `translations` (moteur i18n existant : data-i18n côté vues).
+-- Idempotent : on supprime les clés listées puis on réinsère.
+-- Réappliquer après ajout de nouvelles clés (charset utf8mb4 obligatoire, sinon
+-- les caractères comme … et ' sont corrompus) :
+--   docker exec -i uc_mysql mysql --default-character-set=utf8mb4 -u<user> -p<pass> upcycleconnect < database/seed_i18n_en.sql
+-- ─────────────────────────────────────────────────────────────────────────────
+
+SET @en := (SELECT id_langue FROM langue WHERE code_iso = 'en' LIMIT 1);
+
+-- ── LOT 1 : Marketplace (public/marche/index) + statuts communs ──────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'market.kicker','market.title','market.subtitle','market.search',
+  'market.filter.all','market.filter.don','market.filter.vente',
+  'market.nophoto','market.empty.title','market.empty.body',
+  'market.contactseller','msg.send',
+  'status.don','status.vente','status.free'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('market.contactseller', @en, 'Contact the seller'),
+('msg.send',           @en, 'Send'),
+('market.kicker',      @en, 'Marketplace'),
+('market.title',       @en, 'The Marketplace'),
+('market.subtitle',    @en, 'Browse the community''s donation and sale listings'),
+('market.search',      @en, 'Search a listing…'),
+('market.filter.all',  @en, 'All'),
+('market.filter.don',  @en, 'Donations'),
+('market.filter.vente',@en, 'Sales'),
+('market.nophoto',     @en, 'NO PHOTO'),
+('market.empty.title', @en, 'No listings'),
+('market.empty.body',  @en, 'Listings will appear here once approved by the team.'),
+('status.don',         @en, 'Donation'),
+('status.vente',       @en, 'Sale'),
+('status.free',        @en, 'Free');
+
+-- ── LOT 2 : fiche annonce + événements (liste + fiche) + paiement ────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'market.back','market.show.nophoto','market.seller','market.certified','market.score',
+  'cart.add','cart.view','market.proonly.title','market.proonly.body','market.specs',
+  'market.material','market.state','market.category','market.weight',
+  'market.pickup.container','market.pickup.hand','market.pickup.container.note',
+  'market.pickup.hand.note','market.directions',
+  'events.kicker','events.title','events.subtitle','events.filter.all','events.filter.atelier',
+  'events.filter.formation','events.filter.conference','events.filter.presentiel','events.filter.distanciel',
+  'events.program','events.date','events.time','events.place','events.full','events.empty.title',
+  'events.empty.body','events.description','events.terms','events.format','events.period','events.sessions',
+  'events.perperson','events.availability','events.payregister','events.register.free','events.registered',
+  'events.ticket','events.soldout','common.processing',
+  'pay.title','pay.amount','pay.now','pay.note'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('market.back',                @en, 'Back to marketplace'),
+('market.show.nophoto',        @en, 'No photo'),
+('market.seller',              @en, 'Seller'),
+('market.certified',           @en, 'Certified'),
+('market.score',               @en, 'Upcycling score:'),
+('cart.add',                   @en, 'Add to cart'),
+('cart.view',                  @en, 'View my cart'),
+('market.proonly.title',       @en, 'Pickup reserved for professionals and craftspeople.'),
+('market.proonly.body',        @en, 'Items dropped off by individuals are collected by pros through UpcycleConnect containers.'),
+('market.specs',               @en, 'Specifications'),
+('market.material',            @en, 'Material:'),
+('market.state',               @en, 'Condition:'),
+('market.category',            @en, 'Category:'),
+('market.weight',              @en, 'Weight:'),
+('market.pickup.container',    @en, 'Collection point'),
+('market.pickup.hand',         @en, 'In-person handover'),
+('market.pickup.container.note',@en,'Via container — collection point provided after approval.'),
+('market.pickup.hand.note',    @en, 'In-person handover — address provided by the seller.'),
+('market.directions',          @en, 'Google Maps directions →'),
+('events.kicker',              @en, 'Agenda'),
+('events.title',               @en, 'Events & training'),
+('events.subtitle',            @en, 'Workshops, training and talks organised by the community'),
+('events.filter.all',          @en, 'All'),
+('events.filter.atelier',      @en, 'Workshops'),
+('events.filter.formation',    @en, 'Training'),
+('events.filter.conference',   @en, 'Talks'),
+('events.filter.presentiel',   @en, 'In person'),
+('events.filter.distanciel',   @en, 'Online'),
+('events.program',             @en, 'Programme'),
+('events.date',                @en, 'Date'),
+('events.time',                @en, 'Time'),
+('events.place',               @en, 'Location'),
+('events.full',                @en, 'Full'),
+('events.empty.title',         @en, 'No upcoming events'),
+('events.empty.body',          @en, 'Upcoming workshops and training will appear here.'),
+('events.description',         @en, 'Description'),
+('events.terms',               @en, 'Details'),
+('events.format',              @en, 'Format'),
+('events.period',              @en, 'Period'),
+('events.sessions',            @en, 'Sessions'),
+('events.perperson',           @en, 'per participant'),
+('events.availability',        @en, 'Availability'),
+('events.payregister',         @en, 'Pay & register'),
+('events.register.free',       @en, 'Register for free'),
+('events.registered',          @en, 'You''re registered'),
+('events.ticket',              @en, 'Download my PDF ticket'),
+('events.soldout',             @en, 'Event full'),
+('common.processing',          @en, 'Processing…'),
+('pay.title',                  @en, 'Secure payment'),
+('pay.amount',                 @en, 'Amount:'),
+('pay.now',                    @en, 'Pay now'),
+('pay.note',                   @en, 'Secure payment by Stripe — card details are never stored.');
+
+-- ── LOT 3 : ressources (liste + fiche) + forum (liste + fiche) ───────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'resources.title','resources.subtitle','common.loading','resources.empty.title',
+  'resources.empty.body','resources.pdf','resources.all',
+  'forum.kicker','forum.title','forum.subtitle','forum.newtopic','forum.newtopic.title',
+  'forum.field.title','forum.field.category','forum.field.category.ph','forum.field.message',
+  'forum.by','forum.messages','forum.empty.title','forum.empty.body','forum.nomsg','forum.join',
+  'forum.login2reply','forum.yourreply','forum.reply.ph','forum.postreply','forum.reply','forum.report'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('resources.title',        @en, 'Educational resources'),
+('resources.subtitle',     @en, 'News, tips and advice written by the UpcycleConnect team to help you with reuse and repair.'),
+('common.loading',         @en, 'Loading…'),
+('resources.empty.title',  @en, 'No resources yet'),
+('resources.empty.body',   @en, 'The UpcycleConnect team will publish news and advice here soon.'),
+('resources.pdf',          @en, 'Download as PDF'),
+('resources.all',          @en, 'All resources'),
+('forum.kicker',           @en, 'Community'),
+('forum.title',            @en, 'Forum'),
+('forum.subtitle',         @en, 'Chat with the community, ask your questions and share your feedback'),
+('forum.newtopic',         @en, '+ New topic'),
+('forum.newtopic.title',   @en, 'Start a new topic'),
+('forum.field.title',      @en, 'Title'),
+('forum.field.category',   @en, 'Category (optional)'),
+('forum.field.category.ph',@en, 'e.g. repair, training, advice...'),
+('forum.field.message',    @en, 'Message'),
+('forum.by',               @en, 'By'),
+('forum.messages',         @en, 'Messages'),
+('forum.empty.title',      @en, 'No topics'),
+('forum.empty.body',       @en, 'Be the first to start a discussion!'),
+('forum.nomsg',            @en, 'No messages in this topic.'),
+('forum.join',             @en, 'Would you like to join this discussion?'),
+('forum.login2reply',      @en, 'Log in to reply'),
+('forum.yourreply',        @en, 'Your reply'),
+('forum.reply.ph',         @en, 'Write your message...'),
+('forum.postreply',        @en, 'Post my reply'),
+('forum.reply',            @en, 'Reply'),
+('forum.report',           @en, 'Report');
+
+-- ── LOT 4 : panier (checkout) ────────────────────────────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'cart.kicker','cart.title','cart.empty.title','cart.empty.body','cart.explore','cart.home',
+  'cart.subtotal','cart.commission','cart.total','cart.authwarn.1','cart.authwarn.link',
+  'cart.authwarn.2','cart.paycard','cart.clear','cart.continue','cart.tocharge'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('cart.kicker',        @en, 'Purchases'),
+('cart.title',         @en, 'My cart'),
+('cart.empty.title',   @en, 'Your cart is empty'),
+('cart.empty.body',    @en, 'Browse the marketplace and add items to collect or buy. They will appear here.'),
+('cart.explore',       @en, 'Explore the marketplace'),
+('cart.home',          @en, 'Back to home'),
+('cart.subtotal',      @en, 'Items subtotal'),
+('cart.commission',    @en, 'UpcycleConnect commission'),
+('cart.total',         @en, 'Total to pay'),
+('cart.authwarn.1',    @en, 'You must be'),
+('cart.authwarn.link', @en, 'logged in'),
+('cart.authwarn.2',    @en, 'to place your order.'),
+('cart.paycard',       @en, 'Pay by card'),
+('cart.clear',         @en, 'Empty cart'),
+('cart.continue',      @en, 'Continue shopping'),
+('cart.tocharge',      @en, 'Total to charge:');
+
+-- ── LOT 4b : services-pro + a-propos + tutoriels + CGU/RGPD (entetes) ─────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'pro.kicker','pro.title','pro.subtitle','pro.plan.free','pro.plan.essential','pro.plan.expert',
+  'pro.month','pro.popular','pro.cta.start','pro.cta.subscribe','pro.cta.createaccount',
+  'pro.sponsoring.title','pro.sponsoring.body',
+  'pro.feat.1','pro.feat.2','pro.feat.3','pro.feat.4','pro.feat.5','pro.feat.6','pro.feat.7',
+  'pro.feat.8','pro.feat.9','pro.feat.10','pro.feat.11','pro.feat.12','pro.feat.13','pro.feat.14','pro.feat.15',
+  'about.kicker','about.title','about.p1','about.p2','about.mission','about.mission.body',
+  'about.reduce','about.reduce.body','about.connect','about.connect.body','about.train','about.train.body',
+  'tuto.title','tuto.subtitle',
+  'cgu.title','cgu.updated','cgu.h1','cgu.h2','cgu.h3','cgu.h4','cgu.h5','cgu.h6',
+  'rgpd.title','rgpd.updated','rgpd.h1','rgpd.h2','rgpd.h3','rgpd.h4','rgpd.h5','rgpd.h6'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('pro.kicker',           @en, 'Professionals & Craftspeople'),
+('pro.title',            @en, 'Pro plans'),
+('pro.subtitle',         @en, 'Advanced tools to grow your upcycling business'),
+('pro.plan.free',        @en, 'Freemium'),
+('pro.plan.essential',   @en, 'Essential Pro'),
+('pro.plan.expert',      @en, 'Expert Pro'),
+('pro.month',            @en, ' /month'),
+('pro.popular',          @en, 'Popular'),
+('pro.cta.start',        @en, 'Get started'),
+('pro.cta.subscribe',    @en, 'Subscribe'),
+('pro.cta.createaccount',@en, 'Create a Pro account'),
+('pro.sponsoring.title', @en, 'Promotion & Sponsoring'),
+('pro.sponsoring.body',  @en, 'Showcase your products on UpcycleConnect with a fair advertising system. €100 per ad per month, limited to 5 ads per professional.'),
+('pro.feat.1',  @en, 'Marketplace access'),
+('pro.feat.2',  @en, 'Order items'),
+('pro.feat.3',  @en, 'Events catalogue'),
+('pro.feat.4',  @en, 'Advice area'),
+('pro.feat.5',  @en, 'Everything in the free plan'),
+('pro.feat.6',  @en, '30-day activity dashboard'),
+('pro.feat.7',  @en, '3 material alerts (10 km radius)'),
+('pro.feat.8',  @en, 'Local material statistics'),
+('pro.feat.9',  @en, 'Environmental impact'),
+('pro.feat.10', @en, 'Everything in Essential +'),
+('pro.feat.11', @en, 'Annual dashboard + PDF export'),
+('pro.feat.12', @en, 'Unlimited alerts'),
+('pro.feat.13', @en, 'Adjustable search radius'),
+('pro.feat.14', @en, 'Badge system'),
+('pro.feat.15', @en, 'OneSignal push alerts'),
+('about.kicker',       @en, 'Our story'),
+('about.title',        @en, 'About UpcycleConnect'),
+('about.p1',           @en, 'UpcycleConnect is an innovative, eco-friendly company that reduces waste by giving value to recycling.'),
+('about.p2',           @en, 'Our platform connects individuals who want to give away or sell items and materials with the craftspeople and professionals who give them a second life. Every item saved from waste helps reduce our environmental footprint.'),
+('about.mission',      @en, 'Our mission'),
+('about.mission.body', @en, 'Modernise the web architecture for managing recycled-material exchanges while keeping the soul of UpcycleConnect, essential for optimal customer satisfaction.'),
+('about.reduce',       @en, 'Reduce'),
+('about.reduce.body',  @en, 'Waste, by promoting reuse and upcycling'),
+('about.connect',      @en, 'Connect'),
+('about.connect.body', @en, 'Individuals and craftspeople around the circular economy'),
+('about.train',        @en, 'Train'),
+('about.train.body',   @en, 'Through workshops, training and practical advice'),
+('tuto.title',         @en, 'Guide & Tutorials'),
+('tuto.subtitle',      @en, 'Find the onboarding tutorial steps for UpcycleConnect here'),
+('cgu.title',    @en, 'Terms of Use'),
+('cgu.updated',  @en, 'Last updated: April 2026'),
+('cgu.h1',       @en, '1. Purpose'),
+('cgu.h2',       @en, '2. Service description'),
+('cgu.h3',       @en, '3. Registration'),
+('cgu.h4',       @en, '4. Listings'),
+('cgu.h5',       @en, '5. Liability'),
+('cgu.h6',       @en, '6. Contact'),
+('rgpd.title',   @en, 'Privacy Policy'),
+('rgpd.updated', @en, 'In accordance with GDPR — Last updated: April 2026'),
+('rgpd.h1',      @en, '1. Data collected'),
+('rgpd.h2',      @en, '2. Purpose of processing'),
+('rgpd.h3',      @en, '3. Public anonymisation'),
+('rgpd.h4',      @en, '4. Retention period'),
+('rgpd.h5',      @en, '5. Your rights'),
+('rgpd.h6',      @en, '6. Subcontractors');
+
+-- ── LOT 4c : depot (formulaire de depot en conteneur) ────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'depot.title','depot.subtitle','depot.form.title','depot.map.title','depot.map.hint',
+  'depot.mydemands','depot.alert.success','depot.alert.error','depot.submit',
+  'depot.label.1','depot.label.2','depot.label.3','depot.label.4','depot.label.5','depot.label.6',
+  'depot.label.7','depot.label.8',
+  'depot.opt.1','depot.opt.2','depot.opt.3','depot.opt.4','depot.opt.5','depot.opt.6','depot.opt.7',
+  'depot.opt.8','depot.opt.9','depot.opt.10'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('depot.title',         @en, 'Container drop-off'),
+('depot.subtitle',      @en, 'Drop off your items in one of our partner containers'),
+('depot.form.title',    @en, 'My drop-off request'),
+('depot.map.title',     @en, 'Nearby containers'),
+('depot.map.hint',      @en, 'Click a container to select it — or "Around me" for the nearest ones'),
+('depot.mydemands',     @en, 'My requests'),
+('depot.alert.success', @en, 'Request sent! Our team will process it within 48h.'),
+('depot.alert.error',   @en, 'Error while sending your request.'),
+('depot.submit',        @en, 'Send my request'),
+('depot.label.1', @en, 'Item title *'),
+('depot.label.2', @en, 'Item type *'),
+('depot.label.3', @en, 'Description *'),
+('depot.label.4', @en, 'Quantity'),
+('depot.label.5', @en, 'Pickup address'),
+('depot.label.6', @en, 'Postal code'),
+('depot.label.7', @en, 'City'),
+('depot.label.8', @en, 'Selected container'),
+('depot.opt.1',  @en, 'Select...'),
+('depot.opt.2',  @en, 'Furniture'),
+('depot.opt.3',  @en, 'Appliances'),
+('depot.opt.4',  @en, 'Clothing'),
+('depot.opt.5',  @en, 'Electronics'),
+('depot.opt.6',  @en, 'Books / Media'),
+('depot.opt.7',  @en, 'Toys'),
+('depot.opt.8',  @en, 'Decoration'),
+('depot.opt.9',  @en, 'Tools'),
+('depot.opt.10', @en, 'Other');
+
+-- ── LOT 5 : espace particulier (nav layout + dashboard) ──────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'nav.myspace','nav.dashboard','nav.mylistings','nav.mytrainings','nav.profile',
+  'nav.postlisting','nav.logout',
+  'dash.points','dash.managelistings','dash.myregistrations','dash.wasteavoided',
+  'dash.kgprofile','dash.recentactivity'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('nav.myspace',       @en, 'My space'),
+('nav.dashboard',     @en, 'Dashboard'),
+('nav.mylistings',    @en, 'My listings'),
+('nav.mytrainings',   @en, 'My training'),
+('nav.profile',       @en, 'Profile & settings'),
+('nav.postlisting',   @en, '+ Post a listing'),
+('nav.logout',        @en, 'Log out'),
+('dash.points',           @en, 'upcycling points'),
+('dash.managelistings',   @en, 'Manage my drop-offs →'),
+('dash.myregistrations',  @en, 'View my registrations →'),
+('dash.wasteavoided',     @en, 'Waste avoided'),
+('dash.kgprofile',        @en, 'kg · view my profile →'),
+('dash.recentactivity',   @en, 'Recent activity');
+
+-- ── LOT 5b : particulier (annonces liste, formations, planning, profil) ──────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'stat.total','stat.online','stat.sold','field.title','field.description','field.price',
+  'field.handover','field.type','handover.hand','handover.container','btn.savechanges','btn.add',
+  'part.editlisting','part.editnote',
+  'part.trainings.title','part.trainings.catalogue','part.trainings.myregistrations',
+  'part.planning.title','part.planning.addslot','part.planning.legend.event','part.planning.legend.formation',
+  'part.planning.legend.meeting','part.planning.legend.work','part.planning.legend.perso',
+  'part.planning.newslot','part.planning.f.title','part.planning.f.title.ph','part.planning.start','part.planning.end',
+  'prof.myinfo','prof.changephoto','prof.email','prof.phone','prof.city','prof.address','prof.address.ph',
+  'prof.joined','prof.score','prof.points','prof.wastekg','prof.notifprefs','prof.notifpush','prof.notifpush.desc',
+  'prof.notifemail','prof.notifemail.desc','prof.notif.note','prof.personaldata','prof.personaldata.desc',
+  'prof.download','prof.security','prof.changepwd','prof.pwd.current','prof.pwd.new','prof.pwd.confirm'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('stat.total',   @en, 'Total'),
+('stat.online',  @en, 'Online'),
+('stat.sold',    @en, 'Sold'),
+('field.title',       @en, 'Title'),
+('field.description', @en, 'Description'),
+('field.price',       @en, 'Price (€)'),
+('field.handover',    @en, 'Handover method'),
+('field.type',        @en, 'Type'),
+('handover.hand',      @en, 'In person'),
+('handover.container', @en, 'Via container'),
+('btn.savechanges',    @en, 'Save changes'),
+('btn.add',            @en, 'Add'),
+('part.editlisting',   @en, 'Edit listing'),
+('part.editnote',      @en, 'Editing sends the listing back for approval.'),
+('part.trainings.title',          @en, 'My training & events'),
+('part.trainings.catalogue',      @en, 'View catalogue'),
+('part.trainings.myregistrations',@en, 'My registrations'),
+('part.planning.title',          @en, 'My schedule'),
+('part.planning.addslot',        @en, '+ Add a slot'),
+('part.planning.legend.event',     @en, 'Event'),
+('part.planning.legend.formation', @en, 'Training'),
+('part.planning.legend.meeting',   @en, 'Meeting'),
+('part.planning.legend.work',      @en, 'Work'),
+('part.planning.legend.perso',     @en, 'Personal'),
+('part.planning.newslot',        @en, 'New slot'),
+('part.planning.f.title',        @en, 'Title *'),
+('part.planning.f.title.ph',     @en, 'My slot...'),
+('part.planning.start',          @en, 'Start *'),
+('part.planning.end',            @en, 'End *'),
+('prof.myinfo',          @en, 'My information'),
+('prof.changephoto',     @en, 'Click to change photo'),
+('prof.email',           @en, 'Email'),
+('prof.phone',           @en, 'Phone'),
+('prof.city',            @en, 'City'),
+('prof.address',         @en, 'Address'),
+('prof.address.ph',      @en, 'Full address'),
+('prof.joined',          @en, 'Joined'),
+('prof.score',           @en, 'Upcycling Score'),
+('prof.points',          @en, 'points'),
+('prof.wastekg',         @en, 'kg of waste avoided'),
+('prof.notifprefs',      @en, 'Notification preferences'),
+('prof.notifpush',       @en, 'Push notifications'),
+('prof.notifpush.desc',  @en, 'Receive real-time alerts'),
+('prof.notifemail',      @en, 'Email notifications'),
+('prof.notifemail.desc', @en, 'Receive updates by email'),
+('prof.notif.note',      @en, 'You will receive updates about your listings and events'),
+('prof.personaldata',      @en, 'Personal data'),
+('prof.personaldata.desc', @en, 'Get a file with all your information'),
+('prof.download',        @en, 'Download my data'),
+('prof.security',        @en, 'Security'),
+('prof.changepwd',       @en, 'Change my password'),
+('prof.pwd.current',     @en, 'Current password'),
+('prof.pwd.new',         @en, 'New password (min. 8 characters)'),
+('prof.pwd.confirm',     @en, 'Confirm new password');
+
+-- ── LOT 5c : particulier — creation d'annonce (formulaire multi-etapes) ───────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'btn.next','btn.prev',
+  'create.title','create.tab.description','create.tab.photos','create.tab.confirm',
+  'create.f.title','create.f.title.ph','create.f.desc','create.f.desc.ph','create.f.type',
+  'create.f.price','create.f.handover','create.opt.container','create.opt.hand',
+  'create.f.choosecontainer','create.selectcontainer','create.containeraddr',
+  'create.f.handoveraddr','create.f.handoveraddr.ph','create.ready','create.ready.desc','create.submit'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('btn.next', @en, 'Next'),
+('btn.prev', @en, 'Previous'),
+('create.title',           @en, 'Post a listing'),
+('create.tab.description', @en, 'Description'),
+('create.tab.photos',      @en, 'Photos & delivery'),
+('create.tab.confirm',     @en, 'Confirmation'),
+('create.f.title',         @en, 'Title *'),
+('create.f.title.ph',      @en, 'e.g. Vintage chair'),
+('create.f.desc',          @en, 'Description *'),
+('create.f.desc.ph',       @en, 'Describe your item in detail...'),
+('create.f.type',          @en, 'Listing type *'),
+('create.f.price',         @en, 'Price (EUR) *'),
+('create.f.handover',      @en, 'Handover method *'),
+('create.opt.container',   @en, 'Container'),
+('create.opt.hand',        @en, 'In person'),
+('create.f.choosecontainer',@en,'Choose the container *'),
+('create.selectcontainer', @en, '-- Select a collection point --'),
+('create.containeraddr',   @en, 'Container address'),
+('create.f.handoveraddr',  @en, 'Handover address *'),
+('create.f.handoveraddr.ph',@en,'e.g. 10 Rue de la Paix, Paris...'),
+('create.ready',           @en, 'READY TO PUBLISH?'),
+('create.ready.desc',      @en, 'Check all the information carefully before creating your listing.'),
+('create.submit',          @en, 'Create listing');
+
+-- ── LOT 6 : espace pro (nav + dashboard + alertes + conteneurs) ──────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'nav.alerts','nav.ads','nav.containers','nav.myprofile','nav.publicsite',
+  'prod.title','prod.yearlyview','prod.impact','prod.itemssaved','prod.co2','prod.visualsummary',
+  'prod.materials10km','prod.myalerts','prod.myads','prod.mycontainers',
+  'prod.alerts.title','prod.alerts.new','prod.radius','prod.alerts.create','prod.alerts.active','prod.alerts.empty',
+  'prod.containers.title','prod.history','prod.containers.validate','prod.containers.barcode',
+  'prod.containers.barcode.ph','prod.containers.validatebtn','prod.containers.pending'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('nav.alerts',      @en, 'Alerts'),
+('nav.ads',         @en, 'Ads'),
+('nav.containers',  @en, 'Containers'),
+('nav.myprofile',   @en, 'My profile'),
+('nav.publicsite',  @en, '↗ Public site'),
+('prod.title',          @en, 'Pro dashboard'),
+('prod.yearlyview',     @en, 'Yearly view (Expert Pro)'),
+('prod.impact',         @en, 'Environmental impact — This month'),
+('prod.itemssaved',     @en, 'Items saved'),
+('prod.co2',            @en, 'CO₂ avoided'),
+('prod.visualsummary',  @en, 'Visual summary'),
+('prod.materials10km',  @en, 'Available materials — 10 km radius'),
+('prod.myalerts',       @en, 'My material alerts'),
+('prod.myads',          @en, 'My ads'),
+('prod.mycontainers',   @en, 'My containers'),
+('prod.alerts.title',   @en, 'Material alerts'),
+('prod.alerts.new',     @en, 'New alert'),
+('prod.radius',         @en, 'Radius (km)'),
+('prod.alerts.create',  @en, 'Create alert'),
+('prod.alerts.active',  @en, 'My active alerts'),
+('prod.alerts.empty',   @en, 'No alerts set up.'),
+('prod.containers.title',       @en, 'Container orders'),
+('prod.history',                @en, 'History'),
+('prod.containers.validate',    @en, 'Validate a pickup'),
+('prod.containers.barcode',     @en, 'Pickup barcode'),
+('prod.containers.barcode.ph',  @en, 'Enter or scan the code'),
+('prod.containers.validatebtn', @en, 'Validate receipt'),
+('prod.containers.pending',     @en, 'Awaiting pickup');
+
+-- ── LOT 6b : pro — publicites + dashboard expert + historique ────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'prod.ads.new','prod.ads.terms','prod.ads.refusal','prod.ads.empty','prod.ads.createfirst',
+  'prod.ads.f.visual','prod.ads.f.url','prod.ads.f.start','prod.ads.f.end','prod.ads.submit','prod.ads.submitfull',
+  'prod.expert.title','prod.monthlyview','prod.exportpdf','prod.badges','prod.badges.empty','prod.badges.recalc',
+  'prod.pickups.title'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prod.ads.new',         @en, 'New ad'),
+('prod.ads.terms',       @en, 'Pricing & terms'),
+('prod.ads.refusal',     @en, 'Refusal reason:'),
+('prod.ads.empty',       @en, 'You don''t have any ads yet.'),
+('prod.ads.createfirst', @en, 'Create my first ad'),
+('prod.ads.f.visual',    @en, 'Visual URL (image)'),
+('prod.ads.f.url',       @en, 'Destination URL (click)'),
+('prod.ads.f.start',     @en, 'Start date'),
+('prod.ads.f.end',       @en, 'End date'),
+('prod.ads.submit',      @en, 'Submit'),
+('prod.ads.submitfull',  @en, 'Submit the ad'),
+('prod.expert.title',  @en, 'Expert Pro dashboard'),
+('prod.monthlyview',   @en, 'Monthly view'),
+('prod.exportpdf',     @en, 'Export PDF'),
+('prod.badges',        @en, 'Your badges'),
+('prod.badges.empty',  @en, 'No badges earned yet. Keep collecting items!'),
+('prod.badges.recalc', @en, 'Recalculate my badges'),
+('prod.pickups.title', @en, 'My pickups');
+
+-- ── LOT 6c : pro — abonnement + composant page-header i18n ────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'abo.title','abo.subtitle','abo.manage','abo.monthly','abo.yearly','abo.loading','abo.current'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('abo.title',    @en, 'Your Pro subscription'),
+('abo.subtitle', @en, 'Choose the plan that fits your business. Change or cancel anytime from your management area.'),
+('abo.manage',   @en, 'Manage my subscription →'),
+('abo.monthly',  @en, 'Monthly'),
+('abo.yearly',   @en, 'Yearly'),
+('abo.loading',  @en, 'Loading offers…'),
+('abo.current',  @en, 'Current plan —');
+
+-- ── LOT 6d : pro — profil (entreprise, ventes, abonnement, zone dangereuse) ───
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'prof.company','prof.companyname','prof.siret','prof.siretstatus','prof.mysales',
+  'prof.mytrainingbookings','prof.mysubscription','prof.price','prof.activesince','prof.changeplan',
+  'prof.managebilling','prof.onplan','prof.discoverpro','prof.dangerzone','prof.deleteaccount',
+  'prof.deleteaccount.desc'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prof.company',            @en, 'My company'),
+('prof.companyname',        @en, 'Company name'),
+('prof.siret',              @en, 'SIRET number'),
+('prof.siretstatus',        @en, 'SIRET status'),
+('prof.mysales',            @en, 'My sales'),
+('prof.mytrainingbookings', @en, 'My training bookings'),
+('prof.mysubscription',     @en, 'My subscription'),
+('prof.price',              @en, 'Price'),
+('prof.activesince',        @en, 'Active since'),
+('prof.changeplan',         @en, 'Change plan'),
+('prof.managebilling',      @en, 'Manage / Billing'),
+('prof.onplan',             @en, 'You''re on the plan'),
+('prof.discoverpro',        @en, 'Discover Pro plans'),
+('prof.dangerzone',         @en, 'Danger zone'),
+('prof.deleteaccount',      @en, 'Delete my account'),
+('prof.deleteaccount.desc', @en, 'Your personal data will be erased (GDPR). This action is irreversible.');
+
+-- ── LOT 7 : espace salarie (nav layout + dashboard) ──────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'sal.space','sal.cat.catalog','sal.myevents','sal.templates','sal.planning','sal.materials',
+  'sal.ideas','sal.cat.content','sal.articles','sal.cat.moderation','sal.reports','sal.forumtopics',
+  'sal.bannedwords','common.seeall',
+  'sal.dash.eventspending','sal.dash.eventsvalidated','sal.dash.articlesdraft','sal.dash.articlespublished',
+  'sal.dash.reportspending','sal.dash.newevent','sal.dash.newevent.desc','sal.dash.newarticle',
+  'sal.dash.newarticle.desc','sal.dash.moderation','sal.dash.moderation.desc','sal.dash.ideasbox',
+  'sal.dash.ideas.desc','sal.dash.planning'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('sal.space',          @en, 'Staff area'),
+('sal.cat.catalog',    @en, 'Catalogue'),
+('sal.myevents',       @en, 'My events'),
+('sal.templates',      @en, 'Templates'),
+('sal.planning',       @en, 'Planning'),
+('sal.materials',      @en, 'Equipment'),
+('sal.ideas',          @en, 'Ideas box'),
+('sal.cat.content',    @en, 'Content'),
+('sal.articles',       @en, 'Articles & News'),
+('sal.cat.moderation', @en, 'Moderation'),
+('sal.reports',        @en, 'Reports'),
+('sal.forumtopics',    @en, 'Forum topics'),
+('sal.bannedwords',    @en, 'Banned words'),
+('common.seeall',      @en, 'See all'),
+('sal.dash.eventspending',    @en, 'Pending events'),
+('sal.dash.eventsvalidated',  @en, 'Validated events'),
+('sal.dash.articlesdraft',    @en, 'Draft articles'),
+('sal.dash.articlespublished',@en, 'Published articles'),
+('sal.dash.reportspending',   @en, 'Reports to handle'),
+('sal.dash.newevent',         @en, '+ New event'),
+('sal.dash.newevent.desc',    @en, 'Training, workshop or talk. Subject to admin approval.'),
+('sal.dash.newarticle',       @en, '+ New article'),
+('sal.dash.newarticle.desc',  @en, 'Write a News & Advice article as draft or published.'),
+('sal.dash.moderation',       @en, 'Moderation'),
+('sal.dash.moderation.desc',  @en, 'Handle messages reported by the community.'),
+('sal.dash.ideasbox',         @en, 'Ideas box'),
+('sal.dash.ideas.desc',       @en, 'Suggest and vote for the team''s ideas.'),
+('sal.dash.planning',         @en, 'My schedule — upcoming');
+
+-- ── LOT 7b : salarie — materiel, evenements, templates, idees, planning ──────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'sal.mat.title','sal.mat.add','sal.mat.empty','sal.mat.return','sal.mat.reserve','sal.mat.addmodal',
+  'sal.mat.tab.available','sal.mat.tab.reserved',
+  'sal.mat.photos','sal.mat.reservation','sal.ev.empty','sal.ev.empty.desc','sal.ev.create',
+  'sal.tpl.title','sal.tpl.new','sal.tpl.new2','sal.tpl.empty','sal.ideas.empty','sal.ideas.emptyarchived',
+  'sal.ideas.propose','sal.ideas.proposebtn','sal.ideas.edit','sal.planning.selectday','sal.planning.detail'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('sal.mat.title',       @en, 'Equipment & inventory'),
+('sal.mat.add',         @en, '+ Add'),
+('sal.mat.empty',       @en, 'No equipment yet. Click "Add".'),
+('sal.mat.return',      @en, 'Return'),
+('sal.mat.reserve',     @en, 'Reserve'),
+('sal.mat.tab.available', @en, 'Available'),
+('sal.mat.tab.reserved',  @en, 'Reserved'),
+('sal.mat.addmodal',    @en, 'Add equipment'),
+('sal.mat.photos',      @en, 'Photos'),
+('sal.mat.reservation', @en, 'Reservation'),
+('sal.ev.empty',        @en, 'No events'),
+('sal.ev.empty.desc',   @en, 'Create your first event (training, workshop, talk). It will be submitted for admin approval.'),
+('sal.ev.create',       @en, '+ Create an event'),
+('sal.tpl.title',       @en, 'Event templates'),
+('sal.tpl.new',         @en, '+ New template'),
+('sal.tpl.new2',        @en, 'New template'),
+('sal.tpl.empty',       @en, 'No templates. Create one with "+ New template".'),
+('sal.ideas.empty',         @en, 'No ideas yet'),
+('sal.ideas.emptyarchived', @en, 'No archived ideas'),
+('sal.ideas.propose',       @en, 'Suggest an idea'),
+('sal.ideas.proposebtn',    @en, 'Suggest'),
+('sal.ideas.edit',          @en, 'Edit idea'),
+('sal.planning.selectday',  @en, 'Select a day'),
+('sal.planning.detail',     @en, 'Slot details');
+
+-- ── LOT 8 : espace admin (nav layout + dashboard) ────────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN (
+  'adm.panel','adm.sec.tovalidate','adm.sec.catalog','adm.sec.logistics','adm.sec.system',
+  'adm.listings','adm.events','adm.cat.services','adm.cat.objects','adm.materials','adm.tutorial',
+  'adm.orders','adm.deposits','adm.users','adm.subscriptions','adm.finance','adm.notifications','adm.languages','adm.sites',
+  'adm.overview','adm.quickaccess','adm.mod.listings','adm.mod.events','adm.managemembers','adm.vieworders'
+);
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('adm.panel',          @en, 'Admin panel'),
+('adm.sec.tovalidate', @en, 'To validate'),
+('adm.sec.catalog',    @en, 'Catalogue & content'),
+('adm.sec.logistics',  @en, 'Logistics'),
+('adm.sec.system',     @en, 'System & finances'),
+('adm.listings',       @en, 'Listings'),
+('adm.events',         @en, 'Events'),
+('adm.cat.services',   @en, 'Service categories'),
+('adm.cat.objects',    @en, 'Object categories'),
+('adm.materials',      @en, 'Materials'),
+('adm.tutorial',       @en, 'Tutorial'),
+('adm.orders',         @en, 'Orders'),
+('adm.deposits',       @en, 'Container deposits'),
+('adm.sites',          @en, 'Sites & branches'),
+('adm.users',          @en, 'Users'),
+('adm.subscriptions',  @en, 'Subscriptions'),
+('adm.finance',        @en, 'Financial management'),
+('adm.notifications',  @en, 'Notifications'),
+('adm.languages',      @en, 'Languages & Translation'),
+('adm.overview',       @en, 'Overview'),
+('adm.quickaccess',    @en, 'Quick access'),
+('adm.mod.listings',   @en, '→ Moderate listings'),
+('adm.mod.events',     @en, '→ Moderate events'),
+('adm.managemembers',  @en, '→ Manage members'),
+('adm.vieworders',     @en, '→ View orders');
+
+-- ── Fix profil : placeholder ville auto-remplie ──────────────────────────────
+DELETE FROM translations WHERE id_langue = @en AND cle IN ('prof.cityauto');
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prof.cityauto', @en, 'Filled from address');
+
+-- Vente main propre : paiement espèces
+DELETE FROM translations WHERE id_langue=@en AND cle='market.cash';
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('market.cash', @en, 'Cash payment on handover — contact the seller to arrange a meetup.');
+
+-- Dashboard pro : dépenses du mois
+DELETE FROM translations WHERE id_langue=@en AND cle IN ('prod.spending','prod.spending.note','prod.spending.items','prod.spending.ads','prod.spending.sub','prod.spending.total');
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prod.spending',       @en, 'Spending — This month'),
+('prod.spending.note',  @en, 'Any started advertising month is billed in full.'),
+('prod.spending.items', @en, 'Items purchased'),
+('prod.spending.ads',   @en, 'Advertising'),
+('prod.spending.sub',   @en, 'Subscription'),
+('prod.spending.total', @en, 'Month total');

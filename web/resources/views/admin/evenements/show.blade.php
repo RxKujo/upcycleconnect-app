@@ -2,6 +2,8 @@
 @section('title', 'Événement #' . $evenement['id_evenement'])
 
 @section('content')
+
+{{-- === En-tête : titre et actions (modifier / supprimer / retour) === --}}
 <div class="page-header">
     <h1 class="page-title">Événement #{{ $evenement['id_evenement'] }}</h1>
     <div class="action-cell">
@@ -20,6 +22,7 @@
     $tauxRemplissage = $nbTotal > 0 ? round(($nbInscrits / $nbTotal) * 100) : 0;
 @endphp
 
+{{-- === KPIs : inscrits, places restantes, taux de remplissage === --}}
 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px;">
     <div class="card" style="text-align: center; padding: 28px 24px;">
         <div style="font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--coffee); line-height: 1;">{{ $nbInscrits }}</div>
@@ -35,6 +38,7 @@
     </div>
 </div>
 
+{{-- === Fiche d'informations de l'événement === --}}
 <div class="card">
     <div class="info-grid">
         <div class="info-item">
@@ -102,6 +106,7 @@
     </div>
 </div>
 
+{{-- === Actions de modération (valider / refuser / remettre en attente) === --}}
 <div class="action-cell" style="margin-top: 24px;">
     @if($evenement['statut'] === 'en_attente')
     <form action="{{ route('admin.evenements.valider', $evenement['id_evenement']) }}" method="POST">
@@ -120,6 +125,7 @@
     @endif
 </div>
 
+{{-- === Liste des inscrits (chargée en AJAX, voir scripts) === --}}
 <div class="card" style="margin-top:32px;">
     <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;margin:0 0 20px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">
         Liste des inscrits
@@ -129,6 +135,7 @@
     </div>
 </div>
 
+{{-- === Scripts : récupération des inscrits via l'API admin et rendu du tableau === --}}
 @push('scripts')
 <script>
 (async function() {

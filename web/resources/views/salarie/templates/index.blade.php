@@ -1,12 +1,12 @@
 @extends('layouts.salarie')
 @section('title', 'Mes modèles')
-
 @section('content')
+{{-- === En-tête + bouton nouveau modèle === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <h1 class="page-title">Modèles d'événements</h1>
+    <h1 class="page-title"><span data-i18n="sal.tpl.title">Modèles d'événements</span></h1>
     <div style="display:flex; gap:12px;">
         <a href="{{ route('salarie.evenements.index') }}" class="btn-secondary">← Mes événements</a>
-        <button type="button" class="btn-primary" onclick="openTplModal()">+ Nouveau modèle</button>
+        <button type="button" class="btn-primary" onclick="openTplModal()"><span data-i18n="sal.tpl.new">+ Nouveau modèle</span></button>
     </div>
 </div>
 
@@ -18,6 +18,7 @@
     <div class="badge badge-cherry" style="display:block; margin-bottom:20px; padding:12px 20px;">{{ $errors->first() }}</div>
 @endif
 
+{{-- === Styles : modale de création/édition de modèle === --}}
 <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(18,3,9,0.6); z-index:1000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 20px; }
     .modal-overlay.active { display:flex; }
@@ -32,10 +33,11 @@
     .tpl-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:0.68rem; padding:2px 8px; border:2px solid var(--coffee); margin-right:6px; }
 </style>
 
+{{-- === Modale : création / édition d'un modèle (formulaire partagé, action ajustée en JS) === --}}
 <div class="modal-overlay" id="tplModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeTplModal()">&times;</button>
-        <h3 id="tplModalTitle">Nouveau modèle</h3>
+        <h3 id="tplModalTitle"><span data-i18n="sal.tpl.new2">Nouveau modèle</span></h3>
         <p class="modal-sub">Modèle réutilisable pour créer des événements</p>
         <form method="POST" id="tplForm" action="{{ route('salarie.templates.store') }}">
             @csrf
@@ -93,11 +95,12 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary" style="margin-top:8px;">Enregistrer</button>
+            <button type="submit" class="btn-primary" style="margin-top:8px;"><span data-i18n="btn.save">Enregistrer</span></button>
         </form>
     </div>
 </div>
 
+{{-- === Tableau des modèles existants === --}}
 <div class="card" style="padding:0; overflow-x:auto;">
     <table style="width:100%; border-collapse:collapse;">
         <thead>
@@ -139,12 +142,13 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4" style="text-align:center; padding:28px; color:#888;">Aucun modèle. Créez-en un avec « + Nouveau modèle ».</td></tr>
+            <tr><td colspan="4" style="text-align:center; padding:28px; color:#888;"><span data-i18n="sal.tpl.empty">Aucun modèle. Créez-en un avec « + Nouveau modèle ».</span></td></tr>
             @endforelse
         </tbody>
     </table>
 </div>
 
+{{-- === Scripts : ouverture/pré-remplissage de la modale (création vs édition) === --}}
 <script>
     const tplForm   = document.getElementById('tplForm');
     const tplMethod = document.getElementById('tplMethod');

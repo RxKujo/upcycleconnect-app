@@ -1,5 +1,8 @@
 <?php
 
+// Configuration du cache : magasin par défaut et définition des différents
+// stores disponibles (base de données, fichier, Redis, Memcached, etc.).
+
 use Illuminate\Support\Str;
 
 return [

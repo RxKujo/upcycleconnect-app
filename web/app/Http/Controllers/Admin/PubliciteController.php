@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 
+// Admin : publicités (validation/refus, stats, aperçu rotation). Proxy vers l'API Go.
 class PubliciteController extends Controller
 {
+    // --- Utilitaires (URL API + jeton) ---
+
     private function apiUrl(): string
     {
         return rtrim(config('services.api.url', env('API_URL', 'http://localhost:8080')), '/');
@@ -19,6 +22,9 @@ class PubliciteController extends Controller
         return Session::get('admin_token');
     }
 
+    // --- Lecture ---
+
+    // Liste les publicités, filtrées par statut si fourni en query string.
     public function index(Request $request)
     {
         $statut = $request->query('statut', '');
@@ -35,6 +41,9 @@ class PubliciteController extends Controller
         ]);
     }
 
+    // --- Actions de modération ---
+
+    // Valide une publicité et la met en ligne.
     public function valider(int $id)
     {
         Http::withToken($this->token())
@@ -44,6 +53,7 @@ class PubliciteController extends Controller
             ->with('success', 'Publicité validée et mise en ligne.');
     }
 
+    // Refuse une publicité (enregistre le motif).
     public function refuser(Request $request, int $id)
     {
         Http::withToken($this->token())->asJson()
@@ -55,6 +65,9 @@ class PubliciteController extends Controller
             ->with('success', 'Publicité refusée.');
     }
 
+    // --- Statistiques & rotation ---
+
+    // Stats d'affichage/clics des publicités.
     public function stats()
     {
         $r = Http::withToken($this->token())->timeout(5)
@@ -63,6 +76,7 @@ class PubliciteController extends Controller
         return view('admin.publicites.stats', compact('stats'));
     }
 
+    // Aperçu des publicités en rotation.
     public function rotation()
     {
         $r = Http::withToken($this->token())->timeout(5)

@@ -1,3 +1,6 @@
+// Fichier auth.go : authentification par jeton JWT (Bearer). Vérifie la signature
+// HMAC et extrait l'identifiant et le rôle de l'utilisateur.
+
 package middleware
 
 import (
@@ -10,6 +13,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// AuthRequired valide le jeton Bearer et renvoie (userId, role, true) si l'accès
+// est autorisé ; sinon écrit une réponse 401 et renvoie ok=false.
 func AuthRequired(w http.ResponseWriter, r *http.Request) (int, string, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -59,6 +64,33 @@ func AuthRequired(w http.ResponseWriter, r *http.Request) (int, string, bool) {
 	return int(idClaim), role, true
 }
 
+// AdminRequired indique si le rôle correspond à un administrateur.
 func AdminRequired(role string) bool {
 	return role == "admin"
+}
+
+// OptionalAuth extrait (userId, role) du token s'il est présent et valide, sans
+// écrire d'erreur. Renvoie ok=false si absent/invalide (routes publiques qui
+// adaptent leur réponse selon l'authentification).
+func OptionalAuth(r *http.Request) (int, string, bool) {
+	parts := strings.Split(r.Header.Get("Authorization"), " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return 0, "", false
+	}
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(parts[1], claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil || !token.Valid {
+		return 0, "", false
+	}
+	idClaim, okID := claims["id"].(float64)
+	role, okRole := claims["role"].(string)
+	if !okID || !okRole {
+		return 0, "", false
+	}
+	return int(idClaim), role, true
 }

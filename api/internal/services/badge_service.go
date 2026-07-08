@@ -6,12 +6,10 @@ import (
 )
 
 // ─── Badges Expert Pro ────────────────────────────────────────────────────────
-//
-// Les seuils sont lus depuis la table `badges` (modifiables sans redéploiement).
-// La logique de calcul ne connaît pas les valeurs en dur.
+// Seuils lus depuis la table `badges` (modifiables sans redéploiement).
 // ─────────────────────────────────────────────────────────────────────────────
 
-// BadgeDef est la définition d'un badge telle que stockée en base.
+// BadgeDef : définition d'un badge en base.
 type BadgeDef struct {
 	IDBadge      int    `json:"id_badge"`
 	Nom          string `json:"nom"`
@@ -22,13 +20,13 @@ type BadgeDef struct {
 	IconeURL     string `json:"icone_url"`
 }
 
-// BadgeUtilisateur représente un badge obtenu par un pro.
+// BadgeUtilisateur : badge obtenu par un pro.
 type BadgeUtilisateur struct {
 	BadgeDef
 	DateObtention string `json:"date_obtention"`
 }
 
-// GetAllBadges retourne le référentiel complet (pour affichage public du profil).
+// GetAllBadges : référentiel complet (profil public).
 func GetAllBadges() ([]BadgeDef, error) {
 	rows, err := database.DB.Query(`
 		SELECT id_badge, nom, COALESCE(description,''), seuil_objets,
@@ -52,7 +50,7 @@ func GetAllBadges() ([]BadgeDef, error) {
 	return badges, rows.Err()
 }
 
-// GetUserBadges retourne les badges déjà obtenus par un utilisateur.
+// GetUserBadges : badges obtenus par un utilisateur.
 func GetUserBadges(userID int) ([]BadgeUtilisateur, error) {
 	rows, err := database.DB.Query(`
 		SELECT b.id_badge, b.nom, COALESCE(b.description,''), b.seuil_objets,
@@ -80,13 +78,13 @@ func GetUserBadges(userID int) ([]BadgeUtilisateur, error) {
 	return result, rows.Err()
 }
 
-// comptesObjets regroupe les deux valeurs nécessaires au calcul des badges.
+// comptesObjets : valeurs nécessaires au calcul des badges.
 type comptesObjets struct {
 	total        int            // tous matériaux confondus
 	parMateriau  map[string]int // par type de matériau
 }
 
-// compterObjetsRecuperes compte les objets effectivement récupérés par un pro.
+// compterObjetsRecuperes : objets récupérés par un pro.
 func compterObjetsRecuperes(userID int) (comptesObjets, error) {
 	const q = `
 		SELECT oa.materiau, COUNT(*) AS cnt
@@ -116,8 +114,8 @@ func compterObjetsRecuperes(userID int) (comptesObjets, error) {
 	return res, rows.Err()
 }
 
-// ComputeAndAwardBadges calcule les badges dus à l'utilisateur et les insère
-// (INSERT IGNORE = idempotent). Retourne les badges nouvellement attribués.
+// ComputeAndAwardBadges attribue les badges dus (INSERT IGNORE = idempotent) ;
+// retourne les nouveaux.
 func ComputeAndAwardBadges(userID int) ([]BadgeDef, error) {
 	comptes, err := compterObjetsRecuperes(userID)
 	if err != nil {

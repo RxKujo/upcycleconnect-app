@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
+// Admin : matériaux (référentiel code/libellé/icône), CRUD + activation. Proxy vers l'API Go.
 class MateriauController extends Controller
 {
     private function apiUrl(): string
     {
         return rtrim(config('services.api.url'), '/') . '/api/v1/admin/materiaux';
     }
+
+    // --- Lecture ---
 
     public function index()
     {
@@ -21,6 +25,9 @@ class MateriauController extends Controller
         return view('admin.materiaux.index', compact('materiaux'));
     }
 
+    // --- Actions ---
+
+    // Crée un matériau (code unique + icône optionnelle en base64).
     public function store(Request $request)
     {
         $request->validate([
@@ -65,6 +72,7 @@ class MateriauController extends Controller
         return redirect()->route('admin.materiaux.index')->with('success', 'Matériau mis à jour.');
     }
 
+    // Active/désactive un matériau.
     public function toggle($id)
     {
         $response = Http::withToken(session('admin_token'))->put($this->apiUrl() . "/{$id}/toggle");
@@ -75,10 +83,10 @@ class MateriauController extends Controller
         return back()->with('success', 'Statut mis à jour.');
     }
 
-    /**
-     * Décode une icône base64 (data URL) et l'écrit dans public/uploads/materiaux.
-     * Retourne le chemin relatif (materiaux/xxx.ext) ou null si absent/invalide.
-     */
+    // --- Gestion des icônes ---
+
+    // Décode une icône base64, l'écrit sur le disque média (cf. config/media.php),
+    // et retourne le chemin relatif ou null si absent/invalide.
     private function saveBase64Icon(?string $b64): ?string
     {
         if (!$b64 || !preg_match('/^data:image\/(\w+);base64,/', $b64, $m)) {
@@ -89,12 +97,8 @@ class MateriauController extends Controller
         if (!in_array($ext, ['jpg', 'png', 'webp', 'svg'], true) || $data === false || strlen($data) > 2 * 1024 * 1024) {
             return null;
         }
-        $dir = public_path('uploads/materiaux');
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        $filename = uniqid('mat-') . '.' . $ext;
-        file_put_contents($dir . '/' . $filename, $data);
-        return 'materiaux/' . $filename;
+        $key = 'materiaux/' . uniqid('mat-') . '.' . $ext;
+        Storage::disk(media_disk())->put($key, $data);
+        return $key;
     }
 }

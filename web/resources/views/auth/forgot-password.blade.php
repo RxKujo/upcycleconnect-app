@@ -1,6 +1,9 @@
 @extends('layouts.public')
 @section('title', 'Mot de passe oublié')
 
+{{-- Vue : mot de passe oublié. Réponse générique (anti-énumération). --}}
+
+{{-- === Contenu === --}}
 @section('content')
 <div class="page-container" style="max-width:500px;margin:80px auto;text-align:center;">
     <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.06em;margin-bottom:16px;">Mot de passe oublié</h1>
@@ -26,8 +29,10 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
+// Envoie la demande et affiche le message.
 async function sendReset(e) {
     e.preventDefault();
     const btn = document.getElementById('submit-btn');

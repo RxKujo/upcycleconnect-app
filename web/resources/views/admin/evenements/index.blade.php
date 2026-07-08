@@ -2,11 +2,14 @@
 @section('title', 'Événements')
 
 @section('content')
+
+{{-- === En-tête de page + bouton de création === --}}
 <div class="page-header">
     <h1 class="page-title">Événements</h1>
     <a href="{{ route('admin.evenements.create') }}" class="btn-primary">+ Créer</a>
 </div>
 
+{{-- === Filtres (statut, type) === --}}
 <div style="display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap;">
     <select id="filter-statut" class="form-select" style="width: auto; min-width: 180px;" onchange="filterTable()">
         <option value="">Tous les statuts</option>
@@ -24,6 +27,7 @@
     </select>
 </div>
 
+{{-- === Tableau des événements === --}}
 <div class="table-container">
 <table id="evenements-table">
     <thead>
@@ -78,6 +82,7 @@
 </table>
 </div>
 
+{{-- === Scripts : filtrage du tableau côté client === --}}
 <script>
 function filterTable() {
     const statut = document.getElementById('filter-statut').value;

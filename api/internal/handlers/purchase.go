@@ -10,9 +10,7 @@ import (
 // ErrAchatPropre est retourné quand l'acheteur tente d'acheter sa propre annonce.
 var ErrAchatPropre = errors.New("vous ne pouvez pas acheter votre propre annonce")
 
-// AnnoncePurchaseDetail contient les informations nécessaires pour créer un
-// paiement ou une commande — calculées une seule fois et partagées par stripe.go
-// et commandes_buyer.go.
+// AnnoncePurchaseDetail — infos de paiement/commande, partagées par stripe.go et commandes_buyer.go.
 type AnnoncePurchaseDetail struct {
 	IDVendeur     int
 	Titre         string
@@ -23,9 +21,8 @@ type AnnoncePurchaseDetail struct {
 	Total         float64
 }
 
-// ValidateAnnonceForPurchase vérifie qu'une annonce de type "vente" est
-// disponible et que l'acheteur n'en est pas le vendeur.
-// Retourne les détails nécessaires au paiement ou une erreur HTTP descriptive.
+// ValidateAnnonceForPurchase — vérifie qu'une annonce "vente" est dispo et que
+// l'acheteur n'en est pas le vendeur ; retourne les détails ou une erreur HTTP.
 func ValidateAnnonceForPurchase(idAnnonce, buyerID int) (*AnnoncePurchaseDetail, int, error) {
 	var d AnnoncePurchaseDetail
 	var prix sql.NullFloat64
@@ -57,8 +54,7 @@ func ValidateAnnonceForPurchase(idAnnonce, buyerID int) (*AnnoncePurchaseDetail,
 	return &d, 0, nil
 }
 
-// commissionRate retourne le taux de commission selon le rôle du vendeur.
-// 5 % pour les professionnels, 10 % pour les particuliers.
+// commissionRate — taux selon le rôle : 5 % pro, 10 % particulier.
 func commissionRate(roleVendeur string) float64 {
 	if roleVendeur == "professionnel" {
 		return 5.0

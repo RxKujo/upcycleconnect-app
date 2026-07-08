@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * Modèle Eloquent de l'utilisateur (authentification native Laravel).
+ * Définit les champs remplissables en masse, les attributs masqués et les casts.
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;

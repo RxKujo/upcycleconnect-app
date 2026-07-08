@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des bases de données : connexion par défaut, définition des
+// connexions (SQLite, MySQL, MariaDB, PostgreSQL, SQL Server) et Redis.
+
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 

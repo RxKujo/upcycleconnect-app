@@ -1,3 +1,5 @@
+// Package database gère la connexion MySQL partagée par toute l'API via la
+// variable globale DB, configurée à partir des variables d'environnement DB_*.
 package database
 
 import (
@@ -9,8 +11,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// DB est le pool de connexions partagé, initialisé par InitDB.
 var DB *sql.DB
 
+// InitDB ouvre le pool de connexions MySQL et vérifie sa disponibilité (Ping).
 func InitDB() error {
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")

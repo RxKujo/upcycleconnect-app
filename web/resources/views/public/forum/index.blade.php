@@ -1,45 +1,49 @@
 @extends('layouts.public')
 
+{{-- Forum public : liste des sujets. --}}
+
 @section('title', 'Forum')
 @section('meta_description', 'Forum communautaire UpcycleConnect. Posez vos questions et partagez vos expériences.')
 
 @section('content')
 <div class="page-container">
-    <p class="section-label">Communauté</p>
-    <h1 class="page-title">Forum</h1>
-    <p class="page-subtitle">Échangez avec la communauté, posez vos questions et partagez vos retours d'expérience</p>
+    <p class="section-label" data-i18n="forum.kicker">Communauté</p>
+    <h1 class="page-title" data-i18n="forum.title">Forum</h1>
+    <p class="page-subtitle" data-i18n="forum.subtitle">Échangez avec la communauté, posez vos questions et partagez vos retours d'expérience</p>
 
+    {{-- === Bouton "Nouveau sujet" ou invitation à se connecter === --}}
     <div style="margin-bottom:32px;" id="newSujetSection">
-        <a href="{{ route('particulier.login') }}?return=%2Fforum" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour poster" id="loginToPost" style="display:none;">
-            + Nouveau sujet
+        <a href="{{ route('particulier.login') }}?return=%2Fforum" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour poster" id="loginToPost" style="display:none;"><span data-i18n="forum.newtopic">+ Nouveau sujet</span>
         </a>
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('newSujetForm').style.display='block'; this.style.display='none';" id="openNewSujetForm" style="display:none;">
-            + Nouveau sujet
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('newSujetForm').style.display='block'; this.style.display='none';" id="openNewSujetForm" style="display:none;"><span data-i18n="forum.newtopic">+ Nouveau sujet</span>
         </button>
     </div>
 
+    {{-- === Formulaire nouveau sujet (masqué par défaut) === --}}
     <form id="newSujetForm" autocomplete="off" style="display:none; border:var(--border); padding:24px; background:white; box-shadow:var(--shadow-sm); margin-bottom:32px;" onsubmit="return submitNewSujet(event);">
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; margin-bottom:16px;">Lancer un nouveau sujet</h3>
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; margin-bottom:16px;" data-i18n="forum.newtopic.title">Lancer un nouveau sujet</h3>
         <div style="margin-bottom:12px;">
-            <label class="font-mono" style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Titre</label>
+            <label class="font-mono" style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;" data-i18n="forum.field.title">Titre</label>
             <input type="text" name="titre" required minlength="5" maxlength="300" style="width:100%; padding:10px 12px; border:var(--border); background:var(--cream); font-family:inherit;" />
         </div>
         <div style="margin-bottom:12px;">
-            <label class="font-mono" style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Catégorie (optionnel)</label>
-            <input type="text" name="categorie" maxlength="100" placeholder="ex: reparation, formation, conseil..." style="width:100%; padding:10px 12px; border:var(--border); background:var(--cream); font-family:inherit;" />
+            <label class="font-mono" style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;" data-i18n="forum.field.category">Catégorie (optionnel)</label>
+            <input type="text" name="categorie" maxlength="100" placeholder="ex: reparation, formation, conseil..." data-i18n-ph="forum.field.category.ph" style="width:100%; padding:10px 12px; border:var(--border); background:var(--cream); font-family:inherit;" />
         </div>
         <div style="margin-bottom:16px;">
-            <label class="font-mono" style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Message</label>
+            <label class="font-mono" style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;" data-i18n="forum.field.message">Message</label>
             <textarea name="contenu" required minlength="5" rows="5" style="width:100%; padding:10px 12px; border:var(--border); background:var(--cream); font-family:inherit; resize:vertical;"></textarea>
         </div>
         <div style="display:flex; gap:12px;">
-            <button type="submit" class="btn btn-primary">Publier</button>
-            <button type="button" onclick="document.getElementById('newSujetForm').style.display='none'; document.getElementById('openNewSujetForm').style.display='inline-block';" style="padding:10px 20px; border:var(--border); background:var(--cream); cursor:pointer; font-family:inherit;">Annuler</button>
+            <button type="submit" class="btn btn-primary" data-i18n="btn.publish">Publier</button>
+            <button type="button" onclick="document.getElementById('newSujetForm').style.display='none'; document.getElementById('openNewSujetForm').style.display='inline-block';" style="padding:10px 20px; border:var(--border); background:var(--cream); cursor:pointer; font-family:inherit;" data-i18n="btn.cancel">Annuler</button>
         </div>
         <p id="newSujetError" style="margin-top:12px; color:#b00; display:none;"></p>
     </form>
 
+    {{-- === Scripts === --}}
     <script>
+    // Affiche le bon bouton selon la connexion
     (function() {
         var token = localStorage.getItem('auth_token');
         if (token) {
@@ -48,6 +52,7 @@
             document.getElementById('loginToPost').style.display = 'inline-block';
         }
     })();
+    // Envoie le sujet puis redirige vers sa page
     async function submitNewSujet(e) {
         e.preventDefault();
         var form = e.target;
@@ -77,6 +82,7 @@
     }
     </script>
 
+    {{-- === Liste des sujets === --}}
     @if(count($sujets) > 0)
     <div style="border:var(--border); box-shadow:var(--shadow);">
         @foreach($sujets as $index => $sujet)
@@ -89,21 +95,21 @@
                     <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.25rem; letter-spacing:0.04em; line-height:1;">{{ $sujet['titre'] }}</h3>
                 </div>
                 <p class="font-mono" style="font-size:0.72rem; opacity:0.5;">
-                    Par {{ $sujet['createur_prenom'] ?? '' }} {{ $sujet['createur_nom_initiale'] ?? '' }}
+                    <span data-i18n="forum.by">Par</span> {{ $sujet['createur_prenom'] ?? '' }} {{ $sujet['createur_nom_initiale'] ?? '' }}
                     &middot; {{ \Carbon\Carbon::parse($sujet['date_creation'])->locale('fr')->diffForHumans() }}
                 </p>
             </div>
             <div style="text-align:center; min-width:80px;">
                 <span style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--teal); display:block; line-height:1;">{{ $sujet['nb_messages'] ?? 0 }}</span>
-                <span class="font-mono" style="font-size:0.65rem; opacity:0.5;">Messages</span>
+                <span class="font-mono" style="font-size:0.65rem; opacity:0.5;" data-i18n="forum.messages">Messages</span>
             </div>
         </a>
         @endforeach
     </div>
     @else
     <div style="text-align:center; padding:80px 20px; border:var(--border); background:white;">
-        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:2rem; margin-bottom:12px;">Aucun sujet</h3>
-        <p style="opacity:0.6;">Soyez le premier à lancer une discussion !</p>
+        <h3 style="font-family:'Bebas Neue',sans-serif; font-size:2rem; margin-bottom:12px;" data-i18n="forum.empty.title">Aucun sujet</h3>
+        <p style="opacity:0.6;" data-i18n="forum.empty.body">Soyez le premier à lancer une discussion !</p>
     </div>
     @endif
 </div>

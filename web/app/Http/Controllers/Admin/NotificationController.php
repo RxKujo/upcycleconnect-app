@@ -6,11 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+// Admin : notifications (journal, envoi groupé, préférences par utilisateur). Proxy vers l'API Go.
 class NotificationController extends Controller
 {
+    // Raccourcis URL API + jeton admin.
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('admin_token'); }
 
+    // --- Lecture ---
+
+    // Journal filtré + liste des sites.
     public function index(Request $request)
     {
         $params = $request->only(['type', 'date_debut', 'date_fin', 'user_id']);
@@ -19,6 +24,9 @@ class NotificationController extends Controller
         return view('admin.notifications.index', compact('log', 'sites'));
     }
 
+    // --- Envoi ---
+
+    // Envoi groupé (push/email) à un site ou un segment.
     public function sendGroupe(Request $request)
     {
         $data = $request->validate([
@@ -39,12 +47,16 @@ class NotificationController extends Controller
             ->with('success', 'Notification groupe envoyée : ' . ($r->json('nb_destinataires') ?? '?') . ' destinataires.');
     }
 
+    // --- Préférences utilisateur ---
+
+    // Préférences de notification d'un utilisateur (JSON).
     public function getUserPrefs($userId)
     {
         $prefs = $this->callApi('/api/v1/admin/notifications/user/' . $userId) ?? [];
         return response()->json($prefs);
     }
 
+    // Met à jour les préférences (push/email) d'un utilisateur.
     public function updateUserPrefs(Request $request, $userId)
     {
         $data = $request->validate([
@@ -61,6 +73,9 @@ class NotificationController extends Controller
         return back()->with('success', 'Préférences mises à jour.');
     }
 
+    // --- Utilitaires ---
+
+    // GET générique vers l'API ; JSON ou null si échec.
     private function callApi(string $path, array $query = []): ?array
     {
         $r = Http::withToken($this->token())->timeout(5)->get($this->api() . $path, $query);

@@ -1,3 +1,4 @@
+{{-- Vue : inscription particulier. Formulaire avec autocompletion d'adresse (API geopf), reCAPTCHA optionnel, validation live puis appel API /auth/register. --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    {{-- === Styles (design system : couleurs, champs, autocomplete adresse, spinner) === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -384,6 +387,7 @@
     </style>
 </head>
 <body>
+    {{-- === Overlay de chargement (affiche pendant l'appel API) === --}}
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
@@ -401,6 +405,7 @@
 
             <div id="alertContainer"></div>
 
+            {{-- === Formulaire d'inscription particulier (role fige a "particulier") === --}}
             <form id="registerForm" method="POST" action="{{ config('services.api.public_url') }}/api/v1/auth/register" novalidate>
                 <input type="hidden" name="role" value="particulier">
                 <div class="form-row">
@@ -458,6 +463,7 @@
                     </div>
                 </div>
 
+                {{-- === Adresse : recherche avec autocompletion (champs caches remplis a la selection) === --}}
                 <div class="form-group required" id="adresseAutoGroup">
                     <label for="adresseSearch" class="form-label">Adresse</label>
                     <div class="autocomplete-wrapper">
@@ -476,6 +482,7 @@
                     <input type="hidden" name="code_postal" id="code_postal">
                 </div>
 
+                {{-- Saisie manuelle de secours : affichee si l'API d'autocompletion est indisponible --}}
                 <div id="adresseFallback" style="display:none">
                     <div class="form-row">
                         <div class="form-group required">
@@ -533,6 +540,12 @@
                     </div>
                 </div>
 
+                @if(config('services.recaptcha.site_key'))
+                <div style="display:flex; justify-content:center; margin: 8px 0 4px;">
+                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                </div>
+                @endif
+
                 <button type="submit" class="btn-submit">S'inscrire</button>
             </form>
 
@@ -547,7 +560,9 @@
         </div>
     </div>
 
+    {{-- === Scripts : validation live, autocomplete adresse, reCAPTCHA et appel API === --}}
     <script>
+        // References DOM principales du formulaire
         const form = document.getElementById('registerForm');
         const alertContainer = document.getElementById('alertContainer');
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -666,6 +681,7 @@
             setTimeout(() => alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
         };
 
+        // === Soumission : validation de tous les champs, verification captcha puis appel API ===
         // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -701,6 +717,17 @@
                 }
             });
 
+            // Check reCAPTCHA (seulement s'il est configuré ; sinon ignoré)
+            const RECAPTCHA_ON = @json((bool) config('services.recaptcha.site_key'));
+            let captchaResponse = '';
+            if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') {
+                captchaResponse = grecaptcha.getResponse();
+                if (!captchaResponse) {
+                    formIsValid = false;
+                    errors.push('Veuillez valider le captcha');
+                }
+            }
+
             if (!formIsValid) {
                 showAlert('Veuillez corriger les erreurs', 'error', errors);
                 return;
@@ -709,6 +736,7 @@
             // Prepare form data
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
+            data.captcha_token = captchaResponse;
 
             // Show loading state
             const submitBtn = form.querySelector('.btn-submit');
@@ -767,6 +795,7 @@
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');
                 loadingOverlay.classList.remove('active');
+                if (RECAPTCHA_ON && typeof grecaptcha !== 'undefined') grecaptcha.reset();
             }
         });
         // === Autocomplete adresse ===

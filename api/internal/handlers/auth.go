@@ -1,5 +1,7 @@
 package handlers
 
+// Authentification : inscription (reCAPTCHA), connexion JWT, mot de passe oublié/reset par token, changement de mot de passe.
+
 import (
 	"api/internal/models"
 	"api/internal/services"
@@ -9,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -17,6 +20,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Register crée un compte (particulier ou professionnel) après validation et anti-robot.
 func Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -24,13 +28,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Normalisation
 	req.Nom = strings.TrimSpace(req.Nom)
 	req.Prenom = strings.TrimSpace(req.Prenom)
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 	req.Role = strings.TrimSpace(req.Role)
 
-	// Validation des entrées
 	if req.Nom == "" || req.Prenom == "" {
 		jsonErr(w, "le nom et le prénom sont obligatoires", http.StatusBadRequest)
 		return
@@ -50,6 +52,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if req.Role == "professionnel" && (req.NomEntreprise == nil || strings.TrimSpace(*req.NomEntreprise) == "") {
 		jsonErr(w, "le nom de l'entreprise est obligatoire pour un compte professionnel", http.StatusBadRequest)
 		return
+	}
+
+	// reCAPTCHA vérifié seulement si le secret est configuré (sinon désactivé).
+	if secret := os.Getenv("RECAPTCHA_SECRET_KEY"); secret != "" {
+		if !verifyRecaptcha(secret, req.CaptchaToken) {
+			jsonErr(w, "échec de la vérification anti-robot, merci de recommencer", http.StatusBadRequest)
+			return
+		}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.MotDePasse), bcrypt.DefaultCost)
@@ -75,6 +85,32 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]interface{}{"message": "utilisateur créé avec succès", "id": id}, http.StatusCreated)
 }
 
+// verifyRecaptcha : valide un token via Google siteverify. false si token vide, erreur réseau ou réponse négative.
+func verifyRecaptcha(secret, token string) bool {
+	if token == "" {
+		return false
+	}
+	resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify", url.Values{
+		"secret":   {secret},
+		"response": {token},
+	})
+	if err != nil {
+		logError("verifyRecaptcha", "appel siteverify: %v", err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	var out struct {
+		Success bool `json:"success"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		logError("verifyRecaptcha", "decode reponse: %v", err)
+		return false
+	}
+	return out.Success
+}
+
+// Login vérifie les identifiants (et l'éventuel ban) puis renvoie un JWT valable 72h.
 func Login(w http.ResponseWriter, r *http.Request) {
 	var req models.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -129,6 +165,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, models.LoginResponse{Token: tokenString}, http.StatusOK)
 }
 
+// ForgotPassword : génère un token de reset et envoie l'email, sans révéler si le compte existe.
 func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email string `json:"email"`
@@ -141,7 +178,7 @@ func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var userId int
 	err := database.DB.QueryRow("SELECT id_utilisateur FROM utilisateurs WHERE email = ?", strings.ToLower(strings.TrimSpace(req.Email))).Scan(&userId)
 	if err != nil {
-		// Ne pas révéler si l'email existe
+		// Ne pas révéler si l'email existe.
 		jsonOK(w, map[string]string{"message": "si un compte existe, un email de réinitialisation sera envoyé"}, http.StatusOK)
 		return
 	}
@@ -151,7 +188,7 @@ func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	// Invalider les anciens tokens (schéma Laravel : email, token, created_at)
 	database.DB.Exec("DELETE FROM password_reset_tokens WHERE email = ?", email)
 
-	// Token aléatoire cryptographique (32 octets → 64 caractères hex), non prédictible.
+	// Token cryptographique (32 octets → 64 hex), non prédictible.
 	rawToken := make([]byte, 32)
 	if _, err := rand.Read(rawToken); err != nil {
 		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
@@ -179,6 +216,7 @@ func ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]string{"message": "si un compte existe, un email de réinitialisation sera envoyé"}, http.StatusOK)
 }
 
+// ResetPassword change le mot de passe via un token valable 1h, puis l'invalide.
 func ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Token       string `json:"token"`
@@ -213,8 +251,7 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]string{"message": "mot de passe mis à jour"}, http.StatusOK)
 }
 
-// ChangePassword permet à un utilisateur connecté de modifier son mot de passe
-// en fournissant son mot de passe actuel (vérifié) et le nouveau.
+// ChangePassword : modifie le mot de passe (ancien vérifié + nouveau).
 func ChangePassword(w http.ResponseWriter, r *http.Request, userId int) {
 	var req struct {
 		AncienMotDePasse  string `json:"ancien_mot_de_passe"`

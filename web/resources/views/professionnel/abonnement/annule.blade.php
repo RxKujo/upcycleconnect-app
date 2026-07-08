@@ -1,6 +1,9 @@
 @extends('layouts.professionnel')
 @section('title', 'Paiement annulé')
 
+{{-- Paiement Stripe annulé (aucun débit) --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
     .annule-wrapper { max-width: 520px; margin: 80px auto; text-align: center; }
@@ -11,6 +14,7 @@
 </style>
 @endsection
 
+{{-- === Contenu === --}}
 @section('content')
 <div class="annule-wrapper">
     <div class="annule-icon">✕</div>

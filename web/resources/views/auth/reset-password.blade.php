@@ -1,6 +1,9 @@
 @extends('layouts.public')
 @section('title', 'Nouveau mot de passe')
 
+{{-- Vue : nouveau mot de passe via token email. --}}
+
+{{-- === Contenu === --}}
 @section('content')
 <div class="page-container" style="max-width:500px;margin:80px auto;text-align:center;">
     <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.06em;margin-bottom:16px;">Nouveau mot de passe</h1>
@@ -31,13 +34,16 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
+// Token issu de l'URL ; requis.
 const token = new URLSearchParams(window.location.search).get('token');
 if (!token) {
     document.getElementById('form-wrapper').innerHTML = '<p style="color:var(--cherry);font-family:\'DM Mono\',monospace;font-size:0.85rem;">Lien invalide. <a href="/forgot-password">Demander un nouveau lien</a>.</p>';
 }
 
+// Vérifie la correspondance puis envoie.
 async function submitReset(e) {
     e.preventDefault();
     const msg = document.getElementById('msg');

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UtilisateurController;
 use App\Http\Controllers\Admin\CategorieController;
 use App\Http\Controllers\Admin\CategorieObjetController;
 use App\Http\Controllers\Admin\MateriauController;
+use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\TemplateController;
 use App\Http\Controllers\Admin\EvenementController;
 use App\Http\Controllers\Admin\AnnonceController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Salarie\ArticleController as SalarieArticleController;
 use App\Http\Controllers\Salarie\ModerationController as SalarieModerationController;
 use App\Http\Controllers\Salarie\PlanningController as SalariePlanningController;
 use App\Http\Controllers\Salarie\BoiteIdeeController as SalarieBoiteIdeeController;
+use App\Http\Controllers\Salarie\MaterielController as SalarieMaterielController;
 use App\Http\Controllers\EvenementCatalogueController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcheController;
@@ -35,6 +37,9 @@ use App\Http\Controllers\Pro\AlertesController as ProAlertesController;
 use App\Http\Controllers\Pro\PublicitesController as ProPublicitesController;
 use App\Http\Controllers\Pro\ConteneursController as ProConteneursController;
 
+// ---------------------------------------------------------------------
+// Routes publiques (accessibles sans authentification)
+// ---------------------------------------------------------------------
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/annonces', [MarcheController::class, 'index'])->name('annonces.index');
@@ -62,12 +67,14 @@ Route::get('/a-propos', fn() => view('public.a-propos'))->name('a-propos');
 Route::view('/cgu', 'public.cgu')->name('cgu');
 Route::view('/rgpd', 'public.rgpd')->name('rgpd');
 
+// Authentification — pages de connexion et d'inscription
 Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('auth.forgot-password');
 Route::get('/reset-password', fn() => view('auth.reset-password'))->name('auth.reset-password');
 Route::get('/register', fn() => view('auth.register'))->name('particulier.register');
 Route::get('/register-pro', fn() => view('auth.register-pro'))->name('professionnel.register');
 Route::get('/login', fn() => view('auth.login'))->name('particulier.login');
 
+// Ouverture / fermeture des sessions applicatives par rôle
 Route::post('/auth/set-admin-session', [SessionController::class, 'setAdminSession'])->name('auth.set-admin-session');
 Route::post('/auth/set-salarie-session', [SessionController::class, 'setSalarieSession'])->name('auth.set-salarie-session');
 Route::post('/auth/set-pro-session', [SessionController::class, 'setProSession'])->name('auth.set-pro-session');
@@ -76,8 +83,10 @@ Route::post('/auth/clear-role-sessions', [SessionController::class, 'clearRoleSe
 Route::get('/ressources', [RessourceController::class, 'index'])->name('ressources.index');
 Route::get('/ressources/{id}', [RessourceController::class, 'show'])->name('ressources.show');
 Route::get('/tutoriels', fn() => view('public.tutoriels.index'))->name('tutoriels.index');
-Route::get('/depot', fn() => view('public.depot.index'))->name('depot.index');
 
+// ---------------------------------------------------------------------
+// Espace particulier
+// ---------------------------------------------------------------------
 Route::prefix('particulier')->group(function () {
     Route::get('/', fn() => redirect()->route('particulier.dashboard'));
     Route::get('/dashboard', fn() => view('particulier.dashboard'))->name('particulier.dashboard');
@@ -102,6 +111,9 @@ Route::prefix('particulier')->group(function () {
     Route::get('/planning', fn() => view('particulier.planning.index'))->name('particulier.planning.index');
 });
 
+// ---------------------------------------------------------------------
+// Espace professionnel (pro) — protégé par le middleware pro.auth
+// ---------------------------------------------------------------------
 Route::prefix('professionnel')->name('pro.')->middleware('pro.auth')->group(function () {
     Route::get('/profile', fn() => view('professionnel.profile.show'))->name('profile.show');
     Route::get('/abonnement', fn() => view('professionnel.abonnement.index'))->name('abonnement.index');
@@ -143,10 +155,14 @@ Route::prefix('professionnel')->name('pro.')->middleware('pro.auth')->group(func
     });
 });
 
+// Retours publics de paiement / abonnement
 Route::get('/abonnement/succes', fn() => view('professionnel.abonnement.succes'))->name('abonnement.succes');
 Route::get('/abonnement/annule', fn() => view('professionnel.abonnement.annule'))->name('abonnement.annule');
 Route::get('/paiement/succes', fn() => view('public.paiement.succes'))->name('paiement.succes');
 
+// ---------------------------------------------------------------------
+// Espace administration — protégé par le middleware admin.auth
+// ---------------------------------------------------------------------
 Route::prefix('admin')->group(function () {
     Route::get('/login', fn() => redirect('/login'))->name('admin.login');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
@@ -159,9 +175,15 @@ Route::prefix('admin')->group(function () {
         Route::post('/utilisateurs/{id}/ban', [UtilisateurController::class, 'ban'])->name('admin.utilisateurs.ban');
         Route::post('/utilisateurs/{id}/unban', [UtilisateurController::class, 'unban'])->name('admin.utilisateurs.unban');
         Route::put('/utilisateurs/{id}/role', [UtilisateurController::class, 'changeRole'])->name('admin.utilisateurs.role');
+        Route::put('/utilisateurs/{id}/site', [UtilisateurController::class, 'assignSite'])->name('admin.utilisateurs.site');
         Route::delete('/utilisateurs/{id}', [UtilisateurController::class, 'delete'])->name('admin.utilisateurs.delete');
         Route::post('/utilisateurs/{id}/abonnement', [UtilisateurController::class, 'assignAbonnement'])->name('admin.utilisateurs.abonnement.assign');
         Route::delete('/utilisateurs/{id}/abonnement', [UtilisateurController::class, 'revokeAbonnement'])->name('admin.utilisateurs.abonnement.revoke');
+
+        Route::get('/sites', [SiteController::class, 'index'])->name('admin.sites.index');
+        Route::post('/sites', [SiteController::class, 'store'])->name('admin.sites.store');
+        Route::put('/sites/{id}', [SiteController::class, 'update'])->name('admin.sites.update');
+        Route::delete('/sites/{id}', [SiteController::class, 'destroy'])->name('admin.sites.destroy');
 
         Route::get('/materiaux', [MateriauController::class, 'index'])->name('admin.materiaux.index');
         Route::post('/materiaux', [MateriauController::class, 'store'])->name('admin.materiaux.store');
@@ -226,7 +248,6 @@ Route::prefix('admin')->group(function () {
         Route::put('/scores/paliers/{id}', [ScoreController::class, 'updatePalier'])->name('admin.scores.palier.update');
         Route::post('/scores/recompute', [ScoreController::class, 'recompute'])->name('admin.scores.recompute');
 
-        Route::get('/depot/demandes', fn() => view('admin.depot.index'))->name('admin.depot.index');
         Route::get('/tutoriel/etapes', fn() => view('admin.tutoriel.index'))->name('admin.tutoriel.index');
 
         // Publicités — modération + stats + rotation
@@ -266,6 +287,9 @@ Route::prefix('admin')->group(function () {
     });
 });
 
+// ---------------------------------------------------------------------
+// Espace salarié — protégé par le middleware salarie.auth
+// ---------------------------------------------------------------------
 Route::prefix('salarie')->group(function () {
     Route::post('/logout', [SalarieDashboardController::class, 'logout'])->name('salarie.logout');
 
@@ -290,6 +314,16 @@ Route::prefix('salarie')->group(function () {
         Route::get('/articles/{id}/edit', [SalarieArticleController::class, 'edit'])->name('salarie.articles.edit');
         Route::put('/articles/{id}', [SalarieArticleController::class, 'update'])->name('salarie.articles.update');
         Route::delete('/articles/{id}', [SalarieArticleController::class, 'destroy'])->name('salarie.articles.destroy');
+
+        // Matériel / inventaire
+        Route::get('/materiels', [SalarieMaterielController::class, 'index'])->name('salarie.materiels.index');
+        Route::post('/materiels', [SalarieMaterielController::class, 'store'])->name('salarie.materiels.store');
+        Route::get('/materiels/{id}', [SalarieMaterielController::class, 'show'])->name('salarie.materiels.show');
+        Route::put('/materiels/{id}', [SalarieMaterielController::class, 'update'])->name('salarie.materiels.update');
+        Route::delete('/materiels/{id}', [SalarieMaterielController::class, 'destroy'])->name('salarie.materiels.destroy');
+        Route::delete('/materiels/{id}/photos/{photoId}', [SalarieMaterielController::class, 'deletePhoto'])->name('salarie.materiels.photos.delete');
+        Route::post('/materiels/{id}/reserver', [SalarieMaterielController::class, 'reserver'])->name('salarie.materiels.reserver');
+        Route::post('/materiels/{id}/retour', [SalarieMaterielController::class, 'retour'])->name('salarie.materiels.retour');
 
         // Planning salarié
         Route::get('/planning', [SalariePlanningController::class, 'index'])->name('salarie.planning.index');

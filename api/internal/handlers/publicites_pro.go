@@ -1,5 +1,7 @@
 package handlers
 
+// Publicites : cote pro (creation, suppression, depenses), affichage public WRR, moderation admin.
+
 import (
 	"api/internal/middleware"
 	"api/internal/services"
@@ -14,9 +16,11 @@ import (
 const maxPubsParPro = 5
 const coutMensuelPub = 100.00
 
-// GetMesPublicites retourne les publicités du pro connecté.
+// GetMesPublicites : publicités du pro connecté.
 func GetMesPublicites(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.PublicitesActives },
+		"publicités non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -29,9 +33,11 @@ func GetMesPublicites(w http.ResponseWriter, r *http.Request, userID int) {
 	jsonOK(w, pubs, http.StatusOK)
 }
 
-// CreatePublicitePro crée une publicité (statut en_attente, validation admin requise).
+// CreatePublicitePro : crée une pub (statut en_attente, validation admin requise).
 func CreatePublicitePro(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.PublicitesActives },
+		"publicités non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -74,15 +80,17 @@ func CreatePublicitePro(w http.ResponseWriter, r *http.Request, userID int) {
 
 	id, _ := res.LastInsertId()
 	jsonOK(w, map[string]interface{}{
-		"message":     "publicité soumise, en attente de validation admin",
+		"message":      "publicité soumise, en attente de validation admin",
 		"id_publicite": id,
 		"cout_mensuel": coutMensuelPub,
 	}, http.StatusCreated)
 }
 
-// DeletePublicitePro supprime une publicité et annule immédiatement la subscription Stripe associée.
+// DeletePublicitePro : supprime une pub et annule sa subscription Stripe.
 func DeletePublicitePro(w http.ResponseWriter, r *http.Request, pubID string, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.PublicitesActives },
+		"publicités non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -104,11 +112,11 @@ func DeletePublicitePro(w http.ResponseWriter, r *http.Request, pubID string, us
 		return
 	}
 
-	// Annuler la subscription Stripe si elle existe (pub active ou suspendue)
+	// Annuler la subscription Stripe si elle existe.
 	if stripeSubID.Valid && stripeSubID.String != "" {
 		if err := services.CancelPubSubscription(stripeSubID.String); err != nil {
 			logError("DeletePublicitePro", "annulation Stripe sub=%s: %v", stripeSubID.String, err)
-			// On continue : la pub est supprimée, Stripe enverra un webhook subscription.deleted
+			// On continue : Stripe enverra un webhook subscription.deleted.
 		}
 	}
 
@@ -121,10 +129,46 @@ func DeletePublicitePro(w http.ResponseWriter, r *http.Request, pubID string, us
 	jsonOK(w, map[string]string{"message": "publicité supprimée"}, http.StatusOK)
 }
 
+// GetProDepensesMois : répartition des dépenses du pro pour le mois en cours (objets, pubs, abonnement).
+func GetProDepensesMois(w http.ResponseWriter, r *http.Request, userID int) {
+	// Pubs : chaque pub active due au tarif mensuel (mois entamé = mois payé).
+	var nbPubsActives int
+	database.DB.QueryRow(
+		`SELECT COUNT(*) FROM publicites WHERE id_professionnel = ? AND statut = 'active'`,
+		userID).Scan(&nbPubsActives)
+	depensePub := float64(nbPubsActives) * coutMensuelPub
+
+	// Abonnement : prix mensuel du plan actif.
+	var depenseAbo float64
+	database.DB.QueryRow(`
+		SELECT COALESCE(a.prix_mensuel, 0)
+		FROM souscriptions s
+		JOIN abonnements a ON a.id_abonnement = s.id_abonnement
+		WHERE s.id_utilisateur = ? AND s.est_active = 1
+		ORDER BY s.date_debut DESC LIMIT 1`, userID).Scan(&depenseAbo)
+
+	// Objets : total des achats du mois en cours.
+	var depenseObjets float64
+	database.DB.QueryRow(`
+		SELECT COALESCE(SUM(COALESCE(a.prix, 0)), 0)
+		FROM commandes c
+		JOIN annonces a ON a.id_annonce = c.id_annonce
+		WHERE c.id_acheteur = ?
+		  AND MONTH(c.date_commande) = MONTH(NOW())
+		  AND YEAR(c.date_commande)  = YEAR(NOW())`, userID).Scan(&depenseObjets)
+
+	jsonOK(w, map[string]interface{}{
+		"objets":          depenseObjets,
+		"publicite":       depensePub,
+		"abonnement":      depenseAbo,
+		"total":           depensePub + depenseAbo + depenseObjets,
+		"nb_pubs_actives": nbPubsActives,
+	}, http.StatusOK)
+}
+
 // ─── Publicités — côté public (affichage WRR sur pages particuliers) ─────────
 
-// GetPublicitesActives sélectionne jusqu'à 3 pubs via l'algorithme WRR.
-// Route publique — pas d'auth requise.
+// GetPublicitesActives : jusqu'à 3 pubs via WRR. Route publique (pas d'auth).
 func GetPublicitesActives(w http.ResponseWriter, r *http.Request) {
 	pubs, err := services.PickPublicitesWRR(3)
 	if err != nil {
@@ -137,7 +181,7 @@ func GetPublicitesActives(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, pubs, http.StatusOK)
 }
 
-// EnregistrerClicPub incrémente le compteur de clics pour une publicité.
+// EnregistrerClicPub : incrémente le compteur de clics d'une pub.
 func EnregistrerClicPub(w http.ResponseWriter, r *http.Request, pubID string) {
 	if err := services.EnregistrerClicPublicite(parseIntOrZero(pubID)); err != nil {
 		jsonErr(w, "erreur", http.StatusInternalServerError)
@@ -148,9 +192,9 @@ func EnregistrerClicPub(w http.ResponseWriter, r *http.Request, pubID string) {
 
 // ─── Publicités — admin ───────────────────────────────────────────────────────
 
-// AdminValiderPublicite valide une pub en attente, crée la subscription Stripe et la met en ligne.
+// AdminValiderPublicite : valide une pub en attente, crée la subscription Stripe et la met en ligne.
 func AdminValiderPublicite(w http.ResponseWriter, r *http.Request, pubID string, adminID int) {
-	// Récupérer le proID pour créer la subscription Stripe
+	// proID nécessaire pour la subscription Stripe.
 	var proID int
 	err := database.DB.QueryRow(
 		`SELECT id_professionnel FROM publicites WHERE id_publicite = ? AND statut = 'en_attente'`, pubID,
@@ -160,7 +204,7 @@ func AdminValiderPublicite(w http.ResponseWriter, r *http.Request, pubID string,
 		return
 	}
 
-	// Créer la subscription Stripe (no-op si STRIPE_PRICE_PUB_MENSUEL non défini)
+	// Subscription Stripe (no-op si STRIPE_PRICE_PUB_MENSUEL non défini).
 	stripeSubID, err := services.CreatePubSubscription(proID, parseIntOrZero(pubID))
 	if err != nil {
 		logError("AdminValiderPublicite", "Stripe subscription pub=%s: %v", pubID, err)
@@ -186,23 +230,27 @@ func AdminValiderPublicite(w http.ResponseWriter, r *http.Request, pubID string,
 		jsonErr(w, "publicité introuvable ou déjà traitée", http.StatusNotFound)
 		return
 	}
-	// Initialiser l'entrée de rotation WRR
+	// Initialise l'entrée de rotation WRR.
 	database.DB.Exec(`INSERT IGNORE INTO publicites_rotation (id_publicite) VALUES (?)`, pubID) //nolint:errcheck
 	jsonOK(w, map[string]string{"message": "publicité validée et mise en ligne"}, http.StatusOK)
 }
 
-// AdminRefuserPublicite refuse une pub en attente.
+// AdminRefuserPublicite : refuse une pub en attente.
 func AdminRefuserPublicite(w http.ResponseWriter, r *http.Request, pubID string, adminID int) {
 	var req struct {
 		Motif string `json:"motif"`
 	}
 	json.NewDecoder(r.Body).Decode(&req) //nolint:errcheck
 
+	var motif interface{}
+	if req.Motif != "" {
+		motif = req.Motif
+	}
 	_, err := database.DB.Exec(`
 		UPDATE publicites
-		SET statut = 'refusee', valide_par = ?
+		SET statut = 'refusee', valide_par = ?, motif_refus = ?
 		WHERE id_publicite = ? AND statut = 'en_attente'`,
-		adminID, pubID)
+		adminID, motif, pubID)
 	if err != nil {
 		jsonErr(w, "erreur serveur", http.StatusInternalServerError)
 		return
@@ -210,7 +258,7 @@ func AdminRefuserPublicite(w http.ResponseWriter, r *http.Request, pubID string,
 	jsonOK(w, map[string]string{"message": "publicité refusée"}, http.StatusOK)
 }
 
-// AdminGetPublicites liste toutes les pubs pour l'admin, avec filtre optionnel par statut.
+// AdminGetPublicites : toutes les pubs (admin), filtre optionnel par statut.
 func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 	type pubAdmin struct {
 		IDPublicite int     `json:"id_publicite"`
@@ -220,6 +268,9 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 		NbVues      int     `json:"nb_vues"`
 		NbClics     int     `json:"nb_clics"`
 		Entreprise  string  `json:"nom_entreprise"`
+		VisuelURL   string  `json:"visuel_url"`
+		URLCible    string  `json:"url_cible"`
+		MotifRefus  string  `json:"motif_refus"`
 		DateDebut   *string `json:"date_debut"`
 		DateFin     *string `json:"date_fin"`
 	}
@@ -228,6 +279,7 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 		SELECT p.id_publicite, p.titre, p.statut,
 		       COALESCE(p.cout_mensuel, 100.00), p.nb_vues, p.nb_clics,
 		       COALESCE(u.nom_entreprise,''),
+		       COALESCE(p.visuel_url,''), COALESCE(p.url_cible,''), COALESCE(p.motif_refus,''),
 		       DATE_FORMAT(p.date_debut,'%Y-%m-%dT%H:%i:%s'),
 		       DATE_FORMAT(p.date_fin,'%Y-%m-%dT%H:%i:%s')
 		FROM publicites p
@@ -254,12 +306,16 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 		var p pubAdmin
 		var debut, fin sql.NullString
 		if err := dbRows.Scan(&p.IDPublicite, &p.Titre, &p.Statut, &p.Cout,
-			&p.NbVues, &p.NbClics, &p.Entreprise, &debut, &fin); err != nil {
+			&p.NbVues, &p.NbClics, &p.Entreprise, &p.VisuelURL, &p.URLCible, &p.MotifRefus, &debut, &fin); err != nil {
 			jsonErr(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}
-		if debut.Valid { p.DateDebut = &debut.String }
-		if fin.Valid   { p.DateFin   = &fin.String }
+		if debut.Valid {
+			p.DateDebut = &debut.String
+		}
+		if fin.Valid {
+			p.DateFin = &fin.String
+		}
 		pubs = append(pubs, p)
 	}
 	jsonOK(w, pubs, http.StatusOK)
@@ -267,7 +323,7 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 
 // ─── Statistiques publicités — delta ticket 4 ────────────────────────────────
 
-// AdminGetPublicitesStats retourne les stats détaillées par campagne (vues, clics, CTR).
+// AdminGetPublicitesStats : stats par campagne (vues, clics, CTR).
 func AdminGetPublicitesStats(w http.ResponseWriter, r *http.Request) {
 	type pubStats struct {
 		IDPublicite int     `json:"id_publicite"`
@@ -310,8 +366,7 @@ func AdminGetPublicitesStats(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, stats, http.StatusOK)
 }
 
-// AdminGetRotationWRR expose l'état courant de la table publicites_rotation
-// pour que l'admin puisse auditer la logique de répartition sans requête SQL directe.
+// AdminGetRotationWRR : état de publicites_rotation, pour auditer la répartition sans SQL direct.
 func AdminGetRotationWRR(w http.ResponseWriter, r *http.Request) {
 	type rotationEntry struct {
 		IDPublicite   int    `json:"id_publicite"`
@@ -353,11 +408,14 @@ func AdminGetRotationWRR(w http.ResponseWriter, r *http.Request) {
 		entries = []rotationEntry{}
 	}
 	jsonOK(w, map[string]interface{}{
-		"description": "Score WRR : plus le score est élevé, plus la pub sera sélectionnée au prochain appel WRR. Un score de 0 signifie qu'elle vient d'être affichée.",
+		"description":  "Score WRR : plus le score est élevé, plus la pub sera sélectionnée au prochain appel WRR. Un score de 0 signifie qu'elle vient d'être affichée.",
 		"pubs_actives": entries,
 	}, http.StatusOK)
 }
 
+// ─── Utilitaires ─────────────────────────────────────────────────────────────
+
+// parseIntOrZero : chaine -> entier positif, 0 si invalide.
 func parseIntOrZero(s string) int {
 	n := 0
 	for _, c := range s {

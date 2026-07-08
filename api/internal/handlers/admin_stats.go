@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// AdminStats regroupe les compteurs affichés sur le tableau de bord admin.
 type AdminStats struct {
 	TotalUtilisateurs   int     `json:"total_utilisateurs"`
 	TotalPros           int     `json:"total_pros"`
@@ -22,6 +23,7 @@ type AdminStats struct {
 	AbonnementsActifs   int     `json:"abonnements_actifs"`
 }
 
+// GetAdminStats calcule et renvoie les statistiques globales de la plateforme.
 func GetAdminStats(w http.ResponseWriter, r *http.Request) {
 	var s AdminStats
 	database.DB.QueryRow("SELECT COUNT(*) FROM utilisateurs").Scan(&s.TotalUtilisateurs)

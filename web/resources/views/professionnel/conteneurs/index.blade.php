@@ -2,17 +2,21 @@
 
 @section('title', 'Mes commandes en conteneur')
 
+{{-- Commandes à récupérer en conteneur : validation par code-barre et liste en attente --}}
+
 @section('content')
 <div class="main-content">
 
+    {{-- === En-tête === --}}
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
-        <h1 class="font-bebas" style="font-size:2.4rem;">Commandes en conteneur</h1>
+        <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.containers.title">Commandes en conteneur</span></h1>
         <div style="display:flex; gap:10px;">
-            <a href="{{ route('pro.conteneurs.historique') }}" class="btn-secondary btn-sm">Historique</a>
+            <a href="{{ route('pro.conteneurs.historique') }}" class="btn-secondary btn-sm"><span data-i18n="prod.history">Historique</span></a>
             <a href="{{ route('pro.dashboard.essential') }}" class="btn-secondary btn-sm">← Dashboard</a>
         </div>
     </div>
 
+    {{-- === Messages flash === --}}
     @if(session('success'))
         <div style="background:#e8f5e9;border:2px solid #244F26;padding:12px 20px;margin-bottom:24px;font-family:'DM Mono',monospace;font-size:0.85rem;">
             {{ session('success') }}
@@ -26,16 +30,16 @@
 
     {{-- Scanner code-barre --}}
     <div class="card">
-        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;">Valider une récupération</h2>
+        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;"><span data-i18n="prod.containers.validate">Valider une récupération</span></h2>
         <form method="POST" action="{{ route('pro.conteneurs.valider') }}" style="display:flex; gap:16px; align-items:flex-end;">
             @csrf
             <div style="flex:1;">
-                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;">Code-barre de récupération</label>
-                <input type="text" name="code_barre" required placeholder="Saisir ou scanner le code"
+                <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.containers.barcode">Code-barre de récupération</span></label>
+                <input type="text" name="code_barre" required placeholder="Saisir ou scanner le code" data-i18n-ph="prod.containers.barcode.ph"
                     style="width:100%; padding:12px; border:3px solid #120309; font-family:'DM Mono',monospace; font-size:1rem; letter-spacing:0.05em;">
                 @error('code_barre')<p style="color:#A4243B;font-size:0.8rem;margin-top:4px;">{{ $message }}</p>@enderror
             </div>
-            <button type="submit" class="btn-primary">Valider la réception</button>
+            <button type="submit" class="btn-primary"><span data-i18n="prod.containers.validatebtn">Valider la réception</span></button>
         </form>
         <p class="font-mono" style="font-size:0.72rem; color:#888; margin-top:10px;">
 Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Passé ce délai, contactez le support.
@@ -44,7 +48,7 @@ Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Pass�
 
     {{-- Liste des commandes en attente --}}
     <div class="card">
-        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;">En attente de récupération</h2>
+        <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;"><span data-i18n="prod.containers.pending">En attente de récupération</span></h2>
 
         @forelse($commandes as $cmd)
         <div style="border:2px solid #120309; padding:20px; margin-bottom:16px;">
@@ -63,11 +67,12 @@ Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Pass�
                         → Itinéraire Google Maps
                     </a>
                 </div>
+                {{-- Délai limite et code-barre --}}
                 <div style="text-align:right;">
                     @if(!empty($cmd['date_limite_recuperation']))
                         @php
                             $limite = \Carbon\Carbon::parse($cmd['date_limite_recuperation']);
-                            // diffInDays signé (Carbon 3) : > 0 = jours restants, < 0 = déjà dépassé
+                            // diffInDays signé (Carbon 3) : < 0 = délai dépassé
                             $joursRestants = now()->diffInDays($limite, false);
                             $depasse = $joursRestants < 0;
                             $urgence = !$depasse && $joursRestants <= 2;

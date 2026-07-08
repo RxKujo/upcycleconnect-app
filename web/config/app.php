@@ -1,5 +1,8 @@
 <?php
 
+// Configuration générale de l'application : nom, environnement, débogage,
+// URL, langue/locale, fuseau horaire et clés de chiffrement.
+
 return [
 
     'name' => env('APP_NAME', 'Laravel'),

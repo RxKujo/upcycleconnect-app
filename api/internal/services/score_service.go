@@ -7,14 +7,10 @@ import (
 )
 
 // =====================================================================
-// Upcycling Score — calcul, attribution (idempotente) et certification.
-//
-// Modèle hybride : un socle de points fixe par action + un bonus
-// proportionnel au poids des objets (déchets évités), pondéré par matériau.
-//
-// Le score d'un utilisateur est la somme de son historique (ledger) :
-//   upcycling_score = SUM(historique_score.points)
-// ce qui rend le calcul ré-exécutable et auditable.
+// Upcycling Score — calcul, attribution idempotente et certification.
+// Modèle hybride : socle fixe par action + bonus au poids pondéré par matériau.
+// Le score est la somme du ledger (upcycling_score = SUM(historique_score.points)),
+// donc ré-exécutable et auditable.
 // =====================================================================
 
 // Points de base par type d'action.
@@ -26,7 +22,7 @@ const (
 	PointsParticipationEv = 25 // participation à un événement / atelier
 )
 
-// FacteursMateriau : points par kg selon l'intensité ressources/CO₂ du matériau.
+// FacteursMateriau : points/kg selon l'intensité ressources/CO₂.
 var FacteursMateriau = map[string]float64{
 	"metal":        8,
 	"electronique": 10,
@@ -44,7 +40,7 @@ func facteurMateriau(materiau string) float64 {
 	return FacteursMateriau["autre"]
 }
 
-// Palier représente un niveau du barème (table paliers_score).
+// Palier : niveau du barème (table paliers_score).
 type Palier struct {
 	IDPalier             int    `json:"id_palier"`
 	Nom                  string `json:"nom"`
@@ -55,7 +51,7 @@ type Palier struct {
 	MiseEnAvant          bool   `json:"mise_en_avant"`
 }
 
-// GetPaliers retourne les paliers triés par seuil croissant.
+// GetPaliers : paliers triés par seuil croissant.
 func GetPaliers() ([]Palier, error) {
 	rows, err := database.DB.Query(`
 		SELECT id_palier, nom, seuil_min, ordre, couleur, confere_certification, mise_en_avant
@@ -75,7 +71,7 @@ func GetPaliers() ([]Palier, error) {
 	return paliers, nil
 }
 
-// NiveauPourScore retourne le palier le plus élevé dont le seuil est atteint.
+// NiveauPourScore : palier le plus élevé atteint.
 func NiveauPourScore(paliers []Palier, score int) Palier {
 	var courant Palier
 	for _, p := range paliers {
@@ -86,7 +82,7 @@ func NiveauPourScore(paliers []Palier, score int) Palier {
 	return courant
 }
 
-// prochainPalier retourne le premier palier non encore atteint (ou nil).
+// prochainPalier : premier palier non atteint (ou nil).
 func prochainPalier(paliers []Palier, score int) *Palier {
 	for i := range paliers {
 		if score < paliers[i].SeuilMin {
@@ -96,7 +92,7 @@ func prochainPalier(paliers []Palier, score int) *Palier {
 	return nil
 }
 
-// estCertifiePourScore : vrai si le score atteint un palier conférant la certification.
+// estCertifiePourScore : score atteint un palier certifiant ?
 func estCertifiePourScore(paliers []Palier, score int) bool {
 	for _, p := range paliers {
 		if p.ConfereCertification && score >= p.SeuilMin {
@@ -106,8 +102,8 @@ func estCertifiePourScore(paliers []Palier, score int) bool {
 	return false
 }
 
-// insertLedger insère une ligne de gain. L'INSERT IGNORE + clé unique
-// (utilisateur, motif, ref) garantit l'idempotence : aucun double crédit.
+// insertLedger insère une ligne de gain. INSERT IGNORE + clé unique
+// (utilisateur, motif, ref) = idempotent, aucun double crédit.
 func insertLedger(idUtilisateur, points int, poidsKg float64, motif, refType string, refID int) {
 	_, err := database.DB.Exec(`
 		INSERT IGNORE INTO historique_score (id_utilisateur, points, poids_kg, motif, ref_type, ref_id)
@@ -118,8 +114,8 @@ func insertLedger(idUtilisateur, points int, poidsKg float64, motif, refType str
 	}
 }
 
-// RecalcUser recalcule le score agrégé d'un utilisateur depuis le ledger
-// et met à jour upcycling_score + est_certifie en conséquence.
+// RecalcUser recalcule le score depuis le ledger et met à jour
+// upcycling_score + est_certifie.
 func RecalcUser(idUtilisateur int) {
 	var score int
 	if err := database.DB.QueryRow(
@@ -143,8 +139,8 @@ func RecalcUser(idUtilisateur int) {
 	}
 }
 
-// AwardScoreForCommande crédite vendeur et acheteur lorsqu'une commande
-// est finalisée (statut 'recuperee'). Idempotent : sans effet si déjà crédité.
+// AwardScoreForCommande crédite vendeur et acheteur d'une commande finalisée
+// ('recuperee'). Idempotent.
 func AwardScoreForCommande(idCommande int) {
 	var idAnnonce, idAcheteur int
 	if err := database.DB.QueryRow(
@@ -163,7 +159,7 @@ func AwardScoreForCommande(idCommande int) {
 		return
 	}
 
-	// Bonus poids = somme(poids_kg * facteur matériau) sur tous les objets.
+	// Bonus poids = somme(poids_kg * facteur matériau).
 	rows, err := database.DB.Query(
 		`SELECT materiau, COALESCE(poids_kg, 0) FROM objets_annonces WHERE id_annonce = ?`, idAnnonce)
 	var totalPoids, bonus float64
@@ -197,13 +193,13 @@ func AwardScoreForCommande(idCommande int) {
 	RecalcUser(idAcheteur)
 }
 
-// AwardScoreForEvenement crédite la participation à un événement / atelier.
+// AwardScoreForEvenement crédite la participation à un événement.
 func AwardScoreForEvenement(idUtilisateur, idEvenement int) {
 	insertLedger(idUtilisateur, PointsParticipationEv, 0, "participation_evenement", "evenement", idEvenement)
 	RecalcUser(idUtilisateur)
 }
 
-// ScoreDetail : vue complète du score d'un utilisateur (pour la page profil).
+// ScoreDetail : vue complète du score (page profil).
 type ScoreDetail struct {
 	Score           int       `json:"score"`
 	DechetsEvitesKg float64   `json:"dechets_evites_kg"`
@@ -212,11 +208,11 @@ type ScoreDetail struct {
 	NiveauActuel    Palier    `json:"niveau_actuel"`
 	ProchainPalier  *Palier   `json:"prochain_palier,omitempty"`
 	PointsManquants int       `json:"points_manquants"`
-	Progression     int       `json:"progression_pct"` // progression vers le prochain palier (0-100)
+	Progression     int       `json:"progression_pct"` // vers le prochain palier (0-100)
 	Paliers         []Palier  `json:"paliers"`
 }
 
-// GetUserScoreDetail assemble le détail du score pour l'affichage profil.
+// GetUserScoreDetail assemble le détail du score (profil).
 func GetUserScoreDetail(idUtilisateur int) (ScoreDetail, error) {
 	var d ScoreDetail
 
@@ -251,8 +247,7 @@ func GetUserScoreDetail(idUtilisateur int) (ScoreDetail, error) {
 }
 
 // RecomputeAllScores rebâtit le ledger depuis les transactions réelles
-// (commandes 'recuperee' + inscriptions événements) puis recalcule tous
-// les scores. Idempotent grâce aux INSERT IGNORE.
+// (commandes 'recuperee' + inscriptions) puis recalcule tout. Idempotent.
 func RecomputeAllScores() (int, error) {
 	// Commandes finalisées
 	cmdRows, err := database.DB.Query(`SELECT id_commande FROM commandes WHERE statut = 'recuperee'`)
@@ -288,7 +283,7 @@ func RecomputeAllScores() (int, error) {
 		}
 	}
 
-	// Recalcule tous les utilisateurs (couvre aussi ceux dont le ledger est vide).
+	// Tous les utilisateurs (couvre aussi ceux au ledger vide).
 	userRows, err := database.DB.Query(`SELECT id_utilisateur FROM utilisateurs`)
 	if err != nil {
 		return len(commandeIDs), err

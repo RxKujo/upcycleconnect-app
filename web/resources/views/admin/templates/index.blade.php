@@ -1,7 +1,11 @@
 @extends('layouts.admin')
 @section('title', "Modèles d'événements")
 
+{{-- Vue admin : gestion des modèles d'événements (CRUD via modale) qui pré-remplissent
+     le formulaire de création d'événement côté salarié. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1 class="page-title">Modèles d'événements</h1>
     <button type="button" class="btn-primary" onclick="openTplModal()">+ Nouveau modèle</button>
@@ -15,6 +19,7 @@
     <div class="badge badge-cherry" style="display:block; margin-bottom:20px; padding:12px 20px;">{{ $errors->first() }}</div>
 @endif
 
+{{-- === Styles de la modale === --}}
 <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(18,3,9,0.6); z-index:1000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 20px; }
     .modal-overlay.active { display:flex; }
@@ -33,6 +38,7 @@
     .tpl-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:0.68rem; padding:2px 8px; border:2px solid var(--coffee); margin-right:6px; }
 </style>
 
+{{-- === Modale : création / édition d'un modèle === --}}
 <div class="modal-overlay" id="tplModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeTplModal()">&times;</button>
@@ -104,6 +110,7 @@
     </div>
 </div>
 
+{{-- === Tableau : liste des modèles existants === --}}
 <div class="table-container">
     <table>
         <thead>
@@ -166,6 +173,7 @@
     </table>
 </div>
 
+{{-- === Scripts : ouverture/fermeture de la modale et pré-remplissage en édition === --}}
 <script>
     const tplForm    = document.getElementById('tplForm');
     const tplMethod  = document.getElementById('tplMethod');

@@ -1,3 +1,5 @@
+{{-- Toasts globaux (flash session) + modale de confirmation (data-confirm / confirmAction). --}}
+{{-- === Collecte des flash === --}}
 @php
     $toastMessages = [];
     if (session('toast_success')) $toastMessages[] = ['type' => 'success', 'text' => session('toast_success')];
@@ -7,6 +9,7 @@
 @endphp
 
 @if(count($toastMessages))
+{{-- === Styles === --}}
 <style>
 #toast-container {
     position: fixed;
@@ -83,6 +86,7 @@
 }
 </style>
 
+{{-- === Rendu des toasts === --}}
 <div id="toast-container" role="status" aria-live="polite">
     @foreach($toastMessages as $msg)
     <div class="toast-item toast-{{ $msg['type'] }}" data-autohide="5000">
@@ -100,6 +104,7 @@
     @endforeach
 </div>
 
+{{-- === Script === --}}
 <script>
 (function () {
     document.querySelectorAll('.toast-item').forEach(function (el) {
@@ -115,8 +120,8 @@
 </script>
 @endif
 
-{{-- ─── Confirmation modale globale (remplace window.confirm) ───────────────── --}}
-{{-- Usage : <form ... data-confirm="Votre message ?"> ; ou JS : confirmAction(msg, callback) --}}
+{{-- === Confirmation modale globale === --}}
+{{-- Usage : data-confirm="…" sur un <form>, ou confirmAction(msg, callback). --}}
 <div id="confirm-overlay" style="display:none; position:fixed; inset:0; background:rgba(18,3,9,0.6); z-index:100000; align-items:center; justify-content:center; padding:20px;">
     <div style="background:#F5F0E1; border:3px solid #120309; box-shadow:6px 6px 0 #120309; max-width:420px; width:100%; padding:28px;">
         <p id="confirm-message" style="font-family:'Outfit',sans-serif; font-size:1.05rem; color:#120309; margin:0 0 24px; line-height:1.4;">Confirmer cette action ?</p>

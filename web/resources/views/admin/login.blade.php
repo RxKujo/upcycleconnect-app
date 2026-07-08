@@ -1,3 +1,4 @@
+{{-- Page de connexion au panneau administrateur : formulaire email + mot de passe, style néo-brutaliste autonome (hors layout admin). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -22,12 +23,14 @@
     </style>
 </head>
 <body>
+    {{-- === En-tête : logo et titre du panneau === --}}
     <div style="width: 100%; max-width: 440px; padding: 20px;">
         <div style="text-align: center; margin-bottom: 40px;">
             <h1 class="font-bebas" style="font-size: 2.8rem; color: var(--coffee); margin: 0;">UpcycleConnect</h1>
             <p class="font-mono" style="font-size: 0.75rem; color: var(--cherry); margin-top: 4px;">Panel Administrateur</p>
         </div>
 
+        {{-- === Carte de connexion : message d'erreur eventuel + formulaire === --}}
         <div style="background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 36px 32px;">
             @if(session('error'))
                 <div style="padding: 12px 16px; border: var(--border); background: #f8d7da; color: var(--cherry); margin-bottom: 20px; font-size: 0.9rem;">

@@ -65,13 +65,38 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       STRIPE_PRICE_PUB_MENSUEL: ${STRIPE_PRICE_PUB_MENSUEL}
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
-      MAIL_FROM: "noreply@upcycleconnect.fr"
+      # Mail : par défaut Mailpit (dev, sans auth/TLS). Pour envoyer de VRAIS
+      # mails, pointer MAIL_HOST vers un serveur réel (serveur mail DMZ mission 2
+      # ou relais) et renseigner MAIL_USERNAME/PASSWORD/ENCRYPTION.
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_FROM: ${MAIL_FROM:-noreply@upcycleconnect.fr}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-}
+      # Stockage des photos : S3 (MinIO en dev). UPLOAD_DIR reste comme repli
+      # local si STORAGE_DRIVER n'est pas "s3".
+      STORAGE_DRIVER: s3
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_BUCKET: ${MINIO_BUCKET:-upcycleconnect}
+      AWS_ENDPOINT: http://minio:9000
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      # Push OneSignal (envoi). Laisser vide en dev = push ignoré (no-op).
+      ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID:-}
+      ONESIGNAL_API_KEY: ${ONESIGNAL_API_KEY:-}
+      # GLPI (miroir des tickets d'incident). Vide = miroir désactivé (no-op).
+      # Renseigner après avoir démarré le profil glpi et généré les tokens.
+      GLPI_URL: ${GLPI_URL:-}
+      GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
+      GLPI_USER_TOKEN: ${GLPI_USER_TOKEN:-}
     ports:
       - "8888:8888"
     depends_on:
       db:
+        condition: service_started
+      minio:
         condition: service_started
     networks:
       - uc_network
@@ -109,13 +134,27 @@ services:
       RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
       VITE_DEV_SERVER_URL: "http://localhost:5173"
       MAIL_MAILER: smtp
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
-      MAIL_USERNAME: ""
-      MAIL_PASSWORD: ""
-      MAIL_ENCRYPTION: ""
-      MAIL_FROM_ADDRESS: "noreply@upcycleconnect.fr"
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM:-noreply@upcycleconnect.fr}
       MAIL_FROM_NAME: "UpcycleConnect"
+      # Médias : écriture sur le bucket S3 (MinIO), lecture navigateur via
+      # l'URL publique locale du bucket. AWS_ENDPOINT (minio:9000) sert à
+      # l'écriture côté serveur ; MEDIA_URL (localhost:9000) sert au navigateur.
+      MEDIA_DISK: s3
+      MEDIA_URL: "http://localhost:9000/${MINIO_BUCKET:-upcycleconnect}"
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_BUCKET: ${MINIO_BUCKET:-upcycleconnect}
+      AWS_ENDPOINT: http://minio:9000
+      AWS_URL: "http://localhost:9000/${MINIO_BUCKET:-upcycleconnect}"
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      # Push OneSignal (client web) : App ID exposé au navigateur. Vide = désactivé.
+      ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID:-}
     ports:
       - "8000:8000"
     depends_on:
@@ -124,6 +163,8 @@ services:
       api:
         condition: service_started
       mailpit:
+        condition: service_started
+      minio:
         condition: service_started
     networks:
       - uc_network
@@ -139,6 +180,86 @@ services:
       MP_MAX_MESSAGES: 500
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - uc_network
+
+  # Stockage objet S3-compatible pour le dev (photos annonces/conteneurs/avatars).
+  # Console web : http://localhost:9001 (minioadmin / minioadmin).
+  minio:
+    image: minio/minio:latest
+    container_name: uc_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console web
+    volumes:
+      - minio_data:/data
+    networks:
+      - uc_network
+
+  # Crée le bucket et le rend lisible publiquement (photos "tout public"),
+  # puis se termine. Attend que MinIO réponde avant d'agir.
+  minio_init:
+    image: minio/mc:latest
+    container_name: uc_minio_init
+    depends_on:
+      minio:
+        condition: service_started
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-upcycleconnect}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do echo 'attente MinIO...'; sleep 2; done;
+      mc mb --ignore-existing local/$${MINIO_BUCKET};
+      mc anonymous set download local/$${MINIO_BUCKET};
+      echo 'bucket MinIO prêt';
+      "
+    networks:
+      - uc_network
+
+  # ─── GLPI (ticketing incidents) ────────────────────────────────────────────
+  # Services optionnels (profil "glpi") : ne démarrent qu'avec
+  #   docker compose -f docker-compose.dev.yml --profile glpi up -d
+  # Installation GLPI au 1er lancement via http://localhost:8082 (assistant web),
+  # puis activer l'API REST et générer App-Token + user_token (cf. docs/).
+  glpi_db:
+    image: mariadb:10.11
+    container_name: uc_glpi_db
+    profiles: ["glpi"]
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${GLPI_DB_ROOT_PASSWORD:-glpiroot}
+      MARIADB_DATABASE: glpi
+      MARIADB_USER: glpi
+      MARIADB_PASSWORD: ${GLPI_DB_PASSWORD:-glpi}
+    volumes:
+      - glpi_db_data:/var/lib/mysql
+    networks:
+      - uc_network
+
+  glpi:
+    # GLPI 10.0.x : l'API REST legacy (apirest.php) attendue par le client Go
+    # (api/pkg/glpi). L'image elestio télécharge la version fixée par VERSION_GLPI
+    # (sans quoi = latest = GLPI 11, dont l'API REST legacy est cassée/dépréciée).
+    image: elestio/glpi:10.0.15
+    container_name: uc_glpi
+    profiles: ["glpi"]
+    restart: unless-stopped
+    depends_on:
+      - glpi_db
+    environment:
+      TIMEZONE: Europe/Paris
+      VERSION_GLPI: "10.0.15"
+    ports:
+      - "8082:80"
+    volumes:
+      - glpi_data:/var/www/html/glpi
     networks:
       - uc_network
 
@@ -164,6 +285,9 @@ volumes:
   web_storage_fw:
   web_bootstrap_cache:
   vite_node_modules:
+  minio_data:
+  glpi_data:
+  glpi_db_data:
 
 networks:
   uc_network:

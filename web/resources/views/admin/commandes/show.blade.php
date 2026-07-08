@@ -3,6 +3,8 @@
 @section('title', 'Gestion de la Commande')
 
 @section('content')
+
+{{-- === En-tête : retour, numéro de commande et badge de statut === --}}
 <div class="page-header" style="align-items: flex-start; flex-direction: column; gap: 16px;">
     <div>
         <a href="{{ route('admin.commandes.index') }}" style="color: var(--cherry); text-decoration: none; font-family: 'DM Mono', monospace; font-size: 0.9rem; font-weight: bold;">← RETOUR AUX COMMANDES</a>
@@ -23,6 +25,7 @@
     </div>
 </div>
 
+{{-- === Informations de la commande === --}}
 <div class="card">
     <div class="info-grid">
         <div class="info-item">
@@ -64,6 +67,7 @@
     </div>
 </div>
 
+{{-- === Forçage administratif du statut (litige / problème technique) === --}}
 <div class="card" style="border-top: 5px solid var(--cherry);">
     <h3 class="font-bebas" style="font-size: 2rem; margin: 0 0 16px;">Forçage administratif du statut</h3>
     <p style="margin: 0 0 24px; line-height: 1.6; color: rgba(18,3,9,0.7);">Cette section vous permet de forcer manuellement le statut de la commande en cas de litige ou de problème technique avec le conteneur / processus de remise.</p>

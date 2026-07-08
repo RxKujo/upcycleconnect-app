@@ -3,12 +3,14 @@
 @section('title', 'Statistiques publicités')
 
 @section('content')
+{{-- Statistiques des publicités (admin) : KPIs globaux (vues, clics, CTR, campagnes actives) et tableau de performance par campagne avec barre CTR. --}}
 <style>
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 32px; }
     .stat-card { background: var(--cream); border: var(--border); box-shadow: var(--shadow-sm); padding: 28px 24px; }
     .stat-label { font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.78rem; font-weight: bold; letter-spacing: 0.05em; color: var(--cherry); margin-bottom: 12px; }
     .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2.6rem; line-height: 1; color: var(--coffee); }
 </style>
+{{-- === En-tête : titre et liens (rotation WRR / modération) === --}}
 <div class="page-header">
     <h1 class="page-title">Statistiques publicités</h1>
     <div style="display:flex;gap:12px;">
@@ -28,6 +30,7 @@
         $totalClics = array_sum(array_column($stats, 'nb_clics'));
         $ctrGlobal  = $totalVues > 0 ? $totalClics / $totalVues * 100 : 0;
     @endphp
+    {{-- === Cartes KPIs (vues, clics, CTR, campagnes actives) === --}}
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Vues totales</div>
@@ -47,6 +50,7 @@
         </div>
     </div>
 
+    {{-- === Tableau : performance par campagne === --}}
     <div class="card">
         <h2 class="font-bebas" style="font-size:1.8rem;margin:0 0 24px;">Performance par campagne</h2>
         <div class="table-container" style="box-shadow:none;border:none;">

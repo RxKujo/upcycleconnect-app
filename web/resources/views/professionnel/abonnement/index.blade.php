@@ -1,6 +1,9 @@
 @extends('layouts.professionnel')
 @section('title', 'Choisir mon abonnement')
 
+{{-- Choix d'abonnement Pro : plans chargés via l'API, toggle mensuel/annuel, checkout Stripe --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
     .page-intro { max-width: 640px; margin-bottom: 48px; }
@@ -61,36 +64,38 @@
 </style>
 @endsection
 
+{{-- === Contenu === --}}
 @section('content')
-<x-page-header title="Votre abonnement Pro" />
+<x-page-header title="Votre abonnement Pro" i18n="abo.title" />
 
 <div class="page-intro">
-    <p>Choisissez le plan qui correspond à votre activité. Changez ou annulez à tout moment depuis votre espace de gestion.</p>
+    <p><span data-i18n="abo.subtitle">Choisissez le plan qui correspond à votre activité. Changez ou annulez à tout moment depuis votre espace de gestion.</span></p>
 </div>
 
 {{-- Banner abonnement actif --}}
 <div id="current-plan-banner" style="display:none" class="current-plan-banner">
     <div>
-        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;opacity:0.8;">Plan actuel —</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;opacity:0.8;" data-i18n="abo.current">Plan actuel —</span>
         <strong id="current-plan-name"></strong>
     </div>
-    <button class="btn-portal" onclick="openPortail()">Gérer mon abonnement →</button>
+    <button class="btn-portal" onclick="openPortail()"><span data-i18n="abo.manage">Gérer mon abonnement →</span></button>
 </div>
 
 {{-- Toggle mensuel / annuel --}}
 <div class="billing-toggle">
-    <span class="toggle-label active" id="label-mensuel" onclick="setBilling('mensuel')">Mensuel</span>
+    <span class="toggle-label active" id="label-mensuel" onclick="setBilling('mensuel')"><span data-i18n="abo.monthly">Mensuel</span></span>
     <div class="toggle-switch" id="billing-toggle" onclick="toggleBilling()">
         <div class="toggle-knob"></div>
     </div>
-    <span class="toggle-label" id="label-annuel" onclick="setBilling('annuel')">Annuel</span>
+    <span class="toggle-label" id="label-annuel" onclick="setBilling('annuel')"><span data-i18n="abo.yearly">Annuel</span></span>
     <span class="badge-economy">2 mois offerts</span>
 </div>
 
-<div id="loading-plans" class="loading-plans">Chargement des offres…</div>
+<div id="loading-plans" class="loading-plans"><span data-i18n="abo.loading">Chargement des offres…</span></div>
 
 <div id="plans-grid" class="plans-grid" style="display:none"></div>
 
+{{-- === Script === --}}
 <script>
 const API_BASE = '{{ config("services.api.public_url") }}';
 let billing = 'mensuel';

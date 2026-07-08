@@ -1,20 +1,19 @@
 @extends('layouts.salarie')
 
 @section('title', 'Mon planning')
-
 @section('styles')
 <style>
-/* ─── Barre de navigation calendrier ─────────────────────────────── */
+/* ─── Navigation calendrier ─── */
 .cal-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
 .cal-toolbar .nav-arrow { padding: 8px 16px; font-size: 1.2rem; line-height: 1; }
 .cal-select { border: 3px solid var(--coffee); background: white; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.95rem; padding: 9px 14px; box-shadow: 3px 3px 0px rgba(18,3,9,0.12); cursor: pointer; outline: none; }
 .cal-select:focus { border-color: var(--forest); }
 .cal-spacer { flex: 1; }
 
-/* ─── Grille calendrier ──────────────────────────────────────────── */
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; border: var(--border); box-shadow: var(--shadow); margin-bottom: 32px; }
-.calendar-day-label { background: var(--coffee); color: var(--wheat); font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; text-align: center; padding: 10px 4px; letter-spacing: 0.05em; }
-.calendar-cell { min-height: 92px; background: white; border: 1px solid rgba(18,3,9,0.1); padding: 6px; position: relative; cursor: pointer; transition: background 0.12s ease; }
+/* ─── Grille calendrier ─── */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; border: var(--border); box-shadow: var(--shadow); margin-bottom: 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.calendar-day-label { background: var(--coffee); color: var(--wheat); font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; text-align: center; padding: 10px 4px; letter-spacing: 0.05em; min-width: 0; overflow: hidden; }
+.calendar-cell { min-height: 92px; min-width: 0; overflow: hidden; background: white; border: 1px solid rgba(18,3,9,0.1); padding: 6px; position: relative; cursor: pointer; transition: background 0.12s ease; }
 .calendar-cell:hover { background: rgba(216,201,155,0.25); }
 .calendar-cell.empty { background: rgba(18,3,9,0.03); cursor: default; }
 .calendar-cell.empty:hover { background: rgba(18,3,9,0.03); }
@@ -30,7 +29,7 @@
 .cal-event.type-perso { background: #b2bec3; color: var(--coffee); }
 .cal-more { font-size: 0.62rem; font-family: 'DM Mono', monospace; color: var(--coffee); opacity: 0.6; }
 
-/* ─── Timeline journalière ───────────────────────────────────────── */
+/* ─── Timeline journalière ─── */
 .day-panel-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 24px; flex-wrap: wrap; gap: 12px; }
 .day-panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; margin: 0; letter-spacing: 0.04em; }
 .timeline { position: relative; border-left: 3px solid var(--coffee); margin-left: 60px; }
@@ -49,9 +48,21 @@
 .tl-block .tl-del { position: absolute; top: 3px; right: 5px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.85rem; line-height: 1; background: none; border: none; color: inherit; opacity: 0.75; padding: 2px; }
 .tl-block .tl-del:hover { opacity: 1; }
 .day-empty { color: rgba(18,3,9,0.4); font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; padding: 20px 0; }
+.day-empty-inline { position: absolute; top: 50%; left: 12px; right: 12px; transform: translateY(-50%); text-align: center; color: rgba(18,3,9,0.35); font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.82rem; letter-spacing: 0.04em; pointer-events: none; }
 .tl-badge-auto { display: inline-block; font-size: 0.6rem; background: rgba(255,255,255,0.25); padding: 1px 5px; margin-left: 6px; letter-spacing: 0.04em; }
 
-/* ─── Modale custom ──────────────────────────────────────────────── */
+/* ─── Bandeaux « journée entière » ─── */
+.allday-zone { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.allday-block { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border: 2px solid var(--coffee); box-shadow: 2px 2px 0 rgba(18,3,9,0.3); background: var(--forest); color: var(--cream); cursor: pointer; }
+.allday-block.type-evenement { background: var(--teal); }
+.allday-block.type-reunion { background: var(--cherry); }
+.allday-block.type-formation { background: #6c5ce7; }
+.allday-block.type-travail { background: var(--coffee); }
+.allday-block.type-perso { background: #b2bec3; color: var(--coffee); }
+.allday-block .allday-title { font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; }
+.allday-block .allday-span { font-family: 'DM Mono', monospace; font-size: 0.72rem; opacity: 0.85; white-space: nowrap; }
+
+/* ─── Modale ─── */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(18,3,9,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .modal-box { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 40px; width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto; position: relative; }
 .picker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -67,7 +78,7 @@
 .detail-actions { display: flex; gap: 12px; margin-top: 28px; }
 .detail-actions button { flex: 1; padding: 13px 0; font-size: 1.1rem; }
 
-/* ─── Toast client ───────────────────────────────────────────────── */
+/* ─── Toast ─── */
 #pl-toast-zone { position: fixed; top: 24px; right: 24px; z-index: 100001; display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
 .pl-toast { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border: 3px solid var(--coffee); box-shadow: 5px 5px 0 var(--coffee); background: var(--cherry); color: var(--cream); font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.4; animation: pl-toast-in 0.22s ease-out; }
 .pl-toast .ic { font-family: 'DM Mono', monospace; font-weight: 700; }
@@ -76,12 +87,16 @@
 @endsection
 
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
-    <h1 class="page-title">Mon Planning</h1>
-    <button class="btn-primary" id="btn-open-add">+ Ajouter un créneau</button>
+    <h1 class="page-title"><span data-i18n="part.planning.title">Mon Planning</span></h1>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button class="btn-secondary" id="btn-export-ics" title="Exporter au format iCalendar (Google Agenda, Outlook, Apple…)">Exporter (.ics)</button>
+        <button class="btn-primary" id="btn-open-add">+ Ajouter un créneau</button>
+    </div>
 </div>
 
-{{-- Stats rapides (recalculées en JS selon le mois affiché) --}}
+{{-- Stats (recalculées en JS) --}}
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">Créneaux ce mois</div>
@@ -97,7 +112,7 @@
     </div>
 </div>
 
-{{-- Barre de navigation : flèches + sélecteurs mois/année + Aujourd'hui --}}
+{{-- Navigation mois/année --}}
 <div class="cal-toolbar">
     <button class="btn-secondary btn-sm nav-arrow" id="nav-prev">&larr;</button>
     <select class="cal-select" id="sel-mois"></select>
@@ -107,22 +122,22 @@
     <button class="btn-primary btn-sm" id="nav-today">Aujourd'hui</button>
 </div>
 
-{{-- Calendrier (rendu JS) --}}
+{{-- Calendrier --}}
 <div class="calendar-grid" id="calendar-grid"></div>
 
-{{-- Panneau jour sélectionné (timeline) --}}
+{{-- Jour sélectionné --}}
 <div class="card">
     <div class="day-panel-head">
-        <h2 class="day-panel-title" id="day-title">Sélectionnez un jour</h2>
+        <h2 class="day-panel-title" id="day-title"><span data-i18n="sal.planning.selectday">Sélectionnez un jour</span></h2>
         <button class="btn-secondary btn-sm" id="btn-add-day">+ Créneau ce jour</button>
     </div>
     <div id="day-body"></div>
 </div>
 
-{{-- Modale création créneau (picker custom) --}}
+{{-- Modale création/édition --}}
 <div class="modal-overlay" id="modal-add">
     <div class="modal-box">
-        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;" id="modal-title">Nouveau créneau</h2>
+        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;" id="modal-title"><span data-i18n="part.planning.newslot">Nouveau créneau</span></h2>
         <form action="{{ route('salarie.planning.store') }}" method="POST" id="planning-form">
             @csrf
             <input type="hidden" name="_method" id="form-method" disabled>
@@ -188,12 +203,13 @@
     </div>
 </div>
 
-{{-- Modale détail créneau --}}
+{{-- Modale détail --}}
 <div class="modal-overlay" id="modal-detail">
     <div class="modal-box" style="max-width:520px;">
-        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 24px;">Détail du créneau</h2>
+        <h2 class="font-bebas" style="font-size:2rem;margin:0 0 24px;"><span data-i18n="sal.planning.detail">Détail du créneau</span></h2>
         <div id="detail-body"></div>
         <div class="detail-actions">
+            <button type="button" class="btn-success" id="detail-itineraire" style="display:none;">Itinéraire</button>
             <button type="button" class="btn-primary" id="detail-edit">Modifier</button>
             <button type="button" class="btn-danger" id="detail-delete">Supprimer</button>
             <button type="button" class="btn-secondary" id="detail-close">Fermer</button>
@@ -204,12 +220,13 @@
 <div id="pl-toast-zone"></div>
 @endsection
 
+{{-- === Scripts : moteur du planning === --}}
 @section('scripts')
 <script>
 (function () {
     'use strict';
 
-    // ─── Données & constantes ─────────────────────────────────────
+    // ─── Données & constantes ───
     var ITEMS = @json($items ?? []);
     var CSRF = '{{ csrf_token() }}';
     var BASE_URL = '{{ url('/salarie/planning') }}';
@@ -218,14 +235,13 @@
     var JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
     var HOUR_PX = 56;
 
-    // État de navigation
     var view = { y: TODAY.y, m: TODAY.m };
-    var selected = new Date(TODAY.y, TODAY.m, TODAY.d); // jour sélectionné
-    var editId = null; // id du créneau en cours d'édition (null = création)
-    var detailId = null; // id du créneau affiché dans la fiche détail
+    var selected = new Date(TODAY.y, TODAY.m, TODAY.d);
+    var editId = null; // créneau en édition (null = création)
+    var detailId = null;
     var STORE_URL = document.getElementById('planning-form').getAttribute('action');
 
-    // ─── Helpers ──────────────────────────────────────────────────
+    // ─── Helpers ───
     function pad(n) { return (n < 10 ? '0' : '') + n; }
     function parseDT(s) {
         if (!s) return null;
@@ -237,7 +253,7 @@
     function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
     function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
 
-    // Normalise les items une fois (objets Date)
+    // Normalise les items (objets Date)
     var EVENTS = ITEMS.map(function (it) {
         return {
             id: it.id_planning,
@@ -246,7 +262,13 @@
             desc: it.description || '',
             debut: parseDT(it.date_debut),
             fin: parseDT(it.date_fin),
-            manuel: it.est_manuel === true || it.est_manuel === 1
+            manuel: it.est_manuel === true || it.est_manuel === 1,
+            lieu: it.lieu || '',
+            format: it.format || '',
+            animateurs: it.animateurs || [],
+            nbPlaces: (it.nb_places != null ? it.nb_places : null),
+            nbDispo: (it.nb_dispo != null ? it.nb_dispo : null),
+            prix: (it.prix != null ? it.prix : null)
         };
     }).filter(function (e) { return e.debut && e.fin; });
 
@@ -254,14 +276,13 @@
 
     function eventsOfDay(dt) {
         return EVENTS.filter(function (e) {
-            // inclut les créneaux qui couvrent ce jour
             var dayStart = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0, 0);
             var dayEnd = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 23, 59, 59);
             return e.debut <= dayEnd && e.fin >= dayStart;
         }).sort(function (a, b) { return a.debut - b.debut; });
     }
 
-    // ─── Toast client ─────────────────────────────────────────────
+    // ─── Toast ───
     var toastTimer = null;
     function toast(msg) {
         var zone = document.getElementById('pl-toast-zone');
@@ -272,7 +293,7 @@
         setTimeout(function () { el.remove(); }, 4000);
     }
 
-    // ─── Stats ────────────────────────────────────────────────────
+    // ─── Stats ───
     function renderStats() {
         var moisCount = EVENTS.filter(function (e) {
             return e.debut.getFullYear() === view.y && e.debut.getMonth() === view.m;
@@ -283,7 +304,7 @@
         document.getElementById('stat-events').textContent = evCount;
     }
 
-    // ─── Sélecteurs mois / année ──────────────────────────────────
+    // ─── Sélecteurs mois / année ───
     function buildNavSelectors() {
         var selM = document.getElementById('sel-mois');
         var selY = document.getElementById('sel-annee');
@@ -307,7 +328,7 @@
         document.getElementById('sel-annee').value = view.y;
     }
 
-    // ─── Calendrier ───────────────────────────────────────────────
+    // ─── Calendrier ───
     function renderCalendar() {
         syncNavSelectors();
         renderStats();
@@ -315,7 +336,7 @@
         var html = JOURS.map(function (j) { return '<div class="calendar-day-label">' + j + '</div>'; }).join('');
 
         var first = new Date(view.y, view.m, 1);
-        var firstDow = (first.getDay() + 6) % 7; // 0 = lundi
+        var firstDow = (first.getDay() + 6) % 7; // lundi = 0
         var nbDays = new Date(view.y, view.m + 1, 0).getDate();
 
         for (var i = 0; i < firstDow; i++) html += '<div class="calendar-cell empty"></div>';
@@ -347,57 +368,79 @@
         });
     }
 
-    // ─── Timeline journalière ─────────────────────────────────────
+    // ─── Timeline journalière ───
     function renderDay() {
         var title = document.getElementById('day-title');
         var body = document.getElementById('day-body');
         title.textContent = selected.getDate() + ' ' + MOIS[selected.getMonth()] + ' ' + selected.getFullYear();
 
         var evs = eventsOfDay(selected);
-        if (!evs.length) {
-            body.innerHTML = '<div class="day-empty">Aucun créneau ce jour. Cliquez sur « + Créneau ce jour » pour en ajouter un.</div>';
-            return;
+
+        // Sépare « journée entière / multi-jours » des créneaux horaires
+        var allDay = [], timed = [];
+        evs.forEach(function (e) {
+            if (sameDay(e.debut, selected) && sameDay(e.fin, selected)) timed.push(e);
+            else allDay.push(e);
+        });
+
+        var html = '';
+
+        // Bandeaux « journée entière »
+        if (allDay.length) {
+            html += '<div class="allday-zone">';
+            allDay.forEach(function (e) {
+                var autoTag = e.manuel ? '' : '<span class="tl-badge-auto">auto</span>';
+                var span = e.debut.getDate() + '/' + pad(e.debut.getMonth() + 1) + ' → ' +
+                    e.fin.getDate() + '/' + pad(e.fin.getMonth() + 1);
+                html += '<div class="allday-block type-' + esc(e.type) + '" data-id="' + e.id + '" title="Voir le détail">' +
+                    '<span class="allday-title">' + esc(e.titre) + autoTag + '</span>' +
+                    '<span class="allday-span">Journée entière · ' + span + '</span>' +
+                    '</div>';
+            });
+            html += '</div>';
         }
 
-        // Plage horaire dynamique
+        // Timeline horaire : plage ajustée aux créneaux, sinon 8h–19h
         var minH = 8, maxH = 19;
-        evs.forEach(function (e) {
-            var sh = sameDay(e.debut, selected) ? e.debut.getHours() : 0;
-            var eh = sameDay(e.fin, selected) ? e.fin.getHours() + (e.fin.getMinutes() > 0 ? 1 : 0) : 24;
+        timed.forEach(function (e) {
+            var sh = e.debut.getHours();
+            var eh = e.fin.getHours() + (e.fin.getMinutes() > 0 ? 1 : 0);
             if (sh < minH) minH = sh;
             if (eh > maxH) maxH = eh;
         });
         if (minH < 0) minH = 0;
         if (maxH > 24) maxH = 24;
 
-        var html = '<div class="timeline" style="height:' + ((maxH - minH) * HOUR_PX) + 'px;">';
+        html += '<div class="timeline" style="height:' + ((maxH - minH) * HOUR_PX) + 'px;">';
         for (var h = minH; h < maxH; h++) {
             html += '<div class="timeline-hour"><span class="hour-label">' + pad(h) + ':00</span></div>';
         }
         html += '<div class="timeline-events">';
-        evs.forEach(function (e) {
-            var dayStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), minH, 0);
-            var dayEnd = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), maxH, 0);
-            var s = e.debut < dayStart ? dayStart : e.debut;
-            var f = e.fin > dayEnd ? dayEnd : e.fin;
-            var top = ((s - dayStart) / 3600000) * HOUR_PX;
-            var height = Math.max(22, ((f - s) / 3600000) * HOUR_PX);
-            var label = pad(e.debut.getHours()) + ':' + pad(e.debut.getMinutes()) + ' – ' + pad(e.fin.getHours()) + ':' + pad(e.fin.getMinutes());
+        var dayStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), minH, 0);
+        timed.forEach(function (e) {
+            var top = ((e.debut - dayStart) / 3600000) * HOUR_PX;
+            var height = Math.max(22, ((e.fin - e.debut) / 3600000) * HOUR_PX);
+            var label = pad(e.debut.getHours()) + ':' + pad(e.debut.getMinutes()) + ' – ' +
+                pad(e.fin.getHours()) + ':' + pad(e.fin.getMinutes());
             var autoTag = e.manuel ? '' : '<span class="tl-badge-auto">auto</span>';
             html += '<div class="tl-block type-' + esc(e.type) + '" data-id="' + e.id + '" title="Voir le détail" style="top:' + top + 'px;height:' + height + 'px;cursor:pointer;">' +
                 '<div class="tl-title">' + esc(e.titre) + autoTag + '</div>' +
                 '<div class="tl-time">' + label + '</div>' +
                 '</div>';
         });
+        if (!evs.length) {
+            html += '<div class="day-empty-inline">Aucun créneau ce jour · cliquez sur « + Créneau ce jour »</div>';
+        }
         html += '</div></div>';
+
         body.innerHTML = html;
 
-        body.querySelectorAll('.tl-block').forEach(function (blk) {
+        body.querySelectorAll('.tl-block, .allday-block').forEach(function (blk) {
             blk.addEventListener('click', function () { openDetail(+blk.dataset.id); });
         });
     }
 
-    // ─── Suppression ──────────────────────────────────────────────
+    // ─── Suppression ───
     function deleteCreneau(id) {
         window.confirmAction('Supprimer ce créneau ?').then(function (ok) {
             if (!ok) return;
@@ -411,7 +454,7 @@
         });
     }
 
-    // ─── Picker custom (modale) ───────────────────────────────────
+    // ─── Picker (modale) ───
     function fillSelect(sel, from, to, fmt) {
         var html = '';
         for (var i = from; i <= to; i++) html += '<option value="' + i + '">' + (fmt ? fmt(i) : i) + '</option>';
@@ -469,7 +512,7 @@
         };
     }
 
-    // ─── Validation modale (cohérence + anti-chevauchement) ───────
+    // ─── Validation modale (anti-chevauchement) ───
     var lastOverlapId = null;
     function validateModal() {
         var alertBox = document.getElementById('planning-date-alert');
@@ -580,17 +623,47 @@
         var descHtml = e.desc
             ? '<p style="margin:0;white-space:pre-wrap;line-height:1.5;">' + esc(e.desc) + '</p>'
             : '<p style="margin:0;opacity:0.5;font-style:italic;">Aucune description.</p>';
+
+        // Bloc infos enrichies (format, lieu, animateurs, places, prix) — événements uniquement.
+        var FORMAT_LABELS = { presentiel: 'Présentiel', distanciel: 'Distanciel' };
+        var infos = [];
+        if (e.format) infos.push(['Format', FORMAT_LABELS[e.format] || e.format]);
+        if (e.lieu) infos.push(['Lieu', e.lieu]);
+        if (e.animateurs && e.animateurs.length) infos.push(['Animateur' + (e.animateurs.length > 1 ? 's' : ''), e.animateurs.join(', ')]);
+        if (e.nbPlaces != null) infos.push(['Places', (e.nbDispo != null ? e.nbDispo + ' / ' + e.nbPlaces + ' dispo.' : String(e.nbPlaces))]);
+        if (e.prix != null) infos.push(['Prix', e.prix > 0 ? (Number(e.prix).toFixed(2).replace('.', ',') + ' €') : 'Gratuit']);
+        var infoHtml = infos.length
+            ? '<div style="border-top:2px solid rgba(18,3,9,0.12);padding-top:16px;margin-bottom:16px;display:grid;grid-template-columns:auto 1fr;gap:9px 18px;align-items:baseline;">' +
+              infos.map(function (r) {
+                  return '<div style="font-family:\'DM Mono\',monospace;font-size:0.68rem;text-transform:uppercase;opacity:0.5;white-space:nowrap;">' + esc(r[0]) + '</div>' +
+                         '<div style="font-size:0.94rem;line-height:1.35;">' + esc(r[1]) + '</div>';
+              }).join('') +
+              '</div>'
+            : '';
+
         document.getElementById('detail-body').innerHTML =
             '<div style="margin-bottom:18px;"><span class="cal-event type-' + esc(e.type) + '" style="display:inline-block;padding:4px 10px;font-size:0.8rem;">' + esc(TYPE_LABELS[e.type] || e.type) + '</span>' +
             (e.manuel ? '' : '<span class="tl-badge-auto" style="background:rgba(18,3,9,0.12);color:var(--coffee);margin-left:8px;">automatique</span>') + '</div>' +
             '<h3 style="font-family:\'Bebas Neue\',sans-serif;font-size:1.6rem;margin:0 0 8px;letter-spacing:0.03em;">' + esc(e.titre) + '</h3>' +
             '<p style="font-family:\'DM Mono\',monospace;font-size:0.85rem;color:var(--coffee);opacity:0.7;margin:0 0 20px;">' + quand + '</p>' +
+            infoHtml +
             '<div style="border-top:2px solid rgba(18,3,9,0.12);padding-top:16px;">' +
             '<div style="font-family:\'DM Mono\',monospace;font-size:0.7rem;text-transform:uppercase;opacity:0.5;margin-bottom:6px;">Description</div>' +
             descHtml + '</div>';
         // Boutons Modifier / Supprimer masqués pour les créneaux automatiques
         document.getElementById('detail-edit').style.display = e.manuel ? '' : 'none';
         document.getElementById('detail-delete').style.display = e.manuel ? '' : 'none';
+        // Bouton Itinéraire : visible si un lieu (adresse) est renseigné.
+        var itin = document.getElementById('detail-itineraire');
+        if (e.lieu) {
+            itin.style.display = '';
+            itin.onclick = function () {
+                window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(e.lieu), '_blank', 'noopener');
+            };
+        } else {
+            itin.style.display = 'none';
+            itin.onclick = null;
+        }
         document.getElementById('modal-detail').style.display = 'flex';
     }
     function closeDetail() { document.getElementById('modal-detail').style.display = 'none'; }
@@ -609,6 +682,50 @@
     document.getElementById('modal-detail').addEventListener('mousedown', function (e) {
         if (e.target === this) closeDetail();
     });
+
+    // ─── Export iCalendar (.ics) ──────────────────────────────────
+    function icsEscape(s) {
+        return String(s == null ? '' : s)
+            .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+    }
+    function icsDate(dt) {
+        return dt.getFullYear() + pad(dt.getMonth() + 1) + pad(dt.getDate()) + 'T' +
+               pad(dt.getHours()) + pad(dt.getMinutes()) + pad(dt.getSeconds());
+    }
+    function buildICS() {
+        var stamp = icsDate(new Date());
+        var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//UpcycleConnect//Planning//FR', 'CALSCALE:GREGORIAN'];
+        EVENTS.forEach(function (e) {
+            var desc = e.desc || '';
+            if (e.animateurs && e.animateurs.length) desc += (desc ? '\n' : '') + 'Animateur(s) : ' + e.animateurs.join(', ');
+            lines.push('BEGIN:VEVENT');
+            lines.push('UID:planning-' + e.id + '@upcycleconnect');
+            lines.push('DTSTAMP:' + stamp);
+            lines.push('DTSTART:' + icsDate(e.debut));
+            lines.push('DTEND:' + icsDate(e.fin));
+            lines.push('SUMMARY:' + icsEscape(e.titre));
+            if (e.lieu) lines.push('LOCATION:' + icsEscape(e.lieu));
+            if (desc) lines.push('DESCRIPTION:' + icsEscape(desc));
+            lines.push('END:VEVENT');
+        });
+        lines.push('END:VCALENDAR');
+        return lines.join('\r\n');
+    }
+    var btnExport = document.getElementById('btn-export-ics');
+    if (btnExport) {
+        btnExport.addEventListener('click', function () {
+            if (!EVENTS.length) { toast('Aucun créneau à exporter.'); return; }
+            var blob = new Blob([buildICS()], { type: 'text/calendar;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'mon-planning-upcycleconnect.ics';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        });
+    }
 
     // Soumission : remplit les champs cachés au bon format + dernier garde-fou
     document.getElementById('planning-form').addEventListener('submit', function (e) {

@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 
+// Espace pro : commandes de conteneurs, historique, validation de réception, via l'API Go.
 class ConteneursController extends Controller
 {
+    // --- Utilitaires (URL API + token) ---
+
     private function apiUrl(): string
     {
         return rtrim(config('services.api.url', env('API_URL', 'http://localhost:8080')), '/');
@@ -19,6 +22,9 @@ class ConteneursController extends Controller
         return Session::get('pro_token');
     }
 
+    // --- Actions ---
+
+    // Commandes de conteneurs en cours.
     public function index()
     {
         $response = Http::withToken($this->token())
@@ -33,6 +39,7 @@ class ConteneursController extends Controller
         ]);
     }
 
+    // Historique des récupérations.
     public function historique()
     {
         $response = Http::withToken($this->token())
@@ -47,6 +54,7 @@ class ConteneursController extends Controller
         ]);
     }
 
+    // Valide la réception via code-barre (410 si délai de 7 jours dépassé).
     public function validerReception(Request $request)
     {
         $request->validate([

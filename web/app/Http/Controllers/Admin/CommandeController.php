@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Http;
 
 class CommandeController extends Controller
 {
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
@@ -30,6 +32,8 @@ class CommandeController extends Controller
         $commande = $response->json();
         return view('admin.commandes.show', compact('commande'));
     }
+
+    // --- Actions ---
 
     public function updateStatut(Request $request, $id)
     {

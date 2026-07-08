@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des systèmes de fichiers : disque par défaut et définition des
+// disques de stockage (local, public, uploads_local, S3).
+
 return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
@@ -18,6 +21,17 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Médias servis par Laravel depuis public/uploads (fallback local du
+        // disque "media", cf. config/media.php). En prod on bascule MEDIA_DISK=s3.
+        'uploads_local' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => '/uploads',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

@@ -2,6 +2,8 @@
 
 @section('title', 'Mon Planning')
 
+{{-- Planning perso (FullCalendar) : événements, formations et créneaux manuels. Requiert un jeton (sinon /login). --}}
+
 @section('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
 <style>
@@ -40,54 +42,56 @@
 @section('content')
 <div class="planning-wrap">
     <div class="page-header">
-        <h1 class="page-title">Mon Planning</h1>
-        <button class="btn btn-primary" onclick="openAddModal()">+ Ajouter un créneau</button>
+        <h1 class="page-title" data-i18n="part.planning.title">Mon Planning</h1>
+        <button class="btn btn-primary" onclick="openAddModal()" data-i18n="part.planning.addslot">+ Ajouter un créneau</button>
     </div>
 
+    {{-- === Légende === --}}
     <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div> Événement</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--forest)"></div> Formation</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--cherry)"></div> Réunion</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#6b5c3e"></div> Travail</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--wheat);border-color:var(--coffee)"></div> Personnel</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div> <span data-i18n="part.planning.legend.event">Événement</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--forest)"></div> <span data-i18n="part.planning.legend.formation">Formation</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--cherry)"></div> <span data-i18n="part.planning.legend.meeting">Réunion</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6b5c3e"></div> <span data-i18n="part.planning.legend.work">Travail</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--wheat);border-color:var(--coffee)"></div> <span data-i18n="part.planning.legend.perso">Personnel</span></div>
     </div>
 
+    {{-- === Calendrier === --}}
     <div id="calendar"></div>
 </div>
 
-<!-- Modal Ajout -->
+{{-- === Modale ajout === --}}
 <div class="modal-overlay" id="modal-add">
     <div class="modal-box">
-        <h2 class="modal-title">Nouveau créneau</h2>
+        <h2 class="modal-title" data-i18n="part.planning.newslot">Nouveau créneau</h2>
         <div class="form-group">
-            <label class="form-label">Titre *</label>
-            <input type="text" id="add-titre" class="form-input" placeholder="Mon créneau...">
+            <label class="form-label" data-i18n="part.planning.f.title">Titre *</label>
+            <input type="text" id="add-titre" class="form-input" placeholder="Mon créneau..." data-i18n-ph="part.planning.f.title.ph">
         </div>
         <div class="form-group">
-            <label class="form-label">Type</label>
+            <label class="form-label" data-i18n="field.type">Type</label>
             <select id="add-type" class="form-select">
-                <option value="perso">Personnel</option>
-                <option value="travail">Travail</option>
-                <option value="reunion">Réunion</option>
+                <option value="perso" data-i18n="part.planning.legend.perso">Personnel</option>
+                <option value="travail" data-i18n="part.planning.legend.work">Travail</option>
+                <option value="reunion" data-i18n="part.planning.legend.meeting">Réunion</option>
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">Début *</label>
+            <label class="form-label" data-i18n="part.planning.start">Début *</label>
             <input type="datetime-local" id="add-debut" class="form-input">
         </div>
         <div class="form-group">
-            <label class="form-label">Fin *</label>
+            <label class="form-label" data-i18n="part.planning.end">Fin *</label>
             <input type="datetime-local" id="add-fin" class="form-input">
         </div>
         <div style="display:flex;gap:12px;margin-top:28px;">
-            <button class="btn btn-primary" onclick="submitAdd()">Ajouter</button>
-            <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+            <button class="btn btn-primary" onclick="submitAdd()" data-i18n="btn.add">Ajouter</button>
+            <button class="btn btn-secondary" onclick="closeModal()" data-i18n="btn.cancel">Annuler</button>
         </div>
         <div id="add-error" style="color:var(--cherry);font-family:'DM Mono',monospace;font-size:0.85rem;margin-top:12px;display:none;"></div>
     </div>
 </div>
 
-<!-- Modal Détail -->
+{{-- === Modale détail === --}}
 <div class="modal-overlay" id="modal-detail">
     <div class="modal-box">
         <h2 class="modal-title" id="detail-titre"></h2>
@@ -99,12 +103,13 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/fr.global.min.js"></script>
 <script>
 const API = '{{ config("services.api.public_url") }}';
-const token = localStorage.getItem('uc_token');
+const token = localStorage.getItem('uc_token') || localStorage.getItem('auth_token');
 let calendar;
 let currentEvent = null;
 
@@ -143,6 +148,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     calendar.render();
 });
 
+// Charge les créneaux du planning.
 async function loadPlanning() {
     try {
         const r = await fetch(API + '/api/v1/utilisateurs/me/planning', {
@@ -162,6 +168,7 @@ function closeModal() {
     document.getElementById('modal-detail').classList.remove('active');
 }
 
+// Crée un créneau perso et l'ajoute au calendrier.
 async function submitAdd() {
     const titre = document.getElementById('add-titre').value.trim();
     const type = document.getElementById('add-type').value;
@@ -198,6 +205,7 @@ async function submitAdd() {
     }
 }
 
+// Ouvre le détail ; suppression si créneau manuel.
 function openDetailModal(event) {
     currentEvent = event;
     document.getElementById('detail-titre').textContent = event.title;

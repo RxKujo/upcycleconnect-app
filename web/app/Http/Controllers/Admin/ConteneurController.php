@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
@@ -17,6 +18,8 @@ class ConteneurController extends Controller
         $this->apiUrl = config('services.api.url') . '/api/v1/admin/conteneurs';
     }
 
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))->get($this->apiUrl);
@@ -24,6 +27,8 @@ class ConteneurController extends Controller
 
         return view('admin.conteneurs.index', compact('conteneurs'));
     }
+
+    // --- Actions (CRUD) ---
 
     public function store(Request $request)
     {
@@ -39,7 +44,6 @@ class ConteneurController extends Controller
             'capacite'       => 'required|numeric',
         ]);
 
-        // Photos en base64 (comme les annonces) : décodées et écrites dans public/uploads/conteneurs.
         $images = $this->saveBase64Images($request->input('image_base64', []));
 
         $data = [
@@ -77,7 +81,6 @@ class ConteneurController extends Controller
             'statut'         => 'required|in:actif,plein,maintenance,hors_service',
         ]);
 
-        // Nouvelles photos à ajouter (les existantes se suppriment via deletePhoto).
         $images = $this->saveBase64Images($request->input('image_base64', []));
 
         $data = [
@@ -101,10 +104,8 @@ class ConteneurController extends Controller
         return redirect()->route('admin.conteneurs.show', $id)->with('success', 'Conteneur mis à jour.');
     }
 
-    /**
-     * Décode un tableau d'images base64 (data URLs) et les écrit dans
-     * public/uploads/conteneurs. Retourne la liste des chemins relatifs valides.
-     */
+    // --- Gestion des photos ---
+
     private function saveBase64Images(array $b64List): array
     {
         $paths = [];
@@ -117,13 +118,9 @@ class ConteneurController extends Controller
             if (!in_array($ext, ['jpg', 'png', 'webp'], true) || $data === false || strlen($data) > 5 * 1024 * 1024) {
                 continue;
             }
-            $dir = public_path('uploads/conteneurs');
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-            $filename = uniqid('cont-') . '.' . $ext;
-            file_put_contents($dir . '/' . $filename, $data);
-            $paths[] = 'conteneurs/' . $filename;
+            $key = 'conteneurs/' . uniqid('cont-') . '.' . $ext;
+            Storage::disk(media_disk())->put($key, $data);
+            $paths[] = $key;
         }
         return $paths;
     }
@@ -133,13 +130,9 @@ class ConteneurController extends Controller
         $response = Http::withToken(session('admin_token'))
             ->delete("{$this->apiUrl}/photos/{$photoId}");
 
-        // Suppression du fichier physique si on connaît son chemin.
         $url = $request->input('url_photo');
-        if ($url && str_starts_with($url, 'conteneurs/')) {
-            $file = public_path('uploads/' . $url);
-            if (is_file($file)) {
-                @unlink($file);
-            }
+        if ($url) {
+            Storage::disk(media_disk())->delete($url);
         }
 
         if ($response->failed()) {
@@ -168,6 +161,8 @@ class ConteneurController extends Controller
             'photos' => $details['photos'] ?? [],
         ]);
     }
+
+    // --- Codes-barres & tickets ---
 
     public function scanBarcode(Request $request, $id)
     {
@@ -222,6 +217,6 @@ class ConteneurController extends Controller
             'idCommande' => $idCommande
         ]);
 
-        return $pdf->download("CodeBarre_{$codeValeur}.pdf");
+        return $pdf->stream("CodeBarre_{$codeValeur}.pdf");
     }
 }

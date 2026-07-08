@@ -1,5 +1,7 @@
 package handlers
 
+// Alertes matériaux des pros : CRUD (selon le plan) + envoi email/push sur nouvelle annonce dans le rayon.
+
 import (
 	"api/internal/middleware"
 	"api/internal/services"
@@ -25,7 +27,9 @@ const msgErrServeurAlerte = "erreur serveur"
 
 // GetAlertesPro liste les alertes du professionnel.
 func GetAlertesPro(w http.ResponseWriter, r *http.Request, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.AlertesActives },
+		"alertes non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -57,7 +61,9 @@ func GetAlertesPro(w http.ResponseWriter, r *http.Request, userID int) {
 
 // CreateAlertePro crée une alerte matériau en respectant les contraintes du plan.
 func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
-	plan, ok := middleware.RequireEssentialPro(userID, w)
+	plan, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.AlertesActives },
+		"alertes non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -76,17 +82,16 @@ func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
 		return
 	}
 
-	// Rayon : Essential fixe à 10 km, Expert libre (mais minimum 1)
+	// Rayon : Essential fixe (10 km), Expert libre (min 1).
 	rayon := req.RayonKm
 	if plan.RayonAlertMaxKm != nil {
-		// Essential Pro : rayon fixe 10 km, on ignore la valeur fournie
 		rayon = *plan.RayonAlertMaxKm
 	}
 	if rayon < 1 {
 		rayon = 1
 	}
 
-	// Empêcher le doublon : même matériau déjà actif pour ce pro
+	// Refuser le doublon : même matériau déjà actif pour ce pro.
 	var existing int
 	if err := database.DB.QueryRow(`
 		SELECT COUNT(*) FROM alertes_materiaux
@@ -100,7 +105,7 @@ func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
 		return
 	}
 
-	// Vérifier la limite du nombre d'alertes (nil = illimité pour Expert Pro)
+	// Limite du nombre d'alertes (nil = illimité, Expert Pro).
 	if plan.NbAlertesMax != nil {
 		var count int
 		if err := database.DB.QueryRow(`
@@ -128,7 +133,9 @@ func CreateAlertePro(w http.ResponseWriter, r *http.Request, userID int) {
 
 // DeleteAlertePro supprime une alerte appartenant au pro.
 func DeleteAlertePro(w http.ResponseWriter, r *http.Request, alerteID string, userID int) {
-	_, ok := middleware.RequireEssentialPro(userID, w)
+	_, ok := middleware.RequirePlanFeature(userID, w,
+		func(p *middleware.PlanInfo) bool { return p.AlertesActives },
+		"alertes non incluses dans votre abonnement")
 	if !ok {
 		return
 	}
@@ -149,10 +156,9 @@ func DeleteAlertePro(w http.ResponseWriter, r *http.Request, alerteID string, us
 
 // ─── Envoi des alertes (appelé par le worker lors d'une nouvelle annonce) ─────
 
-// SendAlertesMateriau déclenche l'envoi des alertes correspondant à une annonce.
-// Appelé depuis le worker ou le handler de validation d'annonce.
+// SendAlertesMateriau : envoie les alertes correspondant à une annonce (worker / validation d'annonce).
 func SendAlertesMateriau(annonceID int, materiau string, villeAnnonce string) {
-	// Charger les pros ayant une alerte active pour ce matériau — 1 ligne par pro (rayon max)
+	// Pros ayant une alerte active pour ce matériau — 1 ligne par pro (rayon max).
 	rows, err := database.DB.Query(`
 		SELECT am.id_professionnel, u.email, u.onesignal_player_id,
 		       COALESCE(u.latitude_entreprise, 0), COALESCE(u.longitude_entreprise, 0),
@@ -168,7 +174,7 @@ func SendAlertesMateriau(annonceID int, materiau string, villeAnnonce string) {
 	}
 	defer rows.Close()
 
-	// Récupérer les coordonnées de l'annonce (via le particulier)
+	// Coordonnées de l'annonce (via le particulier).
 	var annLat, annLon float64
 	database.DB.QueryRow(`
 		SELECT COALESCE(u.latitude_entreprise, 0), COALESCE(u.longitude_entreprise, 0)
@@ -195,15 +201,15 @@ func SendAlertesMateriau(annonceID int, materiau string, villeAnnonce string) {
 			logError("SendAlertesMateriau", "email pro %d: %v", proID, err)
 		}
 
-		// Push OneSignal : Expert Pro uniquement (dashboard_annuel = true)
+		// Push OneSignal : seulement si le plan inclut les alertes push.
 		plan, err := middleware.GetUserPlanInfo(proID)
-		if err == nil && plan.IsExpertPro() && playerID != "" {
+		if err == nil && plan.AlertesPush && playerID != "" {
 			services.NotifierAlerteMateriauPush(playerID, materiau, 1, villeAnnonce)
 		}
 	}
 }
 
-// dansLeRayon retourne vrai si la distance Haversine entre deux points est ≤ rayonKm.
+// dansLeRayon : vrai si la distance Haversine ≤ rayonKm.
 func dansLeRayon(lat1, lon1, lat2, lon2, rayonKm float64) bool {
 	if lat1 == 0 && lon1 == 0 {
 		return false
@@ -218,7 +224,7 @@ func dansLeRayon(lat1, lon1, lat2, lon2, rayonKm float64) bool {
 	return R*c <= rayonKm
 }
 
-// ConvertirIDAlerte convertit un string en int pour le routing.
+// ConvertirIDAlerte : string → int pour le routing.
 func ConvertirIDAlerte(s string) (int, bool) {
 	v, err := strconv.Atoi(s)
 	return v, err == nil

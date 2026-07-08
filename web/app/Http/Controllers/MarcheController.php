@@ -13,9 +13,6 @@ class MarcheController extends Controller
         return config('services.api.url');
     }
 
-    /**
-     * Liste des matériaux actifs (mise en cache), pour les filtres et libellés.
-     */
     protected function materiaux(): array
     {
         $base = $this->apiUrl();

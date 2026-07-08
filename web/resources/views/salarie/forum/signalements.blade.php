@@ -1,7 +1,6 @@
 @extends('layouts.salarie')
 
 @section('title', 'Signalements')
-
 @section('styles')
 <style>
 .toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -35,6 +34,7 @@
 @endsection
 
 @section('content')
+{{-- Compteurs --}}
 @php
     $total = count($items);
     $nbEnCours = count(array_filter($items, fn($s) => ($s['statut'] ?? '') === 'en_cours'));
@@ -43,9 +43,10 @@
 @endphp
 
 <div class="page-header">
-    <h1 class="page-title">Signalements</h1>
+    <h1 class="page-title"><span data-i18n="sal.reports">Signalements</span></h1>
 </div>
 
+{{-- === Stats === --}}
 <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">À traiter</div><div class="stat-value" style="color:var(--cherry);">{{ $nbEnCours }}</div></div>
     <div class="stat-card"><div class="stat-label">Traités</div><div class="stat-value">{{ $nbTraite }}</div></div>
@@ -53,6 +54,7 @@
     <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">{{ $total }}</div></div>
 </div>
 
+{{-- === Liste (ou état vide) === --}}
 @if($total === 0)
     <div class="empty-box">
         <p class="big">Aucun signalement</p>
@@ -69,6 +71,7 @@
         <input type="text" class="filter-search" id="sig-search" placeholder="Rechercher (auteur, contenu…)">
     </div>
 
+    {{-- data-statut / data-masque / data-search : filtrage JS --}}
     <div class="sig-list" id="sig-list">
         @foreach($items as $s)
         @php
@@ -127,6 +130,7 @@
 @endif
 @endsection
 
+{{-- === Scripts : filtrage === --}}
 @section('scripts')
 <script>
 (function () {

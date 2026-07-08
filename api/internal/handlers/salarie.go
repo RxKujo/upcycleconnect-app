@@ -1,10 +1,15 @@
 package handlers
 
+// Espace salarié : stats du tableau de bord, événements/formations, articles
+// d'actualité et modération du forum (signalements, sujets, mots bannis).
+
 import (
+	"api/internal/models"
 	"api/pkg/database"
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -19,6 +24,7 @@ type SalarieStats struct {
 	Signalements      int `json:"signalements"`
 }
 
+// GetSalarieStats : compteurs du tableau de bord (événements, articles, signalements).
 func GetSalarieStats(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 	var s SalarieStats
@@ -41,25 +47,28 @@ type SalarieEvenement struct {
 	Lieu          *string `json:"lieu,omitempty"`
 	DateDebut     string  `json:"date_debut"`
 	DateFin       string  `json:"date_fin"`
-	NbPlacesTotal int     `json:"nb_places_total"`
-	NbPlacesDispo int     `json:"nb_places_dispo"`
-	Prix          float64 `json:"prix"`
-	Statut        string  `json:"statut"`
+	NbPlacesTotal int             `json:"nb_places_total"`
+	NbPlacesDispo int             `json:"nb_places_dispo"`
+	Prix          float64         `json:"prix"`
+	Statut        string          `json:"statut"`
+	Seances       []models.Seance `json:"seances,omitempty"`
 }
 
 type CreateEvenementRequest struct {
-	Titre         string  `json:"titre"`
-	Description   string  `json:"description"`
-	TypeEvenement string  `json:"type_evenement"`
-	Format        string  `json:"format"`
-	Lieu          string  `json:"lieu"`
-	DateDebut     string  `json:"date_debut"`
-	DateFin       string  `json:"date_fin"`
-	NbPlacesTotal int     `json:"nb_places_total"`
-	Prix          float64 `json:"prix"`
-	IDTemplate    *int    `json:"id_template,omitempty"`
+	Titre         string               `json:"titre"`
+	Description   string               `json:"description"`
+	TypeEvenement string               `json:"type_evenement"`
+	Format        string               `json:"format"`
+	Lieu          string               `json:"lieu"`
+	DateDebut     string               `json:"date_debut"`
+	DateFin       string               `json:"date_fin"`
+	NbPlacesTotal int                  `json:"nb_places_total"`
+	Prix          float64              `json:"prix"`
+	IDTemplate    *int                 `json:"id_template,omitempty"`
+	Seances       []models.SeanceInput `json:"seances"`
 }
 
+// GetSalarieEvenements : événements créés par le salarié courant.
 func GetSalarieEvenements(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 	rows, err := database.DB.Query(`
@@ -91,6 +100,7 @@ func GetSalarieEvenements(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(list)
 }
 
+// GetSalarieEvenement : détail + séances (créateur ou admin).
 func GetSalarieEvenement(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	w.Header().Set("Content-Type", "application/json")
 	var e SalarieEvenement
@@ -119,38 +129,53 @@ func GetSalarieEvenement(w http.ResponseWriter, r *http.Request, id string, user
 	}
 	e.DateDebut = debut.Format("2006-01-02T15:04:05")
 	e.DateFin = fin.Format("2006-01-02T15:04:05")
+	if idInt, err := strconv.Atoi(id); err == nil {
+		e.Seances = fetchSeances(idInt)
+	}
 	json.NewEncoder(w).Encode(e)
 }
 
-// dureeMaxEvenement borne la durée d'un événement (début → fin).
-const dureeMaxEvenement = 14 * 24 * time.Hour
-
-// validerDureeEvenement vérifie la cohérence et la durée max des dates.
-// Retourne un message d'erreur non vide si invalide.
+// validerDureeEvenement : fin postérieure au début (chemin sans séances).
+// Aucune durée max imposée (formation possible sur plusieurs mois).
 func validerDureeEvenement(debutStr, finStr string) string {
-	layouts := []string{"2006-01-02 15:04:05", "2006-01-02T15:04:05"}
-	var debut, fin time.Time
-	var okD, okF bool
-	for _, l := range layouts {
-		if t, err := time.Parse(l, debutStr); err == nil {
-			debut, okD = t, true
-		}
-		if t, err := time.Parse(l, finStr); err == nil {
-			fin, okF = t, true
-		}
-	}
+	debut, okD := parseFlexibleTime(debutStr)
+	fin, okF := parseFlexibleTime(finStr)
 	if !okD || !okF {
 		return "" // format inattendu : laissé aux autres validations
 	}
 	if !fin.After(debut) {
 		return "la date de fin doit être postérieure à la date de début"
 	}
-	if fin.Sub(debut) > dureeMaxEvenement {
-		return "la durée d'un événement ne peut pas dépasser 14 jours"
-	}
 	return ""
 }
 
+// resoudreEnveloppeSeances calcule l'enveloppe (format, lieu, dates) à stocker.
+// Dérivée des séances si fournies, sinon des champs de premier niveau.
+// Retourne un message d'erreur non vide si invalide.
+func resoudreEnveloppeSeances(req *CreateEvenementRequest) (format string, lieu, debut, fin interface{}, msg string) {
+	if len(req.Seances) > 0 {
+		d, f, fmt2, l, ok := computeEnvelope(req.Seances)
+		if !ok {
+			return "", nil, nil, nil, "au moins une séance avec des dates valides est requise"
+		}
+		lieuVal := interface{}(nil)
+		if l != nil {
+			lieuVal = *l
+		}
+		return fmt2, lieuVal, d, f, ""
+	}
+	// Sans séances : valider les dates de premier niveau.
+	if m := validerDureeEvenement(req.DateDebut, req.DateFin); m != "" {
+		return "", nil, nil, nil, m
+	}
+	lieuVal := interface{}(nil)
+	if strings.TrimSpace(req.Lieu) != "" {
+		lieuVal = req.Lieu
+	}
+	return req.Format, lieuVal, req.DateDebut, req.DateFin, ""
+}
+
+// CreateSalarieEvenement : crée un événement (en attente) et sync ses séances.
 func CreateSalarieEvenement(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 	var req CreateEvenementRequest
@@ -164,32 +189,34 @@ func CreateSalarieEvenement(w http.ResponseWriter, r *http.Request, userId int) 
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "nombre de places invalide"})
 		return
 	}
-	if msg := validerDureeEvenement(req.DateDebut, req.DateFin); msg != "" {
+
+	format, lieu, debut, fin, msg := resoudreEnveloppeSeances(&req)
+	if msg != "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": msg})
 		return
 	}
 
-	var lieu interface{}
-	if strings.TrimSpace(req.Lieu) != "" {
-		lieu = req.Lieu
-	}
 	res, err := database.DB.Exec(`
 		INSERT INTO evenements (id_createur, id_template, titre, description, type_evenement, format, lieu,
 			date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_attente')
-	`, userId, req.IDTemplate, req.Titre, req.Description, req.TypeEvenement, req.Format, lieu,
-		req.DateDebut, req.DateFin, req.NbPlacesTotal, req.NbPlacesTotal, req.Prix)
+	`, userId, req.IDTemplate, req.Titre, req.Description, req.TypeEvenement, format, lieu,
+		debut, fin, req.NbPlacesTotal, req.NbPlacesTotal, req.Prix)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "création impossible: " + err.Error()})
 		return
 	}
 	id, _ := res.LastInsertId()
+	if len(req.Seances) > 0 {
+		syncSeances(id, req.Seances)
+	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]any{"id_evenement": id, "message": "événement créé, en attente de validation"})
 }
 
+// UpdateSalarieEvenement : maj d'un événement en attente (tout événement pour un admin).
 func UpdateSalarieEvenement(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	w.Header().Set("Content-Type", "application/json")
 	var idCreateur int
@@ -213,29 +240,54 @@ func UpdateSalarieEvenement(w http.ResponseWriter, r *http.Request, id string, u
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if msg := validerDureeEvenement(req.DateDebut, req.DateFin); msg != "" {
+	format, lieu, debut, fin, msg := resoudreEnveloppeSeances(&req)
+	if msg != "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": msg})
 		return
-	}
-	var lieu interface{}
-	if strings.TrimSpace(req.Lieu) != "" {
-		lieu = req.Lieu
 	}
 	_, err := database.DB.Exec(`
 		UPDATE evenements SET titre = ?, description = ?, type_evenement = ?, format = ?, lieu = ?,
 			date_debut = ?, date_fin = ?, nb_places_total = ?, nb_places_dispo = ?, prix = ?
 		WHERE id_evenement = ?
-	`, req.Titre, req.Description, req.TypeEvenement, req.Format, lieu,
-		req.DateDebut, req.DateFin, req.NbPlacesTotal, req.NbPlacesTotal, req.Prix, id)
+	`, req.Titre, req.Description, req.TypeEvenement, format, lieu,
+		debut, fin, req.NbPlacesTotal, req.NbPlacesTotal, req.Prix, id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": err.Error()})
 		return
 	}
+	if eid, err := strconv.ParseInt(id, 10, 64); err == nil {
+		if len(req.Seances) > 0 {
+			syncSeances(eid, req.Seances)
+		}
+	}
 	json.NewEncoder(w).Encode(map[string]string{"message": "mis à jour"})
 }
 
+// GetSalarieAnimateurs : staff (salariés + admins) pouvant animer une séance.
+func GetSalarieAnimateurs(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	rows, err := database.DB.Query(`
+		SELECT id_utilisateur, nom, prenom FROM utilisateurs
+		WHERE role IN ('salarie','admin') ORDER BY nom, prenom`)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode([]models.AnimateurInfo{})
+		return
+	}
+	defer rows.Close()
+	out := []models.AnimateurInfo{}
+	for rows.Next() {
+		var a models.AnimateurInfo
+		if rows.Scan(&a.IDUtilisateur, &a.Nom, &a.Prenom) == nil {
+			out = append(out, a)
+		}
+	}
+	json.NewEncoder(w).Encode(out)
+}
+
+// GetSalarieTemplates : modèles d'événements actifs pour la création.
 func GetSalarieTemplates(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	rows, err := database.DB.Query("SELECT id_template, nom_template, COALESCE(description, ''), COALESCE(modele, '{}') FROM templates_evenements WHERE actif = 1 ORDER BY nom_template")
@@ -283,6 +335,7 @@ type ArticleRequest struct {
 	Statut    string `json:"statut"`
 }
 
+// GetArticles : articles d'actualité, auteur anonymisé (prénom + initiale).
 func GetArticles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	rows, err := database.DB.Query(`
@@ -344,6 +397,7 @@ func GetArticle(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(a)
 }
 
+// CreateArticle : crée un article (date de publication posée si statut "publie").
 func CreateArticle(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 	var req ArticleRequest
@@ -382,6 +436,7 @@ func CreateArticle(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(map[string]any{"id_article": id, "message": "article créé"})
 }
 
+// UpdateArticle : maj (auteur ou admin), pose la date au 1er passage en "publie".
 func UpdateArticle(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	w.Header().Set("Content-Type", "application/json")
 	var auteur int
@@ -428,6 +483,7 @@ func UpdateArticle(w http.ResponseWriter, r *http.Request, id string, userId int
 	json.NewEncoder(w).Encode(map[string]string{"message": "mis à jour"})
 }
 
+// DeleteArticle : supprime un article (auteur ou admin).
 func DeleteArticle(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	w.Header().Set("Content-Type", "application/json")
 	var auteur int
@@ -461,6 +517,7 @@ type Signalement struct {
 	EstMasque       bool   `json:"est_masque"`
 }
 
+// GetSignalements : signalements de messages du forum avec leur contexte.
 func GetSignalements(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	rows, err := database.DB.Query(`
@@ -492,6 +549,7 @@ func GetSignalements(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(out)
 }
 
+// MasquerMessage : masque un message et marque ses signalements "traite".
 func MasquerMessage(w http.ResponseWriter, r *http.Request, id string) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := database.DB.Exec("UPDATE forum_messages SET est_signale = 1 WHERE id_message = ?", id); err != nil {
@@ -502,6 +560,7 @@ func MasquerMessage(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "masqué"})
 }
 
+// RestaurerMessage : réaffiche un message et marque ses signalements "rejete".
 func RestaurerMessage(w http.ResponseWriter, r *http.Request, id string) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := database.DB.Exec("UPDATE forum_messages SET est_signale = 0 WHERE id_message = ?", id); err != nil {
@@ -521,6 +580,7 @@ type SujetModeration struct {
 	Createur     string `json:"createur"`
 }
 
+// GetSujetsModeration : sujets du forum pour la modération (nb messages, créateur).
 func GetSujetsModeration(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	rows, err := database.DB.Query(`
@@ -548,6 +608,7 @@ func GetSujetsModeration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(out)
 }
 
+// LockSujet : verrouille un sujet (statut "ferme").
 func LockSujet(w http.ResponseWriter, r *http.Request, id string) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := database.DB.Exec("UPDATE forum_sujets SET statut = 'ferme' WHERE id_sujet = ?", id); err != nil {
@@ -557,6 +618,7 @@ func LockSujet(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "verrouillé"})
 }
 
+// UnlockSujet : rouvre un sujet (statut "ouvert").
 func UnlockSujet(w http.ResponseWriter, r *http.Request, id string) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := database.DB.Exec("UPDATE forum_sujets SET statut = 'ouvert' WHERE id_sujet = ?", id); err != nil {
@@ -572,6 +634,7 @@ type MotBanni struct {
 	DateAjout string `json:"date_ajout"`
 }
 
+// GetMotsBannis : mots bannis du forum, triés alphabétiquement.
 func GetMotsBannis(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	rows, err := database.DB.Query("SELECT id_mot, mot, date_ajout FROM mots_bannis ORDER BY mot ASC")
@@ -592,6 +655,7 @@ func GetMotsBannis(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(out)
 }
 
+// AddMotBanni : ajoute un mot banni (minuscules, unicité imposée).
 func AddMotBanni(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 	var req struct{ Mot string `json:"mot"` }
@@ -616,6 +680,7 @@ func AddMotBanni(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(map[string]any{"id_mot": id, "mot": mot})
 }
 
+// DeleteMotBanni : retire un mot banni.
 func DeleteMotBanni(w http.ResponseWriter, r *http.Request, id string) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := database.DB.Exec("DELETE FROM mots_bannis WHERE id_mot = ?", id); err != nil {
@@ -632,6 +697,7 @@ type SignalerRequest struct {
 	Motif     string `json:"motif"`
 }
 
+// SignalerMessage : enregistre un signalement (un seul actif par personne) et le miroite vers GLPI.
 func SignalerMessage(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 	var req SignalerRequest
@@ -659,11 +725,15 @@ func SignalerMessage(w http.ResponseWriter, r *http.Request, userId int) {
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "vous avez déjà signalé ce message"})
 		return
 	}
-	if _, err := database.DB.Exec("INSERT INTO signalements_forum (id_message, id_signaleur, motif) VALUES (?, ?, ?)",
-		req.IDMessage, userId, req.Motif); err != nil {
+	res, err := database.DB.Exec("INSERT INTO signalements_forum (id_message, id_signaleur, motif) VALUES (?, ?, ?)",
+		req.IDMessage, userId, req.Motif)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": err.Error()})
 		return
+	}
+	if sigID, _ := res.LastInsertId(); sigID > 0 {
+		go mirrorSignalementToGLPI(sigID, req.IDMessage, req.Motif)
 	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "signalement enregistré"})

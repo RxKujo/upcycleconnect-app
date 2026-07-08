@@ -1,21 +1,22 @@
 @extends('layouts.salarie')
 
 @section('title', 'Mes événements')
-
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
-    <h1 class="page-title">Mes événements</h1>
+    <h1 class="page-title"><span data-i18n="sal.myevents">Mes événements</span></h1>
     <div style="display:flex; gap:12px;">
         <a href="{{ route('salarie.templates.index') }}" class="btn-secondary">Gérer les modèles</a>
-        <a href="{{ route('salarie.evenements.create') }}" class="btn-primary">+ Nouvel événement</a>
+        <a href="{{ route('salarie.evenements.create') }}" class="btn-primary"><span data-i18n="sal.dash.newevent">+ Nouvel événement</span></a>
     </div>
 </div>
 
+{{-- === Tableau (ou état vide) === --}}
 @if(empty($evenements))
 <div class="card" style="text-align:center; padding:80px 20px;">
-    <h3 class="font-bebas" style="font-size:1.6rem;">Aucun événement</h3>
-    <p style="opacity:0.7; margin:12px 0 24px;">Créez votre premier événement (formation, atelier, conférence). Il sera soumis à la validation de l'admin.</p>
-    <a href="{{ route('salarie.evenements.create') }}" class="btn-primary">+ Créer un événement</a>
+    <h3 class="font-bebas" style="font-size:1.6rem;"><span data-i18n="sal.ev.empty">Aucun événement</span></h3>
+    <p style="opacity:0.7; margin:12px 0 24px;"><span data-i18n="sal.ev.empty.desc">Créez votre premier événement (formation, atelier, conférence). Il sera soumis à la validation de l'admin.</span></p>
+    <a href="{{ route('salarie.evenements.create') }}" class="btn-primary"><span data-i18n="sal.ev.create">+ Créer un événement</span></a>
 </div>
 @else
 <div class="table-container">

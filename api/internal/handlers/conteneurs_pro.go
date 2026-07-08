@@ -1,5 +1,8 @@
 package handlers
 
+// Récupération en conteneur côté pro : commandes en attente, historique,
+// validation par code-barre (crédit score + badges), notification d'arrivée.
+
 import (
 	"api/internal/middleware"
 	"api/internal/services"
@@ -23,7 +26,7 @@ type commandeConteneurPro struct {
 	CodeBarre     *string `json:"code_barre"`
 }
 
-// GetCommandesEnConteneur liste les commandes en attente de récupération pour le pro.
+// GetCommandesEnConteneur : commandes du pro en attente de récupération.
 func GetCommandesEnConteneur(w http.ResponseWriter, r *http.Request, userID int) {
 	_, ok := middleware.RequireEssentialPro(userID, w)
 	if !ok {
@@ -76,7 +79,7 @@ type historiqueRecupPro struct {
 	DateLimite     *string `json:"date_limite_recuperation"`
 }
 
-// GetHistoriqueRecuperations liste les récupérations passées du pro (récupérées + expirées).
+// GetHistoriqueRecuperations : récupérations passées du pro (récupérées + expirées).
 func GetHistoriqueRecuperations(w http.ResponseWriter, r *http.Request, userID int) {
 	_, ok := middleware.RequireEssentialPro(userID, w)
 	if !ok {
@@ -119,7 +122,7 @@ func GetHistoriqueRecuperations(w http.ResponseWriter, r *http.Request, userID i
 	jsonOK(w, historique, http.StatusOK)
 }
 
-// ValiderReceptionConteneur marque une commande comme récupérée via le code-barre.
+// ValiderReceptionConteneur : marque une commande récupérée via le code-barre.
 func ValiderReceptionConteneur(w http.ResponseWriter, r *http.Request, userID int) {
 	_, ok := middleware.RequireEssentialPro(userID, w)
 	if !ok {
@@ -134,7 +137,7 @@ func ValiderReceptionConteneur(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
-	// Vérifier que le code-barre correspond à une commande du pro
+	// Code-barre valide, non utilisé, sur une commande en_conteneur du pro.
 	var commandeID int
 	err := database.DB.QueryRow(`
 		SELECT c.id_commande
@@ -154,7 +157,7 @@ func ValiderReceptionConteneur(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
-	// Vérifier le délai de récupération (1 semaine)
+	// Délai de récupération (1 semaine).
 	var dateLimit sql.NullTime
 	database.DB.QueryRow(`SELECT date_limite_recuperation FROM commandes WHERE id_commande = ?`, commandeID).Scan(&dateLimit) //nolint:errcheck
 	if dateLimit.Valid && time.Now().After(dateLimit.Time) {
@@ -173,10 +176,9 @@ func ValiderReceptionConteneur(w http.ResponseWriter, r *http.Request, userID in
 	}, http.StatusOK)
 }
 
-// finaliserRecuperation est LE point unique de finalisation d'une récupération
-// (modèle self-scan). Dans une transaction : passe la commande en 'recuperee',
-// marque le code-barre utilisé. Puis crédite l'Upcycling Score (tous plans) et
-// recalcule les badges (Expert Pro uniquement).
+// finaliserRecuperation : point unique de finalisation (self-scan). Tx : commande
+// 'recuperee' + code-barre utilisé. Puis crédite le score (tous plans) et
+// recalcule les badges (Expert Pro).
 func finaliserRecuperation(commandeID, userID int, codeBarre string) error {
 	tx, err := database.DB.Begin()
 	if err != nil {
@@ -195,19 +197,18 @@ func finaliserRecuperation(commandeID, userID int, codeBarre string) error {
 		return err
 	}
 
-	// Créditer l'Upcycling Score du vendeur et de l'acheteur (tous les plans).
+	// Crédite l'Upcycling Score du vendeur et de l'acheteur (tous plans).
 	services.AwardScoreForCommande(commandeID)
 
-	// Recalculer les badges après récupération (Expert Pro uniquement).
+	// Recalcule les badges (plans avec badges uniquement).
 	plan, _ := middleware.GetUserPlanInfo(userID)
-	if plan != nil && plan.IsExpertPro() {
+	if plan != nil && plan.BadgesActives {
 		go services.ComputeAndAwardBadges(userID) //nolint:errcheck
 	}
 	return nil
 }
 
-// NotifierArriveeConteneur est appelé par le worker/admin lors du scan dépôt.
-// Envoie une notification push OneSignal au pro acheteur.
+// NotifierArriveeConteneur : push OneSignal au pro acheteur, appelé au scan dépôt.
 func NotifierArriveeConteneur(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		CommandeID   int    `json:"id_commande"`

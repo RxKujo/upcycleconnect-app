@@ -3,20 +3,22 @@
 import (
 	"api/internal/models"
 	"api/pkg/database"
+	"api/pkg/storage"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-// loadAnnonceWithObjets charge une annonce complète (objets + photos) en deux
-// requêtes au lieu de N+1 : une pour l'annonce, une JOIN pour objets+photos.
+// Annonces marketplace : lecture, CRUD propriétaire, modération admin, photos.
+
+// ─── Chargement des annonces ─────────────────────────────────────────────────
+
+// loadAnnonceWithObjets : annonce complète en 2 requêtes (évite le N+1).
 func loadAnnonceWithObjets(id string) (*models.Annonce, error) {
 	var a models.Annonce
 	var prix sql.NullFloat64
@@ -63,7 +65,7 @@ func loadAnnonceWithObjets(id string) (*models.Annonce, error) {
 		}
 	}
 
-	// Une seule JOIN charge tous les objets ET toutes leurs photos.
+	// Une JOIN pour tous les objets + leurs photos.
 	rows, err := database.DB.Query(`
 		SELECT o.id_objet, o.categorie, o.materiau, o.etat, o.poids_kg,
 		       p.id_photo, p.url_photo, p.ordre
@@ -132,6 +134,7 @@ const (
 
 // ─── Handlers ────────────────────────────────────────────────────────────────
 
+// GetAnnonces liste toutes les annonces non supprimées (usage admin).
 func GetAnnonces(w http.ResponseWriter, r *http.Request) {
 	logInfo("GetAnnonces", "listing all")
 
@@ -167,6 +170,7 @@ func GetAnnonces(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, annonces, http.StatusOK)
 }
 
+// GetMesAnnonces : annonces de l'utilisateur courant (avec vignette).
 func GetMesAnnonces(w http.ResponseWriter, r *http.Request, userId int) {
 	logInfo("GetMesAnnonces", "user=%d", userId)
 
@@ -210,7 +214,7 @@ func GetMesAnnonces(w http.ResponseWriter, r *http.Request, userId int) {
 		ids = append(ids, it.IDAnnonce)
 	}
 
-	// Charge la première photo de chaque annonce en UNE seule requête (fix N+1).
+	// Première photo de chaque annonce en une requête (fix N+1).
 	if len(ids) > 0 {
 		phs := strings.Repeat("?,", len(ids))
 		phs = phs[:len(phs)-1]
@@ -242,6 +246,7 @@ func GetMesAnnonces(w http.ResponseWriter, r *http.Request, userId int) {
 	jsonOK(w, items, http.StatusOK)
 }
 
+// GetAnnonceAuth : détail réservé au propriétaire ou à un admin.
 func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	logInfo("GetAnnonceAuth", logFmtAnnonceUser, userId, id)
 
@@ -257,6 +262,7 @@ func GetAnnonceAuth(w http.ResponseWriter, r *http.Request, id string, userId in
 	jsonOK(w, a, http.StatusOK)
 }
 
+// GetAnnonce retourne le détail public d'une annonce.
 func GetAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	a, err := loadAnnonceWithObjets(id)
 	if err != nil {
@@ -266,7 +272,7 @@ func GetAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, a, http.StatusOK)
 }
 
-// conteneurActif vérifie qu'un conteneur existe et est en statut 'actif'.
+// conteneurActif : conteneur existant et en statut 'actif'.
 func conteneurActif(id int) bool {
 	var x int
 	err := database.DB.QueryRow(
@@ -274,6 +280,7 @@ func conteneurActif(id int) bool {
 	return err == nil
 }
 
+// CreateAnnonce valide et crée une annonce (objets + photos) en statut en_attente.
 func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 	logInfo("CreateAnnonce", "user=%d", userId)
 
@@ -297,7 +304,7 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Prix : strictement > 0 pour une vente ; ignoré (null) pour un don.
+	// Prix : > 0 pour une vente ; null pour un don.
 	if req.TypeAnnonce == "vente" {
 		if req.Prix == nil || *req.Prix <= 0 {
 			jsonErr(w, "un prix strictement supérieur à 0 est requis pour une vente", http.StatusBadRequest)
@@ -312,7 +319,7 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 		return
 	}
 
-	// Remise : on exige le conteneur OU l'adresse selon le mode, et on neutralise l'autre.
+	// Remise : conteneur OU adresse selon le mode, l'autre est neutralisé.
 	if req.ModeRemise == "conteneur" {
 		if req.IDConteneur == nil || !conteneurActif(*req.IDConteneur) {
 			jsonErr(w, "veuillez sélectionner un conteneur actif", http.StatusBadRequest)
@@ -388,9 +395,6 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 	}
 	annonceId, _ := res.LastInsertId()
 
-	uploadDir := getUploadDir()
-	os.MkdirAll(uploadDir, 0755)
-
 	photoOrdre := 0
 	for _, obj := range req.Objets {
 		objRes, err := tx.Exec(
@@ -419,7 +423,8 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 				return
 			}
 			filename := generateUUID() + "." + ext
-			if err := os.WriteFile(filepath.Join(uploadDir, filename), data, 0644); err != nil {
+			key := "photos/" + filename
+			if err := storage.Default().Save(key, data, storage.ContentType(key)); err != nil {
 				tx.Rollback()
 				logError("CreateAnnonce", "file write: %v", err)
 				jsonErr(w, "erreur sauvegarde photo", http.StatusInternalServerError)
@@ -427,7 +432,7 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 			}
 			if _, err = tx.Exec(
 				`INSERT INTO photos_objets (id_objet, url_photo, ordre) VALUES (?, ?, ?)`,
-				objetId, "photos/"+filename, photoOrdre); err != nil {
+				objetId, key, photoOrdre); err != nil {
 				tx.Rollback()
 				logError("CreateAnnonce", "insert photo: %v", err)
 				jsonErr(w, "erreur enregistrement photo", http.StatusInternalServerError)
@@ -450,6 +455,7 @@ func CreateAnnonce(w http.ResponseWriter, r *http.Request, userId int) {
 	}, http.StatusCreated)
 }
 
+// CancelAnnonce : annulation par le propriétaire, uniquement si en_attente.
 func CancelAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int) {
 	logInfo("CancelAnnonce", logFmtAnnonceUser, userId, id)
 
@@ -488,6 +494,7 @@ func CancelAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 	jsonOK(w, map[string]string{"message": "annonce annulée", "statut": "annulee"}, http.StatusOK)
 }
 
+// UpdateAnnonce met à jour une annonce ; une annonce validée repasse en modération.
 func UpdateAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int) {
 	logInfo("UpdateAnnonce", logFmtAnnonceUser, userId, id)
 
@@ -536,6 +543,7 @@ func UpdateAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 	jsonOK(w, map[string]interface{}{"message": "annonce mise à jour", "statut": newStatut}, http.StatusOK)
 }
 
+// DeleteAnnonce : passe une annonce validée en 'supprimee' et purge ses photos.
 func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
 	logInfo("DeleteAnnonce", logFmtAnnonceUser, userId, id)
 
@@ -556,8 +564,7 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		return
 	}
 
-	// Supprime les fichiers photos du disque.
-	uploadDir := getUploadDir()
+	// Purge les fichiers photos du stockage.
 	photoRows, err := database.DB.Query(
 		`SELECT po.url_photo FROM photos_objets po JOIN objets_annonces oa ON po.id_objet = oa.id_objet WHERE oa.id_annonce = ?`, id)
 	if err == nil {
@@ -565,7 +572,7 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 		for photoRows.Next() {
 			var url string
 			if photoRows.Scan(&url) == nil {
-				os.Remove(filepath.Join(uploadDir, filepath.Base(url)))
+				storage.Default().Delete(url) //nolint:errcheck
 			}
 		}
 	}
@@ -580,6 +587,9 @@ func DeleteAnnonce(w http.ResponseWriter, r *http.Request, id string, userId int
 	jsonOK(w, map[string]string{"message": "annonce supprimée"}, http.StatusOK)
 }
 
+// ─── Modération admin ────────────────────────────────────────────────────────
+
+// ValiderAnnonce : mise en ligne + notif vendeur + alertes matériaux.
 func ValiderAnnonce(w http.ResponseWriter, r *http.Request, id string, adminId int) {
 	tx, err := database.DB.Begin()
 	if err != nil {
@@ -616,7 +626,7 @@ func ValiderAnnonce(w http.ResponseWriter, r *http.Request, id string, adminId i
 	tx.Commit()
 	logInfo("ValiderAnnonce", "admin=%d validated annonce=%s", adminId, id)
 
-	// Déclencher les alertes matériaux en arrière-plan
+	// Alertes matériaux en arrière-plan.
 	go func(annonceIDStr string) {
 		annonceID, err := strconv.Atoi(annonceIDStr)
 		if err != nil {
@@ -650,6 +660,7 @@ func ValiderAnnonce(w http.ResponseWriter, r *http.Request, id string, adminId i
 	}, http.StatusOK)
 }
 
+// RefuserAnnonce : refus avec motif + notif vendeur.
 func RefuserAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	var req models.AnnonceValidationRequest
 	_ = json.NewDecoder(r.Body).Decode(&req)
@@ -693,6 +704,7 @@ func RefuserAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "annonce refusée"}, http.StatusOK)
 }
 
+// AttenteAnnonce : remet une annonce en attente de modération.
 func AttenteAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	if _, err := database.DB.Exec(
 		`UPDATE annonces SET statut = 'en_attente', valide_par = NULL, motif_refus = NULL WHERE id_annonce = ?`, id); err != nil {
@@ -703,13 +715,6 @@ func AttenteAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 // ─── Utilitaires fichiers ─────────────────────────────────────────────────────
-
-func getUploadDir() string {
-	if dir := os.Getenv("UPLOAD_DIR"); dir != "" {
-		return dir
-	}
-	return "../web/public/uploads/photos"
-}
 
 func decodeBase64Image(b64 string) (string, []byte, error) {
 	ext := "jpg"
@@ -737,7 +742,7 @@ func decodeBase64Image(b64 string) (string, []byte, error) {
 		}
 	}
 
-	// Détection magique si pas de header MIME.
+	// Détection par magic bytes si pas de header MIME.
 	if !strings.HasPrefix(b64, "data:image/") && len(data) >= 4 {
 		if data[0] == 0x89 && data[1] == 0x50 {
 			ext = "png"

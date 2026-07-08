@@ -6,27 +6,24 @@ import (
 )
 
 // ─── Impact écologique ────────────────────────────────────────────────────────
-//
-// Règle CO₂ : 50 % du poids total des déchets évités.
-// Isolée ici pour être testée sans DB.
+// Règle CO₂ : 50 % du poids des déchets évités. Isolée ici pour être testée sans DB.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const co2FacteurPct = 0.5
 
-// CO2EviteKg retourne les kg de CO₂ évités pour une masse de déchets donnée.
+// CO2EviteKg : kg de CO₂ évités pour une masse de déchets.
 func CO2EviteKg(poidsDechetKg float64) float64 {
 	return poidsDechetKg * co2FacteurPct
 }
 
-// ImpactEcologique regroupe les 3 métriques du dashboard Essential Pro.
+// ImpactEcologique : les 3 métriques du dashboard Essential Pro.
 type ImpactEcologique struct {
 	NbObjetsRecuperes  int     `json:"nb_objets_recuperes"`
 	PoidsDechetKg      float64 `json:"poids_dechet_kg"`
 	CO2EviteKg         float64 `json:"co2_evite_kg"`
 }
 
-// GetImpactEcologique calcule l'impact sur la période [depuis, jusqu'à maintenant].
-// Seules les commandes au statut "recuperee" sont comptabilisées.
+// GetImpactEcologique : impact depuis une date. Seules les commandes 'recuperee' comptent.
 func GetImpactEcologique(proID int, depuis time.Time) (ImpactEcologique, error) {
 	const q = `
 		SELECT
@@ -48,17 +45,15 @@ func GetImpactEcologique(proID int, depuis time.Time) (ImpactEcologique, error) 
 	return imp, nil
 }
 
-// StatsMateriaux représente le nombre d'annonces disponibles par matériau
-// dans un rayon donné autour du professionnel.
+// StatMateriau : nombre d'annonces disponibles par matériau autour du pro.
 type StatMateriau struct {
 	Materiau   string `json:"materiau"`
 	Libelle    string `json:"libelle"`
 	NbAnnonces int    `json:"nb_annonces"`
 }
 
-// GetStatsMateriaux retourne le nombre d'annonces validées par type de matériau
-// dans un rayon rayonKm autour des coordonnées (lat, lon) du pro.
-// La distance est calculée via la formule de Haversine en SQL.
+// GetStatsMateriaux : annonces validées par matériau dans rayonKm autour de (lat, lon).
+// Distance calculée en SQL via Haversine.
 func GetStatsMateriaux(lat, lon float64, rayonKm int) ([]StatMateriau, error) {
 	const q = `
 		SELECT oa.materiau, COALESCE(m.libelle, oa.materiau) AS libelle,

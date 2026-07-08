@@ -1,10 +1,14 @@
+{{-- Layout SALARIE — espace de gestion (sidebar + contenu). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
+    <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Salarié') — UpcycleConnect</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -24,12 +28,12 @@
 
         .salarie-wrapper { display: flex; min-height: 100vh; }
 
-        .sidebar { width: 280px; min-height: 100vh; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border); }
-        .sidebar-header { padding: 32px 24px 24px; border-bottom: 3px solid var(--forest); background-color: rgba(0,0,0,0.2); }
-        .sidebar-nav { flex-grow: 1; padding-top: 24px; }
+        .sidebar { width: 280px; height: 100vh; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border); }
+        .sidebar-header { padding: 32px 24px 24px; border-bottom: 3px solid var(--forest); background-color: rgba(0,0,0,0.2); flex-shrink: 0; }
+        .sidebar-nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-top: 24px; }
         .sidebar a { display: flex; align-items: center; padding: 14px 24px 14px 20px; color: var(--cream); text-decoration: none; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.05em; border-left: 6px solid transparent; transition: all 0.2s ease; }
         .sidebar a:hover, .sidebar a.active { border-left-color: var(--forest); background-color: rgba(36, 79, 38, 0.18); color: var(--wheat); padding-left: 26px; }
-        .sidebar-footer { padding: 24px; border-top: 3px solid rgba(245,240,225,0.1); }
+        .sidebar-footer { padding: 24px; border-top: 3px solid rgba(245,240,225,0.1); flex-shrink: 0; }
         .sidebar-section-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: rgba(245,240,225,0.4); padding: 18px 24px 8px; letter-spacing: 0.1em; text-transform: uppercase; }
 
         .main-content { margin-left: 280px; padding: 48px; width: calc(100% - 280px); box-sizing: border-box; }
@@ -82,56 +86,66 @@
 </head>
 <body>
     @include('partials._toast')
+    {{-- === Sidebar === --}}
     <div class="salarie-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h1 class="font-bebas" style="font-size: 2rem; margin: 0; color: var(--wheat); letter-spacing: 0.06em; line-height: 0.95;">Upcycle<span style="color: var(--cream); display: block;">Connect</span></h1>
-                <span class="font-mono" style="font-size: 0.75rem; color: var(--forest); background:var(--wheat); padding:2px 8px; font-weight: bold; margin-top: 8px; display: inline-block;">Espace Salarié</span>
+                <span class="font-mono" style="font-size: 0.75rem; color: var(--forest); background:var(--wheat); padding:2px 8px; font-weight: bold; margin-top: 8px; display: inline-block;" data-i18n="sal.space">Espace Salarié</span>
             </div>
             <nav class="sidebar-nav">
                 <a href="/salarie/dashboard" class="{{ request()->is('salarie/dashboard') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Tableau de bord
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="nav.dashboard">Tableau de bord</span>
                 </a>
-                <p class="sidebar-section-label">Catalogue</p>
+                <p class="sidebar-section-label" data-i18n="sal.cat.catalog">Catalogue</p>
                 <a href="/salarie/evenements" class="{{ request()->is('salarie/evenements*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Mes événements
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.myevents">Mes événements</span>
                 </a>
                 <a href="/salarie/templates" class="{{ request()->is('salarie/templates*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Modèles
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.templates">Modèles</span>
                 </a>
                 <a href="/salarie/planning" class="{{ request()->is('salarie/planning*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Planning
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.planning">Planning</span>
                 </a>
-                <p class="sidebar-section-label">Communauté</p>
+                <a href="/salarie/materiels" class="{{ request()->is('salarie/materiels*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.materials">Matériel</span>
+                </a>
+                <p class="sidebar-section-label" data-i18n="forum.kicker">Communauté</p>
                 <a href="/salarie/idees" class="{{ request()->is('salarie/idees*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Boîte à idées
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.ideas">Boîte à idées</span>
                 </a>
-                <p class="sidebar-section-label">Contenu</p>
+                <p class="sidebar-section-label" data-i18n="sal.cat.content">Contenu</p>
                 <a href="/salarie/articles" class="{{ request()->is('salarie/articles*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Articles & News
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.articles">Articles & News</span>
                 </a>
-                <p class="sidebar-section-label">Modération</p>
+                <p class="sidebar-section-label" data-i18n="sal.cat.moderation">Modération</p>
                 <a href="/salarie/forum/signalements" class="{{ request()->is('salarie/forum/signalements*') ? 'active' : '' }}" style="justify-content:space-between;">
-                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> Signalements</span>
+                    <span><span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.reports">Signalements</span></span>
                     <span id="badge-signalements" style="display:none;background:var(--cherry);color:var(--cream);font-size:0.7rem;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;font-weight:700;"></span>
                 </a>
                 <a href="/salarie/forum/sujets" class="{{ request()->is('salarie/forum/sujets*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Sujets forum
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.forumtopics">Sujets forum</span>
                 </a>
                 <a href="/salarie/forum/mots-bannis" class="{{ request()->is('salarie/forum/mots-bannis*') ? 'active' : '' }}">
-                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> Mots bannis
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="sal.bannedwords">Mots bannis</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
+                <div class="nav-lang" style="display:flex; gap:4px; justify-content:center; margin-bottom:10px;">
+                    <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')" style="flex:1;background:transparent;color:var(--cream);border:2px solid var(--wheat);padding:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">FR</button>
+                    <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')" style="flex:1;background:transparent;color:var(--cream);border:2px solid var(--wheat);padding:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">EN</button>
+                </div>
+                <style>.nav-lang-btn.active{background:var(--wheat)!important;color:var(--coffee)!important;}</style>
                 <form action="/salarie/logout" method="POST">
                     @csrf
-                    <button type="submit" class="btn-secondary" style="width: 100%; text-align: center; justify-content: center; padding: 10px; font-size: 1.1rem; border-color: var(--wheat);">
+                    <button type="submit" class="btn-secondary" style="width: 100%; text-align: center; justify-content: center; padding: 10px; font-size: 1.1rem; border-color: var(--wheat);" data-i18n="nav.logout">
                         Déconnexion
                     </button>
                 </form>
             </div>
         </aside>
 
+        {{-- === Contenu === --}}
         <main class="main-content">
             <div class="content-container">
                 @if(session('success'))
@@ -145,6 +159,7 @@
         </main>
     </div>
     @yield('scripts')
+{{-- === Script : badge signalements === --}}
 <script>
 (async function() {
     try {
@@ -160,5 +175,8 @@
     } catch(e) {}
 })();
 </script>
+    {{-- === Partials === --}}
+    @include('partials.datepicker')
+    @include('partials.i18n-engine')
 </body>
 </html>

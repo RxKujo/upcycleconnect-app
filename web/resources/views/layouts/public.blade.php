@@ -1,6 +1,9 @@
+{{-- Layout PUBLIC — site vitrine (navbar, contenu, footer). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
+    <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -15,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -198,15 +202,22 @@
     </style>
 </head>
 <body>
+    {{-- === Navbar + toast === --}}
     @include('partials._toast')
     @include('partials.navbar')
 
+    {{-- === Contenu === --}}
     <main>
         @yield('content')
     </main>
 
+    {{-- Emplacement pub --}}
+    @yield('pub_slot')
+
+    {{-- === Footer === --}}
     @include('partials.footer')
 
+    {{-- === Scripts === --}}
     <script>
         const API_BASE = '{{ config("services.api.public_url") }}';
         window.APP_API_BASE = API_BASE;
@@ -228,93 +239,8 @@
     <script src="/js/panier.js"></script>
     @yield('scripts')
 
-<!-- Overlay tutoriel -->
-<div id="tuto-overlay" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.82);z-index:99999;align-items:center;justify-content:center;">
-    <div style="background:var(--cream);border:3px solid var(--coffee);box-shadow:8px 8px 0 var(--coffee);padding:48px;max-width:580px;width:90%;position:relative;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span id="tuto-step-num" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;color:var(--forest);font-weight:700;"></span>
-            <button onclick="passerTutoriel()" style="font-family:'DM Mono',monospace;font-size:0.75rem;text-transform:uppercase;background:none;border:none;cursor:pointer;color:#888;text-decoration:underline;">Passer le tutoriel</button>
-        </div>
-        <div id="tuto-icone" style="font-size:3rem;margin-bottom:16px;"></div>
-        <h2 id="tuto-titre" style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--coffee);margin:0 0 16px;"></h2>
-        <p id="tuto-contenu" style="font-size:1.05rem;color:#444;line-height:1.7;margin-bottom:32px;"></p>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div id="tuto-dots" style="display:flex;gap:8px;"></div>
-            <div style="display:flex;gap:12px;">
-                <button id="tuto-prev" onclick="tutoNav(-1)" style="display:none;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.1em;background:var(--cream);color:var(--coffee);border:3px solid var(--coffee);padding:10px 24px;cursor:pointer;box-shadow:3px 3px 0 var(--coffee);">← Précédent</button>
-                <button id="tuto-next" onclick="tutoNav(1)" style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.1em;background:var(--forest);color:var(--cream);border:3px solid var(--coffee);padding:10px 24px;cursor:pointer;box-shadow:3px 3px 0 var(--coffee);">Suivant →</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+{{-- === Moteur i18n (FR/EN) === --}}
 <script>
-(async function() {
-    const token = localStorage.getItem('uc_token') || localStorage.getItem('auth_token');
-    if (!token) return;
-    const force = sessionStorage.getItem('force_tutoriel');
-    try {
-        const r = await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/statut', { headers: { 'Authorization': 'Bearer ' + token } });
-        if (!r.ok) return;
-        const statut = await r.json();
-        if (!force && (statut.tuto_vu || statut.termine || statut.passe)) return;
-        sessionStorage.removeItem('force_tutoriel');
-        const re = await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/etapes', { headers: { 'Authorization': 'Bearer ' + token } });
-        if (!re.ok) return;
-        const etapes = await re.json();
-        if (!etapes || !etapes.length) return;
-        lancerTutoriel(etapes, token);
-    } catch(e) {}
-})();
-
-let _tutoEtapes = [], _tutoIdx = 0, _tutoToken = '';
-
-function lancerTutoriel(etapes, token) {
-    _tutoEtapes = etapes; _tutoIdx = 0; _tutoToken = token;
-    afficherEtape(0);
-    document.getElementById('tuto-overlay').style.display = 'flex';
-}
-
-function afficherEtape(idx) {
-    const e = _tutoEtapes[idx];
-    if (!e) return;
-    document.getElementById('tuto-step-num').textContent = 'Étape ' + e.ordre + ' / ' + _tutoEtapes.length;
-    document.getElementById('tuto-icone').textContent = e.icone || '';
-    document.getElementById('tuto-titre').textContent = e.titre;
-    document.getElementById('tuto-contenu').textContent = e.contenu;
-    document.getElementById('tuto-prev').style.display = idx > 0 ? 'inline-block' : 'none';
-    const nextBtn = document.getElementById('tuto-next');
-    if (idx === _tutoEtapes.length - 1) {
-        nextBtn.textContent = 'Terminer ✓';
-        nextBtn.onclick = terminerTutoriel;
-    } else {
-        nextBtn.textContent = 'Suivant →';
-        nextBtn.onclick = () => tutoNav(1);
-    }
-    const dots = document.getElementById('tuto-dots');
-    dots.innerHTML = _tutoEtapes.map((_, i) => `<div style="width:10px;height:10px;border-radius:50%;background:${i===idx?'var(--forest)':'rgba(18,3,9,0.2)'};"></div>`).join('');
-}
-
-function tutoNav(dir) {
-    _tutoIdx = Math.max(0, Math.min(_tutoEtapes.length - 1, _tutoIdx + dir));
-    afficherEtape(_tutoIdx);
-}
-
-async function terminerTutoriel() {
-    await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/termine', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
-    document.getElementById('tuto-overlay').style.display = 'none';
-}
-
-async function passerTutoriel() {
-    await fetch('{{ config("services.api.public_url") }}/api/v1/tutoriel/passer', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _tutoToken } });
-    document.getElementById('tuto-overlay').style.display = 'none';
-}
-
-// ─── Moteur i18n ───────────────────────────────────────────────────────────
-// FR = langue source : les textes en dur des pages font foi. Les autres langues
-// sont chargées depuis le back-office admin via /api/v1/public/i18n/{code} et
-// remplacent le contenu des éléments [data-i18n] (repli sur le texte d'origine
-// si la clé n'est pas encore traduite).
 const _i18nCache = {};
 
 async function applyTranslations(lang) {
@@ -375,5 +301,9 @@ document.addEventListener('DOMContentLoaded', function () {
     setLang(localStorage.getItem('uc_lang') || 'fr');
 });
 </script>
+    {{-- === Partials === --}}
+    @include('partials.datepicker')
+    @include('partials.messagerie')
+    @include('partials.tutoriel-overlay')
 </body>
 </html>

@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des sessions : pilote de stockage, durée de vie, chiffrement
+// et paramètres du cookie de session.
+
 use Illuminate\Support\Str;
 
 return [

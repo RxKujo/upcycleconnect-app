@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des services tiers : identifiants et réglages des intégrations
+// externes (mail, Slack, API Go, reCAPTCHA, JWT, OneSignal).
+
 return [
 
     'postmark' => [
@@ -27,13 +30,29 @@ return [
         // URL serveur-à-serveur (PHP → Go API via réseau Docker ou local).
         'url' => env('API_URL') ?: (file_exists('/.dockerenv') ? 'http://api:8888' : 'http://localhost:8888'),
         // URL publique utilisée par le navigateur (fetch JS) — toujours l'hôte accessible depuis la machine cliente.
-        'public_url' => env('API_PUBLIC_URL', 'http://localhost:8888'),
+        // En prod, l'API est servie sur le même domaine HTTPS (Caddy route /api/*), donc on retombe sur APP_URL.
+        // En dev (APP_URL en http://localhost:8000), on garde l'accès direct à l'API sur :8888.
+        'public_url' => env('API_PUBLIC_URL')
+            ?: (str_starts_with((string) env('APP_URL', ''), 'https') ? rtrim(env('APP_URL'), '/') : 'http://localhost:8888'),
     ],
 
     // Secret partagé avec l'API Go pour vérifier la signature des JWT.
     // Passé par config (et non env() direct) pour rester lisible après config:cache.
     'jwt' => [
         'secret' => env('JWT_SECRET'),
+    ],
+
+    // Google reCAPTCHA v2. site_key : widget côté navigateur. secret_key : non
+    // utilisé par le web (la vérification du token se fait côté API Go).
+    'recaptcha' => [
+        'site_key'   => env('RECAPTCHA_SITE_KEY', ''),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY', ''),
+    ],
+
+    // OneSignal (notifications push web). Seul l'App ID est exposé au navigateur ;
+    // la REST API Key reste côté API Go (envoi des push).
+    'onesignal' => [
+        'app_id' => env('ONESIGNAL_APP_ID', ''),
     ],
 
 ];

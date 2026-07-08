@@ -1,11 +1,15 @@
+{{-- Layout PARTICULIER — espace perso (top-bar, sidebar, contenu). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
+    <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Mon Espace') — UpcycleConnect</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -130,40 +134,50 @@
         $isActive = fn($pattern) => request()->is($pattern) ? 'active' : '';
     @endphp
 
+    {{-- === Top-bar === --}}
     <nav class="topbar" aria-label="Navigation du site">
         <a href="/" class="topbar-brand">Upcycle<span>Connect</span></a>
         <div class="topbar-nav">
-            <a href="/annonces">Marché</a>
-            <a href="/evenements">Formations &amp; événements</a>
-            <a href="/forum">Forum</a>
-            <a href="/ressources">Ressources</a>
+            <a href="/annonces" data-i18n="nav.market">Marché</a>
+            <a href="/evenements" data-i18n="nav.events">Formations &amp; événements</a>
+            <a href="/forum" data-i18n="nav.forum">Forum</a>
+            <a href="/ressources" data-i18n="nav.resources">Ressources</a>
         </div>
         <div class="topbar-right">
+            <div class="nav-lang" role="group" aria-label="Langue" style="display:flex; gap:2px;">
+                <button type="button" class="nav-lang-btn" data-lang="fr" onclick="setLang('fr')" style="background:transparent;color:var(--cream);border:2px solid rgba(245,240,225,0.3);padding:5px 9px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">FR</button>
+                <button type="button" class="nav-lang-btn" data-lang="en" onclick="setLang('en')" style="background:transparent;color:var(--cream);border:2px solid rgba(245,240,225,0.3);padding:5px 9px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.72rem;">EN</button>
+            </div>
             <span class="topbar-user" id="topbar-user"></span>
-            <button class="btn-logout" onclick="logout()">Déconnexion</button>
+            <button class="btn-logout" onclick="logout()"  data-i18n="nav.logout">Déconnexion</button>
         </div>
+        <style>.nav-lang-btn.active{background:var(--wheat)!important;color:var(--coffee)!important;}</style>
     </nav>
 
+    {{-- === Shell : sidebar + contenu === --}}
     <div class="espace-shell">
         <aside class="espace-sidebar">
-            <div class="side-head">Mon espace</div>
+            <div class="side-head" data-i18n="nav.myspace">Mon espace</div>
             <nav class="side-nav" aria-label="Mon espace particulier">
-                <a href="{{ route('particulier.dashboard') }}" class="side-link {{ request()->routeIs('particulier.dashboard') ? 'active' : '' }}"><span class="ic"></span> Tableau de bord</a>
-                <a href="{{ route('particulier.annonces.index') }}" class="side-link {{ $isActive('particulier/annonces*') }}"><span class="ic"></span> Mes annonces</a>
-                <a href="{{ route('particulier.formations.index') }}" class="side-link {{ $isActive('particulier/formations*') }}"><span class="ic"></span> Mes formations</a>
-                <a href="{{ route('particulier.profile.show') }}" class="side-link {{ $isActive('particulier/profile*') }}"><span class="ic"></span> Profil &amp; paramètres</a>
+                <a href="{{ route('particulier.dashboard') }}" class="side-link {{ request()->routeIs('particulier.dashboard') ? 'active' : '' }}"><span class="ic"></span> <span data-i18n="nav.dashboard">Tableau de bord</span></a>
+                <a href="{{ route('particulier.annonces.index') }}" class="side-link {{ $isActive('particulier/annonces*') }}"><span class="ic"></span> <span data-i18n="nav.mylistings">Mes annonces</span></a>
+                <a href="{{ route('particulier.formations.index') }}" class="side-link {{ $isActive('particulier/formations*') }}"><span class="ic"></span> <span data-i18n="nav.mytrainings">Mes formations</span></a>
+                <a href="{{ route('particulier.profile.show') }}" class="side-link {{ $isActive('particulier/profile*') }}"><span class="ic"></span> <span data-i18n="nav.profile">Profil &amp; paramètres</span></a>
             </nav>
             <div class="side-cta">
-                <a href="{{ route('particulier.annonces.create') }}">+ Déposer une annonce</a>
+                <a href="{{ route('particulier.annonces.create') }}" data-i18n="nav.postlisting">+ Déposer une annonce</a>
             </div>
         </aside>
 
+        {{-- Contenu --}}
         <main class="espace-main">
             <div id="alert-container"></div>
             @yield('content')
+            @yield('pub_slot')
         </main>
     </div>
 
+    {{-- === Scripts === --}}
     <script>
         const API_BASE = '{{ config("services.api.public_url") }}';
 
@@ -218,5 +232,11 @@
         })();
     </script>
     @yield('scripts')
+    {{-- === Partials === --}}
+    @include('partials.datepicker')
+    @include('partials.onesignal')
+    @include('partials.i18n-engine')
+    @include('partials.messagerie')
+    @include('partials.tutoriel-overlay')
 </body>
 </html>

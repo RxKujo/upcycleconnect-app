@@ -1,3 +1,5 @@
+{{-- Navbar publique : liens, langue, panier, auth selon rôle (JWT localStorage) + menu mobile. --}}
+{{-- === Markup : desktop === --}}
 <nav class="navbar-public" id="navbar" role="navigation" aria-label="Navigation principale">
     <div class="nav-inner">
         
@@ -53,6 +55,7 @@
         </button>
     </div>
 
+    {{-- === Markup : mobile === --}}
     <div class="nav-mobile" id="nav-mobile">
         <a href="{{ route('annonces.index') }}" data-i18n="nav.market">Marché</a>
         <a href="{{ route('evenements.index') }}" data-i18n="nav.events">Formations &amp; événements</a>
@@ -71,6 +74,7 @@
     </div>
 </nav>
 
+{{-- === Styles === --}}
 <style>
     .navbar-public {
         position: fixed;
@@ -372,6 +376,7 @@
     }
 </style>
 
+{{-- === Script === --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('auth_token');

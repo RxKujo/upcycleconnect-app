@@ -3,6 +3,9 @@
 @section('title', 'Supervision Notifications')
 
 @section('content')
+{{-- Supervision des notifications (admin) : stats d'envois, filtres, journal des envois, liste des sites et modale d'envoi groupé (push/email par site et rôle). --}}
+
+{{-- === En-tête : titre et bouton d'envoi groupé === --}}
 <div class="page-header">
     <h1 class="page-title">Supervision Notifications</h1>
     <button class="btn-primary" onclick="document.getElementById('modal-groupe').style.display='flex'">

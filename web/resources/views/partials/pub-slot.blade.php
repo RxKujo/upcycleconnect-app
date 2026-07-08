@@ -1,10 +1,10 @@
-{{-- Emplacement publicitaire public : charge les pubs actives (rotation pondérée
-     côté API) et suit les clics. S'auto-masque s'il n'y a aucune pub active. --}}
+{{-- Emplacement pub public : pubs actives (rotation pondérée API) + suivi clics. Auto-masqué si vide. --}}
 <section id="pub-slot" style="display:none; max-width:1180px; margin:0 auto; padding:56px 24px;">
     <p style="font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; opacity:0.45; margin:0 0 18px;">Nos annonceurs</p>
     <div id="pub-slot-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;"></div>
 </section>
 
+{{-- === Script === --}}
 <script>
 (function () {
     var API = '{{ config("services.api.public_url") }}';

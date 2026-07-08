@@ -1,7 +1,11 @@
 @extends('layouts.public')
 
+{{-- Vue publique : guide et tutoriels. Liste les etapes du tour de prise en main (chargees via l'API)
+     et permet de relancer le tutoriel interactif pour les utilisateurs connectes. --}}
+
 @section('title', 'Tutoriels')
 
+{{-- === Styles : cartes d'etapes et bouton de relance === --}}
 @section('styles')
 .tutoriels-wrap { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
 .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--coffee); margin-bottom: 8px; }
@@ -14,13 +18,14 @@
 .relaunch-btn:hover { transform: translate(2px,2px); box-shadow: var(--shadow-hover); }
 @endsection
 
+{{-- === Contenu : titre, liste des etapes (remplie en JS) et bouton de relance === --}}
 @section('content')
 <div class="tutoriels-wrap">
-    <h1 class="page-title">Guide & Tutoriels</h1>
-    <p class="page-sub">Retrouvez ici les étapes du tutoriel de prise en main d'UpcycleConnect</p>
+    <h1 class="page-title" data-i18n="tuto.title">Guide & Tutoriels</h1>
+    <p class="page-sub" data-i18n="tuto.subtitle">Retrouvez ici les étapes du tutoriel de prise en main d'UpcycleConnect</p>
 
     <div id="etapes-list">
-        <div style="font-family:'DM Mono',monospace;text-transform:uppercase;font-size:0.85rem;color:#999;">Chargement...</div>
+        <div style="font-family:'DM Mono',monospace;text-transform:uppercase;font-size:0.85rem;color:#999;" data-i18n="common.loading">Chargement...</div>
     </div>
 
     <button class="relaunch-btn" onclick="relancerTutoriel()">
@@ -29,10 +34,11 @@
 </div>
 @endsection
 
+{{-- === Scripts : chargement des etapes via l'API et relance du tutoriel interactif === --}}
 @section('scripts')
 <script>
 const API = '{{ config("services.api.public_url") }}';
-const token = localStorage.getItem('uc_token');
+const token = localStorage.getItem('uc_token') || localStorage.getItem('auth_token');
 
 async function loadEtapes() {
     const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
@@ -59,6 +65,7 @@ async function init() {
     `).join('');
 }
 
+// Relance le tour guide : force son reaffichage puis renvoie vers l'accueil
 async function relancerTutoriel() {
     if (!token) {
         window.location.href = '/login?return=/tutoriels';

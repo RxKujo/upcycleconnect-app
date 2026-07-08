@@ -1,3 +1,6 @@
+// Point d'entrée de l'API : charge la configuration (.env), initialise la base de
+// données, démarre les workers de fond puis expose le serveur HTTP.
+
 package main
 
 import (

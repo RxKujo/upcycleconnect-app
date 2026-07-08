@@ -2,6 +2,9 @@
 
 @section('title', 'Articles & News')
 
+{{-- Liste des articles --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
 .toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -41,6 +44,7 @@
 @endsection
 
 @section('content')
+{{-- Compteurs par statut + libellés de badge --}}
 @php
     $total = count($articles);
     $nbPub = count(array_filter($articles, fn($a) => ($a['statut'] ?? '') === 'publie'));
@@ -53,11 +57,13 @@
     ];
 @endphp
 
+{{-- === En-tête === --}}
 <div class="page-header">
     <h1 class="page-title">Articles & News</h1>
     <a href="{{ route('salarie.articles.create') }}" class="btn-primary">+ Nouvel article</a>
 </div>
 
+{{-- === Stats === --}}
 <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">{{ $total }}</div></div>
     <div class="stat-card"><div class="stat-label">Publiés</div><div class="stat-value">{{ $nbPub }}</div></div>
@@ -65,6 +71,7 @@
     <div class="stat-card"><div class="stat-label">Archivés</div><div class="stat-value">{{ $nbArchive }}</div></div>
 </div>
 
+{{-- === Liste (ou état vide) === --}}
 @if($total === 0)
     <div class="empty-box">
         <p class="big">Aucun article</p>
@@ -82,6 +89,7 @@
         <input type="text" class="filter-search" id="art-search" placeholder="Rechercher un article…">
     </div>
 
+    {{-- data-statut / data-search : filtrage JS --}}
     <div class="art-list" id="art-list">
         @foreach($articles as $a)
         @php
@@ -123,6 +131,7 @@
 @endif
 @endsection
 
+{{-- === Scripts : filtrage === --}}
 @section('scripts')
 <script>
 (function () {

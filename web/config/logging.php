@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des journaux (logs) : canal par défaut et définition des
+// différents canaux Monolog (single, daily, slack, syslog, etc.).
+
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;

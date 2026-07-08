@@ -6,11 +6,19 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+/**
+ * Planning personnel du salarié : création et gestion des créneaux.
+ * Proxy vers l'API Go.
+ */
 class PlanningController extends Controller
 {
+    // --- Helpers API ---
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('salarie_token'); }
 
+    // --- Lecture ---
+
+    /** Affiche le planning (liste des créneaux). */
     public function index()
     {
         $r = Http::withToken($this->token())->timeout(5)
@@ -19,6 +27,9 @@ class PlanningController extends Controller
         return view('salarie.planning.index', compact('items'));
     }
 
+    // --- Écriture ---
+
+    /** Crée un nouveau créneau après validation. */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -38,6 +49,7 @@ class PlanningController extends Controller
         return redirect()->route('salarie.planning.index')->with('success', 'Créneau ajouté.');
     }
 
+    /** Met à jour un créneau existant après validation. */
     public function update(Request $request, $id)
     {
         $data = $request->validate([
@@ -57,6 +69,7 @@ class PlanningController extends Controller
         return redirect()->route('salarie.planning.index')->with('success', 'Créneau mis à jour.');
     }
 
+    /** Supprime un créneau. */
     public function destroy($id)
     {
         $r = Http::withToken($this->token())

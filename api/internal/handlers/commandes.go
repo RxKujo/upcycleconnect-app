@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+// GetCommandes — toutes les commandes avec annonce et acheteur (admin).
 func GetCommandes(w http.ResponseWriter, r *http.Request) {
 	query := `
 		SELECT c.id_commande, c.id_annonce, c.id_acheteur, c.id_conteneur, c.commission_pct, c.montant_commission, c.date_limite_recuperation, c.stripe_payment_intent, c.date_commande, c.statut,
@@ -70,6 +71,7 @@ func GetCommande(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(c)
 }
 
+// UpdateCommandeStatut — change le statut ; passage en « recuperee » crédite le score du vendeur.
 func UpdateCommandeStatut(w http.ResponseWriter, r *http.Request, id string) {
 	var req models.UpdateCommandeStatutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

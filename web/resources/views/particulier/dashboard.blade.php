@@ -1,5 +1,9 @@
 @extends('layouts.particulier')
+
+@section('pub_slot')@include('partials.pub-slot')@endsection
 @section('title', 'Tableau de bord')
+
+{{-- Tableau de bord particulier : score, raccourcis et activité récente. --}}
 
 @section('styles')
 <style>
@@ -28,9 +32,10 @@
 @endsection
 
 @section('content')
-<div id="loading" class="loading">Chargement de votre espace...</div>
+<div id="loading" class="loading" data-i18n="common.loading">Chargement de votre espace...</div>
 
 <div id="dash" style="display:none;">
+    {{-- === En-tête + score === --}}
     <div class="dash-hero">
         <div>
             <div class="dash-hello" id="hero-hello">Bonjour</div>
@@ -39,47 +44,52 @@
         <div class="dash-score">
             <div class="lvl" id="hero-lvl">&nbsp;</div>
             <div class="num" id="hero-score">0</div>
-            <div class="pts">points upcycling</div>
+            <div class="pts" data-i18n="dash.points">points upcycling</div>
         </div>
     </div>
 
+    {{-- === Raccourcis === --}}
     <div class="dash-cards">
         <a href="{{ route('particulier.annonces.index') }}" class="dash-card">
-            <span class="label">Mes annonces</span>
+            <span class="label" data-i18n="nav.mylistings">Mes annonces</span>
             <span class="big" id="c-annonces">—</span>
-            <span class="go">Gérer mes dépôts →</span>
+            <span class="go" data-i18n="dash.managelistings">Gérer mes dépôts →</span>
         </a>
         <a href="{{ route('particulier.formations.index') }}" class="dash-card">
-            <span class="label">Formations &amp; événements</span>
+            <span class="label" data-i18n="nav.events">Formations &amp; événements</span>
             <span class="big" id="c-formations">—</span>
-            <span class="go">Voir mes inscriptions →</span>
+            <span class="go" data-i18n="dash.myregistrations">Voir mes inscriptions →</span>
         </a>
         <a href="{{ route('particulier.profile.show') }}" class="dash-card">
-            <span class="label">Déchets évités</span>
+            <span class="label" data-i18n="dash.wasteavoided">Déchets évités</span>
             <span class="big" id="c-dechets">—</span>
-            <span class="go">kg · voir mon profil →</span>
+            <span class="go" data-i18n="dash.kgprofile">kg · voir mon profil →</span>
         </a>
     </div>
 
+    {{-- === Activité récente === --}}
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <h3 class="dash-section-title" style="margin-bottom:0; border:none; padding:0;">Activité récente</h3>
-            <a href="{{ route('particulier.annonces.index') }}" class="btn-secondary btn-sm">Mes annonces</a>
+            <h3 class="dash-section-title" style="margin-bottom:0; border:none; padding:0;" data-i18n="dash.recentactivity">Activité récente</h3>
+            <a href="{{ route('particulier.annonces.index') }}" class="btn-secondary btn-sm" data-i18n="nav.mylistings">Mes annonces</a>
         </div>
         <div id="activity" style="margin-top:16px;">
-            <div class="empty-mini">Chargement…</div>
+            <div class="empty-mini" data-i18n="common.loading">Chargement…</div>
         </div>
     </div>
 </div>
 
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
+// Échappe le HTML (anti-injection).
 function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
+// Charge le profil puis compteurs et activité.
 async function loadDashboard() {
     let user = null;
     try {
@@ -131,6 +141,7 @@ const ANNONCE_STATUTS = {
     retiree:    { label: 'Retirée',    cls: 'badge-waiting' }
 };
 
+// Annonces : compteur + activité récente.
 async function loadAnnoncesSummary() {
     const container = document.getElementById('activity');
     try {

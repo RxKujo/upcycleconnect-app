@@ -1,7 +1,11 @@
+// Fichier conteneur.go : structures des points de collecte (conteneurs), des
+// commandes déposées, des codes-barres et des tickets d'incident associés.
+
 package models
 
 import "time"
 
+// PhotoConteneur : une photo rattachée à un conteneur.
 type PhotoConteneur struct {
 	IDPhoto int    `json:"id_photo" db:"id_photo"`
 	URL     string `json:"url_photo" db:"url_photo"`
