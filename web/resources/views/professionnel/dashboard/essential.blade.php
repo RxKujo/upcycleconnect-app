@@ -53,6 +53,47 @@
         </div>
     </div>
 
+    {{-- Dépenses du mois (objets, publicité, abonnement) --}}
+    @if($depenses)
+    <div class="card">
+        <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:6px;"><span data-i18n="prod.spending">Dépenses — Ce mois</span></h2>
+        <p class="font-mono" style="font-size:0.72rem; color:#666; margin-bottom:24px;"><span data-i18n="prod.spending.note">Tout mois de publicité entamé est dû en entier.</span></p>
+
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:24px;">
+            <div style="border:3px solid #120309; padding:20px; text-align:center;">
+                <div class="font-bebas" style="font-size:2.2rem; color:#18607D;">{{ number_format($depenses['objets'] ?? 0, 2) }} €</div>
+                <div class="font-mono" style="font-size:0.68rem; margin-top:4px;"><span data-i18n="prod.spending.items">Objets achetés</span></div>
+            </div>
+            <div style="border:3px solid #120309; padding:20px; text-align:center;">
+                <div class="font-bebas" style="font-size:2.2rem; color:#A4243B;">{{ number_format($depenses['publicite'] ?? 0, 2) }} €</div>
+                <div class="font-mono" style="font-size:0.68rem; margin-top:4px;"><span data-i18n="prod.spending.ads">Publicités</span> ({{ $depenses['nb_pubs_actives'] ?? 0 }})</div>
+            </div>
+            <div style="border:3px solid #120309; padding:20px; text-align:center;">
+                <div class="font-bebas" style="font-size:2.2rem; color:#244F26;">{{ number_format($depenses['abonnement'] ?? 0, 2) }} €</div>
+                <div class="font-mono" style="font-size:0.68rem; margin-top:4px;"><span data-i18n="prod.spending.sub">Abonnement</span></div>
+            </div>
+            <div style="border:3px solid #120309; background:#120309; color:#F5F0E1; padding:20px; text-align:center;">
+                <div class="font-bebas" style="font-size:2.2rem;">{{ number_format($depenses['total'] ?? 0, 2) }} €</div>
+                <div class="font-mono" style="font-size:0.68rem; margin-top:4px;"><span data-i18n="prod.spending.total">Total du mois</span></div>
+            </div>
+        </div>
+
+        {{-- Répartition par catégorie --}}
+        @php $tot = max($depenses['total'] ?? 0, 0.01); @endphp
+        <div style="display:flex; height:26px; border:3px solid #120309; overflow:hidden;">
+            @foreach([['objets','#18607D'],['publicite','#A4243B'],['abonnement','#244F26']] as [$k,$c])
+                @php $pct = ($depenses[$k] ?? 0) / $tot * 100; @endphp
+                @if($pct > 0)<div style="width:{{ $pct }}%; background:{{ $c }};" title="{{ ucfirst($k) }} : {{ number_format($depenses[$k], 2) }} €"></div>@endif
+            @endforeach
+        </div>
+        <div style="display:flex; gap:20px; margin-top:10px; font-family:'DM Mono',monospace; font-size:0.68rem; flex-wrap:wrap;">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#18607D;vertical-align:middle;"></span> Objets</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#A4243B;vertical-align:middle;"></span> Publicité</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#244F26;vertical-align:middle;"></span> Abonnement</span>
+        </div>
+    </div>
+    @endif
+
     {{-- Stats matériaux --}}
     <div class="card">
         <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:24px;"><span data-i18n="prod.materials10km">Matériaux disponibles — rayon 10 km</span></h2>

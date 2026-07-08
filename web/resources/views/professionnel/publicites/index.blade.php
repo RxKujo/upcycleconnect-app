@@ -118,10 +118,17 @@
             </div>
 
             <div style="margin-bottom:20px;">
-                <label for="pub-visuel" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.visual">URL du visuel (image)</span></label>
+                <label for="pub-visuel-file" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.visual">Visuel de la publicité</span></label>
+                <input id="pub-visuel-file" type="file" accept="image/jpeg,image/png,image/webp"
+                    style="width:100%; padding:10px; border:3px solid var(--coffee); font-family:'DM Mono',monospace; font-size:0.82rem; background:white; cursor:pointer; box-sizing:border-box;">
+                <div id="pub-visuel-preview" style="margin-top:10px; display:none;">
+                    <img id="pub-visuel-preview-img" alt="Aperçu" style="max-height:120px; border:2px solid var(--coffee);">
+                </div>
+                <p class="font-mono" style="font-size:0.7rem; color:#666; margin:10px 0 4px;" data-i18n="prod.ads.f.orurl">— ou coller l'URL d'une image —</p>
                 <input id="pub-visuel" type="url" name="visuel_url" value="{{ old('visuel_url') }}" maxlength="500"
                     placeholder="https://..."
-                    style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'Outfit',sans-serif; font-size:1rem; background:white;">
+                    style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'Outfit',sans-serif; font-size:1rem; background:white; box-sizing:border-box;">
+                <input type="hidden" name="visuel_base64" id="pub-visuel-base64">
                 @error('visuel_url')<p style="color:var(--cherry);font-size:0.8rem;margin-top:4px;">{{ $message }}</p>@enderror
             </div>
 
@@ -136,19 +143,21 @@
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
                 <div>
                     <label for="pub-debut" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.start">Date de début</span></label>
-                    <input id="pub-debut" type="date" name="date_debut" value="{{ old('date_debut') }}"
+                    <input id="pub-debut" type="date" name="date_debut" value="{{ old('date_debut') }}" min="{{ date('Y-m-d') }}"
                         style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'DM Mono',monospace; background:white;">
                 </div>
                 <div>
                     <label for="pub-fin" class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.end">Date de fin</span></label>
-                    <input id="pub-fin" type="date" name="date_fin" value="{{ old('date_fin') }}"
+                    <input id="pub-fin" type="date" name="date_fin" value="{{ old('date_fin') }}" min="{{ date('Y-m-d') }}"
                         style="width:100%; padding:12px; border:3px solid var(--coffee); font-family:'DM Mono',monospace; background:white;">
                 </div>
             </div>
 
-            <div style="border:3px solid var(--coffee); padding:14px 18px; margin-bottom:24px; background:var(--wheat); font-family:'DM Mono',monospace; font-size:0.8rem; color:var(--coffee);">
-                Tarif : <strong>100 €/mois</strong> — facturation mensuelle via Stripe.<br>
-                Votre publicité sera <strong>soumise à validation</strong> avant mise en ligne.
+            <div style="border:3px solid var(--coffee); padding:14px 18px; margin-bottom:24px; background:var(--wheat); font-family:'DM Mono',monospace; font-size:0.8rem; color:var(--coffee); line-height:1.65;">
+                Tarif : <strong>100 €/mois</strong> par publicité — facturation via Stripe.<br>
+                <strong data-i18n="prod.ads.monthpolicy">Tout mois entamé est dû en entier</strong> (facturation par mois calendaire).<br>
+                <span id="pub-cout-estim" style="display:none; margin-top:8px; padding-top:8px; border-top:2px solid rgba(18,3,9,0.15);"></span>
+                <span data-i18n="prod.ads.validnote">Votre publicité sera <strong>soumise à validation</strong> avant mise en ligne.</span>
             </div>
 
             <div style="display:flex; gap:12px; justify-content:flex-end;">
@@ -176,6 +185,64 @@
     pubModal.addEventListener('click', function (e) {
         if (e.target === pubModal) closePubModal();
     });
+
+    // Visuel : upload de fichier (lu en base64) OU URL. L'upload a la priorité.
+    var fileInput = document.getElementById('pub-visuel-file');
+    var b64Input  = document.getElementById('pub-visuel-base64');
+    var urlInput  = document.getElementById('pub-visuel');
+    var preview   = document.getElementById('pub-visuel-preview');
+    var previewImg = document.getElementById('pub-visuel-preview-img');
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            var f = fileInput.files && fileInput.files[0];
+            if (!f) { b64Input.value = ''; preview.style.display = 'none'; return; }
+            if (['image/jpeg', 'image/png', 'image/webp'].indexOf(f.type) === -1) {
+                alert('Format non supporté (JPG, PNG ou WEBP).'); fileInput.value = ''; return;
+            }
+            if (f.size > 5 * 1024 * 1024) {
+                alert('Image trop lourde (max 5 Mo).'); fileInput.value = ''; return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (ev) {
+                b64Input.value = ev.target.result;
+                previewImg.src = ev.target.result;
+                preview.style.display = 'block';
+                urlInput.value = ''; // l'upload prime sur l'URL
+            };
+            reader.readAsDataURL(f);
+        });
+        urlInput.addEventListener('input', function () {
+            if (urlInput.value) { fileInput.value = ''; b64Input.value = ''; preview.style.display = 'none'; }
+        });
+    }
+
+    // Estimation du coût — politique « tout mois entamé = mois payé » (mois calendaires).
+    var debutInput = document.getElementById('pub-debut');
+    var finInput   = document.getElementById('pub-fin');
+    var estimEl    = document.getElementById('pub-cout-estim');
+    function moisEntames(d1, d2) {
+        var a = d1.split('-'), b = d2.split('-');
+        return (parseInt(b[0], 10) - parseInt(a[0], 10)) * 12 + (parseInt(b[1], 10) - parseInt(a[1], 10)) + 1;
+    }
+    function majEstimation() {
+        var d = debutInput.value, f = finInput.value;
+        if (d && f) {
+            var m = moisEntames(d, f);
+            if (m < 1) { estimEl.style.display = 'none'; return; }
+            estimEl.innerHTML = 'Estimation : <strong>' + m + (m > 1 ? ' mois entamés' : ' mois entamé') + ' × 100 € = ' + (m * 100) + ' €</strong>';
+            estimEl.style.display = 'block';
+        } else if (d) {
+            estimEl.innerHTML = 'À partir du <strong>' + d.split('-').reverse().join('/') + '</strong> — 100 €/mois (ajoute une date de fin pour l\'estimation).';
+            estimEl.style.display = 'block';
+        } else {
+            estimEl.style.display = 'none';
+        }
+    }
+    if (debutInput && finInput) {
+        debutInput.addEventListener('change', majEstimation);
+        finInput.addEventListener('change', majEstimation);
+        majEstimation();
+    }
 
     // Rouvre la modale si erreurs de validation
     @if($errors->any() || old('titre'))

@@ -78,7 +78,7 @@ func CreatePublicitePro(w http.ResponseWriter, r *http.Request, userID int) {
 
 	id, _ := res.LastInsertId()
 	jsonOK(w, map[string]interface{}{
-		"message":     "publicité soumise, en attente de validation admin",
+		"message":      "publicité soumise, en attente de validation admin",
 		"id_publicite": id,
 		"cout_mensuel": coutMensuelPub,
 	}, http.StatusCreated)
@@ -125,6 +125,45 @@ func DeletePublicitePro(w http.ResponseWriter, r *http.Request, pubID string, us
 		return
 	}
 	jsonOK(w, map[string]string{"message": "publicité supprimée"}, http.StatusOK)
+}
+
+// GetProDepensesMois retourne la répartition des dépenses du professionnel pour le
+// mois en cours (objets achetés, publicités, abonnement) — cf. descriptif fonctionnel
+// (dashboard pro : montant dépensé en pub + répartition par catégorie).
+func GetProDepensesMois(w http.ResponseWriter, r *http.Request, userID int) {
+	// Publicités : chaque pub active est due au tarif mensuel (mois entamé = mois payé).
+	var nbPubsActives int
+	database.DB.QueryRow(
+		`SELECT COUNT(*) FROM publicites WHERE id_professionnel = ? AND statut = 'active'`,
+		userID).Scan(&nbPubsActives)
+	depensePub := float64(nbPubsActives) * coutMensuelPub
+
+	// Abonnement : prix mensuel du plan actif du pro.
+	var depenseAbo float64
+	database.DB.QueryRow(`
+		SELECT COALESCE(a.prix_mensuel, 0)
+		FROM souscriptions s
+		JOIN abonnements a ON a.id_abonnement = s.id_abonnement
+		WHERE s.id_utilisateur = ? AND s.est_active = 1
+		ORDER BY s.date_debut DESC LIMIT 1`, userID).Scan(&depenseAbo)
+
+	// Objets : total des achats (annonces) du mois en cours.
+	var depenseObjets float64
+	database.DB.QueryRow(`
+		SELECT COALESCE(SUM(COALESCE(a.prix, 0)), 0)
+		FROM commandes c
+		JOIN annonces a ON a.id_annonce = c.id_annonce
+		WHERE c.id_acheteur = ?
+		  AND MONTH(c.date_commande) = MONTH(NOW())
+		  AND YEAR(c.date_commande)  = YEAR(NOW())`, userID).Scan(&depenseObjets)
+
+	jsonOK(w, map[string]interface{}{
+		"objets":          depenseObjets,
+		"publicite":       depensePub,
+		"abonnement":      depenseAbo,
+		"total":           depensePub + depenseAbo + depenseObjets,
+		"nb_pubs_actives": nbPubsActives,
+	}, http.StatusOK)
 }
 
 // ─── Publicités — côté public (affichage WRR sur pages particuliers) ─────────
@@ -230,6 +269,9 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 		NbVues      int     `json:"nb_vues"`
 		NbClics     int     `json:"nb_clics"`
 		Entreprise  string  `json:"nom_entreprise"`
+		VisuelURL   string  `json:"visuel_url"`
+		URLCible    string  `json:"url_cible"`
+		MotifRefus  string  `json:"motif_refus"`
 		DateDebut   *string `json:"date_debut"`
 		DateFin     *string `json:"date_fin"`
 	}
@@ -238,6 +280,7 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 		SELECT p.id_publicite, p.titre, p.statut,
 		       COALESCE(p.cout_mensuel, 100.00), p.nb_vues, p.nb_clics,
 		       COALESCE(u.nom_entreprise,''),
+		       COALESCE(p.visuel_url,''), COALESCE(p.url_cible,''), COALESCE(p.motif_refus,''),
 		       DATE_FORMAT(p.date_debut,'%Y-%m-%dT%H:%i:%s'),
 		       DATE_FORMAT(p.date_fin,'%Y-%m-%dT%H:%i:%s')
 		FROM publicites p
@@ -264,12 +307,16 @@ func AdminGetPublicites(w http.ResponseWriter, r *http.Request) {
 		var p pubAdmin
 		var debut, fin sql.NullString
 		if err := dbRows.Scan(&p.IDPublicite, &p.Titre, &p.Statut, &p.Cout,
-			&p.NbVues, &p.NbClics, &p.Entreprise, &debut, &fin); err != nil {
+			&p.NbVues, &p.NbClics, &p.Entreprise, &p.VisuelURL, &p.URLCible, &p.MotifRefus, &debut, &fin); err != nil {
 			jsonErr(w, "erreur serveur", http.StatusInternalServerError)
 			return
 		}
-		if debut.Valid { p.DateDebut = &debut.String }
-		if fin.Valid   { p.DateFin   = &fin.String }
+		if debut.Valid {
+			p.DateDebut = &debut.String
+		}
+		if fin.Valid {
+			p.DateFin = &fin.String
+		}
 		pubs = append(pubs, p)
 	}
 	jsonOK(w, pubs, http.StatusOK)
@@ -363,7 +410,7 @@ func AdminGetRotationWRR(w http.ResponseWriter, r *http.Request) {
 		entries = []rotationEntry{}
 	}
 	jsonOK(w, map[string]interface{}{
-		"description": "Score WRR : plus le score est élevé, plus la pub sera sélectionnée au prochain appel WRR. Un score de 0 signifie qu'elle vient d'être affichée.",
+		"description":  "Score WRR : plus le score est élevé, plus la pub sera sélectionnée au prochain appel WRR. Un score de 0 signifie qu'elle vient d'être affichée.",
 		"pubs_actives": entries,
 	}, http.StatusOK)
 }

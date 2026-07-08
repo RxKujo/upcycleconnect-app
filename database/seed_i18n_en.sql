@@ -620,3 +620,13 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 DELETE FROM translations WHERE id_langue=@en AND cle='market.cash';
 INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('market.cash', @en, 'Cash payment on handover — contact the seller to arrange a meetup.');
+
+-- Dashboard pro : dépenses du mois
+DELETE FROM translations WHERE id_langue=@en AND cle IN ('prod.spending','prod.spending.note','prod.spending.items','prod.spending.ads','prod.spending.sub','prod.spending.total');
+INSERT INTO translations (cle, id_langue, valeur) VALUES
+('prod.spending',       @en, 'Spending — This month'),
+('prod.spending.note',  @en, 'Any started advertising month is billed in full.'),
+('prod.spending.items', @en, 'Items purchased'),
+('prod.spending.ads',   @en, 'Advertising'),
+('prod.spending.sub',   @en, 'Subscription'),
+('prod.spending.total', @en, 'Month total');

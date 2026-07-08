@@ -13,11 +13,11 @@
 
 {{-- Explication algorithme --}}
 <div class="card" style="background:var(--coffee);color:var(--cream);margin-bottom:32px;">
-    <h2 class="font-bebas" style="font-size:1.6rem;margin:0 0 12px;color:var(--wheat);">Algorithme Weighted Round-Robin</h2>
+    <h2 class="font-bebas" style="font-size:1.6rem;margin:0 0 12px;color:var(--wheat);">Rotation équitable des publicités</h2>
     <p style="font-family:'DM Mono',monospace;font-size:0.85rem;line-height:1.6;opacity:0.85;margin:0;">
-        {{ $data['description'] ?? 'Score WRR : plus le score est élevé, plus la pub sera sélectionnée au prochain appel WRR.' }}
-        La pub avec le score le plus élevé est sélectionnée en priorité lors de chaque affichage.
-        Son score est ensuite décrémenté de son poids × 1, garantissant une rotation équitable selon le poids configuré.
+        Conformément au cahier des charges, <strong>tous les annonceurs qui paient ont exactement la même visibilité</strong>.
+        La rotation est strictement équitable (poids identique pour tous) : chaque pub active est affichée aussi souvent que les autres.
+        Le score ci-dessous ne sert qu'à équilibrer l'ordre de passage — il n'avantage aucun annonceur.
     </p>
 </div>
 

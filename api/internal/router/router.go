@@ -432,6 +432,8 @@ func routePro(w http.ResponseWriter, req *http.Request, path, method string, use
 		handlers.GetDashboardExpert(w, req, userId)
 	case match(path, prefixPro+"/dashboard/export-pdf") && method == "GET":
 		handlers.ExportDashboardPDF(w, req, userId)
+	case match(path, prefixPro+"/depenses") && method == "GET":
+		handlers.GetProDepensesMois(w, req, userId)
 
 	// Alertes matériaux
 	case match(path, prefixPro+segAlertes) && method == "GET":

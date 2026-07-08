@@ -21,7 +21,7 @@
     .uc-dp-ico { flex:0 0 auto; width:16px; height:16px; opacity:0.6; }
 
     .uc-dp-pop {
-        position:absolute; z-index:2000; width:300px;
+        position:absolute; z-index:100000; width:300px;
         background:var(--cream, #F5F0E1); border:3px solid var(--coffee, #120309);
         box-shadow:6px 6px 0 var(--coffee, #120309); padding:14px;
         font-family:'Outfit', sans-serif; color:var(--coffee, #120309);

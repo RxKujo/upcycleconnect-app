@@ -30,10 +30,16 @@ class DashboardController extends Controller
 
         $data = $response->json();
 
+        // Répartition des dépenses du mois (objets, publicité, abonnement).
+        $depensesResp = Http::withToken($this->token())
+            ->get($this->apiUrl() . '/api/v1/pro/depenses');
+        $depenses = $depensesResp->successful() ? $depensesResp->json() : null;
+
         return view('professionnel.dashboard.essential', [
             'impact'          => $data['impact_ecologique'] ?? [],
             'stats_materiaux' => $data['stats_materiaux'] ?? [],
             'periode'         => $data['periode'] ?? '',
+            'depenses'        => $depenses,
         ]);
     }
 

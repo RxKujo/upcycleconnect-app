@@ -13,22 +13,23 @@ import (
 //  État persisté dans `publicites_rotation` (score_rotation, nb_affichages).
 //  À chaque appel PickPublicitesWRR(n) :
 //  1. On charge les publicités actives + leur état de rotation.
-//  2. Pour chaque pub non sélectionnée ce tour-ci : score += poids_affichage.
+//  2. Pour chaque pub non sélectionnée ce tour-ci : score += 1 (poids égal pour tous).
 //  3. La pub avec le score le plus élevé est sélectionnée ; son score est remis à 0.
 //  4. On répète n fois.
 //
-// Propriété : sur le long terme, une pub de poids 2 apparaît deux fois plus
-// souvent qu'une pub de poids 1, de manière déterministe et sans tirage aléatoire.
+// Propriété : le poids est forcé à 1 pour TOUS les annonceurs (exigence du cahier
+// des charges : « tous la même visibilité »). La rotation est donc strictement
+// équitable et déterministe — chaque annonceur actif est affiché aussi souvent.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // PubliciteAffichage est la structure renvoyée à la couche présentation.
 type PubliciteAffichage struct {
-	IDPublicite    int    `json:"id_publicite"`
-	IDProfessionnel int   `json:"id_professionnel"`
-	NomEntreprise  string `json:"nom_entreprise"`
-	Titre          string `json:"titre"`
-	VisuelURL      string `json:"visuel_url"`
-	URLCible       string `json:"url_cible"`
+	IDPublicite     int    `json:"id_publicite"`
+	IDProfessionnel int    `json:"id_professionnel"`
+	NomEntreprise   string `json:"nom_entreprise"`
+	Titre           string `json:"titre"`
+	VisuelURL       string `json:"visuel_url"`
+	URLCible        string `json:"url_cible"`
 }
 
 type pubCandidat struct {
@@ -54,8 +55,10 @@ func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 	now := time.Now()
 
 	// Charger les pubs actives avec leur état de rotation (INSERT si absent).
+	// Poids forcé à 1 pour TOUS : le cahier des charges impose une visibilité
+	// égale entre tous les annonceurs qui paient (« tous la même visibilité »).
 	rows, err := tx.Query(`
-		SELECT p.id_publicite, p.poids_affichage,
+		SELECT p.id_publicite, 1,
 		       COALESCE(pr.score_rotation, 0), COALESCE(pr.nb_affichages, 0),
 		       p.titre, COALESCE(p.visuel_url,''), COALESCE(p.url_cible,''),
 		       p.id_professionnel, COALESCE(u.nom_entreprise,'')
@@ -164,17 +167,17 @@ func EnregistrerClicPublicite(pubID int) error {
 
 // PublicitePro représente une publicité du point de vue du professionnel.
 type PublicitePro struct {
-	IDPublicite  int            `json:"id_publicite"`
-	Titre        string         `json:"titre"`
-	VisuelURL    *string        `json:"visuel_url"`
-	URLCible     *string        `json:"url_cible"`
-	DateDebut    *string        `json:"date_debut"`
-	DateFin      *string        `json:"date_fin"`
-	Statut       string         `json:"statut"`
-	NbClics      int            `json:"nb_clics"`
-	NbVues       int            `json:"nb_vues"`
-	CoutMensuel  float64        `json:"cout_mensuel"`
-	MotifRefus   *string        `json:"motif_refus,omitempty"`
+	IDPublicite int     `json:"id_publicite"`
+	Titre       string  `json:"titre"`
+	VisuelURL   *string `json:"visuel_url"`
+	URLCible    *string `json:"url_cible"`
+	DateDebut   *string `json:"date_debut"`
+	DateFin     *string `json:"date_fin"`
+	Statut      string  `json:"statut"`
+	NbClics     int     `json:"nb_clics"`
+	NbVues      int     `json:"nb_vues"`
+	CoutMensuel float64 `json:"cout_mensuel"`
+	MotifRefus  *string `json:"motif_refus,omitempty"`
 }
 
 // GetPublicitesPro retourne les publicités d'un professionnel.
@@ -203,11 +206,21 @@ func GetPublicitesPro(proID int) ([]PublicitePro, error) {
 			&p.Statut, &p.NbClics, &p.NbVues, &p.CoutMensuel, &motif); err != nil {
 			return nil, err
 		}
-		if visuel.Valid { p.VisuelURL = &visuel.String }
-		if url.Valid   { p.URLCible  = &url.String }
-		if debut.Valid { p.DateDebut = &debut.String }
-		if fin.Valid   { p.DateFin   = &fin.String }
-		if motif.Valid { p.MotifRefus = &motif.String }
+		if visuel.Valid {
+			p.VisuelURL = &visuel.String
+		}
+		if url.Valid {
+			p.URLCible = &url.String
+		}
+		if debut.Valid {
+			p.DateDebut = &debut.String
+		}
+		if fin.Valid {
+			p.DateFin = &fin.String
+		}
+		if motif.Valid {
+			p.MotifRefus = &motif.String
+		}
 		pubs = append(pubs, p)
 	}
 	return pubs, rows.Err()
