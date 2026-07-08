@@ -11,6 +11,8 @@ class FinanceController extends Controller
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('admin_token'); }
 
+    // --- Lecture ---
+
     public function index(Request $request)
     {
         $filters = $request->only(['type', 'mois', 'annee']);
@@ -18,6 +20,8 @@ class FinanceController extends Controller
         $revenus = $this->callApi('/api/v1/admin/finances/revenus', $filters) ?? [];
         return view('admin.finances.index', compact('dashboard', 'revenus', 'filters'));
     }
+
+    // --- Exports ---
 
     public function exportCsv(Request $request)
     {
@@ -54,6 +58,8 @@ class FinanceController extends Controller
             'Content-Disposition' => 'attachment; filename="finances_' . $annee . '.pdf"',
         ]);
     }
+
+    // --- Utilitaires ---
 
     private function callApi(string $path, array $query = []): ?array
     {

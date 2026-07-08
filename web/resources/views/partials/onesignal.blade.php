@@ -1,7 +1,4 @@
-{{-- Notifications push OneSignal (Web Push).
-     Rendu uniquement si l'App ID est configuré (ONESIGNAL_APP_ID).
-     Associe l'utilisateur connecté via External ID = id utilisateur (extrait du
-     JWT uc_token), pour un ciblage côté API Go sans stocker de player_id. --}}
+{{-- Push OneSignal (Web Push). Rendu si ONESIGNAL_APP_ID. External ID = id utilisateur (JWT uc_token). --}}
 @if(config('services.onesignal.app_id'))
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>

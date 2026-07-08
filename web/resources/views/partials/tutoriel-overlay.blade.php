@@ -1,11 +1,6 @@
-{{-- Tutoriel guidé multi-pages (obligatoire, non-passable).
-     Chaque étape pointe un vrai élément (cible_element) sur une page (page) :
-     le moteur navigue de page en page, surligne l'élément (spotlight) et bloque
-     l'interface jusqu'à « Terminer ». État persistant entre les pages (localStorage).
-     Inclus dans les layouts public / particulier / professionnel. --}}
-{{-- Overlay = capteur de clics + fond sombre (mode centré). En mode spotlight,
-     l'ombre de l'élément assombrit la page ; la carte est un frère placé AU-DESSUS
-     (z-index > élément surligné) pour rester parfaitement lisible. --}}
+{{-- Tutoriel guidé multi-pages (non-passable) : spotlight sur cible_element, navigation page à page,
+     état en localStorage. Layouts public / particulier / pro. --}}
+{{-- Overlay = capteur de clics + fond sombre ; carte au-dessus (z-index) pour rester lisible. --}}
 <div id="tuto-overlay" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.82);z-index:99999;"></div>
 <div id="tuto-card" style="display:none;background:var(--cream);border:3px solid var(--coffee);box-shadow:8px 8px 0 var(--coffee);padding:36px;width:460px;max-width:92vw;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100001;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -23,6 +18,7 @@
     </div>
 </div>
 
+{{-- === Script === --}}
 <script>
 (function () {
     const API = '{{ config('services.api.public_url') }}';

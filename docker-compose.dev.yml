@@ -65,9 +65,15 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       STRIPE_PRICE_PUB_MENSUEL: ${STRIPE_PRICE_PUB_MENSUEL}
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
-      MAIL_FROM: "noreply@upcycleconnect.fr"
+      # Mail : par défaut Mailpit (dev, sans auth/TLS). Pour envoyer de VRAIS
+      # mails, pointer MAIL_HOST vers un serveur réel (serveur mail DMZ mission 2
+      # ou relais) et renseigner MAIL_USERNAME/PASSWORD/ENCRYPTION.
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_FROM: ${MAIL_FROM:-noreply@upcycleconnect.fr}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-}
       # Stockage des photos : S3 (MinIO en dev). UPLOAD_DIR reste comme repli
       # local si STORAGE_DRIVER n'est pas "s3".
       STORAGE_DRIVER: s3
@@ -128,12 +134,12 @@ services:
       RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
       VITE_DEV_SERVER_URL: "http://localhost:5173"
       MAIL_MAILER: smtp
-      MAIL_HOST: mailpit
-      MAIL_PORT: "1025"
-      MAIL_USERNAME: ""
-      MAIL_PASSWORD: ""
-      MAIL_ENCRYPTION: ""
-      MAIL_FROM_ADDRESS: "noreply@upcycleconnect.fr"
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM:-noreply@upcycleconnect.fr}
       MAIL_FROM_NAME: "UpcycleConnect"
       # Médias : écriture sur le bucket S3 (MinIO), lecture navigateur via
       # l'URL publique locale du bucket. AWS_ENDPOINT (minio:9000) sert à
@@ -238,7 +244,10 @@ services:
       - uc_network
 
   glpi:
-    image: diouxx/glpi
+    # GLPI 10.0.x : l'API REST legacy (apirest.php) attendue par le client Go
+    # (api/pkg/glpi). L'image elestio télécharge la version fixée par VERSION_GLPI
+    # (sans quoi = latest = GLPI 11, dont l'API REST legacy est cassée/dépréciée).
+    image: elestio/glpi:10.0.15
     container_name: uc_glpi
     profiles: ["glpi"]
     restart: unless-stopped
@@ -246,6 +255,7 @@ services:
       - glpi_db
     environment:
       TIMEZONE: Europe/Paris
+      VERSION_GLPI: "10.0.15"
     ports:
       - "8082:80"
     volumes:

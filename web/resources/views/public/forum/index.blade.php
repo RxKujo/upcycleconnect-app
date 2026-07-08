@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+{{-- Forum public : liste des sujets. --}}
+
 @section('title', 'Forum')
 @section('meta_description', 'Forum communautaire UpcycleConnect. Posez vos questions et partagez vos expériences.')
 
@@ -9,6 +11,7 @@
     <h1 class="page-title" data-i18n="forum.title">Forum</h1>
     <p class="page-subtitle" data-i18n="forum.subtitle">Échangez avec la communauté, posez vos questions et partagez vos retours d'expérience</p>
 
+    {{-- === Bouton "Nouveau sujet" ou invitation à se connecter === --}}
     <div style="margin-bottom:32px;" id="newSujetSection">
         <a href="{{ route('particulier.login') }}?return=%2Fforum" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour poster" id="loginToPost" style="display:none;"><span data-i18n="forum.newtopic">+ Nouveau sujet</span>
         </a>
@@ -16,6 +19,7 @@
         </button>
     </div>
 
+    {{-- === Formulaire nouveau sujet (masqué par défaut) === --}}
     <form id="newSujetForm" autocomplete="off" style="display:none; border:var(--border); padding:24px; background:white; box-shadow:var(--shadow-sm); margin-bottom:32px;" onsubmit="return submitNewSujet(event);">
         <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; margin-bottom:16px;" data-i18n="forum.newtopic.title">Lancer un nouveau sujet</h3>
         <div style="margin-bottom:12px;">
@@ -37,7 +41,9 @@
         <p id="newSujetError" style="margin-top:12px; color:#b00; display:none;"></p>
     </form>
 
+    {{-- === Scripts === --}}
     <script>
+    // Affiche le bon bouton selon la connexion
     (function() {
         var token = localStorage.getItem('auth_token');
         if (token) {
@@ -46,6 +52,7 @@
             document.getElementById('loginToPost').style.display = 'inline-block';
         }
     })();
+    // Envoie le sujet puis redirige vers sa page
     async function submitNewSujet(e) {
         e.preventDefault();
         var form = e.target;
@@ -75,6 +82,7 @@
     }
     </script>
 
+    {{-- === Liste des sujets === --}}
     @if(count($sujets) > 0)
     <div style="border:var(--border); box-shadow:var(--shadow);">
         @foreach($sujets as $index => $sujet)

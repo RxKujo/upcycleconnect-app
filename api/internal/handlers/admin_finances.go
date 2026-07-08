@@ -1,8 +1,6 @@
 package handlers
 
-// Pilotage financier — back-office admin.
-// Réutilise les tables factures (légal), souscriptions et transactions (temps-réel).
-// Export CSV natif Go, export PDF via gofpdf (déjà disponible dans le projet).
+// Pilotage financier (admin) : factures, souscriptions, transactions. Export CSV natif + PDF (gofpdf).
 
 import (
 	"bytes"
@@ -27,9 +25,8 @@ type RevenuLigne struct {
 	TotalTTC       float64 `json:"total_ttc"`
 }
 
-// GetRevenusSynthese agrège les revenus par type_facture et par mois.
-// Renvoie un tableau plat (consommé directement par la vue), filtrable par
-// année (défaut : année courante), type de source et mois.
+// GetRevenusSynthese : revenus agrégés par type_facture et par mois (tableau plat).
+// Filtrable par année (défaut : courante), type et mois.
 func GetRevenusSynthese(w http.ResponseWriter, r *http.Request) {
 	annee := r.URL.Query().Get("annee")
 	if annee == "" {
@@ -91,6 +88,7 @@ type FactureLine struct {
 	StripeID       *string `json:"stripe_payment_id,omitempty"`
 }
 
+// GetFactures liste les factures filtrables (type, mois/année, utilisateur).
 func GetFactures(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	typeF := q.Get("type")
@@ -157,6 +155,7 @@ func GetFactures(w http.ResponseWriter, r *http.Request) {
 
 // ─── Export CSV ───────────────────────────────────────────────────────────────
 
+// ExportFacturesCSV exporte les factures filtrées au format CSV (BOM Excel).
 func ExportFacturesCSV(w http.ResponseWriter, r *http.Request) {
 	annee := r.URL.Query().Get("annee")
 	mois := r.URL.Query().Get("mois")
@@ -234,6 +233,7 @@ type financeLigne struct {
 	TotalTTC float64
 }
 
+// ExportFacturesPDF exporte la synthèse annuelle des revenus en PDF (repli texte).
 func ExportFacturesPDF(w http.ResponseWriter, r *http.Request) {
 	annee := r.URL.Query().Get("annee")
 	if annee == "" {
@@ -266,7 +266,7 @@ func ExportFacturesPDF(w http.ResponseWriter, r *http.Request) {
 
 	pdfBytes, genErr := buildFinancePDF(annee, lignes, grandTotalHT, grandTotalTTC)
 	if genErr != nil {
-		// Fallback texte lisible si PDF impossible
+		// Repli texte si PDF impossible.
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="revenus_%s.txt"`, annee))
 		fmt.Fprintf(w, "PILOTAGE FINANCIER - EXERCICE %s\n\n", annee)
@@ -283,6 +283,7 @@ func ExportFacturesPDF(w http.ResponseWriter, r *http.Request) {
 	w.Write(pdfBytes)
 }
 
+// buildFinancePDF : met en page le tableau annuel des revenus (gofpdf).
 func buildFinancePDF(annee string, lignes []financeLigne, grandTotalHT, grandTotalTTC float64) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
@@ -294,7 +295,7 @@ func buildFinancePDF(annee string, lignes []financeLigne, grandTotalHT, grandTot
 	pdf.CellFormat(190, 8, tr("Généré le "+time.Now().Format("02/01/2006")), "0", 1, "L", false, 0, "")
 	pdf.Ln(6)
 
-	// En-têtes tableau
+	// En-têtes tableau.
 	pdf.SetFont("Arial", "B", 10)
 	pdf.SetFillColor(216, 201, 155)
 	pdf.CellFormat(45, 9, "Mois", "1", 0, "C", true, 0, "")
@@ -311,7 +312,7 @@ func buildFinancePDF(annee string, lignes []financeLigne, grandTotalHT, grandTot
 		pdf.CellFormat(40, 8, fmt.Sprintf("%.2f EUR", l.TotalTTC), "1", 1, "R", false, 0, "")
 	}
 
-	// Ligne total
+	// Ligne total.
 	pdf.SetFont("Arial", "B", 10)
 	pdf.SetFillColor(36, 79, 38)
 	pdf.SetTextColor(245, 240, 225)
@@ -328,6 +329,7 @@ func buildFinancePDF(annee string, lignes []financeLigne, grandTotalHT, grandTot
 
 // ─── Dashboard financier temps-réel ──────────────────────────────────────────
 
+// GetFinanceDashboard renvoie les indicateurs financiers temps-réel (mois/année).
 func GetFinanceDashboard(w http.ResponseWriter, r *http.Request) {
 	annee := r.URL.Query().Get("annee")
 	if annee == "" {

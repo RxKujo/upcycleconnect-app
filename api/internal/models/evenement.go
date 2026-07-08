@@ -1,7 +1,11 @@
+// Fichier evenement.go : structures des événements/formations, de leurs séances
+// (créneaux) et des animateurs, côté modèle et côté payload de création.
+
 package models
 
 import "time"
 
+// AnimateurInfo : identité minimale d'un animateur d'événement/séance.
 type AnimateurInfo struct {
 	IDUtilisateur int    `json:"id_utilisateur"`
 	Nom           string `json:"nom"`
@@ -31,6 +35,7 @@ type SeanceInput struct {
 	Animateurs []int  `json:"animateurs"`
 }
 
+// Evenement : événement ou formation (potentiellement multi-séances).
 type Evenement struct {
 	IDEvenement   int             `json:"id_evenement"`
 	IDCreateur    int             `json:"id_createur"`

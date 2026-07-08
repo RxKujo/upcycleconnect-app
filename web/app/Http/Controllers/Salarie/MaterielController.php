@@ -12,12 +12,32 @@ class MaterielController extends Controller
     private function token(): string { return session('salarie_token'); }
     private function url(): string { return $this->api() . '/api/v1/salarie/materiels'; }
 
+    // Sites (antennes) pour les sélecteurs de rattachement.
+    private function sites(): array
+    {
+        $r = Http::withToken($this->token())->timeout(5)->get($this->api() . '/api/v1/salarie/sites');
+        return $r->successful() ? ($r->json() ?: []) : [];
+    }
+
+    // Site du salarié courant (null si aucun).
+    private function monSite(): ?array
+    {
+        $r = Http::withToken($this->token())->timeout(5)->get($this->api() . '/api/v1/utilisateurs/me');
+        if (!$r->successful()) {
+            return null;
+        }
+        $me = $r->json();
+        return empty($me['id_site_uc']) ? null : ['id' => $me['id_site_uc'], 'nom' => $me['nom_site'] ?? null];
+    }
+
     public function index()
     {
+        $monSite = $this->monSite();
         $r = Http::withToken($this->token())->timeout(5)->get($this->url());
         $materiels = $r->successful() ? ($r->json() ?: []) : [];
+        $sites = $this->sites();
 
-        return view('salarie.materiels.index', compact('materiels'));
+        return view('salarie.materiels.index', compact('materiels', 'sites', 'monSite'));
     }
 
     public function show($id)
@@ -31,8 +51,9 @@ class MaterielController extends Controller
         // Événements pour le formulaire de réservation.
         $re = Http::withToken($this->token())->timeout(5)->get($this->api() . '/api/v1/salarie/evenements');
         $evenements = $re->successful() ? ($re->json() ?: []) : [];
+        $sites = $this->sites();
 
-        return view('salarie.materiels.show', compact('materiel', 'evenements'));
+        return view('salarie.materiels.show', compact('materiel', 'evenements', 'sites'));
     }
 
     public function store(Request $request)
@@ -95,10 +116,7 @@ class MaterielController extends Controller
         return back()->with('success', 'Retour enregistré.');
     }
 
-    /**
-     * Valide les champs et prépare le payload (photos converties en base64 côté
-     * client, transmises telles quelles à l'API qui les pousse sur S3).
-     */
+    // Valide et prépare le payload (photos en base64 côté client, poussées sur S3 par l'API).
     private function validatePayload(Request $request): array
     {
         $v = $request->validate([
@@ -106,6 +124,7 @@ class MaterielController extends Controller
             'description'    => 'nullable|string|max:2000',
             'etat'           => 'required|in:neuf,bon,use,a_reparer',
             'est_disponible' => 'nullable|boolean',
+            'id_site'        => 'nullable|integer',
             'image_base64'   => 'nullable|array',
             'image_base64.*' => 'string',
         ]);
@@ -115,6 +134,7 @@ class MaterielController extends Controller
             'description'    => $v['description'] ?? null,
             'etat'           => $v['etat'],
             'est_disponible' => $request->boolean('est_disponible'),
+            'id_site'        => $request->filled('id_site') ? (int) $request->id_site : null,
             'images'         => $request->input('image_base64', []),
         ];
     }

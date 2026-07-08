@@ -2,6 +2,8 @@
 
 @section('title', 'Mes publicités')
 
+{{-- Publicités du Pro : liste, stats, suppression + modale de création (100 €/mois, max 5 actives) --}}
+
 @section('content')
 <div class="main-content">
 
@@ -13,6 +15,7 @@
         </div>
     </div>
 
+    {{-- === Messages flash === --}}
     @if(session('success'))
         <div style="background:#e8f5e9;border:2px solid #244F26;padding:12px 20px;margin-bottom:24px;font-family:'DM Mono',monospace;font-size:0.85rem;">
             {{ session('success') }}
@@ -33,12 +36,14 @@
         </p>
     </div>
 
+    {{-- === Liste === --}}
     @forelse($publicites as $pub)
     <div class="card" style="margin-bottom:20px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
             <div style="flex:1;">
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
                     <h3 class="font-bebas" style="font-size:1.3rem;">{{ $pub['titre'] }}</h3>
+                    {{-- Couleurs et libellé du badge de statut --}}
                     @php
                         $statutColors = [
                             'en_attente' => ['bg'=>'#fff3cd','border'=>'#856404','text'=>'En attente'],
@@ -98,7 +103,7 @@
 
 </div>
 
-{{-- Modale : nouvelle publicité --}}
+{{-- === Modale : nouvelle publicité === --}}
 <div id="pub-modal" style="display:none; position:fixed; inset:0; background:rgba(18,3,9,0.55); z-index:9999; align-items:center; justify-content:center; padding:16px; overflow-y:auto;">
     <div style="background:var(--cream); border:3px solid var(--coffee); box-shadow:8px 8px 0 var(--coffee); padding:40px; max-width:600px; width:100%; position:relative;">
 
@@ -168,6 +173,7 @@
     </div>
 </div>
 
+{{-- === Script === --}}
 <script>
 (function () {
     var pubModal = document.getElementById('pub-modal');
@@ -186,7 +192,7 @@
         if (e.target === pubModal) closePubModal();
     });
 
-    // Visuel : upload de fichier (lu en base64) OU URL. L'upload a la priorité.
+    // Visuel : upload (base64) OU URL — l'upload prime
     var fileInput = document.getElementById('pub-visuel-file');
     var b64Input  = document.getElementById('pub-visuel-base64');
     var urlInput  = document.getElementById('pub-visuel');
@@ -216,7 +222,7 @@
         });
     }
 
-    // Estimation du coût — politique « tout mois entamé = mois payé » (mois calendaires).
+    // Estimation : tout mois calendaire entamé est dû
     var debutInput = document.getElementById('pub-debut');
     var finInput   = document.getElementById('pub-fin');
     var estimEl    = document.getElementById('pub-cout-estim');

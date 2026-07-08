@@ -1,8 +1,7 @@
 package handlers
 
-// Supervision des notifications — back-office admin.
-// Réutilise onesignal_service et email_service existants, ne les recode pas.
-// Ajoute : journal d'audit, gestion des préfs par utilisateur, envoi groupé par site.
+// Supervision des notifications (admin) : journal d'audit, préfs par utilisateur, envoi groupé par site.
+// S'appuie sur onesignal_service et email_service existants.
 
 import (
 	"api/internal/services"
@@ -31,6 +30,7 @@ type NotifLogEntry struct {
 	DateEnvoi       string  `json:"date_envoi"`
 }
 
+// GetNotificationsLog renvoie le journal des envois, filtrable (type, dates, dest.).
 func GetNotificationsLog(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	typeEnvoi := q.Get("type")
@@ -119,6 +119,7 @@ type UserNotifPrefs struct {
 	OneSignalID     *string `json:"onesignal_player_id,omitempty"`
 }
 
+// GetUserPrefsNotif renvoie les préférences de notification d'un utilisateur.
 func GetUserPrefsNotif(w http.ResponseWriter, r *http.Request, userID string) {
 	var p UserNotifPrefs
 	var oneSignalID sql.NullString
@@ -145,6 +146,7 @@ func GetUserPrefsNotif(w http.ResponseWriter, r *http.Request, userID string) {
 	jsonOK(w, p, http.StatusOK)
 }
 
+// UpdateUserPrefsNotif met à jour les préférences push/email d'un utilisateur.
 func UpdateUserPrefsNotif(w http.ResponseWriter, r *http.Request, userID string) {
 	var req struct {
 		NotifPushActive  *bool `json:"notif_push_active"`
@@ -209,7 +211,7 @@ func SendNotifGroupe(w http.ResponseWriter, r *http.Request, adminID int) {
 		Titre    string `json:"titre"`
 		Contenu  string `json:"contenu"`
 		TypeEnvoi string `json:"type_envoi"` // "push", "email", "push_email"
-		// Filtres de segment (au moins un requis)
+		// Filtres de segment
 		IDSite *int    `json:"id_site,omitempty"`
 		Role   *string `json:"role,omitempty"` // "salarie", "particulier", etc.
 	}
@@ -224,7 +226,7 @@ func SendNotifGroupe(w http.ResponseWriter, r *http.Request, adminID int) {
 	if req.TypeEnvoi == "" {
 		req.TypeEnvoi = "push"
 	}
-	// Normaliser : le client peut envoyer "groupe_push" / "groupe_email"
+	// Le client peut envoyer "groupe_push" / "groupe_email".
 	switch req.TypeEnvoi {
 	case "groupe_push":
 		req.TypeEnvoi = "push"
@@ -232,7 +234,7 @@ func SendNotifGroupe(w http.ResponseWriter, r *http.Request, adminID int) {
 		req.TypeEnvoi = "email"
 	}
 
-	// Construire le filtre de segment
+	// Filtre de segment.
 	segQuery := `
 		SELECT id_utilisateur, email, COALESCE(onesignal_player_id,''), notif_push_active, COALESCE(notif_email_active,1)
 		FROM utilisateurs WHERE est_banni = 0`
@@ -276,14 +278,12 @@ func SendNotifGroupe(w http.ResponseWriter, r *http.Request, adminID int) {
 		return
 	}
 
-	// Envoi push groupé
 	var pushErr, emailErr error
 	nbEnvoyesPush, nbEnvoyesEmail := 0, 0
 
 	if req.TypeEnvoi == "push" || req.TypeEnvoi == "push_email" {
-		// Ciblage par External ID (= id utilisateur, défini via OneSignal.login
-		// côté client). Remplace l'ancien ciblage par player_id qui n'était
-		// jamais peuplé.
+		// Ciblage par External ID (= id utilisateur, via OneSignal.login côté client).
+		// Remplace l'ancien ciblage par player_id, jamais peuplé.
 		externalIDs := []string{}
 		for _, d := range dests {
 			if d.pushActive {
@@ -308,7 +308,6 @@ func SendNotifGroupe(w http.ResponseWriter, r *http.Request, adminID int) {
 		}
 	}
 
-	// Logger dans notifications_envoi_log
 	statut := "envoye"
 	var errDetail *string
 	if pushErr != nil || emailErr != nil {
@@ -347,7 +346,7 @@ func SendNotifGroupe(w http.ResponseWriter, r *http.Request, adminID int) {
 	}, http.StatusOK)
 }
 
-// logNotifEnvoi enregistre un envoi unitaire dans le journal (appelé depuis onesignal/email).
+// logNotifEnvoi : journalise un envoi unitaire (appelé depuis onesignal/email).
 func logNotifEnvoi(typeEnvoi string, idEnvoyeur *int, idDest *int, segment *string, titre, contenu string, nb int, statut string, errDetail *string) {
 	database.DB.Exec(`
 		INSERT INTO notifications_envoi_log

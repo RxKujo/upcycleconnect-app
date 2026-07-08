@@ -2,6 +2,8 @@
 @section('title', 'Catégories de prestations')
 
 @section('content')
+
+{{-- === En-tête de page + bouton de création === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1 class="page-title">Catégories de prestations</h1>
     <button type="button" class="btn-primary" onclick="openCatModal()">+ Nouvelle catégorie</button>
@@ -27,6 +29,7 @@
     .modal-box .form-textarea { min-height:90px; }
 </style>
 
+{{-- === Modale : création / édition d'une catégorie === --}}
 <div class="modal-overlay" id="catModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeCatModal()">&times;</button>
@@ -47,6 +50,7 @@
     </div>
 </div>
 
+{{-- === Tableau des catégories === --}}
 <div class="table-container">
     <table>
         <thead>
@@ -81,6 +85,7 @@
     </table>
 </div>
 
+{{-- === Scripts : ouverture/fermeture de la modale et pré-remplissage en édition === --}}
 <script>
     const catForm   = document.getElementById('catForm');
     const catMethod = document.getElementById('catMethod');

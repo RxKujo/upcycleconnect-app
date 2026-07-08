@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 
 class SessionController extends Controller
 {
+    // ---------------------------------------------------------------------
+    // Ouverture de session par espace
+    // ---------------------------------------------------------------------
+
     public function setAdminSession(Request $request)
     {
         try {
@@ -116,10 +120,10 @@ class SessionController extends Controller
         }
     }
 
-    /**
-     * Vérifie la signature HMAC-SHA256 du JWT et retourne le payload décodé,
-     * ou null si le token est invalide, forgé ou expiré.
-     */
+    // ---------------------------------------------------------------------
+    // Vérification et décodage du JWT
+    // ---------------------------------------------------------------------
+
     private function verifyAndDecodeJWT(string $token): ?array
     {
         $parts = explode('.', $token);
@@ -134,7 +138,6 @@ class SessionController extends Controller
             return null;
         }
 
-        // Recalcule la signature attendue et compare en temps constant
         $expectedSig = hash_hmac('sha256', "$header.$payload", $secret, true);
         $expectedSigB64 = rtrim(strtr(base64_encode($expectedSig), '+/', '-_'), '=');
 
@@ -163,6 +166,10 @@ class SessionController extends Controller
 
         return base64_decode(strtr($input, '-_', '+/'), true);
     }
+
+    // ---------------------------------------------------------------------
+    // Déconnexion
+    // ---------------------------------------------------------------------
 
     public function clearRoleSessions()
     {

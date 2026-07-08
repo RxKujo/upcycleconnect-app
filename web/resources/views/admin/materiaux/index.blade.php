@@ -1,7 +1,11 @@
 @extends('layouts.admin')
 @section('title', 'Matériaux')
 
+{{-- Vue admin : gestion du référentiel des matériaux (CRUD via modale, upload d'icône
+     en base64). Le code interne est immuable car référencé par les annonces/alertes. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1 class="page-title">Matériaux</h1>
     <button type="button" class="btn-primary" onclick="openMatModal()">+ Nouveau matériau</button>
@@ -25,6 +29,7 @@
     .mat-row-off { opacity:0.5; }
 </style>
 
+{{-- === Modale : création / édition d'un matériau === --}}
 <div class="modal-overlay" id="matModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeMatModal()">&times;</button>
@@ -59,6 +64,7 @@
     </div>
 </div>
 
+{{-- === Tableau : liste des matériaux === --}}
 <div class="table-container">
     <table>
         <thead>
@@ -110,6 +116,7 @@
     </table>
 </div>
 
+{{-- === Scripts : modale (nouveau/édition) et prévisualisation de l'icône === --}}
 <script>
     const matForm   = document.getElementById('matForm');
     const matMethod = document.getElementById('matMethod');

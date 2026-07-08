@@ -1,3 +1,5 @@
+// pdf_service.go : génération PDF — export RGPD et billet d'événement (QR code).
+
 package services
 
 import (
@@ -18,8 +20,7 @@ type TicketData struct {
 	PrixPaye       float64 // montant payé (0 si gratuit)
 }
 
-// ExportSection représente une catégorie de données (annonces, commandes…) sous
-// forme de tableau pour l'export RGPD.
+// ExportSection : une catégorie de données sous forme de tableau (export RGPD).
 type ExportSection struct {
 	Titre   string
 	Headers []string
@@ -28,8 +29,7 @@ type ExportSection struct {
 	Vide    string // message affiché si aucune donnée
 }
 
-// UserExportData regroupe l'intégralité des données personnelles d'un utilisateur
-// pour l'export RGPD (droit d'accès et de portabilité).
+// UserExportData : données personnelles pour l'export RGPD (accès + portabilité).
 type UserExportData struct {
 	User     models.Utilisateur
 	Genere   string
@@ -37,6 +37,7 @@ type UserExportData struct {
 	Sections []ExportSection
 }
 
+// GenerateUserDataPDF produit le PDF d'export RGPD (profil + sections).
 func GenerateUserDataPDF(data UserExportData) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetMargins(15, 15, 15)
@@ -132,7 +133,7 @@ func GenerateUserDataPDF(data UserExportData) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// tronque coupe une chaîne trop longue pour tenir dans une cellule.
+// tronque coupe une chaîne trop longue pour une cellule.
 func tronque(s string, max int) string {
 	r := []rune(s)
 	if len(r) <= max {
@@ -144,6 +145,7 @@ func tronque(s string, max int) string {
 	return string(r[:max-1]) + "…"
 }
 
+// GenerateTicketPDF produit le billet d'un participant (infos, tarif, QR du n° de billet).
 func GenerateTicketPDF(user models.Utilisateur, event models.Evenement, t TicketData) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A5", "")
 	pdf.SetMargins(12, 12, 12)
@@ -223,7 +225,7 @@ func GenerateTicketPDF(user models.Utilisateur, event models.Evenement, t Ticket
 	}
 	row("Tarif", tarif)
 
-	// Lien itinéraire (présentiel uniquement) : cliquable dans le PDF.
+	// Lien itinéraire (présentiel), cliquable dans le PDF.
 	if event.Lieu != nil && *event.Lieu != "" {
 		mapsURL := "https://www.google.com/maps/dir/?api=1&destination=" + url.QueryEscape(*event.Lieu)
 		pdf.Ln(1)

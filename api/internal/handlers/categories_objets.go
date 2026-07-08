@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// scanCategoriesObjets exécute une requête et renvoie la liste des catégories d'objets.
+// scanCategoriesObjets — exécute la requête et renvoie les catégories.
 func scanCategoriesObjets(query string, args ...interface{}) ([]models.CategorieObjet, error) {
 	rows, err := database.DB.Query(query, args...)
 	if err != nil {
@@ -26,7 +26,7 @@ func scanCategoriesObjets(query string, args ...interface{}) ([]models.Categorie
 	return cats, nil
 }
 
-// GetCategoriesObjets — endpoint public : catégories actives uniquement (pour le dépôt d'annonce).
+// GetCategoriesObjets — public : catégories actives (dépôt d'annonce).
 func GetCategoriesObjets(w http.ResponseWriter, r *http.Request) {
 	cats, err := scanCategoriesObjets(
 		"SELECT id_categorie_objet, nom, actif, date_creation FROM categories_objets WHERE actif = 1 ORDER BY nom")
@@ -37,7 +37,7 @@ func GetCategoriesObjets(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, cats, http.StatusOK)
 }
 
-// GetCategoriesObjetsAdmin — endpoint admin : toutes les catégories (actives + inactives).
+// GetCategoriesObjetsAdmin — toutes les catégories (actives + inactives).
 func GetCategoriesObjetsAdmin(w http.ResponseWriter, r *http.Request) {
 	cats, err := scanCategoriesObjets(
 		"SELECT id_categorie_objet, nom, actif, date_creation FROM categories_objets ORDER BY nom")
@@ -107,8 +107,7 @@ func DeleteCategorieObjet(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "catégorie supprimée"}, http.StatusOK)
 }
 
-// categorieObjetValide vérifie qu'un nom de catégorie existe et est actif.
-// Utilisé par CreateAnnonce pour empêcher toute saisie hors liste.
+// categorieObjetValide — nom de catégorie existant et actif (CreateAnnonce : anti hors-liste).
 func categorieObjetValide(nom string) bool {
 	var x int
 	err := database.DB.QueryRow(

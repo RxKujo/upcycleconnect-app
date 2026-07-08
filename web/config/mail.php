@@ -1,5 +1,8 @@
 <?php
 
+// Configuration de l'envoi d'e-mails : transporteur par défaut, définition des
+// mailers (SMTP, SES, sendmail, log, etc.) et expéditeur par défaut.
+
 return [
 
     'default' => env('MAIL_MAILER', 'log'),

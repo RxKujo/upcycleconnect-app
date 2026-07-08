@@ -2,9 +2,12 @@
 
 @section('title', 'Dashboard Essential Pro')
 
+{{-- Dashboard mensuel Essential Pro : impact, dépenses, matériaux --}}
+
 @section('content')
 <div class="main-content">
 
+    {{-- === En-tête === --}}
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
         <div>
             <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.title">Dashboard Pro</span></h1>
@@ -53,7 +56,7 @@
         </div>
     </div>
 
-    {{-- Dépenses du mois (objets, publicité, abonnement) --}}
+    {{-- Dépenses du mois --}}
     @if($depenses)
     <div class="card">
         <h2 class="font-bebas" style="font-size:1.6rem; margin-bottom:6px;"><span data-i18n="prod.spending">Dépenses — Ce mois</span></h2>
@@ -130,8 +133,10 @@
 </div>
 @endsection
 
+{{-- === Script (graphique Alpine.js) === --}}
 @push('scripts')
 <script>
+// Barres normalisées sur la valeur max
 function barChart(impact) {
     const vals = [
         impact.nb_objets_recuperes ?? 0,

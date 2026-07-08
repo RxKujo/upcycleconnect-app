@@ -1,6 +1,9 @@
 @extends('layouts.professionnel')
 @section('title', 'Choisir mon abonnement')
 
+{{-- Choix d'abonnement Pro : plans chargés via l'API, toggle mensuel/annuel, checkout Stripe --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
     .page-intro { max-width: 640px; margin-bottom: 48px; }
@@ -61,6 +64,7 @@
 </style>
 @endsection
 
+{{-- === Contenu === --}}
 @section('content')
 <x-page-header title="Votre abonnement Pro" i18n="abo.title" />
 
@@ -91,6 +95,7 @@
 
 <div id="plans-grid" class="plans-grid" style="display:none"></div>
 
+{{-- === Script === --}}
 <script>
 const API_BASE = '{{ config("services.api.public_url") }}';
 let billing = 'mensuel';

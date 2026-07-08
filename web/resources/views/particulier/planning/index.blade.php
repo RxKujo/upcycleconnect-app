@@ -2,6 +2,8 @@
 
 @section('title', 'Mon Planning')
 
+{{-- Planning perso (FullCalendar) : événements, formations et créneaux manuels. Requiert un jeton (sinon /login). --}}
+
 @section('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
 <style>
@@ -44,6 +46,7 @@
         <button class="btn btn-primary" onclick="openAddModal()" data-i18n="part.planning.addslot">+ Ajouter un créneau</button>
     </div>
 
+    {{-- === Légende === --}}
     <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div> <span data-i18n="part.planning.legend.event">Événement</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--forest)"></div> <span data-i18n="part.planning.legend.formation">Formation</span></div>
@@ -52,10 +55,11 @@
         <div class="legend-item"><div class="legend-dot" style="background:var(--wheat);border-color:var(--coffee)"></div> <span data-i18n="part.planning.legend.perso">Personnel</span></div>
     </div>
 
+    {{-- === Calendrier === --}}
     <div id="calendar"></div>
 </div>
 
-<!-- Modal Ajout -->
+{{-- === Modale ajout === --}}
 <div class="modal-overlay" id="modal-add">
     <div class="modal-box">
         <h2 class="modal-title" data-i18n="part.planning.newslot">Nouveau créneau</h2>
@@ -87,7 +91,7 @@
     </div>
 </div>
 
-<!-- Modal Détail -->
+{{-- === Modale détail === --}}
 <div class="modal-overlay" id="modal-detail">
     <div class="modal-box">
         <h2 class="modal-title" id="detail-titre"></h2>
@@ -99,6 +103,7 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/fr.global.min.js"></script>
@@ -143,6 +148,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     calendar.render();
 });
 
+// Charge les créneaux du planning.
 async function loadPlanning() {
     try {
         const r = await fetch(API + '/api/v1/utilisateurs/me/planning', {
@@ -162,6 +168,7 @@ function closeModal() {
     document.getElementById('modal-detail').classList.remove('active');
 }
 
+// Crée un créneau perso et l'ajoute au calendrier.
 async function submitAdd() {
     const titre = document.getElementById('add-titre').value.trim();
     const type = document.getElementById('add-type').value;
@@ -198,6 +205,7 @@ async function submitAdd() {
     }
 }
 
+// Ouvre le détail ; suppression si créneau manuel.
 function openDetailModal(event) {
     currentEvent = event;
     document.getElementById('detail-titre').textContent = event.title;

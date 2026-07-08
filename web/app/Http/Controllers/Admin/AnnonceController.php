@@ -17,6 +17,8 @@ class AnnonceController extends Controller
         $this->apiUrl = config('services.api.url') . '/api/v1/admin/annonces';
     }
 
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))->get($this->apiUrl);
@@ -35,6 +37,8 @@ class AnnonceController extends Controller
 
         return view('admin.annonces.show', ['annonce' => $response->json()]);
     }
+
+    // --- Modération ---
 
     public function valider($id)
     {

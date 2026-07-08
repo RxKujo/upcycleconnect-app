@@ -60,7 +60,6 @@ type materiauRequest struct {
 	Actif   *bool   `json:"actif"`
 }
 
-// CreateMateriau ajoute un matériau.
 func CreateMateriau(w http.ResponseWriter, r *http.Request) {
 	var req materiauRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Code == "" || req.Libelle == "" {
@@ -78,8 +77,8 @@ func CreateMateriau(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, map[string]interface{}{"message": "matériau créé", "id_materiau": id}, http.StatusCreated)
 }
 
-// UpdateMateriau met à jour libellé, icône, ordre et statut actif. Le code reste immuable
-// (il est référencé par les annonces/alertes existantes).
+// UpdateMateriau met à jour libellé, icône, statut. Le code reste immuable
+// (référencé par annonces/alertes existantes).
 func UpdateMateriau(w http.ResponseWriter, r *http.Request, id string) {
 	var req materiauRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Libelle == "" {

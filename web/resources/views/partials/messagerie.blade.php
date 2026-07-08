@@ -1,7 +1,5 @@
-{{-- Widget messagerie acheteur ↔ vendeur (bulle flottante bas-droite).
-     Auto-actif si un jeton est présent (localStorage). Polling léger.
-     API globale : window.ucOpenConversation(idAnnonce) — ouvre/crée la conversation
-     avec le vendeur de l'annonce et affiche le fil. --}}
+{{-- Widget messagerie acheteur↔vendeur (bulle bas-droite, polling). window.ucOpenConversation(idAnnonce). --}}
+{{-- === Styles === --}}
 <style>
     #ucmsg-root { position: fixed; bottom: 22px; right: 22px; z-index: 900; font-family: 'Outfit', sans-serif; }
     #ucmsg-bubble {
@@ -67,6 +65,7 @@
     .ucmsg-ann-vendu { display: inline-block; background: var(--forest,#244F26); color: #fff; font-family: 'DM Mono', monospace; font-size: .6rem; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--coffee,#120309); vertical-align: middle; }
 </style>
 
+{{-- === Markup === --}}
 <div id="ucmsg-root">
     <button id="ucmsg-bubble" aria-label="Messagerie" title="Messagerie">
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -94,6 +93,7 @@
     </div>
 </div>
 
+{{-- === Script === --}}
 <script>
 (function () {
     const API = '{{ config('services.api.public_url') }}';

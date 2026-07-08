@@ -1,10 +1,10 @@
 @extends($layout)
 
 @section('title', 'Boîte à idées')
-
 @section('content')
+{{-- === Styles === --}}
 <style>
-/* ─── Liste classée (rangées à hauteur fixe) ─────────────────────── */
+/* ─── Liste classée ─── */
 .idee-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
 .idee-row { display: flex; align-items: center; gap: 20px; background: var(--cream); border: var(--border); box-shadow: var(--shadow-sm); padding: 16px 22px; transition: transform 0.12s, box-shadow 0.12s; }
 .idee-row:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow); }
@@ -15,7 +15,7 @@
 
 .idee-statut { font-family: 'DM Mono', monospace; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 12px; border: 2px solid var(--coffee); box-shadow: 2px 2px 0 rgba(18,3,9,0.25); white-space: nowrap; }
 
-/* Widget de vote up / down (style Reddit) */
+/* Widget de vote up / down */
 .idee-votebox { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 58px; border: 3px solid var(--coffee); box-shadow: 2px 2px 0 var(--coffee); background: var(--cream); padding: 6px 0; }
 .vote-arrow { background: none; border: none; cursor: pointer; font-size: 1.05rem; line-height: 1; padding: 4px 0; width: 100%; color: var(--coffee); opacity: 0.5; transition: all 0.1s ease; }
 .vote-arrow:hover:not(:disabled) { opacity: 1; }
@@ -41,7 +41,7 @@
 .idee-act.danger { color: var(--cherry); border-color: var(--cherry); grid-column: 1 / -1; }
 .idee-act.danger:hover { background: var(--cherry); color: var(--cream); }
 
-/* Responsive : la colonne droite passe dessous sur petit écran */
+/* Responsive : colonne droite dessous */
 @media (max-width: 760px) {
     .idee-row { flex-wrap: wrap; }
     .idee-row-main { flex-basis: 70%; }
@@ -60,7 +60,7 @@
 .idee-empty .big { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; opacity: 0.3; margin: 0; }
 .idee-empty .sub { font-family: 'DM Mono', monospace; font-size: 0.85rem; text-transform: uppercase; opacity: 0.4; margin: 12px 0 0; }
 
-/* Fallback stats (assure un rendu correct aussi sous le layout admin) */
+/* Fallback stats (rendu correct sous le layout admin) */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 48px; }
 .stat-card { border: var(--border); background: white; padding: 24px; box-shadow: var(--shadow-sm); }
 .stat-label { font-family: 'DM Mono', monospace; font-size: 0.78rem; text-transform: uppercase; opacity: 0.55; margin-bottom: 8px; }
@@ -72,6 +72,7 @@
               + count(array_filter($archivees, fn($i) => ($i['id_auteur'] ?? 0) == session('salarie_id')));
 @endphp
 
+{{-- === En-tête === --}}
 <div class="page-header">
     <div>
         <h1 class="page-title"><span data-i18n="sal.ideas">Boîte à idées</span></h1>
@@ -84,6 +85,7 @@
     </button>
 </div>
 
+{{-- === Stats === --}}
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">Idées partagées</div>
@@ -138,7 +140,7 @@
     @endif
 </div>
 
-{{-- Modal ajout --}}
+{{-- === Modale : proposer === --}}
 <div id="modal-add" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.6);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:40px;width:100%;max-width:540px;position:relative;">
         <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;"><span data-i18n="sal.ideas.propose">Proposer une idée</span></h2>
@@ -164,7 +166,7 @@
     </div>
 </div>
 
-{{-- Modal édition --}}
+{{-- === Modale : modifier === --}}
 <div id="modal-edit" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.6);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:40px;width:100%;max-width:540px;position:relative;">
         <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;"><span data-i18n="sal.ideas.edit">Modifier l'idée</span></h2>
@@ -189,9 +191,11 @@
         </form>
     </div>
 </div>
+{{-- === Scripts : onglets, tri, vote AJAX === --}}
 <script>
 const CSRF_TOKEN = '{{ csrf_token() }}';
 
+// Ouvre la modale d'édition pré-remplie
 function openEditModal(id, titre, contenu, tags) {
     document.getElementById('form-edit').action = '/salarie/idees/' + id;
     document.getElementById('edit-titre').value = titre;
@@ -200,7 +204,7 @@ function openEditModal(id, titre, contenu, tags) {
     document.getElementById('modal-edit').style.display = 'flex';
 }
 
-// ─── Onglets + tri (état partagé avec le vote) ───────────────────────────────
+// ─── Onglets + tri ───
 const tabs = document.querySelectorAll('.idee-tab');
 const fluxSection = document.getElementById('flux-section');
 const archivesSection = document.getElementById('archives-section');
@@ -222,7 +226,7 @@ function sortFlux(mode) {
         .forEach(c => fluxGrid.appendChild(c));
 }
 
-// Réordonne avec une animation FLIP : les rangées glissent vers leur place.
+// Réordonne avec animation FLIP
 function sortFluxAnimated() {
     if (!fluxGrid) return;
     const cards = Array.from(fluxGrid.children);
@@ -258,7 +262,7 @@ function showTab(tab) {
 
 tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
 
-// ─── Vote up / down (style Reddit, sans rechargement) ────────────────────────
+// ─── Vote up / down (sans rechargement) ───
 const countVotesEl = document.getElementById('count-votes');
 const VOTE_BASE = '{{ url('/salarie/idees') }}';
 
@@ -299,7 +303,7 @@ document.querySelectorAll('.idee-votebox').forEach(box => {
                     countVotesEl.textContent = Math.max(0, c + ((mv !== 0 ? 1 : 0) - (prevVoted ? 1 : 0)));
                 }
 
-                // Reclasse en direct (uniquement en tri « Populaire »).
+                // Reclasse en direct (tri « Populaire » uniquement)
                 if (currentSort === 'populaire') sortFluxAnimated();
             } finally {
                 up.disabled = down.disabled = false;

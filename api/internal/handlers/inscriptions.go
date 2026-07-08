@@ -1,5 +1,8 @@
 package handlers
 
+// inscriptions.go — inscriptions aux événements : réservation (crédit du score +
+// billet PDF par email) et téléchargement du billet.
+
 import (
 	"api/internal/middleware"
 	"api/internal/models"
@@ -11,6 +14,8 @@ import (
 	"net/http"
 )
 
+// InscrireEvenement — décrémente les places, crée inscription + créneau planning
+// (transaction), crédite le score et envoie le billet PDF.
 func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	userId, _, ok := middleware.AuthRequired(w, r)
 	if !ok {
@@ -89,7 +94,7 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Participation à un événement : crédit de l'Upcycling Score.
+	// Crédit de l'Upcycling Score.
 	services.AwardScoreForEvenement(userId, event.IDEvenement)
 
 	ref := fmt.Sprintf("UC-E%d-%05d", event.IDEvenement, idInscription)
@@ -112,6 +117,7 @@ func InscrireEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	})
 }
 
+// GetTicketPDF — régénère le billet PDF d'un événement où l'utilisateur est inscrit.
 func GetTicketPDF(w http.ResponseWriter, r *http.Request, id string) {
 	userId, _, ok := middleware.AuthRequired(w, r)
 	if !ok {
@@ -157,7 +163,7 @@ func GetTicketPDF(w http.ResponseWriter, r *http.Request, id string) {
 		user.AdresseComplete = &adresse.String
 	}
 
-	// Détails de l'inscription (numéro de billet + tarif).
+	// Numéro de billet + tarif.
 	var idInscription int
 	var statutPaiement string
 	var prixPaye sql.NullFloat64

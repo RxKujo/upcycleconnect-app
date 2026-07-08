@@ -1,6 +1,8 @@
 @extends('layouts.particulier')
 @section('title', 'Mes annonces')
 
+{{-- Mes annonces : compteurs, tableau (annuler/modifier) et modale d'édition. --}}
+
 @section('styles')
 <style>
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 14px; margin-bottom: 28px; }
@@ -19,6 +21,7 @@
     <a href="{{ route('particulier.annonces.create') }}" class="btn-primary" data-i18n="nav.postlisting">+ Déposer une annonce</a>
 </div>
 
+{{-- === Compteurs par statut === --}}
 <div class="stats-row" id="stats-row" style="display:none;">
     <div class="stat-mini"><div class="l" data-i18n="stat.total">Total</div><div class="v" id="s-total">0</div></div>
     <div class="stat-mini"><div class="l" data-i18n="stat.online">En ligne</div><div class="v" id="s-validee">0</div></div>
@@ -26,11 +29,12 @@
     <div class="stat-mini"><div class="l" data-i18n="stat.sold">Vendues</div><div class="v" id="s-vendue">0</div></div>
 </div>
 
+{{-- === Tableau des annonces === --}}
 <div id="annonces-container">
     <div class="loading" data-i18n="common.loading">Chargement des annonces...</div>
 </div>
 
-<!-- Modal modification annonce -->
+{{-- === Modale édition === --}}
 <div id="modal-edit-annonce" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.55);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:32px;width:100%;max-width:520px;position:relative;">
         <button id="modal-edit-annonce-close" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--coffee);">&times;</button>
@@ -63,8 +67,10 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
+// Statut API → libellé + classe de badge.
 const ANNONCE_STATUTS = {
     en_attente: { label: 'En attente', cls: 'badge-waiting' },
     validee:    { label: 'Validée',    cls: 'badge-valid' },
@@ -78,6 +84,7 @@ function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
+// Charge les annonces : compteurs + tableau.
 async function loadAnnonces() {
     const container = document.getElementById('annonces-container');
     try {
@@ -154,6 +161,7 @@ async function loadAnnonces() {
     }
 }
 
+// Ouvre la modale d'édition (pré-remplie).
 function openEditModal(btn) {
     const isVente = btn.dataset.type === 'vente';
     document.getElementById('edit-annonce-id').value = btn.dataset.id;

@@ -1,5 +1,8 @@
 package handlers
 
+// commandes_buyer.go — commandes côté acheteur : checkout du panier,
+// mes commandes / mes ventes (nom anonymisé).
+
 import (
 	"api/pkg/database"
 	"database/sql"
@@ -7,6 +10,8 @@ import (
 	"net/http"
 	"time"
 )
+
+// --- Checkout du panier ---
 
 type CheckoutItem struct {
 	IDAnnonce int `json:"id_annonce"`
@@ -29,6 +34,8 @@ type CheckoutResponse struct {
 	Total   float64           `json:"total"`
 }
 
+// CheckoutPanier — pour chaque annonce : contrôle dispo, crée la commande et
+// marque l'annonce vendue (transaction par article).
 func CheckoutPanier(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -146,6 +153,8 @@ func CheckoutPanier(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// --- Mes commandes / mes ventes ---
+
 type MaCommande struct {
 	IDCommande     int     `json:"id_commande"`
 	IDAnnonce      int     `json:"id_annonce"`
@@ -176,6 +185,7 @@ type MaVente struct {
 	AcheteurNom    string  `json:"acheteur_nom_initiale"`
 }
 
+// GetMesVentes — commandes reçues sur mes annonces (nom acheteur → initiale).
 func GetMesVentes(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -219,6 +229,7 @@ func GetMesVentes(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(ventes)
 }
 
+// GetMesCommandes — commandes passées par l'utilisateur (nom vendeur → initiale).
 func GetMesCommandes(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 

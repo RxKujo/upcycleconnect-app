@@ -3,10 +3,13 @@
 @section('title', 'Gestion des Commandes')
 
 @section('content')
+
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">Commandes</h1>
 </div>
 
+{{-- === Tableau des commandes === --}}
 <div class="table-container">
     <table>
         <thead>

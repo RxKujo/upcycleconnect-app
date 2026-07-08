@@ -1,11 +1,15 @@
+{{-- Layout ADMIN — panneau d'administration (sidebar + contenu).
+     NB : @stack('scripts') — les vues admin poussent leur JS via @push('scripts'). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
     <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin') — UpcycleConnect</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -96,6 +100,7 @@
 </head>
 <body>
     @include('partials._toast')
+    {{-- === Sidebar === --}}
     <div class="admin-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -142,6 +147,9 @@
                 </a>
 
                 <p class="sidebar-section-label"><span data-i18n="adm.sec.logistics">Logistique</span></p>
+                <a href="{{ route('admin.sites.index') }}" class="{{ request()->is('admin/sites*') ? 'active' : '' }}">
+                    <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.sites">Sites & antennes</span>
+                </a>
                 <a href="{{ route('admin.commandes.index') }}" class="{{ request()->is('admin/commandes*') ? 'active' : '' }}">
                     <span style="margin-right: 12px; font-size: 1.2em;">◆</span> <span data-i18n="adm.orders">Commandes</span>
                 </a>
@@ -185,6 +193,7 @@
             </div>
         </aside>
 
+        {{-- === Contenu === --}}
         <main class="main-content">
             <div class="content-container">
                 @if(session('success'))
@@ -203,6 +212,7 @@
         </main>
     </div>
     @stack('scripts')
+{{-- === Script : badges "en attente" === --}}
 <script>
 (async function() {
     try {
@@ -226,6 +236,7 @@
     } catch(e) {}
 })();
 </script>
+    {{-- === Partials === --}}
     @include('partials.datepicker')
     @include('partials.i18n-engine')
 </body>

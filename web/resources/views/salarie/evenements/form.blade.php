@@ -2,7 +2,10 @@
 
 @section('title', $evenement ? 'Modifier événement' : 'Créer un événement')
 
+{{-- Formulaire événement (infos, séances, modèles) --}}
+
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
     <h1 class="page-title">{{ $evenement ? 'Modifier' : 'Nouvel' }} événement</h1>
     <a href="{{ route('salarie.evenements.index') }}" class="btn-secondary">← Retour</a>
@@ -13,6 +16,7 @@
     $action = $isEdit ? route('salarie.evenements.update', $evenement['id_evenement']) : route('salarie.evenements.store');
 @endphp
 
+{{-- === Erreurs === --}}
 @if($errors->any())
 <div class="alert alert-error" style="display:block; text-transform:none; margin-bottom:20px;">
     <ul style="margin:0; padding-left:20px; font-family:'Outfit',sans-serif;">
@@ -21,6 +25,7 @@
 </div>
 @endif
 
+{{-- === Formulaire === --}}
 <form action="{{ $action }}" method="POST" class="card" autocomplete="off" id="evForm">
     @csrf
     @if($isEdit) @method('PUT') @endif
@@ -70,6 +75,7 @@
         </div>
     </div>
 
+    {{-- Éditeur de séances --}}
     <div style="margin-top:8px; padding-top:20px; border-top:2px solid rgba(18,3,9,0.1);">
         @include('partials.seances-editor', ['seances' => $evenement['seances'] ?? null, 'animateurs' => $animateurs ?? []])
     </div>
@@ -81,7 +87,7 @@
     </div>
 </form>
 
-{{-- Mini-modale : enregistrer les infos générales comme modèle réutilisable --}}
+{{-- Modale : enregistrer comme modèle --}}
 <div class="modal-overlay" id="saveTplModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeSaveTplModal()">&times;</button>
@@ -106,6 +112,7 @@
 </div>
 @endsection
 
+{{-- === Scripts : modèle, garde-fou prix, auto-remplissage === --}}
 @section('scripts')
 <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(18,3,9,0.6); z-index:1000; align-items:flex-start; justify-content:center; overflow-y:auto; padding:40px 20px; }
@@ -131,7 +138,7 @@ function closeSaveTplModal() { document.getElementById('saveTplModal').classList
 document.getElementById('saveTplModal').addEventListener('mousedown', function (e) { if (e.target.id === 'saveTplModal') closeSaveTplModal(); });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSaveTplModal(); });
 
-// === Garde-fou prix : confirmer la gratuité si le prix est à 0 ===
+// Garde-fou : confirmer la gratuité si prix = 0
 (function () {
     var form = document.getElementById('evForm');
     if (!form) return;
@@ -148,7 +155,7 @@ document.addEventListener('keydown', function (e) { if (e.key === 'Escape') clos
     });
 })();
 
-// === Auto-remplissage depuis un template (infos générales uniquement) ===
+// Auto-remplissage depuis un modèle
 (function () {
     var sel = document.getElementById('templateSelect');
     if (!sel) return;

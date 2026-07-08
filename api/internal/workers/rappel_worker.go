@@ -1,3 +1,7 @@
+// Package workers : tâches de fond périodiques de l'API.
+// rappel_worker.go : rappels d'événements (email/push) et expiration des
+// commandes en conteneur au délai de récupération dépassé.
+
 package workers
 
 import (
@@ -10,8 +14,9 @@ import (
 	"time"
 )
 
+// StartRappelWorker lance en fond les rappels et l'expiration des conteneurs :
+// une passe au démarrage, puis toutes les heures.
 func StartRappelWorker() {
-	// Passage immédiat au démarrage, puis toutes les heures.
 	go func() {
 		processRappels()
 		processConteneursExpires()
@@ -24,9 +29,8 @@ func StartRappelWorker() {
 	log.Println("[WORKER] RappelWorker démarré (fréquence: 1h)")
 }
 
-// processConteneursExpires bascule en 'expiree' les commandes en_conteneur dont
-// le délai de récupération (7 j) est dépassé, et ouvre un ticket support pour
-// que l'objet non récupéré soit traité.
+// processConteneursExpires bascule en 'expiree' les commandes en_conteneur au
+// délai (7 j) dépassé et ouvre un ticket support pour l'objet non récupéré.
 func processConteneursExpires() {
 	rows, err := database.DB.Query(`
 		SELECT c.id_commande, c.id_acheteur, c.id_conteneur, a.titre
@@ -83,8 +87,8 @@ func processConteneursExpires() {
 	}
 }
 
-// mirrorTicketToGLPI crée le ticket correspondant dans GLPI (si configuré) et
-// stocke l'id GLPI. L'app reste la source de vérité ; GLPI est un miroir support.
+// mirrorTicketToGLPI crée le ticket dans GLPI (si configuré) et stocke son id.
+// L'app reste la source de vérité ; GLPI est un miroir.
 func mirrorTicketToGLPI(ticketID int64, sujet, desc string) {
 	if !glpi.Configured() {
 		return
@@ -102,8 +106,10 @@ func mirrorTicketToGLPI(ticketID int64, sujet, desc string) {
 	}
 }
 
+// processRappels envoie les rappels des événements validés débutant sous 48 h
+// et marque rappel_envoye pour éviter les doublons.
 func processRappels() {
-	
+
 	query := `
 		SELECT id_evenement, titre, date_debut 
 		FROM evenements 
@@ -141,6 +147,8 @@ func processRappels() {
 	}
 }
 
+// envoyerRappelsEvenement notifie chaque inscrit par email, et par push pour les
+// pros ayant un player_id OneSignal.
 func envoyerRappelsEvenement(evenementID int, titre string, dateDebut time.Time) error {
 	rows, err := database.DB.Query(`
 		SELECT u.email, u.prenom, COALESCE(u.onesignal_player_id,''), u.role

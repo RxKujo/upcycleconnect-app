@@ -1,3 +1,5 @@
+{{-- Footer public : colonnes de liens + copyright. --}}
+{{-- === Markup === --}}
 <footer style="background:var(--coffee); color:var(--cream); border-top:var(--border);">
     <div style="max-width:1200px; margin:0 auto; padding:80px 32px 64px; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px;">
         <div>
@@ -37,6 +39,7 @@
     </div>
 </footer>
 
+{{-- === Styles === --}}
 <style>
 footer a:hover { color: var(--cream) !important; }
 

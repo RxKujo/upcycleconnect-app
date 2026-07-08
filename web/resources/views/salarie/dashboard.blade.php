@@ -1,13 +1,14 @@
 @extends('layouts.salarie')
 
 @section('title', 'Tableau de bord')
-
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
     <h1 class="page-title"><span data-i18n="nav.dashboard">Tableau de bord</span></h1>
     <span class="font-mono" style="font-size:0.75rem; opacity:0.5;">Salarié #{{ session('salarie_id') }}</span>
 </div>
 
+{{-- === Stats === --}}
 <div class="stats-grid">
     <div class="stat-card">
         <p class="stat-label"><span data-i18n="sal.dash.eventspending">Événements en attente</span></p>
@@ -31,6 +32,7 @@
     </div>
 </div>
 
+{{-- === Raccourcis === --}}
 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px; margin-bottom:32px;">
     <a href="/salarie/evenements/create" class="card" style="text-decoration:none; display:block;">
         <h3 class="font-bebas" style="font-size:1.6rem; color:var(--forest); margin:0 0 8px;"><span data-i18n="sal.dash.newevent">+ Nouvel événement</span></h3>
@@ -41,11 +43,11 @@
         <p style="font-size:0.95rem; opacity:0.7;"><span data-i18n="sal.dash.newarticle.desc">Rédiger un article News & Conseils en brouillon ou publié.</span></p>
     </a>
     <a href="/salarie/forum/signalements" class="card" style="text-decoration:none; display:block;">
-        <h3 class="font-bebas" style="font-size:1.6rem; color:var(--cherry); margin:0 0 8px;"><span data-i18n="sal.dash.moderation">⚑ Modération</span></h3>
+        <h3 class="font-bebas" style="font-size:1.6rem; color:var(--cherry); margin:0 0 8px;"><span data-i18n="sal.dash.moderation">Modération</span></h3>
         <p style="font-size:0.95rem; opacity:0.7;"><span data-i18n="sal.dash.moderation.desc">Traiter les messages signalés par la communauté.</span></p>
     </a>
     <a href="/salarie/idees" class="card" style="text-decoration:none; display:block;">
-        <h3 class="font-bebas" style="font-size:1.6rem; color:var(--teal); margin:0 0 8px;"><span data-i18n="sal.dash.ideasbox">💡 Boîte à idées</span></h3>
+        <h3 class="font-bebas" style="font-size:1.6rem; color:var(--teal); margin:0 0 8px;"><span data-i18n="sal.dash.ideasbox">Boîte à idées</span></h3>
         <p style="font-size:0.95rem; opacity:0.7;"><span data-i18n="sal.dash.ideas.desc">Proposer et voter pour les idées de l'équipe.</span></p>
     </a>
 </div>
@@ -61,6 +63,7 @@
     </div>
 </div>
 
+{{-- === Scripts : planning AJAX === --}}
 @section('scripts')
 <script>
 (async function() {

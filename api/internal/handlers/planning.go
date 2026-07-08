@@ -1,5 +1,8 @@
 package handlers
 
+// Planning salariés : créneaux manuels persistés + créneaux calculés en direct
+// depuis les événements validés. L'agenda est un miroir sans stockage.
+
 import (
 	"api/pkg/database"
 	"database/sql"
@@ -10,6 +13,7 @@ import (
 	"time"
 )
 
+// PlanningItem : un créneau d'agenda (manuel ou calculé depuis une séance).
 type PlanningItem struct {
 	IDPlanning      int     `json:"id_planning"`
 	IDUtilisateur   int     `json:"id_utilisateur"`
@@ -22,8 +26,7 @@ type PlanningItem struct {
 	IDCatalogueItem *int    `json:"id_catalogue_item"`
 	EstManuel       bool    `json:"est_manuel"`
 
-	// Détails enrichis, présents uniquement pour les créneaux issus d'un événement
-	// (séances). Omis pour les créneaux manuels.
+	// Détails enrichis : uniquement pour les créneaux de séance. Omis si manuel.
 	Lieu       *string  `json:"lieu,omitempty"`
 	Format     string   `json:"format,omitempty"`
 	Animateurs []string `json:"animateurs,omitempty"`
@@ -32,19 +35,16 @@ type PlanningItem struct {
 	Prix       *float64 `json:"prix,omitempty"`
 }
 
-// GetMonPlanning renvoie l'agenda du salarié : ses créneaux manuels (+ réservations
-// de formations catalogue) FUSIONNÉS, à la lecture, avec un créneau calculé par
-// séance des événements VALIDÉS où il est concerné — qu'il les organise
-// (evenements.id_createur), qu'il anime une séance (animateurs_seances) ou qu'il
-// y soit inscrit (inscriptions_evenements). Rien n'est stocké : l'agenda est un
-// miroir toujours à jour des événements, sans risque de doublon ni de désync.
+// GetMonPlanning : agenda du salarié = créneaux manuels (+ formations catalogue)
+// fusionnés à la lecture avec un créneau par séance des événements VALIDÉS le
+// concernant (organisateur, animateur ou inscrit). Rien n'est stocké : miroir
+// toujours à jour, sans doublon ni désync.
 func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 	items := []PlanningItem{}
 
-	// 1) Créneaux modifiables persistés : saisies manuelles + formations catalogue.
-	//    On IGNORE volontairement les anciennes copies auto d'événements
-	//    (est_manuel=0 AND id_catalogue_item IS NULL) : elles sont désormais
-	//    recalculées en direct ci-dessous et feraient double emploi.
+	// 1) Créneaux persistés : manuels + formations catalogue. On IGNORE les
+	//    anciennes copies auto d'événements (est_manuel=0 AND id_catalogue_item
+	//    IS NULL) : recalculées en direct ci-dessous, sinon double emploi.
 	rows, err := database.DB.Query(`
 		SELECT id_planning, id_utilisateur, titre_creneau, description, date_debut, date_fin,
 		       type_creneau, id_evenement, id_catalogue_item, est_manuel
@@ -81,9 +81,8 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 	}
 
 	// 2) Créneaux calculés en direct : une ligne par séance d'événement validé
-	//    concernant le salarié. Les jointures sur cet utilisateur donnent 0 ou 1
-	//    ligne chacune (pas de multiplication) ; le WHERE dédoublonne les rôles
-	//    cumulés (ex. organisateur ET inscrit → un seul créneau par séance).
+	//    concernant le salarié. Jointures 0/1 ligne (pas de multiplication) ; le
+	//    WHERE dédoublonne les rôles cumulés (organisateur ET inscrit => 1 créneau).
 	seances, err := database.DB.Query(`
 		SELECT s.id_seance, e.id_evenement, e.titre, s.titre, e.type_evenement,
 		       s.date_debut, s.date_fin, s.format, s.lieu,
@@ -119,7 +118,7 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 				titre = evTitre + " — " + seanceTitre.String
 			}
 
-			// Rôle affiché (priorité : organisateur > animateur > participant).
+			// Rôle affiché (priorité organisateur > animateur > participant).
 			role := "Vous participez à cet événement."
 			if organise {
 				role = "Vous organisez cet événement."
@@ -132,7 +131,7 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 				typeCreneau = "formation"
 			}
 
-			// Animateurs de la séance (nom complet).
+			// Animateurs de la séance.
 			var anims []string
 			for _, a := range fetchSeanceAnimateurs(idSeance) {
 				anims = append(anims, strings.TrimSpace(a.Prenom+" "+a.Nom))
@@ -142,7 +141,7 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 			roleCopy := role
 			nbT, nbD, px := nbTotal, nbDispo, prix
 			item := PlanningItem{
-				IDPlanning:    -idSeance, // id synthétique négatif : jamais en collision avec un id_planning réel
+				IDPlanning:    -idSeance, // id négatif : jamais en collision avec un id_planning réel
 				IDUtilisateur: userId,
 				Titre:         titre,
 				Description:   &roleCopy,
@@ -150,7 +149,7 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 				DateFin:       fin,
 				TypeCreneau:   typeCreneau,
 				IDEvenement:   &idEv,
-				EstManuel:     false, // lecture seule côté front (ni Modifier ni Supprimer)
+				EstManuel:     false, // lecture seule côté front
 				Format:        format,
 				Animateurs:    anims,
 				NbPlaces:      &nbT,
@@ -169,6 +168,7 @@ func GetMonPlanning(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(items)
 }
 
+// AddPlanningManuel : crée un créneau manuel (validation + anti-chevauchement).
 func AddPlanningManuel(w http.ResponseWriter, r *http.Request, userId int) {
 	var body struct {
 		Titre       string `json:"titre_creneau"`
@@ -191,8 +191,7 @@ func AddPlanningManuel(w http.ResponseWriter, r *http.Request, userId int) {
 		typeCreneau = "perso"
 	}
 
-	// Garde-fou anti-chevauchement : refuse un créneau qui se superpose à un existant.
-	// Deux intervalles [d1,f1) et [d2,f2) se chevauchent si d1 < f2 ET d2 < f1.
+	// Anti-chevauchement : [d1,f1) et [d2,f2) se chevauchent si d1 < f2 ET d2 < f1.
 	var conflits int
 	if err := database.DB.QueryRow(`
 		SELECT COUNT(*) FROM planning_utilisateurs
@@ -216,6 +215,7 @@ func AddPlanningManuel(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"id_planning": id, "message": "créneau ajouté"})
 }
 
+// DeletePlanningItem : supprime un créneau manuel du salarié.
 func DeletePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, userId int) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -238,6 +238,7 @@ func DeletePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, us
 	json.NewEncoder(w).Encode(map[string]string{"message": "créneau supprimé"})
 }
 
+// UpdatePlanningItem : modifie un créneau manuel (les automatiques sont en lecture seule).
 func UpdatePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, userId int) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -265,7 +266,7 @@ func UpdatePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, us
 		typeCreneau = "perso"
 	}
 
-	// Vérifie l'existence et que le créneau est bien modifiable (manuel).
+	// Vérifie l'existence et que le créneau est manuel (modifiable).
 	var estManuel bool
 	err = database.DB.QueryRow(
 		"SELECT est_manuel FROM planning_utilisateurs WHERE id_planning = ? AND id_utilisateur = ?",
@@ -283,7 +284,7 @@ func UpdatePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, us
 		return
 	}
 
-	// Garde-fou anti-chevauchement (en excluant le créneau lui-même).
+	// Anti-chevauchement (en excluant le créneau lui-même).
 	var conflits int
 	if err := database.DB.QueryRow(`
 		SELECT COUNT(*) FROM planning_utilisateurs
@@ -305,7 +306,7 @@ func UpdatePlanningItem(w http.ResponseWriter, r *http.Request, idStr string, us
 	json.NewEncoder(w).Encode(map[string]string{"message": "créneau mis à jour"})
 }
 
-// AddPlanningFromFormation ajoute automatiquement un créneau après réservation d'une formation
+// AddPlanningFromFormation : crée un créneau après réservation d'une formation.
 func AddPlanningFromFormation(userId, catalogueItemId int) {
 	var titre string
 	var dateDebut, dateFin sql.NullString
@@ -316,7 +317,7 @@ func AddPlanningFromFormation(userId, catalogueItemId int) {
 		return
 	}
 	if !dateDebut.Valid || !dateFin.Valid {
-		// Pas de dates définies, utiliser J+7 par défaut
+		// Pas de dates : J+7 par défaut.
 		now := time.Now()
 		db := now.AddDate(0, 0, 7).Format("2006-01-02 09:00:00")
 		df := now.AddDate(0, 0, 7).Format("2006-01-02 17:00:00")
@@ -329,14 +330,15 @@ func AddPlanningFromFormation(userId, catalogueItemId int) {
 		userId, titre, dateDebut.String, dateFin.String, catalogueItemId)
 }
 
-// helper (already exists in helpers.go but we need it accessible)
+// --- Helpers ---
+
 func jsonError(w http.ResponseWriter, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]string{"erreur": msg})
 }
 
-// splitLast splits "a/b/c" → ["a/b", "c"]
+// splitLast : "a/b/c" → ["a/b", "c"]
 func splitLast(s string) (string, string) {
 	i := strings.LastIndex(s, "/")
 	if i < 0 {

@@ -1,7 +1,10 @@
+// catalogue.go : prestations (ateliers, formations), réservations et planning.
+
 package models
 
 import "time"
 
+// CatalogueItem : une prestation du catalogue (atelier, formation…).
 type CatalogueItem struct {
     IDCatalogueItem int        `json:"id_catalogue_item"`
     IDCreateur      int        `json:"id_createur"`
@@ -45,6 +48,7 @@ type UpdateCatalogueItemRequest struct {
     Prix           float64  `json:"prix" binding:"required"`
 }
 
+// Reservation : réservation d'une prestation par un utilisateur.
 type Reservation struct {
     IDReservation    int      `json:"id_reservation"`
     IDUtilisateur    int      `json:"id_utilisateur"`
@@ -59,6 +63,7 @@ type CreateReservationRequest struct {
     StripePayment *string `json:"stripe_payment"`
 }
 
+// PlanningItem : prestation + réservation, pour le planning utilisateur.
 type PlanningItem struct {
     IDCatalogueItem int      `json:"id_catalogue_item"`
     Titre           string   `json:"titre"`

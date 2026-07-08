@@ -28,8 +28,6 @@ class EvenementCatalogueController extends Controller
 
     public function show($id)
     {
-        // L'appel réseau est dans le try ; le abort() est volontairement HORS du try,
-        // sinon l'HttpException (404) serait rattrapée et transformée en 500.
         try {
             $response = Http::timeout(5)->get("{$this->apiUrl}/api/v1/evenements/{$id}");
         } catch (\Exception $e) {

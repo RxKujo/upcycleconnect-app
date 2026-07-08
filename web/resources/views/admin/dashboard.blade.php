@@ -1,12 +1,17 @@
 @extends('layouts.admin')
 @section('title', 'Tableau de bord')
 
+{{-- Vue admin : tableau de bord d'accueil. Cartes de statistiques (chargées en AJAX
+     depuis l'API Go) et raccourcis vers les principales sections d'administration. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title"><span data-i18n="nav.dashboard">Tableau de bord</span></h1>
     <span class="font-mono" style="font-size:0.75rem;opacity:0.5;">{{ now()->format('d/m/Y H:i') }}</span>
 </div>
 
+{{-- === Vue d'ensemble : cartes de statistiques (valeurs remplies en JS) === --}}
 <section style="margin-bottom:48px;">
     <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;"><span data-i18n="adm.overview">Vue d'ensemble</span></h2>
     <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px;">
@@ -57,6 +62,7 @@
     </div>
 </section>
 
+{{-- === Accès rapides vers les sections d'administration === --}}
 <section>
     <h2 class="font-bebas" style="font-size:1.6rem;color:var(--coffee);margin:0 0 20px;letter-spacing:0.05em;"><span data-i18n="adm.quickaccess">Accès rapides</span></h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
@@ -80,6 +86,7 @@
 </section>
 @endsection
 
+{{-- === Scripts : récupération des statistiques via l'API et mise en évidence des alertes === --}}
 @push('scripts')
 <script>
 (async function() {

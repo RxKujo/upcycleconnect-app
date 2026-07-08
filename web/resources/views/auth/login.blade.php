@@ -1,3 +1,4 @@
+{{-- Vue : connexion. Décode le JWT et crée la session serveur selon le rôle. --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -8,7 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- === Styles === --}}
     <style>
+        /* Couleurs et ombres (pages auth) */
         :root {
             --cherry: #A4243B;
             --wheat: #D8C99B;
@@ -352,6 +355,7 @@
     </style>
 </head>
 <body>
+    {{-- === Overlay de chargement === --}}
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
     </div>
@@ -367,6 +371,7 @@
         <div class="auth-card">
             <h1 class="auth-title">Se connecter</h1>
 
+            {{-- === Messages erreur / succès === --}}
             <div id="alertContainer">
                 @if(session('error'))
                 <div class="alert alert-error" style="margin-bottom:12px;">
@@ -376,6 +381,7 @@
                 @endif
             </div>
 
+            {{-- === Formulaire de connexion (email + mot de passe) === --}}
             <form id="loginForm" method="POST" action="{{ config('services.api.public_url') }}/api/v1/auth/login" novalidate>
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
@@ -428,7 +434,9 @@
         </div>
     </div>
 
+    {{-- === Scripts : validation cote client, appel API et routage par role === --}}
     <script>
+        // References DOM principales du formulaire
         const form = document.getElementById('loginForm');
         const alertContainer = document.getElementById('alertContainer');
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -561,6 +569,7 @@
             setTimeout(() => notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
         };
 
+        // === Soumission du formulaire : validation, appel API puis redirection selon le role ===
         // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();

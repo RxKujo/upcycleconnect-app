@@ -1,7 +1,10 @@
 @extends('layouts.public')
 
+{{-- Page publique "À propos". --}}
+
 @section('title', 'À propos')
 
+{{-- === Contenu === --}}
 @section('content')
 <section class="section section-light">
     <div class="section-inner" style="max-width:800px;">
@@ -21,6 +24,7 @@
             Moderniser l'architecture Web de la gestion des échanges de matériaux recyclés tout en gardant l'âme d'UpcycleConnect, nécessaire pour une satisfaction client optimale.
         </p>
 
+        {{-- === Piliers === --}}
         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:28px; margin-top:48px;">
             <div style="border:var(--border); padding:28px; background:white; box-shadow:var(--shadow-sm);">
                 <span style="font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--cherry); display:block; margin-bottom:8px; line-height:1;" data-i18n="about.reduce">Réduire</span>
@@ -39,6 +43,7 @@
 </section>
 @endsection
 
+{{-- === Styles (piliers en colonne sur mobile) === --}}
 @section('styles')
 @media (max-width: 768px) {
     .section-inner [style*="grid-template-columns:repeat(3"] { grid-template-columns: 1fr !important; }

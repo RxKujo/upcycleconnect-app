@@ -18,6 +18,8 @@ class ConteneurController extends Controller
         $this->apiUrl = config('services.api.url') . '/api/v1/admin/conteneurs';
     }
 
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))->get($this->apiUrl);
@@ -25,6 +27,8 @@ class ConteneurController extends Controller
 
         return view('admin.conteneurs.index', compact('conteneurs'));
     }
+
+    // --- Actions (CRUD) ---
 
     public function store(Request $request)
     {
@@ -40,7 +44,6 @@ class ConteneurController extends Controller
             'capacite'       => 'required|numeric',
         ]);
 
-        // Photos en base64 (comme les annonces) : décodées et écrites dans public/uploads/conteneurs.
         $images = $this->saveBase64Images($request->input('image_base64', []));
 
         $data = [
@@ -78,7 +81,6 @@ class ConteneurController extends Controller
             'statut'         => 'required|in:actif,plein,maintenance,hors_service',
         ]);
 
-        // Nouvelles photos à ajouter (les existantes se suppriment via deletePhoto).
         $images = $this->saveBase64Images($request->input('image_base64', []));
 
         $data = [
@@ -102,11 +104,8 @@ class ConteneurController extends Controller
         return redirect()->route('admin.conteneurs.show', $id)->with('success', 'Conteneur mis à jour.');
     }
 
-    /**
-     * Décode un tableau d'images base64 (data URLs) et les écrit sur le disque
-     * média (public/uploads en local, bucket S3 en prod, cf. config/media.php).
-     * Retourne la liste des chemins relatifs valides.
-     */
+    // --- Gestion des photos ---
+
     private function saveBase64Images(array $b64List): array
     {
         $paths = [];
@@ -131,7 +130,6 @@ class ConteneurController extends Controller
         $response = Http::withToken(session('admin_token'))
             ->delete("{$this->apiUrl}/photos/{$photoId}");
 
-        // Suppression du fichier physique sur le disque média.
         $url = $request->input('url_photo');
         if ($url) {
             Storage::disk(media_disk())->delete($url);
@@ -163,6 +161,8 @@ class ConteneurController extends Controller
             'photos' => $details['photos'] ?? [],
         ]);
     }
+
+    // --- Codes-barres & tickets ---
 
     public function scanBarcode(Request $request, $id)
     {

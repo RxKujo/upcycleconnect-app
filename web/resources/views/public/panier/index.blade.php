@@ -1,7 +1,10 @@
 @extends('layouts.public')
 @section('title', 'Mon panier')
 
+{{-- Panier public (articles stockés côté client via UCPanier, paiement Stripe en modale). --}}
+
 @section('styles')
+{{-- === Styles (modale Stripe, récap) === --}}
 .stripe-modal-overlay {
     display: none;
     position: fixed;
@@ -94,6 +97,7 @@
     <p class="section-label" data-i18n="cart.kicker">Achats</p>
     <h1 class="page-title" data-i18n="cart.title">Mon panier</h1>
 
+    {{-- === Panier vide (masqué par le JS si articles) === --}}
     <div id="panierEmpty" style="text-align:center; padding:72px 24px; border:var(--border); background:white; box-shadow:var(--shadow-sm);">
         <div style="width:84px; height:84px; margin:0 auto 24px; border:3px solid var(--coffee); display:flex; align-items:center; justify-content:center; background:var(--wheat);">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="var(--coffee)" stroke-width="1.6" viewBox="0 0 24 24">
@@ -111,6 +115,7 @@
         </div>
     </div>
 
+    {{-- === Contenu du panier : articles + totaux === --}}
     <div id="panierContent" style="display:none;">
         <div id="panierItems" style="display:flex; flex-direction:column; gap:12px; margin-bottom:32px;"></div>
 
@@ -140,7 +145,7 @@
     </div>
 </div>
 
-{{-- Modal Stripe --}}
+{{-- === Modale Stripe (Payment Element) === --}}
 <div id="stripe-modal-overlay" class="stripe-modal-overlay">
     <div class="stripe-modal">
         <div class="stripe-modal-title" data-i18n="pay.title">Paiement sécurisé</div>
@@ -159,8 +164,10 @@
 @endsection
 
 @section('scripts')
+{{-- === Logique du panier : rendu, totaux, Payment Intent, confirmation === --}}
 <script src="https://js.stripe.com/v3/"></script>
 <script>
+// Instances Stripe réutilisées entre l'ouverture de la modale et la confirmation
 let stripeInstance = null;
 let stripeElements = null;
 let panierDetails = null;
@@ -189,6 +196,7 @@ function renderTotals(items) {
     document.getElementById('panierTotal').textContent = formatPrix(total);
 }
 
+// Rend le panier (bascule vide/plein, liste, totaux provisoires)
 function render() {
     var cartItems = window.UCPanier.items();
     var empty = document.getElementById('panierEmpty');
@@ -230,6 +238,7 @@ function render() {
     document.getElementById('panierAuthWarn').style.display = localStorage.getItem('auth_token') ? 'none' : 'block';
 }
 
+// Ouvre la modale : vérifie la connexion puis crée le Payment Intent
 async function openStripeModal() {
     const token = localStorage.getItem('auth_token');
     if (!token) { window.location.href = '/login?return=%2Fpanier'; return; }

@@ -1,5 +1,7 @@
 package handlers
 
+// Routes publiques (sans auth). Identités vendeurs/auteurs anonymisées (prénom + initiale) pour le RGPD.
+
 import (
 	"api/internal/models"
 	"api/internal/services"
@@ -11,6 +13,8 @@ import (
 	"strings"
 	"time"
 )
+
+// --- Annonces publiques ---
 
 type PublicAnnonceVendeur struct {
 	Prenom       string `json:"prenom"`
@@ -50,6 +54,7 @@ type PublicAnnonce struct {
 	Objets       []PublicAnnonceObjet `json:"objets"`
 }
 
+// GetPublicAnnonces : annonces validées (vendeur anonymisé, objets, photos).
 func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] %s | GetPublicAnnonces | Listing public annonces\n", time.Now().Format(time.RFC3339))
 
@@ -103,8 +108,7 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 		annonces = []PublicAnnonce{}
 	}
 
-	// Chargement groupé des objets et photos : évite le N+1
-	// (1 requête objets + 1 requête photos pour l'ensemble de la liste).
+	// Chargement groupé objets + photos : évite le N+1.
 	attachObjetsToAnnonces(annonces)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -113,8 +117,7 @@ func GetPublicAnnonces(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(annonces)
 }
 
-// attachObjetsToAnnonces charge en lot les objets puis leurs photos pour toutes
-// les annonces fournies, en un nombre constant de requêtes (au lieu de 1 + N + N*M).
+// attachObjetsToAnnonces : charge objets + photos en lot (nb de requêtes constant, pas de N+1).
 func attachObjetsToAnnonces(annonces []PublicAnnonce) {
 	if len(annonces) == 0 {
 		return
@@ -194,6 +197,7 @@ func attachObjetsToAnnonces(annonces []PublicAnnonce) {
 	}
 }
 
+// GetPublicAnnonce : détail d'une annonce validée (vendeur, conteneur, objets).
 func GetPublicAnnonce(w http.ResponseWriter, r *http.Request, id string) {
 	log.Printf("[INFO] %s | GetPublicAnnonce | Viewing annonce %s\n", time.Now().Format(time.RFC3339), id)
 
@@ -315,6 +319,8 @@ func loadPublicPhotos(objetId int) []PublicAnnoncePhoto {
 	return photos
 }
 
+// --- Articles / actualites ---
+
 type PublicArticle struct {
 	IDArticle       int     `json:"id_article"`
 	Titre           string  `json:"titre"`
@@ -325,6 +331,7 @@ type PublicArticle struct {
 	AuteurNom       string  `json:"auteur_nom_initiale"`
 }
 
+// GetPublicArticles liste les articles publies, auteur anonymise.
 func GetPublicArticles(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] %s | GetPublicArticles | Listing public articles\n", time.Now().Format(time.RFC3339))
 
@@ -378,6 +385,7 @@ func GetPublicArticles(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(articles)
 }
 
+// GetPublicArticle retourne le detail d'un article publie.
 func GetPublicArticle(w http.ResponseWriter, r *http.Request, id string) {
 	var a PublicArticle
 	var categorie sql.NullString
@@ -416,6 +424,8 @@ func GetPublicArticle(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(a)
 }
 
+// --- Forum ---
+
 type PublicForumSujet struct {
 	IDSujet       int    `json:"id_sujet"`
 	Titre         string `json:"titre"`
@@ -445,6 +455,7 @@ type PublicForumSujetDetail struct {
 	Messages       []PublicForumMessage  `json:"messages"`
 }
 
+// GetPublicForumSujets liste les sujets ouverts du forum avec nombre de messages.
 func GetPublicForumSujets(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] %s | GetPublicForumSujets | Listing public forum sujets\n", time.Now().Format(time.RFC3339))
 
@@ -492,6 +503,7 @@ func GetPublicForumSujets(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(sujets)
 }
 
+// GetPublicForumSujet retourne un sujet ouvert et ses messages non signales.
 func GetPublicForumSujet(w http.ResponseWriter, r *http.Request, id string) {
 	var s PublicForumSujetDetail
 	var dateCreation time.Time
@@ -559,12 +571,15 @@ func GetPublicForumSujet(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(s)
 }
 
+// --- Statistiques & evenements publics ---
+
 type PublicStats struct {
 	ObjetsSauves int `json:"objets_sauves"`
 	Membres      int `json:"membres"`
 	AteliersAn   int `json:"ateliers_an"`
 }
 
+// GetPublicStats : compteurs page d'accueil (objets sauvés, membres, ateliers).
 func GetPublicStats(w http.ResponseWriter, r *http.Request) {
 	var stats PublicStats
 
@@ -578,6 +593,7 @@ func GetPublicStats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
+// GetPublicEvenements liste les evenements valides, tries par date de debut.
 func GetPublicEvenements(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query("SELECT id_evenement, id_createur, titre, description, type_evenement, format, lieu, date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut, valide_par, date_creation FROM evenements WHERE statut = 'valide' ORDER BY date_debut ASC")
 	if err != nil {
@@ -623,6 +639,7 @@ func GetPublicEvenements(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, evenements, http.StatusOK)
 }
 
+// GetPublicEvenement retourne le detail d'un evenement valide et ses seances.
 func GetPublicEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	var e struct {
 		IDEvenement   int

@@ -1,6 +1,8 @@
 @extends('layouts.particulier')
 @section('title', 'Deposer une annonce')
 
+{{-- Dépôt d'annonce en 3 étapes : description, photos/remise, confirmation. --}}
+
 @section('styles')
 <style>
     .neo-progress-container { margin-bottom: 40px; }
@@ -66,6 +68,7 @@
         <h1 class="page-title"><span data-i18n="create.title">Deposer une annonce</span></h1>
     </div>
 
+    {{-- === Progression === --}}
     <div class="neo-progress-container">
         <div class="neo-progress-header">
             <span id="step-counter">ETAPE 1 SUR 3</span>
@@ -82,6 +85,7 @@
 
     <form id="annonce-form" onsubmit="return false;">
         
+        {{-- === Étape 1 : description === --}}
         <div class="step-content active" id="step-1">
             <div class="card">
                 <div class="form-group">
@@ -121,6 +125,7 @@
             </div>
         </div>
 
+        {{-- === Étape 2 : objets et remise === --}}
         <div class="step-content" id="step-2">
             <div class="card">
                 <div id="objets-container"></div>
@@ -142,7 +147,7 @@
                         </div>
                     </div>
 
-                    {{-- Panneau conteneur : carte interactive des points de collecte --}}
+                    {{-- Panneau conteneur --}}
                     <div id="conteneur-panel" style="display:none; margin-top:20px;">
                         <label class="form-label"><span data-i18n="create.f.choosecontainer">Choisir le conteneur sur la carte *</span></label>
                         <p style="font-family:'DM Mono',monospace; font-size:0.72rem; opacity:0.6; margin-bottom:10px;" data-i18n="depot.map.hint">Cliquez un conteneur sur la carte pour le sélectionner — ou « Autour de moi » pour le plus proche.</p>
@@ -176,6 +181,7 @@
             </div>
         </div>
 
+        {{-- === Étape 3 : confirmation === --}}
         <div class="step-content" id="step-3">
             <div class="card" style="text-align: center; padding: 40px 20px;">
                 <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; margin-bottom: 16px;"><span data-i18n="create.ready">PRET A PUBLIER ?</span></h3>
@@ -200,6 +206,7 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 @vite('resources/js/conteneurs-map.js')
 <script>
@@ -207,6 +214,7 @@ let currentStep = 1;
 let objetCount = 0;
 let objets = {};
 
+// Navigue vers une étape (valide les précédentes).
 function goToStep(step) {
     if (step > 1 && !validateStep1()) return;
     if (step > 2 && !validateStep2()) return;
@@ -234,6 +242,7 @@ function goToStep(step) {
     }
 }
 
+// Construit le récapitulatif (étape 3).
 function buildRecap() {
     const recapContainer = document.getElementById('recap-container');
     const titre = document.getElementById('titre').value;
@@ -299,14 +308,14 @@ function togglePrix() {
     document.getElementById('prix-group').classList.toggle('visible', isVente);
 }
 
-// ── Mode de remise ──────────────────────────────────────────────────────────
+// Mode de remise
 function toggleRemise() {
     const mode = (document.querySelector('input[name="mode_remise"]:checked') || {}).value;
     document.getElementById('conteneur-panel').style.display = mode === 'conteneur' ? 'block' : 'none';
     document.getElementById('mainpropre-panel').style.display = mode === 'main_propre' ? 'block' : 'none';
 }
 
-// Sélection d'un conteneur depuis la carte (module conteneurs-map.js).
+// Sélection d'un conteneur sur la carte.
 let selectedConteneur = null;
 function selectConteneur(c) {
     if (!c) return;
@@ -322,7 +331,7 @@ function selectConteneur(c) {
     document.getElementById('conteneur-info').style.display = 'block';
 }
 
-// ── Autocomplétion d'adresse (API geopf.fr), comme à l'inscription ──────────
+// Autocomplétion d'adresse (API geopf.fr).
 function initAdresseAutocomplete() {
     const input = document.getElementById('adresseSearch');
     const box   = document.getElementById('adresseSuggestions');
@@ -442,6 +451,7 @@ function catOptions() {
         CATEGORIES.map(c => `<option value="${c.nom}">${c.nom}</option>`).join('');
 }
 
+// Ajoute une carte « objet ».
 function addObjet() {
     objetCount++;
     const id = objetCount;
@@ -569,6 +579,7 @@ function removePhoto(objetId, photoIndex) {
     renderPreviews(objetId);
 }
 
+// Assemble le payload et envoie l'annonce.
 async function submitAnnonce() {
     if (!validateStep1() || !validateStep2()) { 
         if (!validateStep1()) goToStep(1);

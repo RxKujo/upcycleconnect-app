@@ -1,3 +1,6 @@
+// Fichier auth.go : authentification par jeton JWT (Bearer). Vérifie la signature
+// HMAC et extrait l'identifiant et le rôle de l'utilisateur.
+
 package middleware
 
 import (
@@ -10,6 +13,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// AuthRequired valide le jeton Bearer et renvoie (userId, role, true) si l'accès
+// est autorisé ; sinon écrit une réponse 401 et renvoie ok=false.
 func AuthRequired(w http.ResponseWriter, r *http.Request) (int, string, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -59,6 +64,7 @@ func AuthRequired(w http.ResponseWriter, r *http.Request) (int, string, bool) {
 	return int(idClaim), role, true
 }
 
+// AdminRequired indique si le rôle correspond à un administrateur.
 func AdminRequired(role string) bool {
 	return role == "admin"
 }

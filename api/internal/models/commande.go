@@ -1,7 +1,11 @@
+// Fichier commande.go : structures d'une commande (achat d'une annonce) et de
+// ses requêtes de création / mise à jour de statut.
+
 package models
 
 import "time"
 
+// Commande : achat d'une annonce par un acheteur, avec commission et remise.
 type Commande struct {
 	IDCommande             int        `json:"id_commande"`
 	IDAnnonce              int        `json:"id_annonce"`

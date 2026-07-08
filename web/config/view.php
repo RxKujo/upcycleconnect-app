@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des vues Blade : chemins des templates et dossier des vues
+// compilées.
+
 return [
 
     'paths' => [

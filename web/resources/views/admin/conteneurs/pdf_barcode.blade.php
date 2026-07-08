@@ -1,3 +1,4 @@
+{{-- Bon de dépôt / récupération imprimable : affiche le code-barres d'une commande (conteneur particulier ou récupération artisan). Page HTML autonome destinée à la génération PDF. --}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -35,6 +36,7 @@
     </style>
 </head>
 <body>
+    {{-- === Contenu du bon (titre selon le type, numéro de commande, code-barres, méta) === --}}
     <div class="container">
         <h2 class="title">
             @if($typeCode == 'depot_particulier')

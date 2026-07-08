@@ -2,6 +2,7 @@
 @section('title', 'Plans d\'abonnement')
 
 @section('content')
+{{-- === Styles (cartes de plan et modale) === --}}
 <style>
     .plan-card { position: relative; border: var(--border); background: var(--cream); box-shadow: var(--shadow); padding: 0; overflow: hidden; display: flex; flex-direction: column; }
     .plan-accent { height: 10px; width: 100%; }
@@ -36,6 +37,7 @@
     #ab-error { display: none; background: #f8d7da; color: var(--cherry); border: 3px solid var(--cherry); padding: 12px 16px; margin-bottom: 18px; font-family: 'DM Mono', monospace; font-size: 0.82rem; }
 </style>
 
+{{-- === En-tête de page (sync Stripe + création) === --}}
 <div class="page-header">
     <h1 class="page-title">Plans d'abonnement</h1>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -44,6 +46,7 @@
     </div>
 </div>
 
+{{-- === Grille des plans existants === --}}
 <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; margin-bottom:40px;" id="plans-grid">
     @forelse($abonnements as $plan)
     <div class="plan-card">
@@ -93,6 +96,7 @@
     @endforelse
 </div>
 
+{{-- === Souscriptions actives (rempli en AJAX plus bas) === --}}
 <div class="card">
     <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;margin:0 0 16px;border-bottom:3px solid var(--coffee);padding-bottom:10px;">
         Souscriptions actives
@@ -102,7 +106,6 @@
     </div>
 </div>
 
-{{-- Modale création / édition d'un plan --}}
 <div class="ab-overlay" id="ab-modal">
     <div class="ab-box">
         <button type="button" class="ab-close" onclick="closePlanModal()">&times;</button>
@@ -173,6 +176,7 @@
 </div>
 @endsection
 
+{{-- === Scripts : sync Stripe, modale plan (CRUD) et chargement des souscriptions === --}}
 @push('scripts')
 <script>
 const API = '{{ config("services.api.public_url") }}';

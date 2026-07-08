@@ -7,8 +7,7 @@ import (
 	"net/http"
 )
 
-// GetPublicConteneursAvecGeo alimente la carte publique des points de collecte
-// (utilisée dans la création d'annonce, mode de remise « conteneur »).
+// GetPublicConteneursAvecGeo — carte publique des points de collecte (création d'annonce, remise « conteneur »).
 func GetPublicConteneursAvecGeo(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT id_conteneur, conteneur_ref, adresse, ville, code_postal, latitude, longitude, capacite, statut

@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des files d'attente (jobs) : connexion par défaut, définition
+// des connexions (sync, base de données, Redis, SQS, etc.) et jobs échoués.
+
 return [
 
     'default' => env('QUEUE_CONNECTION', 'database'),

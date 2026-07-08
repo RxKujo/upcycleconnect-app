@@ -1,7 +1,10 @@
 @extends('layouts.public')
 
+{{-- Page publique CGU. --}}
+
 @section('title', 'Conditions Générales d\'Utilisation')
 
+{{-- === Contenu === --}}
 @section('content')
 <div class="page-container" style="max-width:800px;">
     <h1 class="page-title" data-i18n="cgu.title">Conditions Générales d'Utilisation</h1>

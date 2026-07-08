@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Http;
 
 class ArticleController extends Controller
 {
+    // --- Helpers API ---
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('salarie_token'); }
+
+    // --- Lecture ---
 
     public function index()
     {
@@ -22,6 +25,8 @@ class ArticleController extends Controller
     {
         return view('salarie.articles.form', ['article' => null]);
     }
+
+    // --- Écriture ---
 
     public function store(Request $request)
     {
@@ -53,6 +58,8 @@ class ArticleController extends Controller
         return redirect()->route('salarie.articles.index')->with('success', 'Article supprimé.');
     }
 
+    // --- Validation & assainissement ---
+
     private function validatePayload(Request $request): array
     {
         $data = $request->validate([
@@ -62,8 +69,6 @@ class ArticleController extends Controller
             'statut' => 'required|in:brouillon,publie,archive',
         ]);
 
-        // Le contenu est du HTML issu de l'éditeur enrichi : on neutralise
-        // les éléments/attributs dangereux avant stockage (defense-in-depth).
         $data['contenu'] = $this->sanitizeHtml($data['contenu']);
 
         return $data;
@@ -71,12 +76,9 @@ class ArticleController extends Controller
 
     private function sanitizeHtml(string $html): string
     {
-        // Supprime les balises dangereuses (avec ou sans contenu).
         $html = preg_replace('#<(script|style|iframe|object|embed|form)\b[^>]*>.*?</\1>#is', '', $html) ?? $html;
         $html = preg_replace('#<(script|style|iframe|object|embed|form)\b[^>]*/?>#is', '', $html) ?? $html;
-        // Supprime les gestionnaires d'événements inline (onclick, onerror…).
         $html = preg_replace('#\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $html) ?? $html;
-        // Neutralise les URL javascript:.
         $html = preg_replace('#(href|src)\s*=\s*(["\'])\s*javascript:[^"\']*\2#i', '$1=$2#$2', $html) ?? $html;
 
         return $html;

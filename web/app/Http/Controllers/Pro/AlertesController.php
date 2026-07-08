@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 
+// Espace pro : alertes matériaux (liste, création, suppression) via l'API Go.
 class AlertesController extends Controller
 {
+    // --- Utilitaires (URL API + token) ---
+
     private function apiUrl(): string
     {
         return rtrim(config('services.api.url', env('API_URL', 'http://localhost:8080')), '/');
@@ -19,6 +22,9 @@ class AlertesController extends Controller
         return Session::get('pro_token');
     }
 
+    // --- Actions ---
+
+    // Alertes du pro + plan + matériaux disponibles.
     public function index()
     {
         $response = Http::withToken($this->token())
@@ -46,6 +52,7 @@ class AlertesController extends Controller
         ]);
     }
 
+    // Crée une alerte (limite atteinte, doublon 409, échec API).
     public function store(Request $request)
     {
         $request->validate([

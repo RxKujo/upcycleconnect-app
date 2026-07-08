@@ -1,6 +1,8 @@
 @extends('layouts.particulier')
 @section('title', 'Mes formations & événements')
 
+{{-- Mes formations et événements : statut paiement, billet PDF, itinéraire. --}}
+
 @section('styles')
 <style>
     .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.06em; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 3px solid var(--coffee); display:flex; justify-content:space-between; align-items:center; }
@@ -20,18 +22,22 @@
     <a href="/evenements" class="btn-secondary" data-i18n="part.trainings.catalogue">Voir le catalogue</a>
 </div>
 
+{{-- === Inscriptions === --}}
 <div class="card">
     <h3 class="section-title" data-i18n="part.trainings.myregistrations">Mes inscriptions</h3>
     <div id="events-container"><div class="empty-mini" data-i18n="common.loading">Chargement…</div></div>
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
+// Échappe le HTML (anti-injection).
 function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
+// Charge les inscriptions et construit la liste.
 async function loadEvents() {
     const container = document.getElementById('events-container');
     try {
@@ -85,6 +91,7 @@ function slugify(s) {
         .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'billet';
 }
 
+// Télécharge le billet PDF (blob authentifié).
 async function downloadTicket(btn) {
     const token = getToken();
     if (!token) return;

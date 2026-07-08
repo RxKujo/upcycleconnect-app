@@ -1,5 +1,7 @@
 package handlers
 
+// Dashboard Pro : impact écologique, stats matériaux (Essential/Expert), export PDF annuel.
+
 import (
 	"api/internal/middleware"
 	"api/internal/services"
@@ -14,7 +16,7 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
-// capitalize met la première lettre en majuscule (les matériaux sont des mots simples).
+// capitalize : première lettre en majuscule.
 func capitalize(s string) string {
 	if s == "" {
 		return s
@@ -24,15 +26,14 @@ func capitalize(s string) string {
 	return string(r)
 }
 
-// fixMojibake répare les chaînes en double-encodage UTF-8 (du texte UTF-8 importé
-// via une connexion Latin-1 puis ré-encodé en UTF-8 — ex. "é" stocké "Ã©").
-// Sans danger : ne modifie la chaîne que si chaque rune tient sur un octet ET que
-// le résultat est de l'UTF-8 valide différent de l'original ; sinon retourne tel quel.
+// fixMojibake répare le double-encodage UTF-8 (ex. "é" stocké "Ã©").
+// Sans danger : n'agit que si chaque rune tient sur un octet ET que le résultat
+// est de l'UTF-8 valide différent de l'original ; sinon retourne tel quel.
 func fixMojibake(s string) string {
 	b := make([]byte, 0, len(s))
 	for _, r := range s {
 		if r > 0xFF {
-			return s // contient des runes hors Latin-1 : ce n'est pas du mojibake
+			return s // runes hors Latin-1 : pas du mojibake
 		}
 		b = append(b, byte(r))
 	}
@@ -53,7 +54,7 @@ var (
 func setText(pdf *gofpdf.Fpdf, c [3]int) { pdf.SetTextColor(c[0], c[1], c[2]) }
 func setLine(pdf *gofpdf.Fpdf, c [3]int) { pdf.SetDrawColor(c[0], c[1], c[2]) }
 
-// sectionTitle écrit un titre de section discret suivi d'un filet fin.
+// sectionTitle : titre de section + filet fin.
 func sectionTitle(pdf *gofpdf.Fpdf, x, y, w float64, title string) {
 	setText(pdf, colInk)
 	pdf.SetFont("dv", "B", 12)
@@ -64,7 +65,7 @@ func sectionTitle(pdf *gofpdf.Fpdf, x, y, w float64, title string) {
 	pdf.Line(x, y+9, x+w, y+9)
 }
 
-// drawMetric écrit une métrique : grand chiffre coloré + libellé discret en dessous.
+// drawMetric : grand chiffre coloré + libellé en dessous.
 func drawMetric(pdf *gofpdf.Fpdf, x, y, w float64, value, label string) {
 	setText(pdf, colAccent)
 	pdf.SetFont("dv", "B", 22)
@@ -90,7 +91,7 @@ type dashboardEssentialResponse struct {
 	StatsMateriaux  []services.StatMateriau   `json:"stats_materiaux"`
 }
 
-// GetDashboardEssential retourne les métriques du mois courant.
+// GetDashboardEssential : métriques du mois courant.
 func GetDashboardEssential(w http.ResponseWriter, r *http.Request, userID int) {
 	_, ok := middleware.RequirePlanFeature(userID, w,
 		func(p *middleware.PlanInfo) bool { return p.DashboardMensuel },
@@ -134,7 +135,7 @@ type dashboardExpertResponse struct {
 	Badges         []services.BadgeUtilisateur `json:"badges"`
 }
 
-// GetDashboardExpert retourne les métriques de l'année courante + badges.
+// GetDashboardExpert : métriques de l'année courante + badges.
 func GetDashboardExpert(w http.ResponseWriter, r *http.Request, userID int) {
 	_, ok := middleware.RequirePlanFeature(userID, w,
 		func(p *middleware.PlanInfo) bool { return p.DashboardAnnuel },
@@ -164,7 +165,7 @@ func GetDashboardExpert(w http.ResponseWriter, r *http.Request, userID int) {
 		return
 	}
 
-	// Recalculer et attribuer les badges avant de les lire.
+	// Recalculer les badges avant de les lire.
 	if _, err := services.ComputeAndAwardBadges(userID); err != nil {
 		logError("GetDashboardExpert", "badge award: %v", err)
 	}
@@ -185,7 +186,7 @@ func GetDashboardExpert(w http.ResponseWriter, r *http.Request, userID int) {
 
 // ─── Export PDF annuel (Expert Pro) ──────────────────────────────────────────
 
-// ExportDashboardPDF génère et envoie un PDF du rapport annuel Expert Pro.
+// ExportDashboardPDF : génère et envoie le PDF du rapport annuel Expert Pro.
 func ExportDashboardPDF(w http.ResponseWriter, r *http.Request, userID int) {
 	_, ok := middleware.RequirePlanFeature(userID, w,
 		func(p *middleware.PlanInfo) bool { return p.ExportPDF },
@@ -231,6 +232,7 @@ func ExportDashboardPDF(w http.ResponseWriter, r *http.Request, userID int) {
 	}
 }
 
+// buildDashboardPDF : met en page le rapport annuel d'impact (A4, gofpdf).
 func buildDashboardPDF(annee int, nomEntreprise string,
 	impact services.ImpactEcologique,
 	stats []services.StatMateriau,

@@ -1,7 +1,11 @@
 @extends('layouts.admin')
 @section('title', 'Conteneurs')
 
+{{-- Vue admin : liste des conteneurs et modale de création (avec autocomplétion
+     d'adresse BAN et upload de photos en base64). --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1 class="page-title">Conteneurs</h1>
     <button type="button" class="btn-primary" onclick="openConteneurModal()">+ Nouveau conteneur</button>
@@ -53,6 +57,7 @@
     .photo-preview .remove-photo { position: absolute; top: -8px; right: -8px; background: var(--cherry); color: var(--cream); border: 1px solid var(--coffee); width: 20px; height: 20px; font-size: 0.8rem; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; }
 </style>
 
+{{-- === Modale : création d'un conteneur === --}}
 <div class="modal-overlay" id="conteneurModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeConteneurModal()">&times;</button>
@@ -105,6 +110,7 @@
     </div>
 </div>
 
+{{-- === Tableau : liste des conteneurs === --}}
 <div class="table-container">
     <table>
         <thead>

@@ -1,5 +1,7 @@
 package handlers
 
+// Événements back-office : séances multi-jours, animateurs, inscriptions, validation.
+
 import (
 	"api/internal/models"
 	"api/pkg/database"
@@ -10,8 +12,9 @@ import (
 	"time"
 )
 
-// seanceLayouts liste les formats de date acceptés en provenance du front
-// (datetime-local, ISO avec ou sans zone, format MySQL…).
+// --- Parsing dates & séances (helpers) ---
+
+// seanceLayouts : formats de date acceptés du front (datetime-local, ISO, MySQL…).
 var seanceLayouts = []string{
 	"2006-01-02T15:04:05Z07:00",
 	"2006-01-02T15:04:05Z",
@@ -21,7 +24,7 @@ var seanceLayouts = []string{
 	"2006-01-02 15:04",
 }
 
-// parseFlexibleTime tente de parser une date selon plusieurs layouts courants.
+// parseFlexibleTime : parse une date selon seanceLayouts.
 func parseFlexibleTime(s string) (time.Time, bool) {
 	s = strings.TrimSpace(s)
 	for _, l := range seanceLayouts {
@@ -32,9 +35,8 @@ func parseFlexibleTime(s string) (time.Time, bool) {
 	return time.Time{}, false
 }
 
-// computeEnvelope calcule l'enveloppe (début min / fin max) d'un ensemble de
-// séances, plus le format et le lieu de la première séance valide. Ces valeurs
-// alimentent les colonnes récapitulatives de la table evenements.
+// computeEnvelope : enveloppe (début min / fin max) + format/lieu de la 1re séance
+// valide, pour alimenter les colonnes récapitulatives de evenements.
 func computeEnvelope(seances []models.SeanceInput) (debut, fin time.Time, format string, lieu *string, ok bool) {
 	for _, s := range seances {
 		d, okD := parseFlexibleTime(s.DateDebut)
@@ -63,10 +65,8 @@ func computeEnvelope(seances []models.SeanceInput) (debut, fin time.Time, format
 	return
 }
 
-// syncSeances remplace toutes les séances d'un événement par celles fournies,
-// insère leurs animateurs, puis reconstruit la table animateurs_evenements
-// comme l'union distincte des animateurs de séance (pour que le planning et
-// l'affichage « animateurs » de l'événement continuent de fonctionner).
+// syncSeances : remplace les séances (+ leurs animateurs) et reconstruit
+// animateurs_evenements comme l'union distincte des animateurs de séance.
 func syncSeances(eventId int64, seances []models.SeanceInput) {
 	// ON DELETE CASCADE nettoie animateurs_seances.
 	database.DB.Exec("DELETE FROM seances_evenements WHERE id_evenement = ?", eventId)
@@ -100,7 +100,7 @@ func syncSeances(eventId int64, seances []models.SeanceInput) {
 			database.DB.Exec("INSERT IGNORE INTO animateurs_seances (id_seance, id_salarie) VALUES (?, ?)", sid, uid)
 		}
 	}
-	// Reconstruire l'union des animateurs au niveau événement.
+	// Union des animateurs au niveau événement.
 	database.DB.Exec("DELETE FROM animateurs_evenements WHERE id_evenement = ?", eventId)
 	database.DB.Exec(
 		`INSERT INTO animateurs_evenements (id_evenement, id_salarie)
@@ -112,7 +112,7 @@ func syncSeances(eventId int64, seances []models.SeanceInput) {
 	)
 }
 
-// fetchSeances renvoie les séances d'un événement, animateurs inclus.
+// fetchSeances : séances d'un événement, animateurs inclus.
 func fetchSeances(eventId int) []models.Seance {
 	rows, err := database.DB.Query(
 		`SELECT id_seance, titre, format, lieu, date_debut, date_fin, ordre
@@ -158,6 +158,9 @@ func fetchSeanceAnimateurs(seanceId int) []models.AnimateurInfo {
 	return result
 }
 
+// --- Handlers événements (CRUD) ---
+
+// GetEvenements : liste des événements avec leur nombre d'inscrits.
 func GetEvenements(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT e.id_evenement, e.id_createur, e.titre, e.description, e.type_evenement, e.format, e.lieu,
@@ -186,6 +189,7 @@ func GetEvenements(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, evenements, http.StatusOK)
 }
 
+// GetEvenement : détail d'un événement (animateurs + séances).
 func GetEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	var e models.Evenement
 	err := database.DB.QueryRow(`
@@ -232,6 +236,7 @@ func fetchAnimateurs(eventId int) []models.AnimateurInfo {
 	return result
 }
 
+// CreateEvenement : crée un événement (en_attente) + séances/animateurs.
 func CreateEvenement(w http.ResponseWriter, r *http.Request, adminId int) {
 	var req models.CreateEvenementRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -239,7 +244,7 @@ func CreateEvenement(w http.ResponseWriter, r *http.Request, adminId int) {
 		return
 	}
 
-	// Les séances (si fournies) déterminent l'enveloppe date/format/lieu de l'événement.
+	// Les séances (si fournies) déterminent l'enveloppe date/format/lieu.
 	format, lieu, debut, fin := req.Format, req.Lieu, req.DateDebut, req.DateFin
 	if len(req.Seances) > 0 {
 		if d, f, fmt2, l, ok := computeEnvelope(req.Seances); ok {
@@ -264,6 +269,7 @@ func CreateEvenement(w http.ResponseWriter, r *http.Request, adminId int) {
 	jsonOK(w, map[string]interface{}{"message": "événement créé", "id": id}, http.StatusCreated)
 }
 
+// UpdateEvenement : maj de l'événement + resync séances/animateurs.
 func UpdateEvenement(w http.ResponseWriter, r *http.Request, id string, adminId int) {
 	var req models.CreateEvenementRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -300,6 +306,9 @@ func UpdateEvenement(w http.ResponseWriter, r *http.Request, id string, adminId 
 	jsonOK(w, map[string]string{"message": "événement mis à jour"}, http.StatusOK)
 }
 
+// --- Inscriptions ---
+
+// GetEvenementInscrits : inscrits d'un événement (nom anonymisé RGPD).
 func GetEvenementInscrits(w http.ResponseWriter, r *http.Request, id string) {
 	rows, err := database.DB.Query(`
 		SELECT u.id_utilisateur, u.prenom, u.nom, u.email, i.statut_paiement, i.date_inscription
@@ -339,6 +348,8 @@ func GetEvenementInscrits(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, inscrits, http.StatusOK)
 }
 
+// --- Suppression & workflow de validation ---
+
 func DeleteEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("DELETE FROM evenements WHERE id_evenement = ?", id)
 	if err != nil {
@@ -348,6 +359,7 @@ func DeleteEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "événement supprimé"}, http.StatusOK)
 }
 
+// AttenteEvenement : remet un événement en attente.
 func AttenteEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("UPDATE evenements SET statut = 'en_attente' WHERE id_evenement = ?", id)
 	if err != nil {
@@ -357,6 +369,7 @@ func AttenteEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "événement remis en attente"}, http.StatusOK)
 }
 
+// ValiderEvenement : valide un événement et mémorise l'admin validateur.
 func ValiderEvenement(w http.ResponseWriter, r *http.Request, id string, adminId int) {
 	_, err := database.DB.Exec("UPDATE evenements SET statut = 'valide', valide_par = ? WHERE id_evenement = ?", adminId, id)
 	if err != nil {
@@ -365,14 +378,13 @@ func ValiderEvenement(w http.ResponseWriter, r *http.Request, id string, adminId
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "erreur lors de la validation"})
 		return
 	}
-	// Le planning des salariés (organisateurs / animateurs / inscrits) est désormais
-	// calculé en direct à la lecture par GetMonPlanning : aucun créneau n'est à
-	// insérer ici lors de la validation.
+	// Planning des salariés calculé en direct par GetMonPlanning : rien à insérer ici.
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "événement validé"})
 }
 
+// RefuserEvenement : passe un événement en 'refuse'.
 func RefuserEvenement(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("UPDATE evenements SET statut = 'refuse' WHERE id_evenement = ?", id)
 	if err != nil {

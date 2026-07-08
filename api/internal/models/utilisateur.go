@@ -1,7 +1,12 @@
+// Fichier utilisateur.go : structure d'un utilisateur (tous rôles) et payloads
+// d'inscription / connexion.
+
 package models
 
 import "time"
 
+// Utilisateur : compte de la plateforme (particulier, professionnel, salarié ou
+// admin) ; MotDePasseHash n'est jamais sérialisé en JSON.
 type Utilisateur struct {
 	IDUtilisateur   int       `json:"id_utilisateur"`
 	Nom             string    `json:"nom"`
@@ -23,6 +28,8 @@ type Utilisateur struct {
 	UpcyclingScore  int       `json:"upcycling_score"`
 	EstCertifie     bool      `json:"est_certifie"`
 	NiveauScore     string    `json:"niveau_score,omitempty"`
+	IDSiteUC        *int      `json:"id_site_uc,omitempty"`
+	NomSite         *string   `json:"nom_site,omitempty"`
 	DateCreation    time.Time `json:"date_creation"`
 }
 

@@ -1,9 +1,12 @@
 @extends('layouts.public')
 
+{{-- Ressources pédagogiques : liste d'articles (chargés en JS, filtrés côté client). --}}
+
 @section('pub_slot')@include('partials.pub-slot')@endsection
 
 @section('title', 'Ressources Pédagogiques')
 
+{{-- === Styles === --}}
 @section('styles')
 .ressources-wrap { max-width: 1200px; margin: 0 auto; padding: 60px 24px; }
 .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: var(--coffee); margin-bottom: 8px; }
@@ -36,6 +39,7 @@
 .art-modal-content { font-size: 1.02rem; line-height: 1.7; color: #333; white-space: pre-wrap; }
 @endsection
 
+{{-- === Contenu === --}}
 @section('content')
 <div class="ressources-wrap">
     <h1 class="page-title" data-i18n="resources.title">Ressources pédagogiques</h1>
@@ -55,8 +59,10 @@
 
 @endsection
 
+{{-- === Scripts : chargement, filtres et rendu === --}}
 @section('scripts')
 <script>
+// rubrique -> libellé et couleurs
 const CAT_LABELS = {
     actualites: { label: 'Actualités',         color: 'var(--teal)',   text: '#fff' },
     conseils:   { label: 'Conseils & astuces', color: 'var(--forest)', text: '#fff' },
@@ -93,6 +99,7 @@ function countFor(cat) {
     return ALL_ARTICLES.filter(a => a.categorie === cat).length;
 }
 
+// Construit les chips de filtre (une par rubrique, avec compteur)
 function renderFilters() {
     const wrap = document.getElementById('filters');
     // « Tout » + toutes les rubriques fixes (même à 0) + « Non classé » si présent.
@@ -115,6 +122,7 @@ function renderFilters() {
     });
 }
 
+// Rend la grille selon le filtre courant
 function renderArticles() {
     const grid = document.getElementById('articles-grid');
     const empty = document.getElementById('empty-state');
@@ -150,6 +158,7 @@ function renderArticles() {
     }).join('');
 }
 
+// Point d'entrée : récupère les articles puis rend
 async function init() {
     const grid = document.getElementById('articles-grid');
     try {

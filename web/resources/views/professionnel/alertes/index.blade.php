@@ -2,14 +2,18 @@
 
 @section('title', 'Mes alertes matériaux')
 
+{{-- Alertes matériaux du Pro : création, liste et limites selon le plan --}}
+
 @section('content')
 <div class="main-content">
 
+    {{-- === En-tête === --}}
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
         <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.alerts.title">Alertes matériaux</span></h1>
         <a href="{{ route('pro.dashboard.essential') }}" class="btn-secondary btn-sm">← Dashboard</a>
     </div>
 
+    {{-- === Messages flash === --}}
     @if(session('success'))
         <div style="background:#e8f5e9;border:2px solid #244F26;padding:12px 20px;margin-bottom:24px;font-family:'DM Mono',monospace;font-size:0.85rem;">
             {{ session('success') }}

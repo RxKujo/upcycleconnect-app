@@ -1,7 +1,11 @@
 @extends('layouts.admin')
 @section('title', 'Publicités')
 
+{{-- Vue admin : modération des publicités (liste filtrable, détail en modale,
+     validation / refus des annonces en attente). --}}
+
 @section('content')
+{{-- === En-tête de page (liens stats et rotation) === --}}
 <div class="page-header">
     <h1 class="page-title">Publicités</h1>
     <div style="display:flex;gap:12px;">
@@ -39,6 +43,7 @@
     @endforeach
 </div>
 
+{{-- === Tableau : liste des publicités === --}}
 <div class="table-container">
     <table>
         <thead>
@@ -161,6 +166,7 @@
 </style>
 @endsection
 
+{{-- === Scripts : ouverture de la modale de détail à partir des attributs data-* === --}}
 @push('scripts')
 <script>
 (function () {

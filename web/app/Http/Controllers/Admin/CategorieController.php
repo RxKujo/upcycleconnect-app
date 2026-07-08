@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Http;
 
 class CategorieController extends Controller
 {
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))
@@ -22,6 +24,8 @@ class CategorieController extends Controller
     {
         return view('admin.categories.form', ['categorie' => null]);
     }
+
+    // --- Écriture ---
 
     public function store(Request $request)
     {

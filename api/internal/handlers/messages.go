@@ -12,6 +12,8 @@ import (
 
 // Messagerie acheteur ↔ vendeur, liée à une annonce (coordination main propre…).
 
+// --- Helpers ---
+
 func nomInitiale(nom string) string {
 	r := []rune(strings.TrimSpace(nom))
 	if len(r) == 0 {
@@ -35,9 +37,10 @@ func participantConversation(convID, userID int) (bool, int, int, error) {
 	return userID == acheteur || userID == vendeur, acheteur, vendeur, nil
 }
 
-// POST /api/v1/conversations  { id_annonce }
-// Crée (ou retrouve) la conversation entre l'utilisateur courant (acheteur) et
-// le vendeur de l'annonce. Interdit de se contacter soi-même.
+// --- Handlers ---
+
+// POST /api/v1/conversations { id_annonce }
+// Crée ou retrouve la conversation acheteur (courant) ↔ vendeur. Interdit de se contacter soi-même.
 func CreateOrGetConversation(w http.ResponseWriter, r *http.Request, userID int) {
 	var body struct {
 		IDAnnonce int `json:"id_annonce"`
@@ -63,7 +66,7 @@ func CreateOrGetConversation(w http.ResponseWriter, r *http.Request, userID int)
 		return
 	}
 
-	// Retrouve une conversation existante…
+	// Conversation existante ?
 	var idConv int
 	err = database.DB.QueryRow(
 		"SELECT id_conversation FROM conversations WHERE id_annonce = ? AND id_acheteur = ?",
@@ -129,7 +132,7 @@ func GetConversations(w http.ResponseWriter, r *http.Request, userID int) {
 			&prenomA, &nomA, &prenomV, &nomV, &dernier, &dateDernier, &c.NonLus); err != nil {
 			continue
 		}
-		// L'« autre » partie dépend du rôle de l'utilisateur courant.
+		// L'« autre » partie dépend du rôle du user courant.
 		if userID == idAcheteur {
 			c.AutreNom = strings.TrimSpace(prenomV + " " + nomInitiale(nomV))
 		} else {
@@ -161,12 +164,12 @@ func GetConversationMessages(w http.ResponseWriter, r *http.Request, userID int,
 		return
 	}
 
-	// Marque comme lus les messages que je reçois.
+	// Marque comme lus les messages reçus.
 	database.DB.Exec(
 		"UPDATE messages SET lu = 1 WHERE id_conversation = ? AND id_expediteur <> ? AND lu = 0",
 		convID, userID)
 
-	// En-tête : détails de l'annonce + nom de l'autre.
+	// En-tête : annonce + nom de l'autre.
 	var idAnnonce int
 	var titre, typeAnn, modeRemise, statutAnn, prenomA, nomA, prenomV, nomV string
 	var prix sql.NullFloat64
@@ -184,7 +187,7 @@ func GetConversationMessages(w http.ResponseWriter, r *http.Request, userID int,
 		autreNom = strings.TrimSpace(prenomA + " " + nomInitiale(nomA))
 	}
 
-	// Première photo de l'annonce (pour la mini-carte).
+	// Première photo de l'annonce (mini-carte).
 	var photo sql.NullString
 	database.DB.QueryRow(`
 		SELECT p.url_photo FROM objets_annonces o
@@ -244,8 +247,8 @@ func GetConversationMessages(w http.ResponseWriter, r *http.Request, userID int,
 	}, http.StatusOK)
 }
 
-// PUT /api/v1/conversations/{id}/vendu — le vendeur déclare l'annonce vendue
-// (vente main propre en espèces) ; l'acheteur enregistré est celui de la conversation.
+// PUT /api/v1/conversations/{id}/vendu — le vendeur déclare l'annonce vendue (main propre).
+// L'acheteur enregistré est celui de la conversation.
 func DeclarerVenduConversation(w http.ResponseWriter, r *http.Request, userID int, idStr string) {
 	convID, err := strconv.Atoi(idStr)
 	if err != nil {

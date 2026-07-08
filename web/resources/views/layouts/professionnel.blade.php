@@ -1,12 +1,15 @@
+{{-- Layout PROFESSIONNEL — espace pro (navbar, contenu). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
     <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Espace Pro') — UpcycleConnect</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -102,6 +105,7 @@
 </head>
 <body>
     @include('partials._toast')
+    {{-- === Navbar === --}}
     <nav class="navbar">
         <a href="/" class="navbar-brand">Upcycle<span>Connect</span> <span class="navbar-badge">Pro</span></a>
         <div class="navbar-links">
@@ -120,11 +124,13 @@
         </div>
     </nav>
 
+    {{-- === Contenu === --}}
     <div class="main-content">
         <div id="alert-container"></div>
         @yield('content')
     </div>
 
+    {{-- === Scripts === --}}
     <script>
         const API_BASE = '{{ config("services.api.public_url") }}';
 
@@ -168,6 +174,7 @@
     </script>
     @yield('scripts')
     @stack('scripts')
+    {{-- === Partials === --}}
     @include('partials.datepicker')
     @include('partials.onesignal')
     @include('partials.i18n-engine')

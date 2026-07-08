@@ -1,3 +1,6 @@
+// Package router : routeur HTTP maison. ServeHTTP applique CORS + auth puis
+// aiguille selon chemin, méthode et rôle (public, authentifié, pro, salarié, admin).
+
 package router
 
 import (
@@ -8,7 +11,7 @@ import (
 	"strings"
 )
 
-// Constantes de chemins — source unique de vérité pour toutes les routes.
+// Préfixes de chemins — source unique de vérité des routes.
 const (
 	prefixAuth          = "/api/v1/auth"
 	prefixPublic        = "/api/v1/public"
@@ -48,6 +51,7 @@ const (
 	prefixAdminTrad       = "/api/v1/admin/translations"
 	prefixAdminNotifLog   = "/api/v1/admin/notifications"
 	prefixAdminFinances   = "/api/v1/admin/finances"
+	prefixAdminSites      = "/api/v1/admin/sites"
 
 	// Routes pro (Essential Pro & Expert Pro)
 	prefixPro      = "/api/v1/pro"
@@ -60,21 +64,25 @@ const (
 	prefixSalariePlanning  = "/api/v1/salarie/planning"
 	prefixSalarieMateriels = "/api/v1/salarie/materiels"
 
-	// Segments de suffixes réutilisés — évitent les littéraux répétés.
+	// Suffixes réutilisés.
 	segStats     = "/stats"
 	segCatalogue = "/catalogue"
 	segSujets    = "/sujets"
 	segTickets   = "/tickets"
 )
 
+// Router encapsule le multiplexeur HTTP.
 type Router struct {
 	mux *http.ServeMux
 }
 
+// New crée un routeur.
 func New() *Router {
 	return &Router{mux: http.NewServeMux()}
 }
 
+// ServeHTTP : CORS, préflight OPTIONS, puis aiguillage par couches
+// (public -> authentifié -> pro/salarié -> admin).
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	middleware.CORS(w, req)
 	if req.Method == "OPTIONS" {
@@ -141,7 +149,7 @@ func routePublic(w http.ResponseWriter, req *http.Request, path, method string) 
 	if routePublicPublicites(w, req, path, method) {
 		return true
 	}
-	// i18n — chargement des traductions par code ISO (sans auth, pour le frontend)
+	// i18n — traductions par code ISO (sans auth)
 	pI18 := splitPath(path, prefixPublic+"/i18n")
 	if len(pI18) == 1 && method == "GET" {
 		handlers.GetTranslationsByISO(w, req, pI18[0])
@@ -177,7 +185,7 @@ func routePublicAuth(w http.ResponseWriter, req *http.Request, path, method stri
 }
 
 func routePublicResources(w http.ResponseWriter, req *http.Request, path, method string) bool {
-	// Précompute les splits coûteux une fois.
+	// Splits précalculés une fois.
 	pAnn := splitPath(path, prefixPublic+"/annonces")
 	pArt := splitPath(path, prefixPublic+"/articles")
 	pFor := splitPath(path, prefixPublic+"/forum")
@@ -483,7 +491,7 @@ func routeSalarie(w http.ResponseWriter, req *http.Request, path, method string,
 		routeSalarieMateriels(w, req, path, method, userId)
 }
 
-// routeSalarieMateriels : inventaire du matériel (CRUD + photos + réservation).
+// routeSalarieMateriels : inventaire matériel (CRUD, photos, réservation).
 func routeSalarieMateriels(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
 	p := splitPath(path, prefixSalarieMateriels)
 	switch {
@@ -515,6 +523,8 @@ func routeSalarieGeneral(w http.ResponseWriter, req *http.Request, path, method 
 		handlers.GetSalarieStats(w, req, userId)
 	case match(path, prefixSalarie+"/animateurs") && method == "GET":
 		handlers.GetSalarieAnimateurs(w, req)
+	case match(path, prefixSalarie+"/sites") && method == "GET":
+		handlers.GetSites(w, req)
 	case match(path, prefixSalarie+"/templates") && method == "GET":
 		handlers.GetSalarieTemplates(w, req)
 	case match(path, prefixSalarie+"/templates") && method == "POST":
@@ -632,9 +642,8 @@ func routeSalarieIdees(w http.ResponseWriter, req *http.Request, path, method st
 }
 
 // ─── Routes salarié — planning dédié ─────────────────────────────────────────
-// Le planning salarié réutilise les mêmes handlers que le planning particulier
-// (même table planning_utilisateurs), exposés sous /api/v1/salarie/planning
-// pour que le middleware salarie.auth s'applique sans ambiguïté.
+// Réutilise les handlers du planning particulier (table planning_utilisateurs),
+// exposés sous /api/v1/salarie/planning pour appliquer l'auth salarié.
 
 func routeSalariePlanningDedicated(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
 	p := splitPath(path, prefixSalariePlanning)
@@ -699,7 +708,25 @@ func routeAdmin(w http.ResponseWriter, req *http.Request, path, method string, u
 		routeAdminPro(w, req, path, method, userId) ||
 		routeAdminLangues(w, req, path, method) ||
 		routeAdminNotifications(w, req, path, method, userId) ||
-		routeAdminFinances(w, req, path, method)
+		routeAdminFinances(w, req, path, method) ||
+		routeAdminSites(w, req, path, method)
+}
+
+func routeAdminSites(w http.ResponseWriter, req *http.Request, path, method string) bool {
+	p := splitPath(path, prefixAdminSites)
+	switch {
+	case match(path, prefixAdminSites) && method == "GET":
+		handlers.GetSitesAdmin(w, req)
+	case match(path, prefixAdminSites) && method == "POST":
+		handlers.CreateSite(w, req)
+	case len(p) == 1 && method == "PUT":
+		handlers.UpdateSite(w, req, p[0])
+	case len(p) == 1 && method == "DELETE":
+		handlers.DeleteSite(w, req, p[0])
+	default:
+		return false
+	}
+	return true
 }
 
 func routeAdminPro(w http.ResponseWriter, req *http.Request, path, method string, userId int) bool {
@@ -741,6 +768,8 @@ func routeAdminUsers(w http.ResponseWriter, req *http.Request, path, method stri
 		handlers.UnbanUtilisateur(w, req, p[0])
 	case len(p) == 2 && p[1] == "role" && method == "PUT":
 		handlers.UpdateUserRole(w, req, p[0])
+	case len(p) == 2 && p[1] == "site" && method == "PUT":
+		handlers.AssignUserSite(w, req, p[0])
 	case len(p) == 2 && p[1] == "abonnement" && method == "GET":
 		handlers.GetUserSouscription(w, req, p[0])
 	case len(p) == 2 && p[1] == "abonnement" && method == "POST":
@@ -968,7 +997,7 @@ func routeAdminLangues(w http.ResponseWriter, req *http.Request, path, method st
 		handlers.UpsertTranslation(w, req)
 	case len(pT) == 1 && method == "DELETE":
 		handlers.DeleteTranslation(w, req, pT[0])
-	// Endpoint public i18n — chargement des libellés par langue (sans auth)
+	// i18n public — libellés par langue (sans auth)
 	case len(pI18) == 1 && method == "GET":
 		handlers.GetTranslationsByISO(w, req, pI18[0])
 	default:
@@ -1024,7 +1053,7 @@ func match(path, pattern string) bool {
 	return path == pattern
 }
 
-// parts retourne le premier segment après le prefix, ou "" si absent/multiple.
+// parts : premier segment après prefix, ou "" si absent/multiple.
 func parts(path, prefix string) string {
 	p := splitPath(path, prefix)
 	if len(p) == 1 {
@@ -1033,6 +1062,8 @@ func parts(path, prefix string) string {
 	return ""
 }
 
+// splitPath retire prefix et renvoie les segments restants (nil si pas de prefix).
+// Sert à extraire les paramètres d'URL.
 func splitPath(path, prefix string) []string {
 	if !strings.HasPrefix(path, prefix) {
 		return nil

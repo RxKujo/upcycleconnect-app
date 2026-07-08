@@ -37,6 +37,8 @@ L.Icon.Default.mergeOptions({
     shadowUrl: markerShadow,
 });
 
+// --- Constantes et fonctions utilitaires ---
+
 const CENTRE_FRANCE = [46.603354, 1.888334];
 
 // Distance à vol d'oiseau entre deux points GPS (km).
@@ -96,6 +98,8 @@ function boutonAutourDeMoi(onClick) {
     });
     return new Control();
 }
+
+// --- Initialisation d'une carte sur un element [data-conteneurs-map] ---
 
 function initCarte(el) {
     const api = (el.dataset.api || '').replace(/\/$/, '');
@@ -206,6 +210,8 @@ function initCarte(el) {
 
     return map;
 }
+
+// --- Auto-initialisation de toutes les cartes presentes sur la page ---
 
 function initAll() {
     document.querySelectorAll('[data-conteneurs-map]').forEach((el) => {

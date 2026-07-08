@@ -8,7 +8,10 @@
 @section('og_description', Illuminate\Support\Str::limit($annonce['description'] ?? '', 160))
 @section('og_type', 'product')
 
+{{-- Détail d'une annonce publique (achat réservé aux pros). --}}
+
 @php
+    // code -> libellé (matériaux et état)
     $materiauLabels = collect($materiaux ?? [])->pluck('libelle', 'code')->all();
     $etatLabels = [
         'neuf' => 'Neuf', 'bon' => 'Bon état',
@@ -24,7 +27,8 @@
     </a>
 
     <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:48px; align-items:start;">
-        
+
+        {{-- === Colonne gauche : galerie photos === --}}
         <div>
             <div style="border:var(--border); box-shadow:var(--shadow); background:var(--wheat); height:400px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:16px;">
                 @if(!empty($annonce['objets']) && !empty($annonce['objets'][0]['photos']))
@@ -45,6 +49,7 @@
             @endif
         </div>
 
+        {{-- === Colonne droite : infos et actions === --}}
         <div>
             <div style="display:flex; gap:8px; margin-bottom:16px;">
                 <span class="badge {{ ($annonce['type_annonce'] ?? '') === 'don' ? 'badge-valid' : 'badge-cherry' }}" data-i18n="{{ ($annonce['type_annonce'] ?? '') === 'don' ? 'status.don' : 'status.vente' }}">{{ ($annonce['type_annonce'] ?? '') === 'don' ? 'Don' : 'Vente' }}</span>
@@ -64,6 +69,7 @@
 
             <p style="font-size:1rem; line-height:1.7; margin-bottom:32px; white-space:pre-line;">{{ $annonce['description'] }}</p>
 
+            {{-- Encart vendeur (identité anonymisée) --}}
             <div style="border:var(--border); padding:20px; margin-bottom:24px; background:white;">
                 <p class="font-mono" data-i18n="market.seller" style="font-size:0.75rem; color:var(--teal); margin-bottom:10px;">Vendeur</p>
                 <p style="font-size:1.05rem; font-weight:600;">
@@ -84,7 +90,7 @@
                 </button>
             </div>
 
-            {{-- Achat réservé aux professionnels / artisans (cf. cahier des charges) --}}
+            {{-- Achat réservé aux pros (cf. cahier des charges) --}}
             <div id="buyBlock" style="display:none; flex-direction:column; gap:12px;">
                 <button type="button"
                         id="btnAddPanier"
@@ -104,7 +110,7 @@
                 <a href="{{ route('panier.index') }}" class="btn btn-secondary btn-block" data-i18n="cart.view">Voir mon panier</a>
             </div>
 
-            {{-- Message affiché aux particuliers / visiteurs --}}
+            {{-- Message pour particuliers / visiteurs --}}
             <div id="proOnlyNote" style="display:none; padding:14px 16px; background:var(--wheat,#D8C99B); border:2px solid var(--coffee,#120309); font-size:0.9rem; line-height:1.5;">
                 <strong data-i18n="market.proonly.title">Récupération réservée aux professionnels et artisans.</strong><br>
                 <span data-i18n="market.proonly.body">Les objets déposés par les particuliers sont récupérés par les pros via les conteneurs UpcycleConnect.</span>
@@ -112,6 +118,7 @@
             </div>
             <p id="panierFlash" style="display:none; margin-top:12px; padding:10px 14px; background:#dff5e1; border-left:3px solid var(--forest,#3a7d44); font-size:0.9rem;"></p>
 
+            {{-- Caractéristiques des objets --}}
             @if(!empty($annonce['objets']))
             <div style="margin-top:32px; border:var(--border); padding:20px; background:white;">
                 <p class="font-mono" data-i18n="market.specs" style="font-size:0.75rem; color:var(--teal); margin-bottom:12px;">Caractéristiques</p>
@@ -130,6 +137,7 @@
             </div>
             @endif
 
+            {{-- URL itinéraire Google Maps selon le mode de remise --}}
             @php
                 $mode = $annonce['mode_remise'] ?? '';
                 $cont = $annonce['conteneur'] ?? null;
@@ -190,8 +198,9 @@
 @endsection
 
 @section('scripts')
+{{-- === Scripts : accès achat (pro), panier, galerie === --}}
 <script>
-// Achat des objets réservé aux professionnels / artisans (cf. cahier des charges).
+// Achat réservé aux pros : lit le rôle dans le JWT pour afficher le bon bloc
 (function() {
     var buyBlock = document.getElementById('buyBlock');
     var note = document.getElementById('proOnlyNote');
@@ -218,6 +227,7 @@
     }
 })();
 
+// Bouton « Ajouter au panier »
 (function() {
     var btn = document.getElementById('btnAddPanier');
     if (!btn) return;
@@ -247,6 +257,7 @@
     });
 })();
 
+// Galerie : la vignette cliquée devient la photo principale
 (function() {
     var main = document.getElementById('mainPhoto');
     if (!main) return;

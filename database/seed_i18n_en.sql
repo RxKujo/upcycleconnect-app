@@ -541,15 +541,16 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('sal.dash.newevent.desc',    @en, 'Training, workshop or talk. Subject to admin approval.'),
 ('sal.dash.newarticle',       @en, '+ New article'),
 ('sal.dash.newarticle.desc',  @en, 'Write a News & Advice article as draft or published.'),
-('sal.dash.moderation',       @en, '⚑ Moderation'),
+('sal.dash.moderation',       @en, 'Moderation'),
 ('sal.dash.moderation.desc',  @en, 'Handle messages reported by the community.'),
-('sal.dash.ideasbox',         @en, '💡 Ideas box'),
+('sal.dash.ideasbox',         @en, 'Ideas box'),
 ('sal.dash.ideas.desc',       @en, 'Suggest and vote for the team''s ideas.'),
 ('sal.dash.planning',         @en, 'My schedule — upcoming');
 
 -- ── LOT 7b : salarie — materiel, evenements, templates, idees, planning ──────
 DELETE FROM translations WHERE id_langue = @en AND cle IN (
   'sal.mat.title','sal.mat.add','sal.mat.empty','sal.mat.return','sal.mat.reserve','sal.mat.addmodal',
+  'sal.mat.tab.available','sal.mat.tab.reserved',
   'sal.mat.photos','sal.mat.reservation','sal.ev.empty','sal.ev.empty.desc','sal.ev.create',
   'sal.tpl.title','sal.tpl.new','sal.tpl.new2','sal.tpl.empty','sal.ideas.empty','sal.ideas.emptyarchived',
   'sal.ideas.propose','sal.ideas.proposebtn','sal.ideas.edit','sal.planning.selectday','sal.planning.detail'
@@ -560,6 +561,8 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('sal.mat.empty',       @en, 'No equipment yet. Click "Add".'),
 ('sal.mat.return',      @en, 'Return'),
 ('sal.mat.reserve',     @en, 'Reserve'),
+('sal.mat.tab.available', @en, 'Available'),
+('sal.mat.tab.reserved',  @en, 'Reserved'),
 ('sal.mat.addmodal',    @en, 'Add equipment'),
 ('sal.mat.photos',      @en, 'Photos'),
 ('sal.mat.reservation', @en, 'Reservation'),
@@ -582,7 +585,7 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 DELETE FROM translations WHERE id_langue = @en AND cle IN (
   'adm.panel','adm.sec.tovalidate','adm.sec.catalog','adm.sec.logistics','adm.sec.system',
   'adm.listings','adm.events','adm.cat.services','adm.cat.objects','adm.materials','adm.tutorial',
-  'adm.orders','adm.deposits','adm.users','adm.subscriptions','adm.finance','adm.notifications','adm.languages',
+  'adm.orders','adm.deposits','adm.users','adm.subscriptions','adm.finance','adm.notifications','adm.languages','adm.sites',
   'adm.overview','adm.quickaccess','adm.mod.listings','adm.mod.events','adm.managemembers','adm.vieworders'
 );
 INSERT INTO translations (cle, id_langue, valeur) VALUES
@@ -599,6 +602,7 @@ INSERT INTO translations (cle, id_langue, valeur) VALUES
 ('adm.tutorial',       @en, 'Tutorial'),
 ('adm.orders',         @en, 'Orders'),
 ('adm.deposits',       @en, 'Container deposits'),
+('adm.sites',          @en, 'Sites & branches'),
 ('adm.users',          @en, 'Users'),
 ('adm.subscriptions',  @en, 'Subscriptions'),
 ('adm.finance',        @en, 'Financial management'),

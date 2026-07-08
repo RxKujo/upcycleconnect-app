@@ -2,7 +2,11 @@
 
 @section('title', 'Rotation WRR publicités')
 
+{{-- Vue admin : visualisation de la rotation équitable (WRR) des publicités actives.
+     Affiche le score de rotation de chaque pub et la répartition théorique des affichages. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">Rotation WRR — Publicités</h1>
     <div style="display:flex;gap:12px;">
@@ -28,6 +32,7 @@
         <p style="font-family:'Bebas Neue',sans-serif;font-size:2rem;opacity:0.3;margin:0;">Aucune publicité active</p>
     </div>
 @else
+    {{-- === État actuel : classement des pubs par score de rotation === --}}
     @php $maxScore = max(array_column($pubs, 'score_rotation') ?: [1]); @endphp
     <div class="card">
         <h2 class="font-bebas" style="font-size:1.8rem;margin:0 0 8px;">

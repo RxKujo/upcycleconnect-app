@@ -49,6 +49,7 @@ func validateAbonnement(in *AbonnementInput) string {
 	return ""
 }
 
+// descOrNil retourne nil pour une description vide (colonne NULL) sinon la chaîne.
 func descOrNil(s string) interface{} {
 	if strings.TrimSpace(s) == "" {
 		return nil
@@ -121,13 +122,14 @@ func UpdateAbonnement(w http.ResponseWriter, r *http.Request, idStr string) {
 	jsonOK(w, map[string]string{"message": "plan mis à jour"}, http.StatusOK)
 }
 
+// DeleteAbonnement supprime un plan, sauf si des souscriptions y sont rattachées.
 func DeleteAbonnement(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		jsonErr(w, "id invalide", http.StatusBadRequest)
 		return
 	}
-	// Refus si des souscriptions (actives ou passées) référencent ce plan (FK).
+	// Refus si des souscriptions référencent ce plan (FK).
 	var nb int
 	database.DB.QueryRow("SELECT COUNT(*) FROM souscriptions WHERE id_abonnement = ?", id).Scan(&nb)
 	if nb > 0 {

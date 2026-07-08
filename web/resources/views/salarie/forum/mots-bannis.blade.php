@@ -2,6 +2,9 @@
 
 @section('title', 'Mots bannis')
 
+{{-- Modération : mots bannis --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
 .mb-add { background: var(--cream); border: var(--border); box-shadow: var(--shadow-sm); padding: 24px 26px; margin-bottom: 28px; }
@@ -28,11 +31,13 @@
 @endsection
 
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
     <h1 class="page-title">Mots bannis</h1>
     <span class="font-mono" style="font-size:0.85rem; opacity:0.6;">{{ count($mots) }} mot(s) filtré(s)</span>
 </div>
 
+{{-- === Bannir un mot === --}}
 <div class="mb-add">
     <h3>Bannir un mot ou une expression</h3>
     <form action="{{ route('salarie.forum.mots-bannis.add') }}" method="POST" class="mb-form">
@@ -46,6 +51,7 @@
     <p class="mb-hint">Les messages du forum contenant ces termes seront automatiquement bloqués à la publication.</p>
 </div>
 
+{{-- === Liste (ou état vide) === --}}
 @if(empty($mots))
     <div class="empty-box">
         <p class="big">Aucun mot banni</p>
@@ -73,6 +79,7 @@
 @endif
 @endsection
 
+{{-- === Scripts : filtrage === --}}
 @section('scripts')
 <script>
 (function () {

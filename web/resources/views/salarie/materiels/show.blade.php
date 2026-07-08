@@ -1,11 +1,15 @@
 @extends('layouts.salarie')
 @section('title', $materiel['nom'])
 
+{{-- Fiche matériel : photos, réservation, édition --}}
+
 @section('content')
+{{-- Libellés d'état --}}
 @php
     $etatLabels = ['neuf' => 'Neuf', 'bon' => 'Bon état', 'use' => 'Usé', 'a_reparer' => 'À réparer'];
 @endphp
 
+{{-- === En-tête === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1 class="page-title">{{ $materiel['nom'] }}</h1>
     <a href="{{ route('salarie.materiels.index') }}" class="btn-secondary">← Inventaire</a>
@@ -86,6 +90,17 @@
                     <input type="checkbox" name="est_disponible" value="1" @checked($materiel['est_disponible'])> Disponible
                 </label>
             </div>
+            @if(!empty($sites))
+            <div>
+                <label style="display:block; font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">Site de rattachement</label>
+                <select name="id_site" style="width:100%; border:3px solid var(--coffee); padding:10px 12px; box-sizing:border-box; background:#fff;">
+                    <option value="">— Aucun site (partagé) —</option>
+                    @foreach($sites as $s)
+                        <option value="{{ $s['id_site'] }}" @selected(($materiel['id_site'] ?? null) == $s['id_site'])>{{ $s['nom_site'] }}@if(!empty($s['ville'])) — {{ $s['ville'] }}@endif</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <div>
                 <label style="display:block; font-family:'DM Mono',monospace; font-size:0.72rem; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">Ajouter des photos</label>
                 <input type="file" id="mat-photos" accept="image/*" multiple>
@@ -102,6 +117,7 @@
     </div>
 </div>
 
+{{-- === Scripts : photos en base64 === --}}
 <script>
 function prepareMatImages(form) {
     var input = form.querySelector('#mat-photos');

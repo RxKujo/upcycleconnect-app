@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des systèmes de fichiers : disque par défaut et définition des
+// disques de stockage (local, public, uploads_local, S3).
+
 return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),

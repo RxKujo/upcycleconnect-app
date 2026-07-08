@@ -1,7 +1,10 @@
 @extends('layouts.public')
 
+{{-- Lecture d'une ressource (article) avec export PDF côté client. --}}
+
 @section('title', ($article['titre'] ?? 'Ressource') . ' — UpcycleConnect')
 
+{{-- === Styles (article, contenu, impression) === --}}
 @section('styles')
 .res-wrap { max-width: 820px; margin: 0 auto; padding: 48px 24px 80px; }
 .res-back { display: inline-flex; align-items: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--coffee); opacity: 0.6; text-decoration: none; margin-bottom: 32px; transition: opacity 0.15s; }
@@ -43,8 +46,10 @@
 }
 @endsection
 
+{{-- === Contenu === --}}
 @section('content')
 @php
+    // Détecte le format du contenu : HTML riche ou texte brut à échapper
     $cats = config('articles.categories');
     $catKey = $article['categorie'] ?? null;
     $catLabel = $catKey ? ($cats[$catKey] ?? $catKey) : null;
@@ -56,6 +61,7 @@
 <div class="res-wrap">
     <a href="{{ route('ressources.index') }}" class="res-back no-print">← Retour aux ressources</a>
 
+    {{-- === Zone imprimable (seule partie exportée en PDF) === --}}
     <div class="printable">
         <header class="res-head">
             @if($catLabel)<span class="res-cat">{{ $catLabel }}</span>@endif
@@ -75,12 +81,14 @@
         </div>
     </div>
 
+    {{-- === Actions (non imprimées) === --}}
     <div class="res-actions no-print" style="margin-top:48px;">
         <button type="button" class="btn btn-primary" id="btn-pdf" data-filename="{{ \Illuminate\Support\Str::slug($article['titre'] ?? 'ressource') }}" data-i18n="resources.pdf">Télécharger en PDF</button>
         <a href="{{ route('ressources.index') }}" class="btn btn-secondary" data-i18n="resources.all">Toutes les ressources</a>
     </div>
 </div>
 
+{{-- === Scripts : PDF via html2pdf (repli sur impression) === --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 <script>
 (function () {

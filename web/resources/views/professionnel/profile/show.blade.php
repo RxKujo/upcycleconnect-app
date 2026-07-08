@@ -1,6 +1,9 @@
 @extends('layouts.professionnel')
 @section('title', 'Mon Profil Pro')
 
+{{-- Profil Pro : infos, score, ventes, annonces, abonnement, RGPD — tout via l'API (scripts en bas) --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
     .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -48,6 +51,7 @@
 </style>
 @endsection
 
+{{-- === Contenu === --}}
 @section('content')
 <x-page-header title="Mon Profil Professionnel" />
 
@@ -56,6 +60,7 @@
 <div id="profile-content" style="display: none;">
     <div class="profile-grid">
         
+        {{-- Mes informations (édition inline) --}}
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title"><span data-i18n="prof.myinfo">Mes Informations</span></h3>
@@ -107,6 +112,7 @@
             </div>
         </div>
 
+        {{-- Entreprise / SIRET --}}
         <div class="card">
             <h3 class="card-title"><span data-i18n="prof.company">Mon Entreprise</span></h3>
             <div class="info-row">
@@ -123,6 +129,7 @@
             </div>
         </div>
 
+        {{-- Upcycling Score --}}
         <div class="card" id="score-card">
             <h3 class="card-title"><span data-i18n="prof.score">Upcycling Score</span></h3>
             <div class="score-display">
@@ -141,6 +148,7 @@
             <div class="score-ladder" id="score-ladder"></div>
         </div>
 
+        {{-- Mes ventes --}}
         <div class="card full-width" id="card-ventes">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 class="card-title" style="margin-bottom:0;"><span data-i18n="prof.mysales">Mes Ventes</span></h3>
@@ -152,6 +160,7 @@
 
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                {{-- Mes annonces (modale d'édition plus bas) --}}
                 <h3 class="card-title" style="margin-bottom:0;"><span data-i18n="nav.mylistings">Mes Annonces</span></h3>
                 <button class="btn btn-sm" onclick="window.location.href='/particulier/annonces/create'"><span data-i18n="create.title"><span data-i18n="create.title">Deposer une annonce</span></span></button>
             </div>
@@ -160,6 +169,7 @@
             </div>
         </div>
 
+        {{-- Réservations formations --}}
         <div class="card full-width" id="card-reservations">
             <h3 class="card-title"><span data-i18n="prof.mytrainingbookings">Mes Réservations Formations</span></h3>
             <div id="reservations-container">
@@ -167,6 +177,7 @@
             </div>
         </div>
 
+        {{-- Préférences notifications --}}
         <div class="card">
             <h3 class="card-title"><span data-i18n="prof.notifprefs">Preferences de Notifications</span></h3>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(18,3,9,0.1);">
@@ -191,6 +202,7 @@
             </div>
         </div>
 
+        {{-- Abonnement (ou invitation Freemium) --}}
         <div class="card" id="card-abonnement">
             <h3 class="card-title"><span data-i18n="prof.mysubscription">Mon Abonnement</span></h3>
             <div id="abo-loading" style="font-family:'DM Mono',monospace;font-size:0.8rem;text-transform:uppercase;opacity:0.5;">Chargement…</div>
@@ -217,12 +229,14 @@
             </div>
         </div>
 
+        {{-- Export RGPD --}}
         <div class="card">
             <h3 class="card-title"><span data-i18n="prof.personaldata">Donnees Personnelles</span></h3>
             <p style="margin-bottom: 16px; font-size: 0.95rem;"><span data-i18n="prof.personaldata.desc">Recuperez un fichier contenant toutes vos informations</span></p>
             <x-btn size="sm" onclick="downloadPDF()">Telecharger mes donnees</x-btn>
         </div>
 
+        {{-- Badges (masquée pour les non-Pro) --}}
         <div class="card full-width" id="card-badges-pro" style="display:none;">
             <h3 class="card-title">Mes Badges UpcycleConnect</h3>
             <div id="badges-pro-container">
@@ -230,6 +244,7 @@
             </div>
         </div>
 
+        {{-- Sécurité et zone dangereuse (suppression RGPD) --}}
         <div class="card full-width">
             <h3 class="card-title">Securite</h3>
             <x-btn variant="secondary" size="sm" type="button" onclick="togglePwdForm()">Modifier mon mot de passe</x-btn>
@@ -260,7 +275,7 @@
     </div>
 </div>
 
-<!-- Modal modification annonce pro -->
+{{-- === Modale : édition annonce === --}}
 <div id="modal-pro-edit-annonce" style="display:none;position:fixed;inset:0;background:rgba(18,3,9,0.55);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:var(--cream);border:var(--border);box-shadow:var(--shadow);padding:32px;width:100%;max-width:520px;position:relative;">
         <button id="modal-pro-edit-annonce-close" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--coffee);">&times;</button>
@@ -293,12 +308,14 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
 let userData = null;
 let isEditing = false;
 let profilePhotoB64 = null;
 
+// Charge et remplit les cartes du profil
 async function loadProfile() {
     try {
         const resp = await apiFetch('/api/v1/utilisateurs/me');
@@ -312,8 +329,7 @@ async function loadProfile() {
         document.getElementById('display-name').textContent = userData.prenom + ' ' + userData.nom;
         document.getElementById('display-role').textContent = 'Professionnel';
 
-        // Avatar reconstruit à chaque appel (idempotent) : évite le null.textContent
-        // au rechargement après sauvegarde (le rendu photo écrase #avatar-initials).
+        // Avatar reconstruit à chaque appel : le rendu photo écrase #avatar-initials
         const initials = ((userData.prenom || ' ')[0] || '') + ((userData.nom || ' ')[0] || '');
         const avatarEl = document.getElementById('avatar-display');
         if (userData.photo_profil_url) {
@@ -749,6 +765,7 @@ async function loadBadgesPro() {
     } catch (e) { /* badges indisponibles */ }
 }
 
+// Init : sections + modale d'édition
 document.addEventListener('DOMContentLoaded', () => {
     loadProfile(); loadAbonnement(); loadVentes(); loadProAnnonces(); loadReservations(); loadBadgesPro();
 

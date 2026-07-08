@@ -6,8 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+/**
+ * Gestion des événements (formations, ateliers…) et de leurs séances côté salarié.
+ * Un événement est soumis à validation avant publication. Proxy vers l'API Go.
+ */
 class EvenementController extends Controller
 {
+    // --- Helpers API ---
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('salarie_token'); }
 
@@ -18,6 +23,9 @@ class EvenementController extends Controller
         return $r->successful() && is_array($r->json()) ? $r->json() : [];
     }
 
+    // --- Lecture & formulaires ---
+
+    /** Affiche la liste des événements du salarié. */
     public function index()
     {
         $r = Http::withToken($this->token())->timeout(5)->get($this->api() . '/api/v1/salarie/evenements');
@@ -25,6 +33,7 @@ class EvenementController extends Controller
         return view('salarie.evenements.index', compact('evenements'));
     }
 
+    /** Affiche le formulaire de création (modèles et animateurs disponibles). */
     public function create()
     {
         $r = Http::withToken($this->token())->timeout(5)->get($this->api() . '/api/v1/salarie/templates');
@@ -36,6 +45,9 @@ class EvenementController extends Controller
         ]);
     }
 
+    // --- Écriture ---
+
+    /** Crée un événement (mis en attente de validation). */
     public function store(Request $request)
     {
         $payload = $this->validatePayload($request);
@@ -46,6 +58,7 @@ class EvenementController extends Controller
         return redirect()->route('salarie.evenements.index')->with('success', 'Événement créé, en attente de validation.');
     }
 
+    /** Affiche le formulaire d'édition d'un événement existant. */
     public function edit($id)
     {
         $r = Http::withToken($this->token())->timeout(5)->get($this->api() . '/api/v1/salarie/evenements/' . $id);
@@ -59,6 +72,7 @@ class EvenementController extends Controller
         ]);
     }
 
+    /** Met à jour un événement existant. */
     public function update(Request $request, $id)
     {
         $payload = $this->validatePayload($request);
@@ -69,6 +83,9 @@ class EvenementController extends Controller
         return redirect()->route('salarie.evenements.index')->with('success', 'Événement mis à jour.');
     }
 
+    // --- Validation & normalisation ---
+
+    /** Valide les champs (dont les séances) et construit le payload pour l'API. */
     private function validatePayload(Request $request): array
     {
         $request->validate([

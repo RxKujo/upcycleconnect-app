@@ -10,6 +10,8 @@ class EvenementController extends Controller
 {
     private string $apiUrl;
 
+    // --- Référentiels (libellés affichés dans les formulaires) ---
+
     private array $types = [
         'formation'  => 'Formation',
         'atelier'    => 'Atelier',
@@ -36,6 +38,8 @@ class EvenementController extends Controller
         return is_array($data) ? $data : [];
     }
 
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))->get($this->apiUrl);
@@ -52,6 +56,8 @@ class EvenementController extends Controller
             'users'   => $users,
         ]);
     }
+
+    // --- Actions (CRUD) ---
 
     public function store(Request $request)
     {
@@ -114,6 +120,8 @@ class EvenementController extends Controller
         return redirect()->route('admin.evenements.show', $id)->with('success', 'Événement mis à jour.');
     }
 
+    // --- Validation & assemblage du payload ---
+
     private function validateEvenement(Request $request): void
     {
         $request->validate([
@@ -148,9 +156,6 @@ class EvenementController extends Controller
         ];
     }
 
-    /**
-     * Normalise les séances soumises en un tableau prêt pour l'API.
-     */
     private function buildSeances(Request $request): array
     {
         $seances = [];
@@ -175,6 +180,8 @@ class EvenementController extends Controller
         Http::withToken(session('admin_token'))->delete("{$this->apiUrl}/{$id}");
         return redirect()->route('admin.evenements.index')->with('success', 'Événement supprimé.');
     }
+
+    // --- Workflow de validation ---
 
     public function valider($id)
     {

@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+{{-- Forum public : détail d'un sujet (fil de messages avec réponses imbriquées). --}}
+
 @section('title', $sujet['titre'] ?? 'Sujet')
 @section('og_title', $sujet['titre'] ?? 'Forum')
 
@@ -10,6 +12,7 @@
         Retour au forum
     </a>
 
+    {{-- === En-tête du sujet === --}}
     <div style="margin-bottom:40px;">
         @if(!empty($sujet['categorie']))
         <span class="badge badge-teal" style="margin-bottom:16px;">{{ $sujet['categorie'] }}</span>
@@ -22,7 +25,9 @@
         </p>
     </div>
 
+    {{-- === Fil des messages === --}}
     @php
+        // Indexe les messages par id pour retrouver le parent (réponses imbriquées)
         $messages = $sujet['messages'] ?? [];
         $msgById = [];
         foreach ($messages as $m) { $msgById[$m['id_message']] = $m; }
@@ -69,6 +74,7 @@
         @endforelse
     </div>
 
+    {{-- === Invitation à se connecter (non connectés) === --}}
     <div id="replyLoginBox" style="display:none; border:var(--border); padding:32px; background:white; box-shadow:var(--shadow-sm); text-align:center;">
         <p style="font-size:1rem; margin-bottom:16px; opacity:0.7;" data-i18n="forum.join">Vous souhaitez participer à cette discussion ?</p>
         <a href="{{ route('particulier.login') }}?return={{ urlencode(request()->getPathInfo()) }}" class="btn btn-primary" data-requires-auth data-auth-title="Connectez-vous pour répondre" data-i18n="forum.login2reply">
@@ -76,6 +82,7 @@
         </a>
     </div>
 
+    {{-- === Formulaire de réponse (connectés) === --}}
     <form id="replyForm" autocomplete="off" style="display:none; border:var(--border); padding:24px; background:white; box-shadow:var(--shadow-sm);" onsubmit="return submitReply(event, {{ $sujet['id_sujet'] }});">
         <h3 style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; margin-bottom:8px;" data-i18n="forum.yourreply">Votre réponse</h3>
         <div id="replyContext" style="display:none; font-family:'DM Mono',monospace; font-size:0.72rem; opacity:0.6; margin-bottom:12px; padding:8px 12px; background:rgba(0,0,0,0.04); border-left:2px solid var(--teal);">
@@ -91,7 +98,9 @@
     </form>
 </div>
 
+{{-- === Scripts : réponses, ciblage et signalements === --}}
 <script>
+// Formulaire si connecté, sinon boîte d'invitation
 (function() {
     var token = localStorage.getItem('auth_token');
     document.getElementById(token ? 'replyForm' : 'replyLoginBox').style.display = 'block';
@@ -115,6 +124,7 @@
         document.getElementById('replyContext').style.display = 'none';
     });
 
+    // Signalement d'un message à la modération
     document.querySelectorAll('.report-btn').forEach(function(btn) {
         btn.addEventListener('click', async function() {
             var msgId = btn.getAttribute('data-msg-id');
@@ -138,6 +148,7 @@
         });
     });
 })();
+// Envoie la réponse puis recharge la page
 async function submitReply(e, sujetId) {
     e.preventDefault();
     var form = e.target;

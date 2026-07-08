@@ -3,6 +3,8 @@
 @section('title', 'Pilotage Financier')
 
 @section('content')
+
+{{-- === En-tête : titre et boutons d'export === --}}
 <div class="page-header">
     <h1 class="page-title">Pilotage Financier</h1>
     <div style="display:flex;gap:12px;">

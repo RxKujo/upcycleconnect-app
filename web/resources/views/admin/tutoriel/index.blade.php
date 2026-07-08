@@ -2,7 +2,11 @@
 
 @section('title', 'Étapes du tutoriel')
 
+{{-- Vue admin : édition des étapes du tutoriel d'accueil. La liste est chargée et
+     enregistrée en AJAX via l'API Go ; le rendu des cartes est généré en JavaScript. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">Étapes du tutoriel</h1>
 </div>
@@ -16,6 +20,7 @@
 <div id="etapes-list"></div>
 @endsection
 
+{{-- === Scripts : chargement, rendu et sauvegarde des étapes (API Go) === --}}
 @push('scripts')
 <script>
 const API = '{{ config("services.api.public_url") }}';

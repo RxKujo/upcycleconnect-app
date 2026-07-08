@@ -1,7 +1,11 @@
 @extends('layouts.admin')
 @section('title', 'Gestion Conteneur')
 
+{{-- Vue admin : gestion d'un conteneur (édition via modale, scan code-barres, photos,
+     commandes associées et tickets incidents). --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
     <h1 class="page-title">Conteneur : {{ $conteneur['conteneur_ref'] }}</h1>
     <div style="display:flex; gap:10px;">
@@ -37,6 +41,7 @@
     .photo-preview .remove-photo { position:absolute; top:-8px; right:-8px; background:var(--cherry); color:var(--cream); border:1px solid var(--coffee); width:20px; height:20px; font-size:0.8rem; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center; padding:0; }
 </style>
 
+{{-- === Modale : édition du conteneur === --}}
 <div class="modal-overlay" id="editModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
@@ -98,6 +103,7 @@
     </div>
 </div>
 
+{{-- === Détails du conteneur + scanner code-barres === --}}
 <div class="info-grid" style="margin-bottom: 30px;">
     <div class="card">
         <span class="info-label">Détails du conteneur</span>
@@ -124,6 +130,7 @@
     </div>
 </div>
 
+{{-- === Photos du conteneur === --}}
 <h2>Photos du conteneur</h2>
 <div class="card" style="margin-bottom:30px;">
     @if(empty($photos))
@@ -147,6 +154,7 @@
     @endif
 </div>
 
+{{-- === Commandes associées (génération des codes PDF) === --}}
 <h2>Commandes Associées</h2>
 <div class="table-container">
     <table>
@@ -189,6 +197,7 @@
     </table>
 </div>
 
+{{-- === Tickets incidents === --}}
 <h2>Tickets Incidents</h2>
 <div class="table-container">
     <table>

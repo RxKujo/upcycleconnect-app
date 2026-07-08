@@ -20,7 +20,7 @@ func GetPaliersAdmin(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, paliers, http.StatusOK)
 }
 
-// UpdatePalier met à jour un palier (seuil, nom, couleur, certification, mise en avant).
+// UpdatePalier — met à jour un palier du barème.
 func UpdatePalier(w http.ResponseWriter, r *http.Request, id string) {
 	var req struct {
 		Nom                  *string `json:"nom"`
@@ -48,13 +48,13 @@ func UpdatePalier(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Les seuils/certifications ont pu changer : on recalcule l'ensemble des comptes.
+	// Seuils/certifications modifiés : recalcul de tous les comptes.
 	go services.RecomputeAllScores()
 
 	jsonOK(w, map[string]string{"message": "palier mis à jour"}, http.StatusOK)
 }
 
-// RecomputeScores recalcule tous les Upcycling Scores depuis les transactions réelles.
+// RecomputeScores — recalcule tous les scores depuis les transactions réelles.
 func RecomputeScores(w http.ResponseWriter, r *http.Request) {
 	n, err := services.RecomputeAllScores()
 	if err != nil {

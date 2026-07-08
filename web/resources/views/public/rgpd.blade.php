@@ -1,7 +1,10 @@
 @extends('layouts.public')
 
+{{-- Page publique politique de confidentialité (RGPD). --}}
+
 @section('title', 'Politique de confidentialité — RGPD')
 
+{{-- === Contenu === --}}
 @section('content')
 <div class="page-container" style="max-width:800px;">
     <h1 class="page-title" data-i18n="rgpd.title">Politique de Confidentialité</h1>

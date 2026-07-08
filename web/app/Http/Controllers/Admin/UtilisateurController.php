@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+// Admin : utilisateurs (fiche, site, ban, rôle, abonnements, suppression). Proxy vers l'API Go.
 class UtilisateurController extends Controller
 {
     private string $apiUrl;
@@ -15,6 +16,8 @@ class UtilisateurController extends Controller
         $this->apiUrl = config('services.api.url') . '/api/v1/admin/utilisateurs';
     }
 
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))->get($this->apiUrl);
@@ -22,6 +25,7 @@ class UtilisateurController extends Controller
         return view('admin.utilisateurs.index', compact('utilisateurs'));
     }
 
+    // Fiche : abonnements dispo, souscription en cours, sites affectables.
     public function show($id)
     {
         $response = Http::withToken(session('admin_token'))->get("{$this->apiUrl}/{$id}");
@@ -38,9 +42,30 @@ class UtilisateurController extends Controller
             ->get("{$this->apiUrl}/{$id}/abonnement");
         $souscription = $souscriptionResp->successful() ? $souscriptionResp->json() : null;
 
-        return view('admin.utilisateurs.show', compact('utilisateur', 'abonnements', 'souscription'));
+        $sitesResp = Http::withToken(session('admin_token'))
+            ->get(config('services.api.url') . '/api/v1/admin/sites');
+        $sites = $sitesResp->successful() ? $sitesResp->json() : [];
+
+        return view('admin.utilisateurs.show', compact('utilisateur', 'abonnements', 'souscription', 'sites'));
     }
 
+    // --- Affectation de site ---
+
+    // Affecte un site (détache si vide).
+    public function assignSite(Request $request, $id)
+    {
+        $idSite = $request->input('id_site');
+        $payload = ['id_site' => ($idSite === null || $idSite === '') ? null : (int) $idSite];
+
+        $response = Http::withToken(session('admin_token'))
+            ->asJson()->put("{$this->apiUrl}/{$id}/site", $payload);
+        return back()->with($response->successful() ? 'success' : 'error',
+            $response->successful() ? 'Site affecté.' : 'Erreur lors de l\'affectation du site.');
+    }
+
+    // --- Modération (bannissement & rôle) ---
+
+    // Bannit (date de fin, ou permanent via une date lointaine).
     public function ban(Request $request, $id)
     {
         $dateFin = $request->input('permanent') ? '2099-12-31' : $request->input('date_fin_ban');
@@ -69,6 +94,9 @@ class UtilisateurController extends Controller
             ->with($response->successful() ? 'success' : 'error', $response->successful() ? 'Compte supprimé.' : 'Erreur lors de la suppression.');
     }
 
+    // --- Abonnements ---
+
+    // Assigne un abonnement (date de fin optionnelle).
     public function assignAbonnement(Request $request, $id)
     {
         $payload = ['id_abonnement' => (int) $request->input('id_abonnement')];

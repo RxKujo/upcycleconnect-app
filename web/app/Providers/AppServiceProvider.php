@@ -5,6 +5,10 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
+/**
+ * Fournisseur de services applicatif : amorçage global de l'application.
+ * Ici, force le schéma HTTPS des URLs générées lorsqu'on est derrière un proxy TLS.
+ */
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void

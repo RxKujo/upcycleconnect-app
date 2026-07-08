@@ -1,9 +1,6 @@
-{{-- Autocomplétion d'adresse réutilisable (géocodeur BAN data.geopf.fr).
-     Usage : sur un <input> d'adresse, appeler
-       window.initAddressAutocomplete(inputEl, { city: villeEl, postcode: cpEl });
-     À la sélection d'une suggestion : l'input reçoit l'adresse, et la ville /
-     le code postal (s'ils sont fournis) sont remplis automatiquement.
-     Repli silencieux : si l'API est injoignable, l'input reste saisissable. --}}
+{{-- Autocomplétion d'adresse (géocodeur BAN geopf).
+     window.initAddressAutocomplete(inputEl, { city, postcode }). Repli : input libre si API KO. --}}
+{{-- === Styles === --}}
 <style>
     .addr-ac-wrap { position: relative; }
     .addr-ac-suggestions {
@@ -15,6 +12,7 @@
     .addr-ac-item { padding: 9px 12px; cursor: pointer; font-size: 0.9rem; line-height: 1.3; }
     .addr-ac-item:hover, .addr-ac-item.active { background: var(--wheat, #f0e0c0); }
 </style>
+{{-- === Script === --}}
 <script>
 (function () {
     if (window.initAddressAutocomplete) return;

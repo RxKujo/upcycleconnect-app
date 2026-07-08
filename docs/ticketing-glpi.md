@@ -29,6 +29,23 @@ docker compose -f docker-compose.dev.yml --profile glpi up -d glpi glpi_db
 - GLPI : http://localhost:8082 — MariaDB dédiée `uc_glpi_db` (séparée de la base
   applicative `uc_mysql`).
 
+> ⚠️ **Version épinglée à GLPI 10.0.15** (image `elestio/glpi:10.0.15` +
+> `VERSION_GLPI=10.0.15`). Le client Go (`api/pkg/glpi`) utilise l'**API REST
+> legacy** `apirest.php`, qui est **cassée/dépréciée dans GLPI 11** (la HL API
+> `api.php` OAuth la remplace). Ne pas laisser l'image en `latest`.
+
+Installation du schéma en une commande (au lieu de l'assistant web) :
+
+```bash
+docker exec uc_glpi sh -lc 'cd /var/www/html/glpi && php bin/console database:install \
+  --no-interaction --db-host=glpi_db --db-name=glpi --db-user=glpi --db-password=glpi --default-language=fr_FR'
+```
+
+En dev, l'API REST et les tokens sont **déjà configurés** (App-Token sur le
+client « full access » avec plage IP élargie au réseau Docker, user_token sur le
+compte `glpi`, chiffrement des app-tokens désactivé) et renseignés dans le `.env`
+racine (`GLPI_URL`/`GLPI_APP_TOKEN`/`GLPI_USER_TOKEN`).
+
 ## Configuration initiale de GLPI (une fois)
 
 1. Ouvrir http://localhost:8082 et suivre l'assistant d'installation.

@@ -2,6 +2,8 @@
 
 @section('title', 'Historique des récupérations')
 
+{{-- Historique des récupérations en conteneur (récupérées / expirées) --}}
+
 @section('content')
 <div class="main-content">
 
@@ -13,8 +15,10 @@
     <div class="card">
         <h2 class="font-bebas" style="font-size:1.4rem; margin-bottom:20px;"><span data-i18n="prod.history">Historique</span></h2>
 
+        {{-- === Liste === --}}
         @forelse($recuperations as $rec)
         @php
+            // Expiré : on affiche la date limite, sinon la date de récupération
             $expiree = ($rec['statut'] ?? '') === 'expiree';
             $date = $expiree
                 ? ($rec['date_limite_recuperation'] ?? null)

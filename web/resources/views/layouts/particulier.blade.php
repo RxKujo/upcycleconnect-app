@@ -1,12 +1,15 @@
+{{-- Layout PARTICULIER — espace perso (top-bar, sidebar, contenu). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
     <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Mon Espace') — UpcycleConnect</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -131,6 +134,7 @@
         $isActive = fn($pattern) => request()->is($pattern) ? 'active' : '';
     @endphp
 
+    {{-- === Top-bar === --}}
     <nav class="topbar" aria-label="Navigation du site">
         <a href="/" class="topbar-brand">Upcycle<span>Connect</span></a>
         <div class="topbar-nav">
@@ -150,6 +154,7 @@
         <style>.nav-lang-btn.active{background:var(--wheat)!important;color:var(--coffee)!important;}</style>
     </nav>
 
+    {{-- === Shell : sidebar + contenu === --}}
     <div class="espace-shell">
         <aside class="espace-sidebar">
             <div class="side-head" data-i18n="nav.myspace">Mon espace</div>
@@ -164,6 +169,7 @@
             </div>
         </aside>
 
+        {{-- Contenu --}}
         <main class="espace-main">
             <div id="alert-container"></div>
             @yield('content')
@@ -171,6 +177,7 @@
         </main>
     </div>
 
+    {{-- === Scripts === --}}
     <script>
         const API_BASE = '{{ config("services.api.public_url") }}';
 
@@ -225,6 +232,7 @@
         })();
     </script>
     @yield('scripts')
+    {{-- === Partials === --}}
     @include('partials.datepicker')
     @include('partials.onesignal')
     @include('partials.i18n-engine')

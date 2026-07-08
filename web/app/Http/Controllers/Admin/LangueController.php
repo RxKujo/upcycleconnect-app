@@ -11,12 +11,16 @@ class LangueController extends Controller
     private function api(): string { return config('services.api.url'); }
     private function token(): string { return session('admin_token'); }
 
+    // --- Lecture ---
+
     public function index()
     {
         $langues = $this->callApi('/api/v1/admin/langues') ?? [];
         $translations = $this->callApi('/api/v1/admin/translations') ?? [];
         return view('admin.langues.index', compact('langues', 'translations'));
     }
+
+    // --- Langues ---
 
     public function storeLangue(Request $request)
     {
@@ -66,6 +70,8 @@ class LangueController extends Controller
         return redirect()->route('admin.langues.index')->with('success', 'Langue supprimée.');
     }
 
+    // --- Traductions ---
+
     public function upsertTranslation(Request $request)
     {
         $data = $request->validate([
@@ -73,7 +79,7 @@ class LangueController extends Controller
             'id_langue' => 'required|integer',
             'valeur'    => 'required|string',
         ]);
-        $data['id_langue'] = (int) $data['id_langue']; // l'API Go attend un entier, pas une chaîne
+        $data['id_langue'] = (int) $data['id_langue'];
 
         $r = Http::withToken($this->token())->asJson()
             ->post($this->api() . '/api/v1/admin/translations', $data);
@@ -84,18 +90,16 @@ class LangueController extends Controller
         return redirect()->route('admin.langues.index')->with('success', 'Traduction enregistrée.');
     }
 
-    // Enregistrement de la grille complète (matrice clés × langues) en une fois.
-    // Chaque ligne porte une clé ; chaque colonne une langue. Valeur vide = effacée.
     public function saveTranslations(Request $request)
     {
-        $cles = $request->input('cle', []);   // [rowIndex => clé]
-        $vals = $request->input('val', []);   // [rowIndex => [id_langue => valeur]]
+        $cles = $request->input('cle', []);
+        $vals = $request->input('val', []);
 
         $items = [];
         foreach ($cles as $i => $cle) {
             $cle = trim((string) $cle);
             if ($cle === '') {
-                continue; // ligne « nouvelle clé » laissée vide → ignorée
+                continue;
             }
             foreach (($vals[$i] ?? []) as $idLangue => $valeur) {
                 $items[] = [
@@ -125,6 +129,8 @@ class LangueController extends Controller
         }
         return redirect()->route('admin.langues.index')->with('success', 'Traduction supprimée.');
     }
+
+    // --- Utilitaires ---
 
     private function callApi(string $path): ?array
     {

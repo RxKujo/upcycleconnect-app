@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+{{-- Espace acheteur : liste des commandes (chargées en JS via l'API). --}}
+
 @section('title', 'Mes commandes')
 
 @section('content')
@@ -7,6 +9,7 @@
     <p class="section-label">Espace acheteur</p>
     <h1 class="page-title">Mes commandes</h1>
 
+    {{-- === États (gérés par le JS) === --}}
     <div id="cmdLoginRequired" style="display:none; text-align:center; padding:60px 20px; border:var(--border); background:white;">
         <p style="margin-bottom:20px;">Connectez-vous pour consulter vos commandes.</p>
         <a href="/login?return=%2Fmes-commandes" class="btn btn-primary">Se connecter</a>
@@ -25,7 +28,9 @@
 @endsection
 
 @section('scripts')
+{{-- === Chargement et rendu des commandes === --}}
 <script>
+// Libellés et couleurs par statut
 const STATUT_LABELS = {
     'commandee':    { txt: 'Commandée', bg: '#fff4d6' },
     'deposee':      { txt: 'Déposée',   bg: '#e3eefd' },

@@ -7,22 +7,12 @@ import (
 )
 
 // ─── Publicités — Weighted Round-Robin (WRR) ──────────────────────────────────
-//
-// Algorithme : Deficit-based Weighted Round-Robin.
-//
-//  État persisté dans `publicites_rotation` (score_rotation, nb_affichages).
-//  À chaque appel PickPublicitesWRR(n) :
-//  1. On charge les publicités actives + leur état de rotation.
-//  2. Pour chaque pub non sélectionnée ce tour-ci : score += 1 (poids égal pour tous).
-//  3. La pub avec le score le plus élevé est sélectionnée ; son score est remis à 0.
-//  4. On répète n fois.
-//
-// Propriété : le poids est forcé à 1 pour TOUS les annonceurs (exigence du cahier
-// des charges : « tous la même visibilité »). La rotation est donc strictement
-// équitable et déterministe — chaque annonceur actif est affiché aussi souvent.
+// Deficit-based WRR. État persisté dans `publicites_rotation`. Poids forcé à 1
+// pour TOUS (cahier des charges : « tous la même visibilité ») : rotation
+// strictement équitable et déterministe.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// PubliciteAffichage est la structure renvoyée à la couche présentation.
+// PubliciteAffichage : structure renvoyée à la présentation.
 type PubliciteAffichage struct {
 	IDPublicite     int    `json:"id_publicite"`
 	IDProfessionnel int    `json:"id_professionnel"`
@@ -39,8 +29,7 @@ type pubCandidat struct {
 	nbAffichages  int64
 }
 
-// PickPublicitesWRR sélectionne jusqu'à n publicités actives selon l'algorithme WRR.
-// La mise à jour de l'état de rotation est faite dans une transaction.
+// PickPublicitesWRR sélectionne jusqu'à n pubs actives (WRR), maj de l'état en transaction.
 func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 	if n <= 0 {
 		return nil, nil
@@ -54,9 +43,7 @@ func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 
 	now := time.Now()
 
-	// Charger les pubs actives avec leur état de rotation (INSERT si absent).
-	// Poids forcé à 1 pour TOUS : le cahier des charges impose une visibilité
-	// égale entre tous les annonceurs qui paient (« tous la même visibilité »).
+	// Pubs actives + état de rotation. Poids forcé à 1 pour TOUS (visibilité égale).
 	rows, err := tx.Query(`
 		SELECT p.id_publicite, 1,
 		       COALESCE(pr.score_rotation, 0), COALESCE(pr.nb_affichages, 0),
@@ -97,7 +84,7 @@ func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 		return nil, tx.Commit()
 	}
 
-	// Assurer l'existence des lignes de rotation pour les nouveaux entrants.
+	// Lignes de rotation pour les nouveaux entrants.
 	for _, c := range candidats {
 		_, err := tx.Exec(`
 			INSERT IGNORE INTO publicites_rotation (id_publicite, score_rotation, nb_affichages)
@@ -107,18 +94,18 @@ func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 		}
 	}
 
-	// Sélectionner n pubs par WRR.
+	// Sélection de n pubs par WRR.
 	var selection []PubliciteAffichage
 	picked := make(map[int]bool)
 
 	for len(selection) < n && len(picked) < len(candidats) {
-		// Incrémenter le score de tous les candidats non encore sélectionnés ce tour.
+		// score += poids pour tout candidat non encore sélectionné ce tour.
 		for i := range candidats {
 			if !picked[candidats[i].id] {
 				candidats[i].scoreRotation += int64(candidats[i].poids)
 			}
 		}
-		// Choisir le candidat avec le score le plus élevé.
+		// Candidat au score le plus élevé.
 		best := -1
 		for i, c := range candidats {
 			if picked[c.id] {
@@ -138,7 +125,7 @@ func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 		selection = append(selection, candidats[best].pub)
 	}
 
-	// Persister le nouvel état de rotation.
+	// Persister l'état de rotation.
 	for _, c := range candidats {
 		if _, err := tx.Exec(`
 			UPDATE publicites_rotation
@@ -147,7 +134,7 @@ func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 			c.scoreRotation, c.nbAffichages, now, c.id); err != nil {
 			return nil, err
 		}
-		// Incrémenter les vues sur la table principale pour les pubs sélectionnées.
+		// Incrémenter nb_vues sur la table principale (pubs sélectionnées).
 		if picked[c.id] {
 			if _, err := tx.Exec(`UPDATE publicites SET nb_vues = nb_vues + 1 WHERE id_publicite = ?`, c.id); err != nil {
 				return nil, err
@@ -158,14 +145,14 @@ func PickPublicitesWRR(n int) ([]PubliciteAffichage, error) {
 	return selection, tx.Commit()
 }
 
-// EnregistrerClicPublicite incrémente le compteur de clics (appelé par le frontend).
+// EnregistrerClicPublicite incrémente le compteur de clics.
 func EnregistrerClicPublicite(pubID int) error {
 	_, err := database.DB.Exec(
 		`UPDATE publicites SET nb_clics = nb_clics + 1 WHERE id_publicite = ?`, pubID)
 	return err
 }
 
-// PublicitePro représente une publicité du point de vue du professionnel.
+// PublicitePro : publicité vue côté professionnel.
 type PublicitePro struct {
 	IDPublicite int     `json:"id_publicite"`
 	Titre       string  `json:"titre"`
@@ -226,7 +213,7 @@ func GetPublicitesPro(proID int) ([]PublicitePro, error) {
 	return pubs, rows.Err()
 }
 
-// CountPublicitesActivesPro retourne le nombre de pubs non-refusées/expirées pour un pro.
+// CountPublicitesActivesPro : nombre de pubs non refusées/expirées d'un pro.
 func CountPublicitesActivesPro(proID int) (int, error) {
 	var n int
 	err := database.DB.QueryRow(`

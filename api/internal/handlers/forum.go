@@ -1,5 +1,7 @@
 package handlers
 
+// forum.go — forum : création de sujets/messages, filtrage des mots bannis, anti-doublon.
+
 import (
 	"api/pkg/database"
 	"database/sql"
@@ -21,6 +23,9 @@ type CreateMessageRequest struct {
 	IDParentMessage  *int   `json:"id_parent_message,omitempty"`
 }
 
+// --- Modération ---
+
+// contientMotBanni — premier mot banni trouvé dans les textes (insensible à la casse).
 func contientMotBanni(textes ...string) (string, bool) {
 	rows, err := database.DB.Query("SELECT mot FROM mots_bannis")
 	if err != nil {
@@ -50,6 +55,9 @@ func contientMotBanni(textes ...string) (string, bool) {
 	return "", false
 }
 
+// --- Sujets et messages ---
+
+// CreateForumSujet crée un sujet et son message initial dans une transaction.
 func CreateForumSujet(w http.ResponseWriter, r *http.Request, userId int) {
 	var req CreateSujetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -116,6 +124,8 @@ func CreateForumSujet(w http.ResponseWriter, r *http.Request, userId int) {
 	})
 }
 
+// CreateForumMessage — message dans un sujet ouvert ; vérifie le parent éventuel
+// et refuse un doublon récent du même auteur.
 func CreateForumMessage(w http.ResponseWriter, r *http.Request, sujetID string, userId int) {
 	var req CreateMessageRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -13,6 +13,8 @@ class CategorieObjetController extends Controller
         return rtrim(config('services.api.url'), '/') . '/api/v1/admin/categories-objets';
     }
 
+    // --- Lecture ---
+
     public function index()
     {
         $response = Http::withToken(session('admin_token'))->get($this->apiUrl());
@@ -20,6 +22,8 @@ class CategorieObjetController extends Controller
 
         return view('admin.categories-objets.index', compact('categories'));
     }
+
+    // --- Écriture ---
 
     public function store(Request $request)
     {

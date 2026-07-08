@@ -2,6 +2,9 @@
 
 @section('title', 'Sujets forum')
 
+{{-- Modération : sujets forum --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
 .toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -23,6 +26,7 @@
 @endsection
 
 @section('content')
+{{-- Compteurs --}}
 @php
     $total = count($sujets);
     $nbOuvert = count(array_filter($sujets, fn($s) => ($s['statut'] ?? '') === 'ouvert'));
@@ -34,6 +38,7 @@
     <h1 class="page-title">Sujets forum</h1>
 </div>
 
+{{-- === Stats === --}}
 <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">Sujets</div><div class="stat-value">{{ $total }}</div></div>
     <div class="stat-card"><div class="stat-label">Ouverts</div><div class="stat-value">{{ $nbOuvert }}</div></div>
@@ -41,6 +46,7 @@
     <div class="stat-card"><div class="stat-label">Messages cumulés</div><div class="stat-value">{{ $totalMsg }}</div></div>
 </div>
 
+{{-- === Tableau (ou état vide) === --}}
 @if($total === 0)
     <div class="empty-box">
         <p class="big">Aucun sujet</p>
@@ -110,6 +116,7 @@
 @endif
 @endsection
 
+{{-- === Scripts : filtrage === --}}
 @section('scripts')
 <script>
 (function () {

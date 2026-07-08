@@ -1,6 +1,8 @@
 @extends('layouts.particulier')
 @section('title', 'Profil & paramètres')
 
+{{-- Profil particulier : infos, score, notifications, export RGPD, mot de passe, suppression. --}}
+
 @section('styles')
 <style>
     .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -41,11 +43,10 @@
     .edit-input { width: 100%; border: 2px solid var(--coffee); padding: 8px 12px; font-family: 'Outfit', sans-serif; font-size: 0.95rem; display: none; border-radius: 0; }
     .editing .info-val { display: none; }
     .editing .edit-input { display: block; }
-    /* En édition : label au-dessus du champ pleine largeur (plus aéré). */
+    /* En édition : label au-dessus du champ. */
     .editing .info-row { flex-direction: column; align-items: stretch; gap: 6px; padding: 14px 0; }
     .editing .info-key { margin-bottom: 2px; }
-    /* Le wrapper d'autocomplétion d'adresse ne doit exister qu'en édition,
-       sinon il casse l'alignement à droite de la valeur en lecture. */
+    /* Wrapper autocomplete visible en édition seulement (sinon casse l'alignement en lecture). */
     .addr-ac-wrap { display: none; }
     .editing .addr-ac-wrap { display: block; }
     .edit-input[readonly] { background: rgba(18,3,9,0.04); color: var(--coffee); cursor: default; }
@@ -67,6 +68,7 @@
 <div id="profile-content" style="display: none;">
     <div class="profile-grid">
 
+        {{-- === Mes informations === --}}
         <div class="card" id="info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 class="card-title"><span data-i18n="prof.myinfo">Mes informations</span></h3>
@@ -118,6 +120,7 @@
             </div>
         </div>
 
+        {{-- === Upcycling Score === --}}
         <div class="card" id="score-card">
             <h3 class="card-title"><span data-i18n="prof.score">Upcycling Score</span></h3>
             <div class="score-display">
@@ -136,6 +139,7 @@
             <div class="score-ladder" id="score-ladder"></div>
         </div>
 
+        {{-- === Notifications === --}}
         <div class="card">
             <h3 class="card-title"><span data-i18n="prof.notifprefs">Préférences de notifications</span></h3>
             <div class="toggle-row">
@@ -161,12 +165,14 @@
             <p style="font-size: 0.8rem; margin-top: 12px; color: rgba(18,3,9,0.5);"><span data-i18n="prof.notif.note">Vous recevrez les mises a jour sur vos annonces et evenements</span></p>
         </div>
 
+        {{-- === Données personnelles (RGPD) === --}}
         <div class="card">
             <h3 class="card-title"><span data-i18n="prof.personaldata">Données personnelles</span></h3>
             <p style="margin-bottom: 16px; font-size: 0.95rem;"><span data-i18n="prof.personaldata.desc">Recuperez un fichier contenant toutes vos informations</span></p>
             <button class="btn-primary btn-sm" onclick="downloadPDF()"><span data-i18n="prof.download">Telecharger mes donnees</span></button>
         </div>
 
+        {{-- === Sécurité === --}}
         <div class="card full-width">
             <h3 class="card-title"><span data-i18n="prof.security">Sécurité</span></h3>
             <button class="btn-secondary btn-sm" type="button" onclick="togglePwdForm()"><span data-i18n="prof.changepwd">Modifier mon mot de passe</span></button>
@@ -198,12 +204,14 @@
 </div>
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
 let userData = null;
 let isEditing = false;
 let profilePhotoB64 = null;
 
+// Charge le profil et remplit l'affichage.
 async function loadProfile() {
     try {
         const resp = await apiFetch('/api/v1/utilisateurs/me');
@@ -216,9 +224,7 @@ async function loadProfile() {
         document.getElementById('display-name').textContent = userData.prenom + ' ' + userData.nom;
         document.getElementById('display-role').textContent = userData.role;
 
-        // Reconstruit l'avatar à chaque appel (idempotent) : le rendu photo
-        // remplaçait le <span id="avatar-initials">, ce qui faisait planter le
-        // rechargement après sauvegarde (null.textContent).
+        // Reconstruit l'avatar à chaque appel (idempotent) : évite un null.textContent au rechargement.
         const initials = ((userData.prenom || ' ')[0] || '') + ((userData.nom || ' ')[0] || '');
         const avatarEl = document.getElementById('avatar-display');
         if (userData.photo_profil_url) {
@@ -284,6 +290,7 @@ async function deleteMyAccount() {
     }
 }
 
+// Charge le détail du score.
 async function loadScore() {
     try {
         const resp = await apiFetch('/api/v1/utilisateurs/me/score');
@@ -328,6 +335,7 @@ async function loadScore() {
     } catch (err) { /* score indisponible : on garde la valeur de base */ }
 }
 
+// Passe la carte infos en mode édition.
 function toggleEdit() {
     isEditing = !isEditing;
     const card = document.getElementById('info-card');
@@ -372,6 +380,7 @@ function previewProfilePhoto(e) {
     reader.readAsDataURL(file);
 }
 
+// Enregistre les modifications du profil.
 async function saveProfile() {
     const payload = {
         telephone: document.getElementById('edit-telephone').value || null,

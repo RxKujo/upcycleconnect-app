@@ -1,5 +1,8 @@
 package handlers
 
+// tutoriel.go — tutoriel first-login : étapes (filtrées par rôle), statut
+// utilisateur (terminé/passé), CRUD admin.
+
 import (
 	"api/internal/middleware"
 	"api/pkg/database"
@@ -28,9 +31,8 @@ type TutorielStatut struct {
 	DateDebut *string `json:"date_debut"`
 }
 
-// GetTutorielEtapes renvoie les étapes actives. Auth optionnelle : si un token
-// valide est présent, filtre par rôle (étapes communes + étapes du rôle) ;
-// sinon renvoie uniquement les étapes communes (role NULL).
+// GetTutorielEtapes — étapes actives. Auth optionnelle : si authentifié, communes
+// + celles du rôle ; sinon communes seules (role NULL).
 func GetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	_, role, authed := middleware.OptionalAuth(r)
 
@@ -67,6 +69,7 @@ func GetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(etapes)
 }
 
+// GetTutorielStatut — état du tutoriel (vu, terminé, passé).
 func GetTutorielStatut(w http.ResponseWriter, r *http.Request, userId int) {
 	var tutoVu bool
 	database.DB.QueryRow("SELECT tuto_vu FROM utilisateurs WHERE id_utilisateur = ?", userId).Scan(&tutoVu)
@@ -91,6 +94,7 @@ func GetTutorielStatut(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(statut)
 }
 
+// MarquerTutorielTermine — marque le tutoriel terminé.
 func MarquerTutorielTermine(w http.ResponseWriter, r *http.Request, userId int) {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	database.DB.Exec(`
@@ -104,6 +108,7 @@ func MarquerTutorielTermine(w http.ResponseWriter, r *http.Request, userId int) 
 	json.NewEncoder(w).Encode(map[string]string{"message": "tutoriel terminé"})
 }
 
+// PasserTutoriel — marque le tutoriel passé (ignoré).
 func PasserTutoriel(w http.ResponseWriter, r *http.Request, userId int) {
 	now := time.Now().Format("2006-01-02 15:04:05")
 	database.DB.Exec(`
@@ -118,6 +123,8 @@ func PasserTutoriel(w http.ResponseWriter, r *http.Request, userId int) {
 }
 
 // Admin CRUD tutoriel
+
+// AdminGetTutorielEtapes — toutes les étapes (actives ou non).
 func AdminGetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT id_etape, titre, contenu, ordre, COALESCE(cible_element,''), position, COALESCE(page,''), COALESCE(icone,''), COALESCE(role,''), est_actif
@@ -143,6 +150,7 @@ func AdminGetTutorielEtapes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(etapes)
 }
 
+// AdminUpdateTutorielEtape met à jour une étape (rôle/page vides -> NULL).
 func AdminUpdateTutorielEtape(w http.ResponseWriter, r *http.Request, idStr string) {
 	var body struct {
 		Titre        string `json:"titre"`
@@ -164,7 +172,7 @@ func AdminUpdateTutorielEtape(w http.ResponseWriter, r *http.Request, idStr stri
 	if body.Role != "" {
 		role = body.Role
 	}
-	// page vide -> NULL (étape affichée sur la page courante, centrée).
+	// page vide -> NULL (affichée sur la page courante, centrée).
 	var page interface{}
 	if body.Page != "" {
 		page = body.Page

@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+{{-- Page d'accueil publique (landing « .lp », néo-brutalisme isolé du reste du site). --}}
+
 @section('pub_slot')@include('partials.pub-slot')@endsection
 
 @section('title', 'Accueil')
@@ -324,6 +326,7 @@
 @endsection
 
 @section('styles')
+{{-- === Styles (portée limitée à .lp) === --}}
 /* =====================================================
    LANDING PAGE (.lp) — néo-brutalisme, isolé du global
 ===================================================== */
@@ -573,6 +576,7 @@
 @endsection
 
 @section('scripts')
+{{-- === Scripts : rubans, reveal, compteurs, filtres, tilt, CTA === --}}
 <script>
 (function(){
     const root = document.querySelector('.lp');
@@ -639,7 +643,7 @@
         zone.addEventListener('mouseleave', () => { tilt.style.transform = 'rotate(2deg)'; });
     }
 
-    // CTA final : redirige vers l'inscription
+    // CTA final : redirige vers l'inscription (avec email prérempli)
     const form = root.querySelector('.lp-final__form');
     if(form){
         form.addEventListener('submit', e => {

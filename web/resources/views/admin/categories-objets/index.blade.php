@@ -2,6 +2,8 @@
 @section('title', "Catégories d'objets")
 
 @section('content')
+
+{{-- === En-tête de page + bouton de création === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1 class="page-title">Catégories d'objets</h1>
     <button type="button" class="btn-primary" onclick="openCatModal()">+ Nouvelle catégorie</button>
@@ -12,6 +14,7 @@
     n'apparaît plus dans le formulaire, mais reste sur les annonces existantes.
 </p>
 
+{{-- === Messages de retour (erreurs / succès) === --}}
 @if($errors->any())
     <div class="badge badge-cherry" style="display:block; margin-bottom:20px; padding:12px 20px;">{{ $errors->first() }}</div>
 @endif
@@ -32,6 +35,7 @@
     .cat-row-off { opacity:0.5; }
 </style>
 
+{{-- === Modale : création / édition d'une catégorie === --}}
 <div class="modal-overlay" id="catModal">
     <div class="modal-box">
         <button type="button" class="modal-close" onclick="closeCatModal()">&times;</button>
@@ -53,6 +57,7 @@
     </div>
 </div>
 
+{{-- === Tableau des catégories === --}}
 <div class="table-container">
     <table>
         <thead>
@@ -91,6 +96,7 @@
     </table>
 </div>
 
+{{-- === Scripts : ouverture/fermeture de la modale et pré-remplissage en édition === --}}
 <script>
     const catForm    = document.getElementById('catForm');
     const catMethod  = document.getElementById('catMethod');

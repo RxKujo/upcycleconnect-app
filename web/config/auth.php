@@ -1,5 +1,8 @@
 <?php
 
+// Configuration de l'authentification : gardes (guards), fournisseurs
+// d'utilisateurs et réinitialisation des mots de passe.
+
 use App\Models\User;
 
 return [

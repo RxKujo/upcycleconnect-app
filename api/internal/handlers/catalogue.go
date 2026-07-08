@@ -1,5 +1,8 @@
 package handlers
 
+// Catalogue formations/ateliers : consultation filtrée, cycle de vie des items (CRUD + validation admin),
+// réservations (paiement Stripe, planning).
+
 import (
     "api/internal/models"
     "api/pkg/database"
@@ -10,6 +13,9 @@ import (
     "time"
 )
 
+// --- Consultation du catalogue ---
+
+// GetCatalogueItems : items publiés (ou tous pour l'admin), avec filtres (catégorie, prix, date...).
 func GetCatalogueItems(w http.ResponseWriter, r *http.Request, role string) {
     queryParts := []string{"statut = 'publie'"}
     args := []interface{}{}
@@ -80,6 +86,7 @@ func GetCatalogueItems(w http.ResponseWriter, r *http.Request, role string) {
     json.NewEncoder(w).Encode(items)
 }
 
+// GetCatalogueItem : item par id (restreint aux publiés hors admin).
 func GetCatalogueItem(w http.ResponseWriter, r *http.Request, id string, role string) {
     query := `SELECT id_catalogue_item, id_createur, titre, description, categorie, format, lieu, date_debut, date_fin, nb_places_total, nb_places_dispo, prix, statut, valide_par, date_creation FROM catalogue_items WHERE id_catalogue_item = ?`
     if role != "admin" {
@@ -100,6 +107,9 @@ func GetCatalogueItem(w http.ResponseWriter, r *http.Request, id string, role st
     json.NewEncoder(w).Encode(item)
 }
 
+// --- Cycle de vie des items (creation / modification / validation) ---
+
+// CreateCatalogueItem : crée un item (publié si admin, en_attente si salarié).
 func CreateCatalogueItem(w http.ResponseWriter, r *http.Request, userId int, role string) {
     if role != "admin" && role != "salarie" {
         w.Header().Set("Content-Type", "application/json")
@@ -140,6 +150,7 @@ func CreateCatalogueItem(w http.ResponseWriter, r *http.Request, userId int, rol
     json.NewEncoder(w).Encode(map[string]interface{}{"message": "élément créé", "id": id})
 }
 
+// UpdateCatalogueItem : maj d'un item ; un non-admin ne modifie que ses items non publiés.
 func UpdateCatalogueItem(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
     var existing models.CatalogueItem
     err := database.DB.QueryRow("SELECT id_catalogue_item, id_createur, nb_places_total, nb_places_dispo, statut FROM catalogue_items WHERE id_catalogue_item = ?", id).
@@ -193,6 +204,7 @@ func UpdateCatalogueItem(w http.ResponseWriter, r *http.Request, id string, user
     json.NewEncoder(w).Encode(map[string]string{"message": "élément mis à jour"})
 }
 
+// DeleteCatalogueItem : annule un item (statut 'annule', places à zéro).
 func DeleteCatalogueItem(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
     var existing models.CatalogueItem
     err := database.DB.QueryRow("SELECT id_catalogue_item, id_createur, statut FROM catalogue_items WHERE id_catalogue_item = ?", id).
@@ -224,6 +236,7 @@ func DeleteCatalogueItem(w http.ResponseWriter, r *http.Request, id string, user
     json.NewEncoder(w).Encode(map[string]string{"message": "élément annulé"})
 }
 
+// ValiderCatalogueItem : publie un item en attente (admin).
 func ValiderCatalogueItem(w http.ResponseWriter, r *http.Request, id string, adminId int, role string) {
     if role != "admin" {
         w.Header().Set("Content-Type", "application/json")
@@ -245,6 +258,9 @@ func ValiderCatalogueItem(w http.ResponseWriter, r *http.Request, id string, adm
     json.NewEncoder(w).Encode(map[string]string{"message": "élément publié"})
 }
 
+// --- Reservations & planning ---
+
+// ReserverCatalogueItem : inscrit le user (vérifie places/paiement, décrémente en transaction).
 func ReserverCatalogueItem(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
     if role != "particulier" && role != "professionnel" && role != "salarie" {
         w.Header().Set("Content-Type", "application/json")
@@ -330,7 +346,7 @@ func ReserverCatalogueItem(w http.ResponseWriter, r *http.Request, id string, us
         return
     }
 
-    // Ajout automatique au planning
+    // Ajout automatique au planning.
     catalogueId, _ := strconv.Atoi(id)
     go AddPlanningFromFormation(userId, catalogueId)
 
@@ -339,6 +355,7 @@ func ReserverCatalogueItem(w http.ResponseWriter, r *http.Request, id string, us
     json.NewEncoder(w).Encode(map[string]string{"message": "réservation enregistrée"})
 }
 
+// GetCatalogueReservations : réservations d'un item (créateur ou admin).
 func GetCatalogueReservations(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
     var creator int
     err := database.DB.QueryRow("SELECT id_createur FROM catalogue_items WHERE id_catalogue_item = ?", id).Scan(&creator)
@@ -380,6 +397,7 @@ func GetCatalogueReservations(w http.ResponseWriter, r *http.Request, id string,
     json.NewEncoder(w).Encode(reservations)
 }
 
+// GetMesReservations : planning des réservations du user connecté.
 func GetMesReservations(w http.ResponseWriter, r *http.Request, userId int) {
 	rows, err := database.DB.Query(`SELECT c.id_catalogue_item, c.titre, c.categorie, c.format, c.lieu, c.date_debut, c.date_fin, c.prix, r.id_reservation, r.date_reservation, r.statut_paiement
 		FROM catalogue_reservations r
@@ -410,6 +428,7 @@ func GetMesReservations(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(planning)
 }
 
+// GetUtilisateurPlanning : planning d'un utilisateur (soi-même ou admin).
 func GetUtilisateurPlanning(w http.ResponseWriter, r *http.Request, id string, userId int, role string) {
     requestedId, err := strconv.Atoi(id)
     if err != nil {

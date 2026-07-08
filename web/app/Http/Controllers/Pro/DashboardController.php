@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 
+// Espace pro : tableaux de bord (essentiel/expert) et export PDF annuel, selon le plan.
 class DashboardController extends Controller
 {
+    // --- Utilitaires (URL API + token) ---
+
     private function apiUrl(): string
     {
         return rtrim(config('services.api.url', env('API_URL', 'http://localhost:8080')), '/');
@@ -19,6 +22,9 @@ class DashboardController extends Controller
         return Session::get('pro_token');
     }
 
+    // --- Actions ---
+
+    // Dashboard essentiel : impact, stats matériaux, dépenses du mois.
     public function essential(Request $request)
     {
         $response = Http::withToken($this->token())
@@ -43,6 +49,7 @@ class DashboardController extends Controller
         ]);
     }
 
+    // Dashboard annuel expert (réservé plan Expert Pro : 403 sinon).
     public function expert(Request $request)
     {
         $response = Http::withToken($this->token())
@@ -67,6 +74,7 @@ class DashboardController extends Controller
         ]);
     }
 
+    // Rapport annuel en PDF (réservé Expert Pro).
     public function exportPdf(Request $request)
     {
         $response = Http::withToken($this->token())

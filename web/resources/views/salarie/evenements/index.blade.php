@@ -2,7 +2,10 @@
 
 @section('title', 'Mes événements')
 
+{{-- Liste des événements (modification tant qu'en attente) --}}
+
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
     <h1 class="page-title"><span data-i18n="sal.myevents">Mes événements</span></h1>
     <div style="display:flex; gap:12px;">
@@ -11,6 +14,7 @@
     </div>
 </div>
 
+{{-- === Tableau (ou état vide) === --}}
 @if(empty($evenements))
 <div class="card" style="text-align:center; padding:80px 20px;">
     <h3 class="font-bebas" style="font-size:1.6rem;"><span data-i18n="sal.ev.empty">Aucun événement</span></h3>

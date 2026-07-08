@@ -1,12 +1,6 @@
-{{--
-    Sélecteur de date/heure custom — remplace le calendrier natif du navigateur
-    partout sur la plateforme, dans le style néo-brutaliste (palette du site).
-    S'applique automatiquement à tout <input type="date"> et <input type="datetime-local">
-    (y compris ceux générés dynamiquement en JS), sans casser name/value/évènements :
-    l'input natif reste dans le DOM (caché), sa value garde le format ISO, et les
-    évènements input/change sont émis normalement.
-    Pour désactiver sur un champ précis : ajouter l'attribut data-no-uc.
---}}
+{{-- Sélecteur date/heure custom : remplace l'input natif partout (auto-enhance).
+     Value ISO conservée. Opt-out par champ : data-no-uc. --}}
+{{-- === Styles === --}}
 <style>
     .uc-dp-field {
         display:inline-flex; align-items:center; gap:10px; justify-content:space-between;
@@ -49,6 +43,7 @@
     .uc-dp-link:hover { text-decoration:underline; }
 </style>
 
+{{-- === Script : auto-enhance === --}}
 <script>
 (function () {
     if (window.__ucDatePicker) return; window.__ucDatePicker = true;

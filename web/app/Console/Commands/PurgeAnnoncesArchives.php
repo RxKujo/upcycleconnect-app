@@ -5,13 +5,20 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Commande de purge : supprime les annonces refusées ou vendues de plus de
+ * 3 mois afin d'alléger la base de données. Destinée à être planifiée (cron).
+ */
 class PurgeAnnoncesArchives extends Command
 {
-    
+
     protected $signature = 'upcycle:purge-annonces';
 
     protected $description = 'Supprime les annonces refusées ou vendues datant de plus de 3 mois pour alléger la BDD.';
 
+    /**
+     * Exécute la purge et affiche le nombre d'annonces supprimées.
+     */
     public function handle()
     {
         $this->info('Début de la purge des annonces anciennes...');

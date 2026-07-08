@@ -1,11 +1,14 @@
+{{-- Layout SALARIE — espace de gestion (sidebar + contenu). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
     <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Salarié') — UpcycleConnect</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -25,12 +28,12 @@
 
         .salarie-wrapper { display: flex; min-height: 100vh; }
 
-        .sidebar { width: 280px; min-height: 100vh; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border); }
-        .sidebar-header { padding: 32px 24px 24px; border-bottom: 3px solid var(--forest); background-color: rgba(0,0,0,0.2); }
-        .sidebar-nav { flex-grow: 1; padding-top: 24px; }
+        .sidebar { width: 280px; height: 100vh; background-color: var(--coffee); color: var(--cream); position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 100; border-right: var(--border); }
+        .sidebar-header { padding: 32px 24px 24px; border-bottom: 3px solid var(--forest); background-color: rgba(0,0,0,0.2); flex-shrink: 0; }
+        .sidebar-nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-top: 24px; }
         .sidebar a { display: flex; align-items: center; padding: 14px 24px 14px 20px; color: var(--cream); text-decoration: none; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.05em; border-left: 6px solid transparent; transition: all 0.2s ease; }
         .sidebar a:hover, .sidebar a.active { border-left-color: var(--forest); background-color: rgba(36, 79, 38, 0.18); color: var(--wheat); padding-left: 26px; }
-        .sidebar-footer { padding: 24px; border-top: 3px solid rgba(245,240,225,0.1); }
+        .sidebar-footer { padding: 24px; border-top: 3px solid rgba(245,240,225,0.1); flex-shrink: 0; }
         .sidebar-section-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: rgba(245,240,225,0.4); padding: 18px 24px 8px; letter-spacing: 0.1em; text-transform: uppercase; }
 
         .main-content { margin-left: 280px; padding: 48px; width: calc(100% - 280px); box-sizing: border-box; }
@@ -83,6 +86,7 @@
 </head>
 <body>
     @include('partials._toast')
+    {{-- === Sidebar === --}}
     <div class="salarie-wrapper">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -141,6 +145,7 @@
             </div>
         </aside>
 
+        {{-- === Contenu === --}}
         <main class="main-content">
             <div class="content-container">
                 @if(session('success'))
@@ -154,6 +159,7 @@
         </main>
     </div>
     @yield('scripts')
+{{-- === Script : badge signalements === --}}
 <script>
 (async function() {
     try {
@@ -169,6 +175,7 @@
     } catch(e) {}
 })();
 </script>
+    {{-- === Partials === --}}
     @include('partials.datepicker')
     @include('partials.i18n-engine')
 </body>

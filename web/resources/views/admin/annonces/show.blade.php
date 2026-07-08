@@ -1,12 +1,13 @@
 @extends('layouts.admin')
 @section('title', 'Annonce #' . $annonce['id_annonce'])
-
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">Annonce #{{ $annonce['id_annonce'] }}</h1>
     <a href="{{ route('admin.annonces.index') }}" class="btn-secondary btn-sm">← Retour</a>
 </div>
 
+{{-- === Informations générales de l'annonce === --}}
 <div class="card">
     <div class="info-grid">
         <div class="info-item">
@@ -68,6 +69,7 @@
     </div>
 </div>
 
+{{-- === Objets rattachés à l'annonce === --}}
 @if(!empty($annonce['objets']))
 <h2 class="font-bebas" style="font-size: 2rem; margin: 0 0 20px;">
     Objets ({{ count($annonce['objets']) }})
@@ -110,6 +112,7 @@
 @endforeach
 @endif
 
+{{-- === Actions de modération (dépendent du statut de l'annonce) === --}}
 <div class="action-cell" style="margin-top: 32px; flex-wrap: wrap; gap: 12px;">
     @if($annonce['statut'] === 'en_attente')
         <form action="{{ route('admin.annonces.valider', $annonce['id_annonce']) }}" method="POST">

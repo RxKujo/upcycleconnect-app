@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// GetCategories liste les catégories de prestations.
 func GetCategories(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query("SELECT id_categorie, nom, description, date_creation FROM categories_prestations")
 	if err != nil {
@@ -84,6 +85,7 @@ func UpdateCategorie(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "catégorie modifiée avec succès"})
 }
 
+// DeleteCategorie — supprime une catégorie (échoue si des prestations y sont liées).
 func DeleteCategorie(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("DELETE FROM categories_prestations WHERE id_categorie = ?", id)
 	if err != nil {

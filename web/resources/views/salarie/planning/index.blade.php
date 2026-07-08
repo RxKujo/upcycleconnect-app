@@ -2,16 +2,19 @@
 
 @section('title', 'Mon planning')
 
+{{-- Planning : calendrier + timeline, entièrement piloté en JS --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
-/* ─── Barre de navigation calendrier ─────────────────────────────── */
+/* ─── Navigation calendrier ─── */
 .cal-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
 .cal-toolbar .nav-arrow { padding: 8px 16px; font-size: 1.2rem; line-height: 1; }
 .cal-select { border: 3px solid var(--coffee); background: white; font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.95rem; padding: 9px 14px; box-shadow: 3px 3px 0px rgba(18,3,9,0.12); cursor: pointer; outline: none; }
 .cal-select:focus { border-color: var(--forest); }
 .cal-spacer { flex: 1; }
 
-/* ─── Grille calendrier ──────────────────────────────────────────── */
+/* ─── Grille calendrier ─── */
 .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; border: var(--border); box-shadow: var(--shadow); margin-bottom: 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
 .calendar-day-label { background: var(--coffee); color: var(--wheat); font-family: 'DM Mono', monospace; font-size: 0.75rem; text-transform: uppercase; text-align: center; padding: 10px 4px; letter-spacing: 0.05em; min-width: 0; overflow: hidden; }
 .calendar-cell { min-height: 92px; min-width: 0; overflow: hidden; background: white; border: 1px solid rgba(18,3,9,0.1); padding: 6px; position: relative; cursor: pointer; transition: background 0.12s ease; }
@@ -30,7 +33,7 @@
 .cal-event.type-perso { background: #b2bec3; color: var(--coffee); }
 .cal-more { font-size: 0.62rem; font-family: 'DM Mono', monospace; color: var(--coffee); opacity: 0.6; }
 
-/* ─── Timeline journalière ───────────────────────────────────────── */
+/* ─── Timeline journalière ─── */
 .day-panel-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 24px; flex-wrap: wrap; gap: 12px; }
 .day-panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; margin: 0; letter-spacing: 0.04em; }
 .timeline { position: relative; border-left: 3px solid var(--coffee); margin-left: 60px; }
@@ -52,7 +55,7 @@
 .day-empty-inline { position: absolute; top: 50%; left: 12px; right: 12px; transform: translateY(-50%); text-align: center; color: rgba(18,3,9,0.35); font-family: 'DM Mono', monospace; text-transform: uppercase; font-size: 0.82rem; letter-spacing: 0.04em; pointer-events: none; }
 .tl-badge-auto { display: inline-block; font-size: 0.6rem; background: rgba(255,255,255,0.25); padding: 1px 5px; margin-left: 6px; letter-spacing: 0.04em; }
 
-/* ─── Bandeaux « journée entière » (événements multi-jours) ──────── */
+/* ─── Bandeaux « journée entière » ─── */
 .allday-zone { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .allday-block { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border: 2px solid var(--coffee); box-shadow: 2px 2px 0 rgba(18,3,9,0.3); background: var(--forest); color: var(--cream); cursor: pointer; }
 .allday-block.type-evenement { background: var(--teal); }
@@ -63,7 +66,7 @@
 .allday-block .allday-title { font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; }
 .allday-block .allday-span { font-family: 'DM Mono', monospace; font-size: 0.72rem; opacity: 0.85; white-space: nowrap; }
 
-/* ─── Modale custom ──────────────────────────────────────────────── */
+/* ─── Modale ─── */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(18,3,9,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .modal-box { background: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 40px; width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto; position: relative; }
 .picker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -79,7 +82,7 @@
 .detail-actions { display: flex; gap: 12px; margin-top: 28px; }
 .detail-actions button { flex: 1; padding: 13px 0; font-size: 1.1rem; }
 
-/* ─── Toast client ───────────────────────────────────────────────── */
+/* ─── Toast ─── */
 #pl-toast-zone { position: fixed; top: 24px; right: 24px; z-index: 100001; display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
 .pl-toast { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border: 3px solid var(--coffee); box-shadow: 5px 5px 0 var(--coffee); background: var(--cherry); color: var(--cream); font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.4; animation: pl-toast-in 0.22s ease-out; }
 .pl-toast .ic { font-family: 'DM Mono', monospace; font-weight: 700; }
@@ -88,6 +91,7 @@
 @endsection
 
 @section('content')
+{{-- === En-tête === --}}
 <div class="page-header">
     <h1 class="page-title"><span data-i18n="part.planning.title">Mon Planning</span></h1>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -96,7 +100,7 @@
     </div>
 </div>
 
-{{-- Stats rapides (recalculées en JS selon le mois affiché) --}}
+{{-- Stats (recalculées en JS) --}}
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">Créneaux ce mois</div>
@@ -112,7 +116,7 @@
     </div>
 </div>
 
-{{-- Barre de navigation : flèches + sélecteurs mois/année + Aujourd'hui --}}
+{{-- Navigation mois/année --}}
 <div class="cal-toolbar">
     <button class="btn-secondary btn-sm nav-arrow" id="nav-prev">&larr;</button>
     <select class="cal-select" id="sel-mois"></select>
@@ -122,10 +126,10 @@
     <button class="btn-primary btn-sm" id="nav-today">Aujourd'hui</button>
 </div>
 
-{{-- Calendrier (rendu JS) --}}
+{{-- Calendrier --}}
 <div class="calendar-grid" id="calendar-grid"></div>
 
-{{-- Panneau jour sélectionné (timeline) --}}
+{{-- Jour sélectionné --}}
 <div class="card">
     <div class="day-panel-head">
         <h2 class="day-panel-title" id="day-title"><span data-i18n="sal.planning.selectday">Sélectionnez un jour</span></h2>
@@ -134,7 +138,7 @@
     <div id="day-body"></div>
 </div>
 
-{{-- Modale création créneau (picker custom) --}}
+{{-- Modale création/édition --}}
 <div class="modal-overlay" id="modal-add">
     <div class="modal-box">
         <h2 class="font-bebas" style="font-size:2rem;margin:0 0 28px;" id="modal-title"><span data-i18n="part.planning.newslot">Nouveau créneau</span></h2>
@@ -203,7 +207,7 @@
     </div>
 </div>
 
-{{-- Modale détail créneau --}}
+{{-- Modale détail --}}
 <div class="modal-overlay" id="modal-detail">
     <div class="modal-box" style="max-width:520px;">
         <h2 class="font-bebas" style="font-size:2rem;margin:0 0 24px;"><span data-i18n="sal.planning.detail">Détail du créneau</span></h2>
@@ -220,12 +224,13 @@
 <div id="pl-toast-zone"></div>
 @endsection
 
+{{-- === Scripts : moteur du planning === --}}
 @section('scripts')
 <script>
 (function () {
     'use strict';
 
-    // ─── Données & constantes ─────────────────────────────────────
+    // ─── Données & constantes ───
     var ITEMS = @json($items ?? []);
     var CSRF = '{{ csrf_token() }}';
     var BASE_URL = '{{ url('/salarie/planning') }}';
@@ -234,14 +239,13 @@
     var JOURS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
     var HOUR_PX = 56;
 
-    // État de navigation
     var view = { y: TODAY.y, m: TODAY.m };
-    var selected = new Date(TODAY.y, TODAY.m, TODAY.d); // jour sélectionné
-    var editId = null; // id du créneau en cours d'édition (null = création)
-    var detailId = null; // id du créneau affiché dans la fiche détail
+    var selected = new Date(TODAY.y, TODAY.m, TODAY.d);
+    var editId = null; // créneau en édition (null = création)
+    var detailId = null;
     var STORE_URL = document.getElementById('planning-form').getAttribute('action');
 
-    // ─── Helpers ──────────────────────────────────────────────────
+    // ─── Helpers ───
     function pad(n) { return (n < 10 ? '0' : '') + n; }
     function parseDT(s) {
         if (!s) return null;
@@ -253,7 +257,7 @@
     function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
     function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
 
-    // Normalise les items une fois (objets Date)
+    // Normalise les items (objets Date)
     var EVENTS = ITEMS.map(function (it) {
         return {
             id: it.id_planning,
@@ -276,14 +280,13 @@
 
     function eventsOfDay(dt) {
         return EVENTS.filter(function (e) {
-            // inclut les créneaux qui couvrent ce jour
             var dayStart = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0, 0);
             var dayEnd = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 23, 59, 59);
             return e.debut <= dayEnd && e.fin >= dayStart;
         }).sort(function (a, b) { return a.debut - b.debut; });
     }
 
-    // ─── Toast client ─────────────────────────────────────────────
+    // ─── Toast ───
     var toastTimer = null;
     function toast(msg) {
         var zone = document.getElementById('pl-toast-zone');
@@ -294,7 +297,7 @@
         setTimeout(function () { el.remove(); }, 4000);
     }
 
-    // ─── Stats ────────────────────────────────────────────────────
+    // ─── Stats ───
     function renderStats() {
         var moisCount = EVENTS.filter(function (e) {
             return e.debut.getFullYear() === view.y && e.debut.getMonth() === view.m;
@@ -305,7 +308,7 @@
         document.getElementById('stat-events').textContent = evCount;
     }
 
-    // ─── Sélecteurs mois / année ──────────────────────────────────
+    // ─── Sélecteurs mois / année ───
     function buildNavSelectors() {
         var selM = document.getElementById('sel-mois');
         var selY = document.getElementById('sel-annee');
@@ -329,7 +332,7 @@
         document.getElementById('sel-annee').value = view.y;
     }
 
-    // ─── Calendrier ───────────────────────────────────────────────
+    // ─── Calendrier ───
     function renderCalendar() {
         syncNavSelectors();
         renderStats();
@@ -337,7 +340,7 @@
         var html = JOURS.map(function (j) { return '<div class="calendar-day-label">' + j + '</div>'; }).join('');
 
         var first = new Date(view.y, view.m, 1);
-        var firstDow = (first.getDay() + 6) % 7; // 0 = lundi
+        var firstDow = (first.getDay() + 6) % 7; // lundi = 0
         var nbDays = new Date(view.y, view.m + 1, 0).getDate();
 
         for (var i = 0; i < firstDow; i++) html += '<div class="calendar-cell empty"></div>';
@@ -369,7 +372,7 @@
         });
     }
 
-    // ─── Timeline journalière ─────────────────────────────────────
+    // ─── Timeline journalière ───
     function renderDay() {
         var title = document.getElementById('day-title');
         var body = document.getElementById('day-body');
@@ -377,8 +380,7 @@
 
         var evs = eventsOfDay(selected);
 
-        // Sépare les événements « journée entière / multi-jours » (qui ne tiennent
-        // pas dans la journée sélectionnée) des créneaux horaires classiques.
+        // Sépare « journée entière / multi-jours » des créneaux horaires
         var allDay = [], timed = [];
         evs.forEach(function (e) {
             if (sameDay(e.debut, selected) && sameDay(e.fin, selected)) timed.push(e);
@@ -387,7 +389,7 @@
 
         var html = '';
 
-        // Bandeaux « journée entière » en haut (multi-jours).
+        // Bandeaux « journée entière »
         if (allDay.length) {
             html += '<div class="allday-zone">';
             allDay.forEach(function (e) {
@@ -402,8 +404,7 @@
             html += '</div>';
         }
 
-        // Timeline horaire — TOUJOURS affichée (emploi du temps permanent).
-        // La plage s'ajuste aux créneaux horaires du jour, sinon défaut 8h–19h.
+        // Timeline horaire : plage ajustée aux créneaux, sinon 8h–19h
         var minH = 8, maxH = 19;
         timed.forEach(function (e) {
             var sh = e.debut.getHours();
@@ -443,7 +444,7 @@
         });
     }
 
-    // ─── Suppression ──────────────────────────────────────────────
+    // ─── Suppression ───
     function deleteCreneau(id) {
         window.confirmAction('Supprimer ce créneau ?').then(function (ok) {
             if (!ok) return;
@@ -457,7 +458,7 @@
         });
     }
 
-    // ─── Picker custom (modale) ───────────────────────────────────
+    // ─── Picker (modale) ───
     function fillSelect(sel, from, to, fmt) {
         var html = '';
         for (var i = from; i <= to; i++) html += '<option value="' + i + '">' + (fmt ? fmt(i) : i) + '</option>';
@@ -515,7 +516,7 @@
         };
     }
 
-    // ─── Validation modale (cohérence + anti-chevauchement) ───────
+    // ─── Validation modale (anti-chevauchement) ───
     var lastOverlapId = null;
     function validateModal() {
         var alertBox = document.getElementById('planning-date-alert');

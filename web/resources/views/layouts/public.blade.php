@@ -1,6 +1,8 @@
+{{-- Layout PUBLIC — site vitrine (navbar, contenu, footer). --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    {{-- === En-tete === --}}
     <script>window.MEDIA_BASE = @js(media_base());</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- === Styles === --}}
     <style>
         :root {
             --cherry: #A4243B;
@@ -199,17 +202,22 @@
     </style>
 </head>
 <body>
+    {{-- === Navbar + toast === --}}
     @include('partials._toast')
     @include('partials.navbar')
 
+    {{-- === Contenu === --}}
     <main>
         @yield('content')
     </main>
 
+    {{-- Emplacement pub --}}
     @yield('pub_slot')
 
+    {{-- === Footer === --}}
     @include('partials.footer')
 
+    {{-- === Scripts === --}}
     <script>
         const API_BASE = '{{ config("services.api.public_url") }}';
         window.APP_API_BASE = API_BASE;
@@ -231,6 +239,7 @@
     <script src="/js/panier.js"></script>
     @yield('scripts')
 
+{{-- === Moteur i18n (FR/EN) === --}}
 <script>
 const _i18nCache = {};
 
@@ -292,6 +301,7 @@ document.addEventListener('DOMContentLoaded', function () {
     setLang(localStorage.getItem('uc_lang') || 'fr');
 });
 </script>
+    {{-- === Partials === --}}
     @include('partials.datepicker')
     @include('partials.messagerie')
     @include('partials.tutoriel-overlay')

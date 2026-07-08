@@ -1,6 +1,9 @@
 @extends('layouts.professionnel')
 @section('title', 'Abonnement activé')
 
+{{-- Paiement Stripe réussi : affiche le plan actif (chargé via l'API) --}}
+
+{{-- === Styles === --}}
 @section('styles')
 <style>
     .succes-wrapper { max-width: 560px; margin: 80px auto; text-align: center; }
@@ -14,6 +17,7 @@
 </style>
 @endsection
 
+{{-- === Contenu === --}}
 @section('content')
 <div class="succes-wrapper">
     <div class="succes-icon">✓</div>
@@ -35,9 +39,11 @@
     </div>
 </div>
 
+{{-- === Script === --}}
 <script>
 const API_BASE = '{{ config("services.api.public_url") }}';
 function getToken() { return localStorage.getItem('auth_token'); }
+
 
 async function loadPlanActif() {
     const token = getToken();

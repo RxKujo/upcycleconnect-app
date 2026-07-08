@@ -2,6 +2,8 @@
 
 @section('title', 'Nouvelle publicité')
 
+{{-- Création d'une publicité Pro (soumise à validation, 100 €/mois) --}}
+
 @section('content')
 <div class="main-content" style="max-width:680px;">
 
@@ -10,6 +12,7 @@
         <a href="{{ route('pro.publicites.index') }}" class="btn-secondary btn-sm">← Retour</a>
     </div>
 
+    {{-- === Formulaire === --}}
     <div class="card">
         <form method="POST" action="{{ route('pro.publicites.store') }}">
             @csrf
@@ -37,6 +40,7 @@
                 @error('url_cible')<p style="color:#A4243B;font-size:0.8rem;margin-top:4px;">{{ $message }}</p>@enderror
             </div>
 
+            {{-- Période de diffusion --}}
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
                 <div>
                     <label class="font-mono" style="font-size:0.75rem; display:block; margin-bottom:6px;"><span data-i18n="prod.ads.f.start">Date de début</span></label>
@@ -50,6 +54,7 @@
                 </div>
             </div>
 
+            {{-- Rappel tarif --}}
             <div style="background:#f9f5e7; border:2px solid #D8C99B; padding:14px; margin-bottom:24px; font-family:'DM Mono',monospace; font-size:0.8rem; color:#666;">
                 💰 Tarif : <strong style="color:#120309;">100 €/mois</strong> — facturation mensuelle via Stripe.<br>
                 ⏳ Votre publicité sera <strong>soumise à validation</strong> avant mise en ligne.

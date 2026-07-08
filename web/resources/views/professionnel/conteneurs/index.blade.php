@@ -2,9 +2,12 @@
 
 @section('title', 'Mes commandes en conteneur')
 
+{{-- Commandes à récupérer en conteneur : validation par code-barre et liste en attente --}}
+
 @section('content')
 <div class="main-content">
 
+    {{-- === En-tête === --}}
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
         <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.containers.title">Commandes en conteneur</span></h1>
         <div style="display:flex; gap:10px;">
@@ -13,6 +16,7 @@
         </div>
     </div>
 
+    {{-- === Messages flash === --}}
     @if(session('success'))
         <div style="background:#e8f5e9;border:2px solid #244F26;padding:12px 20px;margin-bottom:24px;font-family:'DM Mono',monospace;font-size:0.85rem;">
             {{ session('success') }}
@@ -63,11 +67,12 @@ Délai de récupération : <strong>7 jours</strong> à compter du dépôt. Pass�
                         → Itinéraire Google Maps
                     </a>
                 </div>
+                {{-- Délai limite et code-barre --}}
                 <div style="text-align:right;">
                     @if(!empty($cmd['date_limite_recuperation']))
                         @php
                             $limite = \Carbon\Carbon::parse($cmd['date_limite_recuperation']);
-                            // diffInDays signé (Carbon 3) : > 0 = jours restants, < 0 = déjà dépassé
+                            // diffInDays signé (Carbon 3) : < 0 = délai dépassé
                             $joursRestants = now()->diffInDays($limite, false);
                             $depasse = $joursRestants < 0;
                             $urgence = !$depasse && $joursRestants <= 2;

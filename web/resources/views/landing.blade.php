@@ -1,3 +1,4 @@
+{{-- Vue : page d'accueil publique (landing marketing). Sections : hero, services, chiffres, fonctionnement, abonnements, CTA, footer. Navbar avec etat auth gere en JS via le token stocke localement. --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -677,6 +678,7 @@
 </head>
 <body>
 
+    {{-- === Navbar : marque, ancres de navigation et zone auth (connexion / menu utilisateur) === --}}
     <nav class="landing-nav" id="landing-nav" role="navigation" aria-label="Navigation principale">
         <div class="nav-inner">
             <a href="/" class="nav-brand" aria-label="UpcycleConnect — Accueil">
@@ -717,6 +719,7 @@
         </div>
     </nav>
 
+    {{-- === Hero : titre principal et boutons d'appel a l'action === --}}
     <section class="hero section-light" id="hero" aria-labelledby="hero-title">
         <div class="hero-inner">
             <h1 class="hero-title" id="hero-title">Upcyclez Ensemble</h1>
@@ -737,6 +740,7 @@
         </div>
     </section>
 
+    {{-- === Services : trois cartes (particulier, professionnel, communaute) === --}}
     <section class="section section-light" id="services" aria-labelledby="services-title">
         <div class="section-inner">
             <p class="section-label">Ce que nous offrons</p>
@@ -776,6 +780,7 @@
         </div>
     </section>
 
+    {{-- === Impact : chiffres cles de la plateforme === --}}
     <section class="section section-wheat" id="impact" aria-labelledby="impact-title">
         <div class="section-inner">
             <p class="section-label">Notre impact</p>
@@ -802,6 +807,7 @@
         </div>
     </section>
 
+    {{-- === Comment ca marche : les 4 etapes du parcours utilisateur === --}}
     <section class="section section-light" id="how-it-works" aria-labelledby="how-title">
         <div class="section-inner">
             <p class="section-label">Simple &amp; Efficace</p>
@@ -837,6 +843,7 @@
         </div>
     </section>
 
+    {{-- === Abonnements : grille tarifaire (Gratuit, Eco-Citizen, Essential Pro) === --}}
     <section class="section section-light" id="abonnements" aria-labelledby="pricing-title">
         <div class="section-inner">
             <p class="section-label">Tarifs</p>
@@ -915,6 +922,7 @@
         </div>
     </section>
 
+    {{-- === Banniere CTA finale === --}}
     <section class="cta-banner" id="about" aria-labelledby="cta-title">
         <div class="section-inner cta-inner">
             <h2 class="cta-title" id="cta-title">Prêt à transformer ?</h2>
@@ -927,6 +935,7 @@
         </div>
     </section>
 
+    {{-- === Footer : marque et colonnes de liens (plateforme, entreprise, legal) === --}}
     <footer class="footer" role="contentinfo">
         <div class="section-inner footer-inner">
 
@@ -973,6 +982,7 @@
         </div>
     </footer>
 
+    {{-- === Scripts : ombre de navbar au scroll et affichage auth selon le token local === --}}
     <script>
         // Navbar: ombre au scroll
         (function () {

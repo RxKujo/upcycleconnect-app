@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
+// Espace pro : publicités (liste, création avec visuel uploadé ou URL, suppression), via l'API Go.
 class PublicitesController extends Controller
 {
+    // --- Utilitaires (URL API + token) ---
+
     private function apiUrl(): string
     {
         return rtrim(config('services.api.url', env('API_URL', 'http://localhost:8080')), '/');
@@ -19,6 +22,8 @@ class PublicitesController extends Controller
     {
         return Session::get('pro_token');
     }
+
+    // --- Actions ---
 
     public function index()
     {
@@ -39,6 +44,7 @@ class PublicitesController extends Controller
         return view('professionnel.publicites.create');
     }
 
+    // Crée une publicité (visuel : upload base64 prioritaire, sinon URL ; limite de 5).
     public function store(Request $request)
     {
         $request->validate([
@@ -86,10 +92,7 @@ class PublicitesController extends Controller
             ->with('success', 'Publicité soumise — en attente de validation par l\'équipe UpcycleConnect.');
     }
 
-    /**
-     * Décode un visuel en data URL base64, l'écrit sur le disque média
-     * (publicites/…) et renvoie son URL publique complète — ou null si invalide.
-     */
+    // Décode un visuel base64, l'écrit sur le disque média et renvoie son URL publique (null si invalide).
     private function saveBase64Visuel(string $b64): ?string
     {
         if (!preg_match('/^data:image\/(\w+);base64,/', $b64, $m)) {
@@ -111,6 +114,7 @@ class PublicitesController extends Controller
         return media_url($key);
     }
 
+    // Supprime une publicité (échoue si active ou introuvable).
     public function destroy(int $id)
     {
         $response = Http::withToken($this->token())

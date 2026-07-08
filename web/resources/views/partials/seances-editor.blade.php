@@ -1,8 +1,5 @@
-{{--
-    Éditeur de séances : assistant (1 séance / plusieurs / récurrent) + calendrier visuel.
-    Variables : $seances (array|null existantes), $animateurs (array staff).
-    Sérialise toujours vers seances[i][titre|format|lieu|date_debut|date_fin|animateurs[]].
---}}
+{{-- Éditeur de séances (1 / plusieurs / récurrent + calendrier). Variables : $seances, $animateurs.
+     Sérialise vers seances[i][titre|format|lieu|date_debut|date_fin|animateurs[]]. --}}
 @php
     $animateursList = $animateurs ?? [];
     $initSeances = old('seances');
@@ -20,6 +17,7 @@
     }
 @endphp
 
+{{-- === Styles === --}}
 <style>
     .sc { --sc-line: rgba(18,3,9,0.14); }
     .sc-title { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.04em; margin:0 0 4px; color:var(--coffee); }
@@ -119,6 +117,7 @@
     .sc-btn-green { background:var(--forest); color:var(--cream); }
 </style>
 
+{{-- === Markup === --}}
 <div class="sc" id="scEditor">
     <p class="sc-title">Dates & séances</p>
     <p class="sc-sub">La capacité et le prix (ci-dessus) valent pour l'ensemble de la formation.</p>
@@ -138,7 +137,7 @@
         </label>
     </div>
 
-    {{-- Réglages communs (multi/récurrent) --}}
+    {{-- Réglages communs --}}
     <div class="sc-defaults" id="scDefaults" style="display:none;">
         <p class="sc-defaults-t">⚙ Réglages communs — repris pour chaque nouvelle séance</p>
         <div class="sc-defaults-grid">
@@ -218,13 +217,14 @@
         </div>
     </div>
 
-    {{-- Mode 1 séance : édition inline (pas de calendrier) --}}
+    {{-- Mode 1 séance (inline) --}}
     <div id="scSingle" style="display:none;"></div>
 
-    {{-- Champs postés (reconstruits à chaque changement) --}}
+    {{-- Champs postés --}}
     <div id="scHidden"></div>
 </div>
 
+{{-- === Script === --}}
 <script>
 (function () {
     var ANIMATEURS = @json(collect($animateursList)->map(fn($a) => ['id' => (int)$a['id_utilisateur'], 'nom' => trim(($a['prenom'] ?? '').' '.($a['nom'] ?? ''))])->values());

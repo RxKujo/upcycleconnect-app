@@ -1,8 +1,5 @@
-{{-- Moteur i18n partagé. Applique la langue enregistrée (localStorage uc_lang)
-     sur les éléments [data-i18n] / [data-i18n-html] / [data-i18n-ph], en
-     chargeant le dictionnaire via /api/v1/public/i18n/{code} (repli sur le texte
-     FR d'origine). À inclure dans les layouts internes (particulier, pro,
-     salarié, admin) qui n'embarquent pas déjà le moteur du layout public. --}}
+{{-- Moteur i18n partagé : applique uc_lang sur [data-i18n]/[data-i18n-html]/[data-i18n-ph] (repli FR).
+     À inclure dans les layouts internes (le layout public a déjà le sien). --}}
 <script>
 if (typeof window.__ucI18n === 'undefined') {
     window.__ucI18n = true;

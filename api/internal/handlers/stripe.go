@@ -1,5 +1,8 @@
 package handlers
 
+// Intégration Stripe : abonnements, paiements (Checkout + Payment Intents),
+// portail, webhook et administration.
+
 import (
 	"api/internal/services"
 	"api/pkg/database"
@@ -24,11 +27,13 @@ import (
 	stripewebhook "github.com/stripe/stripe-go/v82/webhook"
 )
 
+// --- Configuration & lecture publique ---
+
 func init() {
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 }
 
-// GetAbonnementsPublic retourne les plans d'abonnement pro avec les prix (public, pas d'auth)
+// GetAbonnementsPublic : plans pro + prix (public, sans auth).
 func GetAbonnementsPublic(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -88,7 +93,7 @@ func GetAbonnementsPublic(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(plans)
 }
 
-// GetStripeConfig retourne la clé publique Stripe au frontend
+// GetStripeConfig : clé publique Stripe pour le frontend.
 func GetStripeConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
@@ -96,7 +101,9 @@ func GetStripeConfig(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// getOrCreateStripeCustomer trouve ou crée un customer Stripe pour un utilisateur
+// --- Création de sessions & paiements ---
+
+// getOrCreateStripeCustomer : customer Stripe existant ou nouveau.
 func getOrCreateStripeCustomer(userId int) (string, error) {
 	var stripeCustomerID sql.NullString
 	var email, nom, prenom string
@@ -135,7 +142,7 @@ func getOrCreateStripeCustomer(userId int) (string, error) {
 	return c.ID, nil
 }
 
-// StripeCheckoutAbonnement crée une Stripe Checkout Session pour un abonnement
+// StripeCheckoutAbonnement : Checkout Session pour un abonnement.
 func StripeCheckoutAbonnement(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -222,7 +229,7 @@ func StripeCheckoutAbonnement(w http.ResponseWriter, r *http.Request, userId int
 	json.NewEncoder(w).Encode(map[string]string{"url": s.URL})
 }
 
-// StripePortal crée une session du portail de gestion Stripe
+// StripePortal : session du portail de gestion Stripe.
 func StripePortal(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -254,7 +261,7 @@ func StripePortal(w http.ResponseWriter, r *http.Request, userId int) {
 	json.NewEncoder(w).Encode(map[string]string{"url": ps.URL})
 }
 
-// StripePaymentIntentCommande crée un Payment Intent pour l'achat d'une annonce
+// StripePaymentIntentCommande : Payment Intent pour l'achat d'une annonce.
 func StripePaymentIntentCommande(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -323,7 +330,7 @@ func StripePaymentIntentCommande(w http.ResponseWriter, r *http.Request, userId 
 	})
 }
 
-// StripePaymentIntentEvenement crée un Payment Intent pour une place d'événement
+// StripePaymentIntentEvenement : Payment Intent pour une place d'événement.
 func StripePaymentIntentEvenement(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -358,7 +365,6 @@ func StripePaymentIntentEvenement(w http.ResponseWriter, r *http.Request, userId
 		return
 	}
 
-	// Vérifier pas déjà inscrit
 	var already int
 	database.DB.QueryRow(
 		`SELECT COUNT(*) FROM inscriptions_evenements WHERE id_evenement = ? AND id_utilisateur = ? AND statut_paiement != 'rembourse'`,
@@ -409,9 +415,8 @@ func StripePaymentIntentEvenement(w http.ResponseWriter, r *http.Request, userId
 	})
 }
 
-// StripePaymentIntentCatalogue crée un Payment Intent pour une formation payante
-// du catalogue (mirroir de StripePaymentIntentEvenement). La réservation effective
-// est créée par le webhook payment_intent.succeeded (handleCataloguePaid).
+// StripePaymentIntentCatalogue : Payment Intent pour une formation payante.
+// La réservation est créée par le webhook (handleCataloguePaid).
 func StripePaymentIntentCatalogue(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -496,7 +501,7 @@ func StripePaymentIntentCatalogue(w http.ResponseWriter, r *http.Request, userId
 	})
 }
 
-// StripePaymentIntentPanier crée un seul Payment Intent pour tout le panier
+// StripePaymentIntentPanier : un seul Payment Intent pour tout le panier.
 func StripePaymentIntentPanier(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -617,7 +622,9 @@ func StripePaymentIntentPanier(w http.ResponseWriter, r *http.Request, userId in
 	})
 }
 
-// StripeWebhook gère tous les événements Stripe
+// --- Webhook Stripe & traitement des événements ---
+
+// StripeWebhook : dispatch de tous les événements Stripe.
 func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 	const maxBodyBytes = int64(65536)
 	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
@@ -665,10 +672,9 @@ func StripeWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// creerFacture enregistre une facture légale pour un paiement encaissé.
-// Idempotent : le numéro est dérivé de l'identifiant Stripe (contrainte UNIQUE
-// sur numero_facture) → un webhook rejoué est silencieusement ignoré via
-// INSERT IGNORE. TVA 20 % : montant_ht = montant_ttc / 1.20.
+// creerFacture enregistre une facture légale (TVA 20 %).
+// Idempotent : numero_facture dérivé de l'ID Stripe (UNIQUE + INSERT IGNORE),
+// donc un webhook rejoué est ignoré.
 func creerFacture(idUtilisateur int, montantTTC float64, typeFacture, service, stripeID string) {
 	if idUtilisateur <= 0 || montantTTC <= 0 {
 		return
@@ -733,8 +739,7 @@ func handleCheckoutSessionCompleted(event stripe.Event) {
 		VALUES (?, ?, NOW(), TRUE, ?, FALSE)
 	`, userId, idAbonnement, subID)
 
-	// Facture du paiement initial de l'abonnement (les renouvellements sont
-	// facturés par handleInvoicePaymentSucceeded).
+	// Paiement initial de l'abonnement (renouvellements : handleInvoicePaymentSucceeded).
 	factRef := subID
 	if factRef == "" {
 		factRef = s.ID
@@ -763,12 +768,8 @@ func handlePaymentIntentSucceeded(event stripe.Event) {
 	}
 }
 
-// insertCommandeWithRetry insère une commande + marque l'annonce vendue en transaction.
-// Retry jusqu'à 3 fois sur deadlock, idempotent grâce à la contrainte UNIQUE (stripe_payment_intent, id_annonce).
-// insertCommandeWithRetry insère une commande idempotente et retourne l'id_commande créé (0 si doublon).
-// conteneurDeAnnonce retourne l'id du conteneur désigné sur l'annonce (mode
-// conteneur), ou nil (don/main propre). La commande hérite ainsi du point de
-// collecte choisi par le vendeur, indispensable au suivi logistique.
+// conteneurDeAnnonce : id du conteneur désigné sur l'annonce, ou nil (main propre).
+// La commande hérite du point de collecte pour le suivi logistique.
 func conteneurDeAnnonce(idAnnonce int) *int {
 	var idc sql.NullInt64
 	if err := database.DB.QueryRow(`SELECT id_conteneur FROM annonces WHERE id_annonce = ?`, idAnnonce).Scan(&idc); err == nil && idc.Valid {
@@ -778,6 +779,9 @@ func conteneurDeAnnonce(idAnnonce int) *int {
 	return nil
 }
 
+// insertCommandeWithRetry : commande + annonce vendue en transaction. Idempotent
+// (UNIQUE stripe_payment_intent, id_annonce), retry x3 sur deadlock. Retourne
+// l'id_commande (0 si doublon).
 func insertCommandeWithRetry(piID string, idAnnonce, idAcheteur int, commissionPct, commission float64, dateLimite time.Time, idConteneur *int) (int64, error) {
 	for attempt := 0; attempt < 3; attempt++ {
 		tx, err := database.DB.Begin()
@@ -876,7 +880,7 @@ func handlePanierPaid(pi *stripe.PaymentIntent) {
 		return
 	}
 
-	// Une seule facture pour l'ensemble du panier (montant total réellement payé).
+	// Une seule facture pour tout le panier (montant total payé).
 	creerFacture(idAcheteur, float64(pi.Amount)/100, "commande", "Achat panier", pi.ID)
 
 	for _, entry := range strings.Split(itemsMeta, "|") {
@@ -941,9 +945,9 @@ func handleEvenementPaid(pi *stripe.PaymentIntent) {
 	services.AwardScoreForEvenement(idUtilisateur, idEvenement)
 }
 
-// handleCataloguePaid finalise une réservation de formation payante après paiement
-// Stripe. Idempotent grâce à la clé unique (id_catalogue_item, id_utilisateur) :
-// un webhook rejoué fait un UPDATE (RowsAffected=2) et ne re-décrémente pas les places.
+// handleCataloguePaid finalise une réservation de formation payante.
+// Idempotent (UNIQUE id_catalogue_item, id_utilisateur) : un rejeu fait un UPDATE
+// et ne re-décrémente pas les places.
 func handleCataloguePaid(pi *stripe.PaymentIntent) {
 	var idItem, idUtilisateur int
 	fmt.Sscanf(pi.Metadata["id_catalogue_item"], "%d", &idItem)
@@ -961,7 +965,7 @@ func handleCataloguePaid(pi *stripe.PaymentIntent) {
 		return
 	}
 
-	// RowsAffected == 1 → insertion réelle (1ère réservation) : on décrémente + planning.
+	// RowsAffected == 1 → 1ère réservation : décrémenter + planning.
 	if aff, _ := res.RowsAffected(); aff == 1 {
 		database.DB.Exec(
 			`UPDATE catalogue_items SET nb_places_dispo = GREATEST(0, nb_places_dispo - 1) WHERE id_catalogue_item = ?`,
@@ -1003,7 +1007,7 @@ func handleSubscriptionDeleted(event stripe.Event) {
 		sub.ID,
 	)
 
-	// Publicité — marquer comme expirée si c'est une sub de pub
+	// Pub : marquer expirée si c'est une sub de pub.
 	if sub.Metadata["type"] == "publicite" {
 		services.ExpirerPubliciteStripe(sub.ID) //nolint:errcheck
 	}
@@ -1040,8 +1044,8 @@ func handleInvoicePaymentSucceeded(event stripe.Event) {
 	montant := float64(invoice.AmountPaid) / 100
 	isCreate := invoice.BillingReason == stripe.InvoiceBillingReasonSubscriptionCreate
 
-	// Abonnement de plan Pro : la facture initiale est déjà émise par
-	// checkout.session.completed → ici on ne facture que les renouvellements.
+	// Plan Pro : facture initiale déjà émise par checkout.session.completed,
+	// ici on ne facture que les renouvellements.
 	var uid int
 	if database.DB.QueryRow(
 		`SELECT id_utilisateur FROM souscriptions WHERE stripe_subscription_id = ? ORDER BY date_debut DESC LIMIT 1`,
@@ -1055,7 +1059,7 @@ func handleInvoicePaymentSucceeded(event stripe.Event) {
 		return
 	}
 
-	// Publicité Pro : pas de checkout session → on facture aussi le 1er paiement.
+	// Pub Pro : pas de checkout session, on facture aussi le 1er paiement.
 	var pid int
 	if database.DB.QueryRow(
 		`SELECT id_professionnel FROM publicites WHERE stripe_subscription_id = ? LIMIT 1`,
@@ -1070,7 +1074,9 @@ func handleInvoicePaymentSucceeded(event stripe.Event) {
 	log.Printf("Paiement reçu pour souscription inconnue: %s", subID)
 }
 
-// AdminSyncStripePlans crée les Products et Prices Stripe pour tous les abonnements
+// --- Administration & facturation ---
+
+// AdminSyncStripePlans : crée les Products/Prices Stripe pour tous les abonnements.
 func AdminSyncStripePlans(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -1170,7 +1176,7 @@ func AdminSyncStripePlans(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetMaFacturation retourne l'abonnement actif et les factures de l'utilisateur
+// GetMaFacturation : abonnement actif + factures de l'utilisateur.
 func GetMaFacturation(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Header().Set("Content-Type", "application/json")
 

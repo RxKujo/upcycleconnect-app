@@ -1,5 +1,7 @@
 package handlers
 
+// Utilisateurs : profil courant, admin des comptes, abonnements, export/anonymisation RGPD.
+
 import (
 	"api/internal/middleware"
 	"api/internal/models"
@@ -13,19 +15,24 @@ import (
 	"time"
 )
 
+// --- Profil de l'utilisateur courant ---
+
+// GetMe : profil complet du connecté (site, niveau de score, plan pro éventuel).
 func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 	var u models.Utilisateur
-	var adresse, photo sql.NullString
+	var adresse, photo, siteNom sql.NullString
 	var siretVerifie, notifPush, notifEmail, estCertifie sql.NullBool
-	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, adresse_complete, photo_profil_url,
-	                 role, est_banni, date_fin_ban, nom_entreprise, numero_siret, siret_verifie, notif_push_active,
-	                 notif_email_active, COALESCE(upcycling_score, 0), est_certifie, date_creation
-	          FROM utilisateurs WHERE id_utilisateur = ?`
+	var siteID sql.NullInt64
+	query := `SELECT u.id_utilisateur, u.nom, u.prenom, u.email, u.telephone, u.ville, u.adresse_complete, u.photo_profil_url,
+	                 u.role, u.est_banni, u.date_fin_ban, u.nom_entreprise, u.numero_siret, u.siret_verifie, u.notif_push_active,
+	                 u.notif_email_active, COALESCE(u.upcycling_score, 0), u.est_certifie, u.date_creation, u.id_site_uc, s.nom_site
+	          FROM utilisateurs u LEFT JOIN site_uc s ON s.id_site = u.id_site_uc
+	          WHERE u.id_utilisateur = ?`
 
 	err := database.DB.QueryRow(query, id).Scan(
 		&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &adresse, &photo,
 		&u.Role, &u.EstBanni, &u.DateFinBan, &u.NomEntreprise, &u.NumeroSiret, &siretVerifie, &notifPush,
-		&notifEmail, &u.UpcyclingScore, &estCertifie, &u.DateCreation)
+		&notifEmail, &u.UpcyclingScore, &estCertifie, &u.DateCreation, &siteID, &siteNom)
 
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -50,13 +57,20 @@ func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 		u.NotifEmailActive = &notifEmail.Bool
 	}
 	u.EstCertifie = estCertifie.Valid && estCertifie.Bool
+	if siteID.Valid {
+		v := int(siteID.Int64)
+		u.IDSiteUC = &v
+	}
+	if siteNom.Valid {
+		u.NomSite = &siteNom.String
+	}
 
-	// Niveau (palier) correspondant au score courant.
+	// Palier correspondant au score courant.
 	if paliers, perr := services.GetPaliers(); perr == nil {
 		u.NiveauScore = services.NiveauPourScore(paliers, u.UpcyclingScore).Nom
 	}
 
-	// Réponse = utilisateur + plan d'abonnement (pour les professionnels).
+	// Réponse = utilisateur + plan d'abonnement (pros).
 	out := struct {
 		models.Utilisateur
 		Plan *middleware.PlanInfo `json:"plan,omitempty"`
@@ -72,8 +86,7 @@ func GetMe(w http.ResponseWriter, r *http.Request, id int) {
 	json.NewEncoder(w).Encode(out)
 }
 
-// GetMyScore retourne le détail de l'Upcycling Score de l'utilisateur courant
-// (niveau, prochain palier, déchets évités, progression, barème complet).
+// GetMyScore : détail de l'Upcycling Score courant (niveau, palier, déchets évités, barème).
 func GetMyScore(w http.ResponseWriter, r *http.Request, id int) {
 	detail, err := services.GetUserScoreDetail(id)
 	if err != nil {
@@ -83,6 +96,7 @@ func GetMyScore(w http.ResponseWriter, r *http.Request, id int) {
 	jsonOK(w, detail, http.StatusOK)
 }
 
+// UpdateMe : champs modifiables du profil courant (téléphone, ville, adresse, photo).
 func UpdateMe(w http.ResponseWriter, r *http.Request, id int) {
 	var req struct {
 		Telephone       *string `json:"telephone"`
@@ -102,8 +116,7 @@ func UpdateMe(w http.ResponseWriter, r *http.Request, id int) {
 	if req.PhotoProfil != nil && *req.PhotoProfil != "" {
 		ext, data, err := decodeBase64Image(*req.PhotoProfil)
 		if err == nil {
-			// generateUUID + extension : un fichier unique par avatar
-			// (l'ancien code réutilisait l'extension comme nom de fichier).
+			// Nom unique par avatar (l'ancien code réutilisait l'extension comme nom).
 			key := "photos/" + generateUUID() + "." + ext
 			if serr := storage.Default().Save(key, data, storage.ContentType(key)); serr == nil {
 				photoURL = &key
@@ -130,8 +143,17 @@ func UpdateMe(w http.ResponseWriter, r *http.Request, id int) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "profil mis à jour avec succès"})
 }
 
+// --- Administration des comptes ---
+
+// GetAllUtilisateurs : liste des utilisateurs (admin).
 func GetAllUtilisateurs(w http.ResponseWriter, r *http.Request) {
-	rows, err := database.DB.Query("SELECT id_utilisateur, nom, prenom, email, role, est_banni FROM utilisateurs")
+	rows, err := database.DB.Query(`
+		SELECT u.id_utilisateur, u.nom, u.prenom, u.email, u.role, u.est_banni,
+		       u.ville, u.nom_entreprise, COALESCE(u.upcycling_score, 0), COALESCE(u.est_certifie, false),
+		       u.date_creation, s.nom_site
+		FROM utilisateurs u
+		LEFT JOIN site_uc s ON s.id_site = u.id_site_uc
+		ORDER BY u.nom, u.prenom`)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -140,41 +162,88 @@ func GetAllUtilisateurs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var utilisateurs []map[string]interface{}
+	utilisateurs := []map[string]interface{}{}
 	for rows.Next() {
-		var id int
+		var id, score int
 		var nom, prenom, email, role string
-		var estBanni bool
-		if err := rows.Scan(&id, &nom, &prenom, &email, &role, &estBanni); err == nil {
-			utilisateurs = append(utilisateurs, map[string]interface{}{
-				"id_utilisateur": id, "nom": nom, "prenom": prenom, "email": email, "role": role, "est_banni": estBanni,
-			})
+		var estBanni, estCertifie bool
+		var ville, entreprise, nomSite sql.NullString
+		var dateCreation time.Time
+		if err := rows.Scan(&id, &nom, &prenom, &email, &role, &estBanni,
+			&ville, &entreprise, &score, &estCertifie, &dateCreation, &nomSite); err != nil {
+			continue
 		}
+		utilisateurs = append(utilisateurs, map[string]interface{}{
+			"id_utilisateur":  id,
+			"nom":             nom,
+			"prenom":          prenom,
+			"email":           email,
+			"role":            role,
+			"est_banni":       estBanni,
+			"ville":           nullableString(ville),
+			"nom_entreprise":  nullableString(entreprise),
+			"upcycling_score": score,
+			"est_certifie":    estCertifie,
+			"date_creation":   dateCreation,
+			"nom_site":        nullableString(nomSite),
+		})
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(utilisateurs)
 }
 
+// GetUtilisateur : détail d'un utilisateur par id (admin).
 func GetUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	var u models.Utilisateur
-	query := `SELECT id_utilisateur, nom, prenom, email, telephone, ville, role, est_banni, date_fin_ban, nom_entreprise, numero_siret, date_creation,
-	                 COALESCE(upcycling_score, 0), COALESCE(est_certifie, false)
-	          FROM utilisateurs WHERE id_utilisateur = ?`
+	var siteID sql.NullInt64
+	var siteNom sql.NullString
+	query := `SELECT u.id_utilisateur, u.nom, u.prenom, u.email, u.telephone, u.ville, u.role, u.est_banni, u.date_fin_ban, u.nom_entreprise, u.numero_siret, u.date_creation,
+	                 COALESCE(u.upcycling_score, 0), COALESCE(u.est_certifie, false), u.id_site_uc, s.nom_site
+	          FROM utilisateurs u LEFT JOIN site_uc s ON s.id_site = u.id_site_uc
+	          WHERE u.id_utilisateur = ?`
 	err := database.DB.QueryRow(query, id).Scan(
 		&u.IDUtilisateur, &u.Nom, &u.Prenom, &u.Email, &u.Telephone, &u.Ville, &u.Role, &u.EstBanni, &u.DateFinBan, &u.NomEntreprise, &u.NumeroSiret, &u.DateCreation,
-		&u.UpcyclingScore, &u.EstCertifie)
+		&u.UpcyclingScore, &u.EstCertifie, &siteID, &siteNom)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"erreur": "utilisateur non trouvé"})
 		return
 	}
+	if siteID.Valid {
+		v := int(siteID.Int64)
+		u.IDSiteUC = &v
+	}
+	if siteNom.Valid {
+		u.NomSite = &siteNom.String
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(u)
 }
 
+// AssignUserSite : rattache un utilisateur à un site (id_site null/0 => détache).
+func AssignUserSite(w http.ResponseWriter, r *http.Request, id string) {
+	var req struct {
+		IDSite *int `json:"id_site"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonErr(w, "données invalides", http.StatusBadRequest)
+		return
+	}
+	var site interface{} // NULL par défaut → détaché
+	if req.IDSite != nil && *req.IDSite > 0 {
+		site = *req.IDSite
+	}
+	if _, err := database.DB.Exec("UPDATE utilisateurs SET id_site_uc = ? WHERE id_utilisateur = ?", site, id); err != nil {
+		jsonErr(w, "impossible d'affecter le site", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]string{"message": "site affecté"}, http.StatusOK)
+}
+
+// BanUtilisateur : bannit jusqu'à la date de fin fournie.
 func BanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	var req struct {
 		DateFinBan string `json:"date_fin_ban"`
@@ -200,6 +269,7 @@ func BanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "utilisateur banni"})
 }
 
+// UnbanUtilisateur : lève le bannissement.
 func UnbanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	query := `UPDATE utilisateurs SET est_banni = false, date_fin_ban = NULL WHERE id_utilisateur = ?`
 	_, err := database.DB.Exec(query, id)
@@ -214,6 +284,7 @@ func UnbanUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "utilisateur débanni"})
 }
 
+// GetMesEvenementsInscrits : événements où le connecté est inscrit.
 func GetMesEvenementsInscrits(w http.ResponseWriter, r *http.Request, userId int) {
 	rows, err := database.DB.Query(`
 		SELECT e.id_evenement, e.titre, e.date_debut, e.date_fin, e.lieu, e.statut, i.statut_paiement, i.date_inscription
@@ -251,6 +322,7 @@ func GetMesEvenementsInscrits(w http.ResponseWriter, r *http.Request, userId int
 	jsonOK(w, result, http.StatusOK)
 }
 
+// UpdateNotifications : préférences de notifications (push, email) du connecté.
 func UpdateNotifications(w http.ResponseWriter, r *http.Request, userId int) {
 	var req struct {
 		NotifPushActive  *bool `json:"notif_push_active"`
@@ -269,6 +341,7 @@ func UpdateNotifications(w http.ResponseWriter, r *http.Request, userId int) {
 	jsonOK(w, map[string]string{"message": "préférences mises à jour"}, http.StatusOK)
 }
 
+// DeleteUtilisateur : suppression définitive (admin).
 func DeleteUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("DELETE FROM utilisateurs WHERE id_utilisateur = ?", id)
 	if err != nil {
@@ -278,6 +351,7 @@ func DeleteUtilisateur(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "utilisateur supprimé"}, http.StatusOK)
 }
 
+// DeleteMe : anonymise le compte courant (RGPD) — efface les données perso et bannit.
 func DeleteMe(w http.ResponseWriter, r *http.Request, userId int) {
 	anon := fmt.Sprintf("supprime_%d", userId)
 	_, err := database.DB.Exec(`
@@ -296,6 +370,7 @@ func DeleteMe(w http.ResponseWriter, r *http.Request, userId int) {
 	jsonOK(w, map[string]string{"message": "compte anonymisé — vos données personnelles ont été effacées"}, http.StatusOK)
 }
 
+// UpdateUserRole : change le rôle (valeurs autorisées uniquement).
 func UpdateUserRole(w http.ResponseWriter, r *http.Request, id string) {
 	var req struct {
 		Role string `json:"role"`
@@ -317,6 +392,9 @@ func UpdateUserRole(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "rôle mis à jour"}, http.StatusOK)
 }
 
+// --- Abonnements et souscriptions ---
+
+// GetAbonnements : formules d'abonnement disponibles + fonctionnalités.
 func GetAbonnements(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query(`
 		SELECT id_abonnement, nom, prix_mensuel, prix_annuel, type_cible, description, couleur,
@@ -367,6 +445,8 @@ func GetAbonnements(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, result, http.StatusOK)
 }
 
+// --- Helpers SQL nullable -> JSON (nil si non renseigné) ---
+
 func nullableString(v sql.NullString) interface{} {
 	if v.Valid {
 		return v.String
@@ -388,6 +468,7 @@ func nullableInt(v sql.NullInt64) interface{} {
 	return nil
 }
 
+// GetUserSouscription : souscription active d'un utilisateur (null si aucune).
 func GetUserSouscription(w http.ResponseWriter, r *http.Request, id string) {
 	var sub map[string]interface{}
 	row := database.DB.QueryRow(`
@@ -412,6 +493,7 @@ func GetUserSouscription(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, sub, http.StatusOK)
 }
 
+// AssignSouscription : assigne une souscription admin (désactive l'ancienne active).
 func AssignSouscription(w http.ResponseWriter, r *http.Request, id string) {
 	var req struct {
 		IDAbonnement int    `json:"id_abonnement"`
@@ -436,6 +518,7 @@ func AssignSouscription(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "abonnement assigné"}, http.StatusCreated)
 }
 
+// RevokeSouscription : révoque la souscription active.
 func RevokeSouscription(w http.ResponseWriter, r *http.Request, id string) {
 	_, err := database.DB.Exec("UPDATE souscriptions SET est_active = FALSE WHERE id_utilisateur = ? AND est_active = TRUE", id)
 	if err != nil {
@@ -445,6 +528,9 @@ func RevokeSouscription(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "abonnement révoqué"}, http.StatusOK)
 }
 
+// --- Export RGPD ---
+
+// ExportUserData : PDF récapitulant les données perso (profil, annonces, commandes, inscriptions, forum).
 func ExportUserData(w http.ResponseWriter, r *http.Request, userId int) {
 	// ── Profil complet ──
 	var u models.Utilisateur
@@ -587,8 +673,7 @@ func ExportUserData(w http.ResponseWriter, r *http.Request, userId int) {
 	w.Write(pdfBytes)
 }
 
-// ExportSectionRows exécute une requête et transforme chaque ligne en []string
-// via mapper. Retourne une slice vide (jamais nil) si aucune donnée ou erreur.
+// ExportSectionRows : exécute query, mappe chaque ligne en []string. Slice vide (jamais nil) si erreur.
 func ExportSectionRows(query string, userId int, mapper func(*sql.Rows) []string) [][]string {
 	out := [][]string{}
 	rows, err := database.DB.Query(query, userId)

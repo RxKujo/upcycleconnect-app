@@ -1,3 +1,6 @@
+// Fichier cors.go : gestion des en-têtes CORS avec liste blanche d'origines
+// (origines par défaut + variable d'environnement CORS_ALLOWED_ORIGINS).
+
 package middleware
 
 import (
@@ -40,6 +43,8 @@ func loadAllowedOrigins() map[string]bool {
 	return allowedOrigins
 }
 
+// CORS positionne les en-têtes CORS sur la réponse ; l'origine n'est reflétée
+// (avec credentials) que si elle figure dans la liste blanche.
 func CORS(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
 

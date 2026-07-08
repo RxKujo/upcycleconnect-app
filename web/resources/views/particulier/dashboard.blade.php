@@ -3,6 +3,8 @@
 @section('pub_slot')@include('partials.pub-slot')@endsection
 @section('title', 'Tableau de bord')
 
+{{-- Tableau de bord particulier : score, raccourcis et activité récente. --}}
+
 @section('styles')
 <style>
     .dash-hero { background: var(--coffee); color: var(--cream); border: var(--border); box-shadow: var(--shadow); padding: 32px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
@@ -33,6 +35,7 @@
 <div id="loading" class="loading" data-i18n="common.loading">Chargement de votre espace...</div>
 
 <div id="dash" style="display:none;">
+    {{-- === En-tête + score === --}}
     <div class="dash-hero">
         <div>
             <div class="dash-hello" id="hero-hello">Bonjour</div>
@@ -45,6 +48,7 @@
         </div>
     </div>
 
+    {{-- === Raccourcis === --}}
     <div class="dash-cards">
         <a href="{{ route('particulier.annonces.index') }}" class="dash-card">
             <span class="label" data-i18n="nav.mylistings">Mes annonces</span>
@@ -63,6 +67,7 @@
         </a>
     </div>
 
+    {{-- === Activité récente === --}}
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <h3 class="dash-section-title" style="margin-bottom:0; border:none; padding:0;" data-i18n="dash.recentactivity">Activité récente</h3>
@@ -76,12 +81,15 @@
 
 @endsection
 
+{{-- === Scripts === --}}
 @section('scripts')
 <script>
+// Échappe le HTML (anti-injection).
 function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
+// Charge le profil puis compteurs et activité.
 async function loadDashboard() {
     let user = null;
     try {
@@ -133,6 +141,7 @@ const ANNONCE_STATUTS = {
     retiree:    { label: 'Retirée',    cls: 'badge-waiting' }
 };
 
+// Annonces : compteur + activité récente.
 async function loadAnnoncesSummary() {
     const container = document.getElementById('activity');
     try {

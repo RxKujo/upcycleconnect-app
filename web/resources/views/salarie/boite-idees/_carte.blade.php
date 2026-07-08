@@ -1,3 +1,4 @@
+{{-- Partial : carte d'une idée (flux + archives) --}}
 @php
     $statuts   = config('idees.statuts');
     $stKey     = $idee['statut'] ?? config('idees.statut_defaut');
@@ -13,7 +14,7 @@
 
 <div class="idee-row" data-votes="{{ $nbVotes }}" data-date="{{ $ts }}" style="border-left:8px solid {{ $st['bg'] }};">
 
-    {{-- Colonne vote (up / down style Reddit) --}}
+    {{-- Colonne vote --}}
     <div class="idee-votebox" data-id="{{ $id }}">
         <button type="button" class="vote-arrow up {{ $monVote === 1 ? 'active' : '' }}" data-val="1"
                 title="J'aime" {{ $isArchive ? 'disabled' : '' }}>▲</button>

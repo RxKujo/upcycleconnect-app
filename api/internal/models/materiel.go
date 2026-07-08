@@ -1,3 +1,6 @@
+// Fichier materiel.go : structures de l'inventaire de matériel prêté pour les
+// ateliers/conférences et de leurs réservations.
+
 package models
 
 import "time"

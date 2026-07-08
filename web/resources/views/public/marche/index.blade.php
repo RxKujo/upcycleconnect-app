@@ -1,5 +1,7 @@
 @extends('layouts.public')
 
+{{-- Marché public : liste des annonces, recherche et filtres (côté client). --}}
+
 @section('pub_slot')@include('partials.pub-slot')@endsection
 
 @section('title', 'Marché')
@@ -11,14 +13,17 @@
     <h1 class="page-title" data-i18n="market.title">Le Marché</h1>
     <p class="page-subtitle" data-i18n="market.subtitle">Parcourez les annonces de don et de vente de la communauté</p>
 
+    {{-- === Barre de recherche === --}}
     <div style="margin-bottom:16px;">
         <input type="search" id="search-marche" placeholder="Rechercher une annonce…" data-i18n-ph="market.search"
                style="width:100%;max-width:480px;padding:10px 16px;border:var(--border);font-family:'DM Mono',monospace;font-size:0.9rem;background:white;outline:none;">
     </div>
 
     @php
+        // code matériau -> libellé
         $materiauLabels = collect($materiaux)->pluck('libelle', 'code')->all();
     @endphp
+    {{-- === Filtres === --}}
     <div class="filters-row" id="filters">
         <button class="filter-btn active" data-filter="all" data-i18n="market.filter.all">Tout</button>
         <button class="filter-btn" data-filter="don" data-i18n="market.filter.don">Dons</button>
@@ -28,6 +33,7 @@
         @endforeach
     </div>
 
+    {{-- === Grille des annonces === --}}
     @if(count($annonces) > 0)
     <div class="grid-4" id="annonces-grid">
         @foreach($annonces as $annonce)
@@ -118,10 +124,12 @@
 @endsection
 
 @section('scripts')
+{{-- === Filtrage côté client (filtre + recherche) === --}}
 <script>
 let activeFilter = 'all';
 let searchTerm = '';
 
+// Affiche/masque les cartes selon le filtre et la recherche
 function applyFilters() {
     document.querySelectorAll('.annonce-card').forEach(card => {
         const matchFilter = activeFilter === 'all'

@@ -1,11 +1,7 @@
 package services
 
-// Boîte à idées — logique métier isolée et testable :
-// cycle de vie (statuts), tri (popularité / récence), permissions par rôle
-// et exclusion des idées archivées du flux principal.
-//
-// Aucune valeur de statut n'est codée en dur ailleurs : les handlers et les
-// vues s'appuient sur ces constantes / helpers.
+// Boîte à idées — logique métier : statuts, tri, permissions, archivage.
+// Statuts jamais codés en dur ailleurs : handlers et vues utilisent ces constantes.
 
 import (
 	"sort"
@@ -19,14 +15,14 @@ const (
 	StatutIdeeNonRetenu = "non_retenu"
 )
 
-// StatutsIdeeValides liste les transitions autorisées (source de vérité unique).
+// StatutsIdeeValides : statuts acceptés (source de vérité unique).
 var StatutsIdeeValides = map[string]bool{
 	StatutIdeeEnAttente: true,
 	StatutIdeeRealise:   true,
 	StatutIdeeNonRetenu: true,
 }
 
-// IsStatutIdeeValide indique si une valeur de statut est acceptée.
+// IsStatutIdeeValide : statut accepté ?
 func IsStatutIdeeValide(statut string) bool {
 	return StatutsIdeeValides[statut]
 }
@@ -37,19 +33,16 @@ const (
 	TriIdeeRecent    = "recent"
 )
 
-// IdeeTriable expose le minimum nécessaire au tri (découplé du modèle DB).
+// IdeeTriable : minimum nécessaire au tri (découplé du modèle DB).
 type IdeeTriable struct {
 	ID              int
 	NbVotes         int
 	DatePublication time.Time
 }
 
-// TrierIdees ordonne les idées selon le mode demandé, en place.
-//
-//   - TriIdeePopulaire (défaut) : score de votes décroissant ; à votes égaux,
-//     la plus récente d'abord (tie-break déterministe).
-//   - TriIdeeRecent : date de publication décroissante ; à date égale, l'ID le
-//     plus grand d'abord.
+// TrierIdees trie en place. Tie-break déterministe :
+//   - populaire (défaut) : votes desc, puis plus récente d'abord.
+//   - recent : date desc, puis plus grand ID d'abord.
 func TrierIdees(items []IdeeTriable, mode string) {
 	switch mode {
 	case TriIdeeRecent:
@@ -69,7 +62,7 @@ func TrierIdees(items []IdeeTriable, mode string) {
 	}
 }
 
-// NormaliserTri renvoie un mode de tri valide (défaut : populaire).
+// NormaliserTri : mode de tri valide (défaut : populaire).
 func NormaliserTri(mode string) string {
 	if mode == TriIdeeRecent {
 		return TriIdeeRecent
@@ -80,17 +73,14 @@ func NormaliserTri(mode string) string {
 // ─── Permissions ─────────────────────────────────────────────────────────────
 const RoleAdmin = "admin"
 
-// PeutGererIdee : un utilisateur peut modifier / changer le statut / archiver /
-// supprimer une idée s'il en est l'auteur, OU s'il est administrateur.
-// Centralise la règle utilisée par modification, statut, archivage, suppression.
+// PeutGererIdee : auteur ou admin peut gérer une idée (modif/statut/archivage/suppression).
 func PeutGererIdee(role string, estAuteur bool) bool {
 	return role == RoleAdmin || estAuteur
 }
 
 // ─── Exclusion des archivées du flux principal ───────────────────────────────
 
-// EstDansFluxPrincipal : une idée est dans le flux (onglets Populaire/Récent)
-// uniquement si elle n'est pas archivée.
+// EstDansFluxPrincipal : dans le flux (Populaire/Récent) seulement si non archivée.
 func EstDansFluxPrincipal(archivedAt *time.Time) bool {
 	return archivedAt == nil
 }

@@ -2,6 +2,9 @@
 @section('title', 'Upcycling Score — Paliers')
 
 @section('content')
+{{-- Upcycling Score — paliers (admin) : configuration des seuils, couleurs et certifications de chaque palier, avec recalcul global des scores. --}}
+
+{{-- === En-tête : titre et bouton de recalcul global === --}}
 <div class="page-header">
     <h1 class="page-title">Upcycling Score</h1>
     <div class="action-cell">
@@ -20,6 +23,7 @@
     @if(empty($paliers))
         <p style="font-family:'DM Mono',monospace;font-size:0.85rem;opacity:0.5;">Aucun palier configuré.</p>
     @else
+    {{-- === Liste des paliers : une carte-formulaire éditable par palier === --}}
     <div style="display:grid;gap:20px;">
         @foreach($paliers as $palier)
         <div style="border:3px solid {{ $palier['couleur'] ?? 'var(--coffee)' }};padding:24px;background:#fff;box-shadow:var(--shadow-sm);">

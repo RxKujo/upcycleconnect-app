@@ -1,7 +1,10 @@
 @extends('layouts.public')
 @section('title', 'Paiement confirmé')
 
+{{-- Page de retour après paiement Stripe (récap et liens selon le type d'achat). --}}
+
 @section('styles')
+{{-- === Styles === --}}
 .succes-wrapper { max-width: 600px; margin: 80px auto; text-align: center; }
 .succes-icon { font-size: 4rem; color: var(--forest); margin-bottom: 24px; }
 .succes-title { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; letter-spacing: 0.08em; color: var(--forest); margin-bottom: 16px; }
@@ -26,6 +29,7 @@
 
     <div id="loading-state" class="loading-state">Chargement du récapitulatif…</div>
 
+    {{-- === Récapitulatif (rempli par le JS) === --}}
     <div id="succes-details" class="succes-details" style="display:none">
         <div class="succes-detail-row">
             <span class="succes-detail-label">Référence paiement</span>
@@ -41,6 +45,7 @@
         </div>
     </div>
 
+    {{-- === Actions === --}}
     <div class="succes-actions">
         <a href="/mes-commandes" id="link-commandes" class="btn btn-primary" style="display:none">Voir mes commandes</a>
         <a href="#" id="link-profil" class="btn btn-primary" style="display:none">Mon espace</a>
@@ -51,13 +56,16 @@
 @endsection
 
 @section('scripts')
+{{-- === Lecture des paramètres Stripe et affichage du résultat === --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Paramètres renvoyés par Stripe dans l'URL
     const params = new URLSearchParams(window.location.search);
     const piId = params.get('payment_intent');
     const status = params.get('redirect_status');
     const type = params.get('type') || 'panier';
 
+    // Paiement non abouti : mode échec
     if (status !== 'succeeded') {
         document.getElementById('succes-icon') && (document.getElementById('succes-icon').textContent = '✕');
         document.getElementById('succes-title').textContent = 'Paiement échoué';
@@ -74,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('detail-pi').textContent = piId;
     }
 
+    // Récap et liens selon le type d'achat
     if (type === 'panier') {
         document.getElementById('detail-type').textContent = 'Achat d\'objet(s)';
         document.getElementById('link-commandes').style.display = 'inline-flex';

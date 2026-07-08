@@ -5,11 +5,20 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 
+/**
+ * Middleware : restreint l'accès à l'espace professionnel.
+ * Vérifie la présence et la validité du jeton pro en session (expiration, rôle) ;
+ * purge la session et redirige avec un message adapté selon le motif du refus.
+ */
 class ProAuth
 {
     private const LOGIN_ROUTE = '/login';
     private const PRO_SESSION_KEYS = ['pro_token', 'pro_role', 'pro_id'];
 
+    /**
+     * Point d'entrée du middleware : laisse passer si le jeton pro est valide,
+     * sinon nettoie la session et redirige avec le message d'erreur adéquat.
+     */
     public function handle(Request $request, Closure $next)
     {
         $token = session('pro_token');

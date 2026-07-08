@@ -1,5 +1,7 @@
 package handlers
 
+// Conteneurs (back-office) : CRUD + photos, codes-barres, tickets d'incident, miroir GLPI.
+
 import (
 	"api/internal/models"
 	"api/internal/services"
@@ -13,9 +15,10 @@ import (
 	"time"
 )
 
-// notifyAcheteurDepot prévient l'acheteur (pro) par email que son objet est
-// arrivé en conteneur et prêt à être récupéré (complément au push OneSignal,
-// utile en local et si le pro n'a pas activé les push).
+// --- Notifications & photos (helpers) ---
+
+// notifyAcheteurDepot : email « objet arrivé en conteneur » au pro. Complément au
+// push OneSignal (utile en local et si le pro n'a pas activé les push).
 func notifyAcheteurDepot(idCommande int) {
 	var idAcheteur int
 	var email, titre, conteneurRef, adresse, ville, limite string
@@ -53,7 +56,7 @@ func notifyAcheteurDepot(idCommande int) {
 		log.Printf("[notifyAcheteurDepot] envoi email: %v", err)
 	}
 
-	// Push OneSignal en parallèle de l'email, ciblé par External ID (= id acheteur).
+	// Push OneSignal, ciblé par External ID (= id acheteur).
 	pushBody := "« " + titre + " » est arrivé dans le conteneur " + conteneurRef
 	if lieu != "" {
 		pushBody += " (" + lieu + ")"
@@ -68,7 +71,7 @@ func notifyAcheteurDepot(idCommande int) {
 	}
 }
 
-// loadPhotosConteneur retourne les photos d'un conteneur (ordonnées).
+// loadPhotosConteneur : photos ordonnées d'un conteneur.
 func loadPhotosConteneur(idConteneur int) []models.PhotoConteneur {
 	photos := []models.PhotoConteneur{}
 	rows, err := database.DB.Query(
@@ -86,6 +89,9 @@ func loadPhotosConteneur(idConteneur int) []models.PhotoConteneur {
 	return photos
 }
 
+// --- CRUD conteneurs ---
+
+// GetAllConteneurs : tous les conteneurs avec leurs photos.
 func GetAllConteneurs(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query("SELECT id_conteneur, conteneur_ref, adresse, ville, code_postal, latitude, longitude, capacite, statut FROM conteneurs")
 	if err != nil {
@@ -111,6 +117,7 @@ func GetAllConteneurs(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(conteneurs)
 }
 
+// CreateConteneur : crée un conteneur (statut « actif ») + photos.
 func CreateConteneur(w http.ResponseWriter, r *http.Request) {
 	var req models.CreateConteneurRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -140,8 +147,7 @@ func CreateConteneur(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"message": "conteneur créé", "id_conteneur": id})
 }
 
-// insertPhotosConteneur ajoute des photos (chemins relatifs) à un conteneur,
-// en continuant l'ordre après les photos existantes.
+// insertPhotosConteneur : ajoute des photos, en continuant l'ordre existant.
 func insertPhotosConteneur(idConteneur int, urls []string) {
 	if len(urls) == 0 {
 		return
@@ -157,8 +163,8 @@ func insertPhotosConteneur(idConteneur int, urls []string) {
 	}
 }
 
-// UpdateConteneur met à jour les champs d'un conteneur et AJOUTE les nouvelles
-// photos fournies (les photos existantes se gèrent via DeleteConteneurPhoto).
+// UpdateConteneur : maj des champs + AJOUTE les photos fournies
+// (suppression des existantes via DeleteConteneurPhoto).
 func UpdateConteneur(w http.ResponseWriter, r *http.Request, id string) {
 	var req struct {
 		ConteneurRef string   `json:"conteneur_ref"`
@@ -206,7 +212,7 @@ func UpdateConteneur(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "conteneur mis à jour"})
 }
 
-// DeleteConteneurPhoto supprime une photo de la galerie d'un conteneur.
+// DeleteConteneurPhoto : supprime une photo de la galerie.
 func DeleteConteneurPhoto(w http.ResponseWriter, r *http.Request, photoID string) {
 	_, err := database.DB.Exec("DELETE FROM photos_conteneurs WHERE id_photo = ?", photoID)
 	w.Header().Set("Content-Type", "application/json")
@@ -219,6 +225,7 @@ func DeleteConteneurPhoto(w http.ResponseWriter, r *http.Request, photoID string
 	json.NewEncoder(w).Encode(map[string]string{"message": "photo supprimée"})
 }
 
+// GetConteneurDetails : commandes, tickets et photos d'un conteneur.
 func GetConteneurDetails(w http.ResponseWriter, r *http.Request, id string) {
 
 	var commandes []models.CommandeConteneur
@@ -257,6 +264,9 @@ func GetConteneurDetails(w http.ResponseWriter, r *http.Request, id string) {
 	})
 }
 
+// --- Codes-barres (dépôt / récupération) ---
+
+// CreateCodeBarre : enregistre un code-barre lié à une commande.
 func CreateCodeBarre(w http.ResponseWriter, r *http.Request) {
 	var req models.CreateCodeBarreRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -278,6 +288,8 @@ func CreateCodeBarre(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "code création succès"})
 }
 
+// ScanBarcodeAndUpdateCommande : traite un scan et fait avancer la commande
+// selon le type de code (dépôt particulier ou récupération pro).
 func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		CodeValeur string `json:"code_valeur"`
@@ -300,7 +312,7 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 	var newStatut string
 	switch typeCode {
 	case "depot_particulier":
-		// Dépôt par le particulier : l'objet entre en conteneur, on notifie le pro.
+		// Dépôt particulier : l'objet entre en conteneur, on notifie le pro.
 		newStatut = "en_conteneur"
 		database.DB.Exec("UPDATE codes_barres SET date_utilisation = ? WHERE id_code_barre = ?", time.Now(), idCodeBarre) //nolint:errcheck
 		database.DB.Exec("UPDATE commandes SET statut = 'en_conteneur' WHERE id_commande = ?", idCommande)                 //nolint:errcheck
@@ -316,13 +328,12 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 				services.NotifierObjetsEnConteneur(playerID, cmdID, conteneurRef)
 			}
 		}(idCommande)
-		// Email de complément (toujours envoyé, indispensable en local).
+		// Email de complément (indispensable en local).
 		go notifyAcheteurDepot(idCommande)
 
 	case "recuperation_pro":
-		// La récupération est normalement en self-scan côté pro. Ici l'admin peut
-		// la forcer (litige) ; on délègue au MÊME point unique (finaliserRecuperation)
-		// pour un comportement strictement identique (statut + score + badges).
+		// Récupération normalement en self-scan pro ; ici l'admin peut la forcer (litige).
+		// Délégué à finaliserRecuperation (même point unique) : statut + score + badges.
 		newStatut = "recuperee"
 		var acheteurID int
 		database.DB.QueryRow("SELECT id_acheteur FROM commandes WHERE id_commande = ?", idCommande).Scan(&acheteurID) //nolint:errcheck
@@ -345,6 +356,9 @@ func ScanBarcodeAndUpdateCommande(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "commande mise à jour", "nouveau_statut": newStatut})
 }
 
+// --- Tickets d'incident & miroir GLPI ---
+
+// ResolveTicket : marque le ticket résolu et propage à GLPI.
 func ResolveTicket(w http.ResponseWriter, r *http.Request, id string) {
 	query := `UPDATE tickets_incidents SET statut = 'resolu', date_resolution = ? WHERE id_ticket = ?`
 	_, err := database.DB.Exec(query, time.Now(), id)
@@ -354,7 +368,7 @@ func ResolveTicket(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	// Miroir GLPI : passe le ticket correspondant en « résolu » côté GLPI.
+	// Miroir GLPI : passe le ticket en « résolu » côté GLPI.
 	go syncTicketResoluGLPI(id)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -362,8 +376,7 @@ func ResolveTicket(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "ticket résolu"})
 }
 
-// mirrorSignalementToGLPI crée un ticket GLPI pour un signalement de forum
-// (miroir support), et stocke l'id GLPI. No-op si GLPI n'est pas configuré.
+// mirrorSignalementToGLPI : crée un ticket GLPI pour un signalement forum et stocke l'id. No-op si GLPI non configuré.
 func mirrorSignalementToGLPI(sigID int64, idMessage int, motif string) {
 	if !glpi.Configured() {
 		return
@@ -380,7 +393,7 @@ func mirrorSignalementToGLPI(sigID int64, idMessage int, motif string) {
 	}
 }
 
-// syncTicketResoluGLPI propage la résolution vers GLPI si le ticket y est miroité.
+// syncTicketResoluGLPI : propage la résolution à GLPI si le ticket y est miroité.
 func syncTicketResoluGLPI(id string) {
 	var glpiID string
 	if err := database.DB.QueryRow(

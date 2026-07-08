@@ -2,9 +2,12 @@
 
 @section('title', 'Dashboard Expert Pro — ' . $annee)
 
+{{-- Dashboard annuel Expert Pro : impact, matériaux, badges --}}
+
 @section('content')
 <div class="main-content">
 
+    {{-- === En-tête === --}}
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
         <div>
             <h1 class="font-bebas" style="font-size:2.4rem;"><span data-i18n="prod.expert.title">Dashboard Expert Pro</span></h1>

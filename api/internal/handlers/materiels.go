@@ -1,5 +1,7 @@
 package handlers
 
+// Inventaire matériel par site : CRUD, photos (S3/MinIO), réservations. Visibilité limitée au site du salarié.
+
 import (
 	"api/internal/models"
 	"api/pkg/database"
@@ -10,7 +12,7 @@ import (
 	"strconv"
 )
 
-// États autorisés pour un matériel.
+// États autorisés.
 var etatsMateriel = map[string]bool{"neuf": true, "bon": true, "use": true, "a_reparer": true}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -32,8 +34,7 @@ func loadPhotosMateriel(idMateriel int) []models.PhotoMateriel {
 	return photos
 }
 
-// insertPhotosMateriel décode des images base64, les pousse sur le stockage
-// (S3/MinIO) et enregistre leurs clés, en continuant l'ordre existant.
+// insertPhotosMateriel : décode le base64, pousse sur le stockage, enregistre les clés (ordre continué).
 func insertPhotosMateriel(idMateriel int, images []string) {
 	if len(images) == 0 {
 		return
@@ -62,8 +63,7 @@ func insertPhotosMateriel(idMateriel int, images []string) {
 	}
 }
 
-// loadReservationActive renvoie la réservation active (non retournée) d'un
-// matériel, avec le titre de l'événement associé, ou nil.
+// loadReservationActive : réservation active (non retournée) + titre événement, ou nil.
 func loadReservationActive(idMateriel int) *models.ReservationMateriel {
 	var r models.ReservationMateriel
 	var idEv sql.NullInt64
@@ -112,28 +112,26 @@ func scanMateriel(rows *sql.Rows) (models.Materiel, error) {
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
-// userSite renvoie le site (id_site_uc) du salarié, s'il en a un.
+// userSite : site (id_site_uc) du salarié, s'il en a un.
 func userSite(userId int) sql.NullInt64 {
 	var site sql.NullInt64
 	database.DB.QueryRow("SELECT id_site_uc FROM utilisateurs WHERE id_utilisateur = ?", userId).Scan(&site) //nolint:errcheck
 	return site
 }
 
-// GetMateriels liste l'inventaire visible par le salarié : le matériel de son
-// site + le matériel sans site (partagé). Un salarié sans site voit tout.
+// GetMateriels : inventaire du site du salarié (+ matériel sans site). Sans site => liste vide.
 func GetMateriels(w http.ResponseWriter, r *http.Request, userId int) {
 	site := userSite(userId)
 
-	var rows *sql.Rows
-	var err error
-	if site.Valid {
-		rows, err = database.DB.Query(
-			"SELECT id_materiel, nom, description, etat, est_disponible, id_site FROM materiels WHERE id_site = ? OR id_site IS NULL ORDER BY nom",
-			site.Int64)
-	} else {
-		rows, err = database.DB.Query(
-			"SELECT id_materiel, nom, description, etat, est_disponible, id_site FROM materiels ORDER BY nom")
+	// Pas de site => inventaire vide.
+	if !site.Valid {
+		jsonOK(w, []models.Materiel{}, http.StatusOK)
+		return
 	}
+
+	rows, err := database.DB.Query(
+		"SELECT id_materiel, nom, description, etat, est_disponible, id_site FROM materiels WHERE id_site = ? OR id_site IS NULL ORDER BY nom",
+		site.Int64)
 	if err != nil {
 		jsonErr(w, errServeur, http.StatusInternalServerError)
 		return
@@ -156,7 +154,6 @@ func GetMateriels(w http.ResponseWriter, r *http.Request, userId int) {
 	jsonOK(w, list, http.StatusOK)
 }
 
-// GetMateriel renvoie le détail d'un matériel.
 func GetMateriel(w http.ResponseWriter, r *http.Request, id string) {
 	idMateriel, err := strconv.Atoi(id)
 	if err != nil {
@@ -188,7 +185,7 @@ func GetMateriel(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, m, http.StatusOK)
 }
 
-// CreateMateriel ajoute un objet à l'inventaire.
+// CreateMateriel ajoute un matériel à l'inventaire.
 func CreateMateriel(w http.ResponseWriter, r *http.Request, userId int) {
 	var req models.CreateMaterielRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -210,7 +207,7 @@ func CreateMateriel(w http.ResponseWriter, r *http.Request, userId int) {
 	if req.EstDisponible != nil {
 		dispo = *req.EstDisponible
 	}
-	// Par défaut, le matériel est rattaché au site du salarié créateur.
+	// Par défaut : rattaché au site du créateur.
 	if req.IDSite == nil {
 		if site := userSite(userId); site.Valid {
 			v := int(site.Int64)
@@ -232,7 +229,7 @@ func CreateMateriel(w http.ResponseWriter, r *http.Request, userId int) {
 	jsonOK(w, map[string]interface{}{"message": "matériel créé", "id_materiel": id}, http.StatusCreated)
 }
 
-// UpdateMateriel met à jour un matériel et AJOUTE les nouvelles photos.
+// UpdateMateriel : maj du matériel ; AJOUTE les nouvelles photos.
 func UpdateMateriel(w http.ResponseWriter, r *http.Request, id string) {
 	idMateriel, err := strconv.Atoi(id)
 	if err != nil {
@@ -270,8 +267,7 @@ func UpdateMateriel(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "matériel mis à jour"}, http.StatusOK)
 }
 
-// DeleteMateriel supprime un matériel, ses photos (fichiers + lignes) et ses
-// réservations.
+// DeleteMateriel : supprime le matériel, ses photos (fichiers + lignes) et ses réservations.
 func DeleteMateriel(w http.ResponseWriter, r *http.Request, id string) {
 	idMateriel, err := strconv.Atoi(id)
 	if err != nil {
@@ -290,7 +286,7 @@ func DeleteMateriel(w http.ResponseWriter, r *http.Request, id string) {
 	jsonOK(w, map[string]string{"message": "matériel supprimé"}, http.StatusOK)
 }
 
-// DeleteMaterielPhoto supprime une photo (fichier + ligne).
+// DeleteMaterielPhoto : supprime une photo (fichier + ligne).
 func DeleteMaterielPhoto(w http.ResponseWriter, r *http.Request, id, photoID string) {
 	idPhoto, err := strconv.Atoi(photoID)
 	if err != nil {
@@ -305,7 +301,7 @@ func DeleteMaterielPhoto(w http.ResponseWriter, r *http.Request, id, photoID str
 	jsonOK(w, map[string]string{"message": "photo supprimée"}, http.StatusOK)
 }
 
-// ReserverMateriel réserve un matériel (optionnellement pour un événement).
+// ReserverMateriel : réserve un matériel (optionnellement pour un événement).
 func ReserverMateriel(w http.ResponseWriter, r *http.Request, id string, userId int) {
 	idMateriel, err := strconv.Atoi(id)
 	if err != nil {
@@ -330,7 +326,7 @@ func ReserverMateriel(w http.ResponseWriter, r *http.Request, id string, userId 
 	jsonOK(w, map[string]string{"message": "matériel réservé"}, http.StatusCreated)
 }
 
-// RetourMateriel clôt la réservation active d'un matériel (retour).
+// RetourMateriel : clôt la réservation active.
 func RetourMateriel(w http.ResponseWriter, r *http.Request, id string) {
 	idMateriel, err := strconv.Atoi(id)
 	if err != nil {

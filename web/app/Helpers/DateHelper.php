@@ -4,8 +4,15 @@ namespace App\Helpers;
 
 use Carbon\Carbon;
 
+/**
+ * Fonctions utilitaires de formatage de dates au format français
+ * (affichage, valeur d'input HTML, découpage en composants).
+ */
 class DateHelper
 {
+    /**
+     * Formate une date au format « jj/mm/aaaa hh:mm ». Chaîne vide si date nulle.
+     */
     public static function formatFrench($date)
     {
         if (!$date) {
@@ -15,6 +22,10 @@ class DateHelper
         return $carbon->format('d/m/Y H:i');
     }
 
+    /**
+     * Comme formatFrench() mais ajoute la période « matin »/« après-midi »
+     * (bascule à 12h).
+     */
     public static function formatFrenchWithPeriod($date)
     {
         if (!$date) {
@@ -26,6 +37,9 @@ class DateHelper
         return $carbon->format('d/m/Y') . ' ' . $carbon->format('H:i') . ' (' . $period . ')';
     }
 
+    /**
+     * Formate une date pour un champ <input type="datetime-local"> (Y-m-d\TH:i).
+     */
     public static function formatForInput($date)
     {
         if (!$date) {
@@ -34,6 +48,10 @@ class DateHelper
         return Carbon::parse($date)->format('Y-m-d\TH:i');
     }
 
+    /**
+     * Reconstruit une date SQL (Y-m-d H:i:s) à partir d'une date « jj/mm/aaaa »
+     * et d'une heure/minute saisies séparément. Retourne null si invalide.
+     */
     public static function getDateFromInput($date, $hour, $minute)
     {
         if (!$date) {
@@ -53,6 +71,10 @@ class DateHelper
         return null;
     }
 
+    /**
+     * Décompose une date en tableau associatif (jour, mois, année, heure, minute)
+     * pour préremplir des sélecteurs. Valeurs vides si date nulle.
+     */
     public static function getDateParts($date)
     {
         if (!$date) {

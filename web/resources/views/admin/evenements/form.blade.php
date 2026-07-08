@@ -1,12 +1,17 @@
 @extends('layouts.admin')
 @section('title', isset($evenement) ? 'Modifier événement' : 'Nouvel événement')
 
+{{-- Vue admin : formulaire de création / édition d'un événement (le même gabarit sert
+     aux deux cas selon la présence de $evenement). Inclut l'éditeur de séances. --}}
+
 @section('content')
+{{-- === En-tête de page === --}}
 <div class="page-header">
     <h1 class="page-title">{{ isset($evenement) ? 'Modifier événement' : 'Nouvel événement' }}</h1>
     <a href="{{ route('admin.evenements.index') }}" class="btn-secondary btn-sm">← Retour</a>
 </div>
 
+{{-- === Erreurs de validation === --}}
 @if($errors->any())
 <div class="alert alert-error" style="display: block; text-transform: none;">
     <p style="font-weight: 700; margin: 0 0 8px;">Erreurs du formulaire :</p>
@@ -18,6 +23,7 @@
 </div>
 @endif
 
+{{-- === Formulaire principal (infos générales + séances) === --}}
 <div class="card">
     <form method="POST" action="{{ isset($evenement) ? route('admin.evenements.update', $evenement['id_evenement']) : route('admin.evenements.store') }}">
         @csrf
@@ -56,6 +62,7 @@
             </div>
         </div>
 
+        {{-- === Éditeur de séances (partial réutilisable) === --}}
         <div style="margin-top: 28px; padding-top: 24px; border-top: 2px solid rgba(18,3,9,0.1);">
             @include('partials.seances-editor', ['seances' => $evenement['seances'] ?? null, 'animateurs' => $users])
         </div>

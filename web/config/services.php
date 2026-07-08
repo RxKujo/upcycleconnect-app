@@ -1,5 +1,8 @@
 <?php
 
+// Configuration des services tiers : identifiants et réglages des intégrations
+// externes (mail, Slack, API Go, reCAPTCHA, JWT, OneSignal).
+
 return [
 
     'postmark' => [
