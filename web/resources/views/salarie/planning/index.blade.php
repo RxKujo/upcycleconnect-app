@@ -1,10 +1,6 @@
 @extends('layouts.salarie')
 
 @section('title', 'Mon planning')
-
-{{-- Planning : calendrier + timeline, entièrement piloté en JS --}}
-
-{{-- === Styles === --}}
 @section('styles')
 <style>
 /* ─── Navigation calendrier ─── */

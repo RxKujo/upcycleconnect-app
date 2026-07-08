@@ -1,9 +1,6 @@
 @extends('layouts.salarie')
 
 @section('title', 'Mes événements')
-
-{{-- Liste des événements (modification tant qu'en attente) --}}
-
 @section('content')
 {{-- === En-tête === --}}
 <div class="page-header">

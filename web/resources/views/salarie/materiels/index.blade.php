@@ -1,8 +1,5 @@
 @extends('layouts.salarie')
 @section('title', 'Matériel')
-
-{{-- Inventaire matériel (nécessite un site de rattachement) --}}
-
 @section('content')
 {{-- Libellés et couleurs d'état --}}
 @php

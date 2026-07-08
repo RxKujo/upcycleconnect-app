@@ -1,8 +1,5 @@
 @extends('layouts.salarie')
 @section('title', 'Mes modèles')
-
-{{-- Gestion des modèles d'événement : modèles réutilisables qui pré-remplissent le formulaire de création (CRUD via modale) --}}
-
 @section('content')
 {{-- === En-tête + bouton nouveau modèle === --}}
 <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">

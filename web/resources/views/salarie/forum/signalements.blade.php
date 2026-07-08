@@ -1,10 +1,6 @@
 @extends('layouts.salarie')
 
 @section('title', 'Signalements')
-
-{{-- Modération : signalements --}}
-
-{{-- === Styles === --}}
 @section('styles')
 <style>
 .toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
